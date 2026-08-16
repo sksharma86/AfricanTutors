@@ -54,6 +54,9 @@ create table if not exists public.students (
   created_at   timestamptz not null default now()
 );
 create index if not exists students_account_id_idx on public.students (account_id);
+-- Default the owner to the caller so an account can insert its own students
+-- under RLS (with check account_id = auth.uid()) without trusting the client.
+alter table public.students alter column account_id set default auth.uid();
 
 -- ---------------------------------------------------------------------------
 -- subjects — admin-managed catalog.
