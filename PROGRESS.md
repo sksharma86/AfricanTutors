@@ -1,5 +1,23 @@
 # African Tutors Development Progress
 
+## Prompt 3 — Booking, scheduling, availability, matching, free trial (complete)
+
+- Managed booking system live on Supabase: `students` (parent-first learners),
+  `subjects` + `tutor_subjects` (admin-controlled), `tutor_availability` +
+  `tutor_availability_exceptions`, and `bookings`
+  (`supabase/migrations/0002_prompt3_booking.sql`).
+- Timezone-safe scheduling (UTC authoritative; availability in tutor local tz;
+  UI renders in each viewer's tz).
+- DB-enforced double-booking prevention (gist exclusion) and one-free-30min-trial
+  per student (partial unique index + server check).
+- Automatic managed matching (`create_booking`): approved + subject-approved +
+  available + not-double-booked; repeat-tutor preference then least workload.
+- Polished multi-step booking flow, and upgraded student / tutor / admin
+  dashboards (bookings, availability management, subject & tutor-subject admin,
+  booking oversight/cancel). Mobile-first.
+- 32/32 live Supabase tests pass (13 Phase 2 + 19 Prompt 3). No Stripe/Twilio yet
+  (documented attachment points).
+
 ## Completed
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 project initialized

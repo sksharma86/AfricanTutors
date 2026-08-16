@@ -40,17 +40,26 @@ actually done.
 - [x] Public site + docs updated; tutor compensation kept private
       (`BUSINESS_MODEL.md`)
 
-## Phase 3 — Subjects, Availability & Booking
+## Phase 3 — Subjects, Availability & Booking (DONE — Prompt 3)
 
-- [ ] `subjects` and `tutor_subjects` tables + admin management UI
-- [ ] `tutor_availability` model and a way for tutors to set it
-- [ ] Student-facing tutor search/matching flow
-- [ ] `bookings` table + booking creation flow (status lifecycle), supporting
-      **both 30-minute and 60-minute** sessions
-- [ ] Free-trial eligibility: let a new student book one free 30-minute session
-      (no card), and track claimed / booked / completed / tutor / converted
-- [ ] Wire the "Try 30 Minutes Free" CTA into the real booking flow
-- [ ] Booking views for student and tutor dashboards
+- [x] `subjects` and `tutor_subjects` tables + admin management UI
+- [x] `tutor_availability` + `tutor_availability_exceptions` and a tutor UI to set them
+- [x] Managed automatic matching flow (no public tutor catalog)
+- [x] `bookings` table + booking creation flow (status lifecycle), 30- and 60-min
+- [x] Free-trial eligibility enforced at the DB (one free 30-min per student),
+      with conversion data derivable from `bookings`
+- [x] Booking flow wired from the dashboard "Book a Session" CTA
+- [x] Booking views for student, tutor, and admin dashboards
+- [x] Parent-first `students` model (account may own multiple learners)
+- [x] Timezone-safe scheduling (UTC + local-tz availability), double-booking &
+      free-trial enforcement, RLS/anti-poaching, live tests
+
+### Deferred to later phases (not Prompt 3)
+- [ ] Stripe payments (attach to `bookings`; move `awaiting_payment` → `paid`)
+- [ ] Twilio video rooms (attach to a confirmed booking)
+- [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
+- [ ] Full multi-child account UX polish (DB foundation already supports it)
+- [ ] Free-trial conversion + tutor-performance analytics dashboards
 
 ## Phase 4 — Payments (Stripe)
 

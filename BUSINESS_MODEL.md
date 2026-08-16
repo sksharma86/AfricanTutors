@@ -63,3 +63,24 @@ These metrics will determine whether the free-trial acquisition model works:
 - Tutor-specific free trial → paid conversion rate
 
 Do not build the analytics dashboard yet; this is the target metric set.
+
+## Prompt 3 — data foundation for the metrics (INTERNAL)
+
+The booking system now records the raw data these metrics need, without building
+the dashboards:
+
+- Free-trial funnel: `bookings.is_free_trial`, `status` (booked → completed →
+  no_show/cancelled), `tutor_id`, `completed_at`, and `created_at` allow
+  computing trial booked/completed, which tutor conducted it, the first paid
+  booking afterward, and time-from-trial-to-first-paid — per student and per
+  tutor.
+- Tutor performance: sessions completed, no-shows, cancellations, hours taught,
+  trial→paid conversion, and repeat-student rate are all derivable from
+  `bookings` grouped by `tutor_id`. Not displayed publicly.
+- Matching cost lever: the assignment order (repeat-tutor → least workload) is
+  where future ranking will incorporate conversion/performance once the metrics
+  above are calculated.
+
+Tutor compensation remains private and never appears in customer-facing code.
+Cancellation/refund policy (which affects unit economics) is still an open owner
+decision.
