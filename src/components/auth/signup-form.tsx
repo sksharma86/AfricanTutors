@@ -7,6 +7,7 @@ import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-n
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { getAuthErrorMessage } from "@/lib/supabase/errors";
 import type { RequestableRole } from "@/lib/roles";
 
 export function SignupForm() {
@@ -42,12 +43,14 @@ export function SignupForm() {
 
     if (error) {
       setStatus("error");
-      setErrorMessage(error.message);
+      setErrorMessage(getAuthErrorMessage(error));
       return;
     }
 
     if (data.session) {
-      router.push(role === "tutor" ? "/dashboard/tutor" : "/dashboard/student");
+      // Let the server-side proxy (src/proxy.ts) route to the right
+      // dashboard based on the role actually stored in the database.
+      router.push("/dashboard");
       router.refresh();
       return;
     }

@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-notice";
@@ -10,10 +9,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAuthErrorMessage } from "@/lib/supabase/errors";
 
-export function LoginForm() {
+export function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -26,10 +24,16 @@ export function LoginForm() {
     setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (password !== confirmPassword) {
+      setStatus("error");
+      setErrorMessage("Those passwords don't match. Please try again.");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       setStatus("error");
@@ -37,12 +41,19 @@ export function LoginForm() {
       return;
     }
 
-    // Let the server-side proxy (src/proxy.ts) decide which dashboard this
-    // account is actually allowed to see, based on its role in the
-    // database — not on anything the client assumes.
-    const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
-    router.push(redirectTo);
-    router.refresh();
+    setStatus("success");
+    setTimeout(() => {
+      router.push("/dashboard");
+      router.refresh();
+    }, 1500);
+  }
+
+  if (status === "success") {
+    return (
+      <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
+        Your password has been updated. Taking you to your dashboard...
+      </div>
+    );
   }
 
   return (
@@ -50,36 +61,33 @@ export function LoginForm() {
       {!isSupabaseConfigured ? <AuthNotConfiguredNotice /> : null}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-ink-800">
-          Email
+        <label htmlFor="password" className="block text-sm font-medium text-ink-800">
+          New password
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          disabled={!isSupabaseConfigured}
-          autoComplete="email"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
-        />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between">
-          <label htmlFor="password" className="block text-sm font-medium text-ink-800">
-            Password
-          </label>
-          <Link href="/forgot-password" className="text-xs font-medium text-brand-600 hover:underline">
-            Forgot password?
-          </Link>
-        </div>
         <input
           id="password"
           name="password"
           type="password"
           required
+          minLength={8}
           disabled={!isSupabaseConfigured}
-          autoComplete="current-password"
+          autoComplete="new-password"
+          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-ink-800">
+          Confirm new password
+        </label>
+        <input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          required
+          minLength={8}
+          disabled={!isSupabaseConfigured}
+          autoComplete="new-password"
           className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
         />
       </div>
@@ -93,7 +101,7 @@ export function LoginForm() {
         disabled={!isSupabaseConfigured || status === "submitting"}
         className="w-full"
       >
-        {status === "submitting" ? "Logging in..." : "Log In"}
+        {status === "submitting" ? "Updating..." : "Update Password"}
       </Button>
     </form>
   );
