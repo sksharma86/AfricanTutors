@@ -17,10 +17,15 @@ export default function LoginPage() {
       description="Log in to access your dashboard."
       footer={
         <>
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-brand-600 hover:underline">
-            Sign up
+          <Link href="/forgot-password" className="font-medium text-brand-600 hover:underline">
+            Forgot your password?
           </Link>
+          <span className="mt-2 block">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="font-medium text-brand-600 hover:underline">
+              Sign up
+            </Link>
+          </span>
         </>
       }
     >
