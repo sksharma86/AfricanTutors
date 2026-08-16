@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Container } from "@/components/ui/container";
 import { FOOTER_LINKS, SITE_NAME } from "@/lib/constants";
 
@@ -8,10 +9,10 @@ export function Footer() {
     <footer className="border-t border-ink-100 bg-white">
       <Container className="flex flex-col gap-8 py-12 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
-          <span className="font-display text-lg font-semibold text-ink-900">{SITE_NAME}</span>
+          <BrandLockup />
           <p className="mt-3 text-sm leading-6 text-ink-500">
-            Connecting students with qualified tutors for convenient, one-on-one online
-            tutoring &mdash; entirely on one platform.
+            Live, one-on-one online tutoring for American students &mdash; from carefully
+            selected African academics, for just $19.50 an hour.
           </p>
         </div>
 
@@ -44,12 +45,25 @@ export function Footer() {
               </li>
             </ul>
           </div>
+
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">
+              For Educators
+            </p>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link href="/apply-to-tutor" className="text-sm text-ink-600 hover:text-ink-900">
+                  Apply to Tutor
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
       </Container>
 
       <Container className="flex flex-col gap-2 border-t border-ink-100 py-6 text-xs text-ink-400 md:flex-row md:items-center md:justify-between">
         <p>&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
-        <p>All tutoring, scheduling, and payments happen on {SITE_NAME}.</p>
+        <p>Tutoring, scheduling, and payments are all managed through {SITE_NAME}.</p>
       </Container>
     </footer>
   );
