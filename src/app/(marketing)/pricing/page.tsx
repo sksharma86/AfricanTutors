@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const details = [
   {
     title: "Pay per session",
-    description: "You pay for the sessions you book. There are no packages to buy and no long-term contract.",
+    description: "Sessions are billed individually, so you only pay for the tutoring your student books.",
   },
   {
     title: "One transparent price",
@@ -32,7 +32,7 @@ export default function PricingPage() {
       <PageHeader
         eyebrow="Pricing"
         title="Real tutoring. One on one. Just $19.50 an hour."
-        description="No tiers, no packages, no surprises \u2014 one simple price for live, one-on-one tutoring."
+        description="One straightforward price for live, one-on-one tutoring."
       />
 
       <PriceHighlight eyebrow="African Tutors" title="One student. One tutor. One hour." />

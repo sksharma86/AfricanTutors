@@ -24,24 +24,20 @@ export default function AboutPage() {
       <Container className="py-16">
         <div className="max-w-2xl space-y-6 text-base leading-7 text-ink-600">
           <p>
-            There is tremendous academic talent throughout Africa &mdash; qualified educators
-            and subject-matter experts equipped to teach at the highest level. At the same
-            time, many American families want consistent, personalized tutoring for their
-            students but run into high prices for traditional one-on-one instruction.
+            There is tremendous academic talent throughout Africa. At the same time, many
+            American families want consistent, personalized tutoring but run into high prices
+            for traditional one-on-one instruction.
           </p>
           <p>
-            African Tutors bridges those two realities. We built a company around recruiting,
-            vetting, and managing a network of qualified African academics, and connecting
-            them with American students who need one-on-one academic support &mdash; live,
-            online, for {" "}
-            <span className="font-semibold text-ink-900">just $19.50 an hour</span>.
+            African Tutors bridges those two realities: we built a company around recruiting,
+            approving, and managing a network of skilled African academics, and connecting
+            them with American students who need one-on-one support &mdash; live, online, for
+            just <span className="font-semibold text-ink-900">$19.50 an hour</span>.
           </p>
           <p>
-            American students get affordable, personal academic support from a real tutor.
-            Qualified African academics get access to meaningful, paid teaching opportunities.
-            African Tutors manages every part of the experience in between &mdash; recruiting,
-            approving, scheduling, and supporting every session &mdash; so families can simply
-            focus on learning.
+            Families get affordable, personal academic support from a real tutor. Talented
+            academics get meaningful, paid teaching work. African Tutors manages everything in
+            between, so both sides can focus on learning.
           </p>
         </div>
       </Container>
@@ -54,13 +50,12 @@ export default function AboutPage() {
       >
         <p>
           African Tutors is not an open marketplace where students and tutors find each other
-          independently. We recruit and approve every tutor, manage scheduling, and handle
-          payments, so families always know they&apos;re working with a qualified, vetted
-          professional.
+          independently. We recruit and approve every tutor, and manage scheduling and
+          payments, so families always know who they&apos;re working with.
         </p>
         <p>
           That structure lets us stand behind the quality of every session, and lets tutors
-          focus on teaching instead of running their own independent business.
+          focus on teaching.
         </p>
       </InfoSplit>
 
