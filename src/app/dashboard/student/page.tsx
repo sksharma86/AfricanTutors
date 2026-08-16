@@ -35,7 +35,7 @@ export default async function StudentDashboardPage() {
       description="This is where you'll manage tutoring sessions, bookings, and messages."
       navItems={[
         { label: "Overview", available: true },
-        { label: "Find a Tutor", available: false },
+        { label: "Book Tutoring", available: false },
         { label: "Bookings", available: false },
         { label: "Sessions", available: false },
         { label: "Messages", available: false },
@@ -44,8 +44,8 @@ export default async function StudentDashboardPage() {
     >
       <div className="grid gap-6 sm:grid-cols-2">
         <ComingSoonCard
-          title="Book a tutor"
-          description="Search for tutors by subject and availability, and book a session directly on the platform."
+          title="Book a session"
+          description="Tell us what your student needs and book a live, one-on-one tutoring session with African Tutors."
         />
         <ComingSoonCard
           title="Upcoming sessions"

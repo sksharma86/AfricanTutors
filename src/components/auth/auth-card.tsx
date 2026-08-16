@@ -18,7 +18,7 @@ export function AuthCard({
     <section className="flex flex-1 items-center justify-center bg-ink-50/60 py-16">
       <Container className="max-w-md">
         <div className="rounded-2xl border border-ink-100 bg-white p-8 shadow-sm">
-          <Link href="/" className="text-xs font-semibold tracking-wide text-brand-600 uppercase">
+          <Link href="/" className="text-xs font-semibold tracking-wide text-gold-700 uppercase">
             African Tutors
           </Link>
           <h1 className="mt-3 font-display text-2xl font-semibold text-ink-900">{title}</h1>

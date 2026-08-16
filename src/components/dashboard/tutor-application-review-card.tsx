@@ -27,7 +27,7 @@ const STATUS_LABEL: Record<TutorStatus, string> = {
 };
 
 const STATUS_TONE: Record<TutorStatus, string> = {
-  pending: "bg-brand-50 text-brand-700 border-brand-200",
+  pending: "bg-gold-50 text-gold-700 border-gold-200",
   approved: "bg-green-50 text-green-700 border-green-200",
   rejected: "bg-ink-100 text-ink-600 border-ink-200",
   suspended: "bg-red-50 text-red-700 border-red-200",

@@ -50,7 +50,7 @@ export function ResetPasswordForm() {
 
   if (status === "success") {
     return (
-      <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
+      <div className="rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm text-gold-800">
         Your password has been updated. Taking you to your dashboard...
       </div>
     );

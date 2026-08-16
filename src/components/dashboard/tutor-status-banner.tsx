@@ -4,7 +4,7 @@ const COPY: Record<Exclude<TutorStatus, "approved">, { title: string; body: stri
   pending: {
     title: "Your tutor application is under review.",
     body: "Our team reviews new tutor applications by hand. You can still update the information below any time before a decision is made.",
-    tone: "border-brand-200 bg-brand-50 text-brand-800",
+    tone: "border-gold-200 bg-gold-50 text-gold-800",
   },
   rejected: {
     title: "Your tutor application was not approved at this time.",

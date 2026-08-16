@@ -10,9 +10,23 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAuthErrorMessage } from "@/lib/supabase/errors";
 import type { RequestableRole } from "@/lib/roles";
 
-export function SignupForm() {
+/**
+ * `role` is fixed by the page that renders this form ("student" for the
+ * primary /signup path, "tutor" for the secondary /apply-to-tutor path) —
+ * there is no toggle presented to the visitor. This is a presentation
+ * choice only: the underlying signup mechanics (Supabase Auth signUp with
+ * `requested_role` in user metadata, and the database trigger that creates
+ * a `pending` tutor application) are unchanged from Prompt 2. See
+ * DECISIONS.md.
+ */
+export function SignupForm({
+  role,
+  submitLabel = "Create Account",
+}: {
+  role: RequestableRole;
+  submitLabel?: string;
+}) {
   const router = useRouter();
-  const [role, setRole] = useState<RequestableRole>("student");
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -60,7 +74,7 @@ export function SignupForm() {
 
   if (status === "success") {
     return (
-      <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800">
+      <div className="rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm text-gold-800">
         Check your email to confirm your account before logging in.
       </div>
     );
@@ -70,45 +84,9 @@ export function SignupForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       {!isSupabaseConfigured ? <AuthNotConfiguredNotice /> : null}
 
-      <fieldset disabled={!isSupabaseConfigured}>
-        <legend className="block text-sm font-medium text-ink-800">I want to</legend>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {(
-            [
-              { value: "student", label: "Learn" },
-              { value: "tutor", label: "Teach" },
-            ] as const
-          ).map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-medium ${
-                role === option.value
-                  ? "border-ink-900 bg-ink-900 text-white"
-                  : "border-ink-200 text-ink-700 hover:border-ink-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name="role"
-                value={option.value}
-                checked={role === option.value}
-                onChange={() => setRole(option.value)}
-                className="sr-only"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-        {role === "tutor" ? (
-          <p className="mt-2 text-xs text-ink-400">
-            Tutor applications are reviewed by our team before you get full tutor access.
-          </p>
-        ) : null}
-      </fieldset>
-
       <div>
         <label htmlFor="displayName" className="block text-sm font-medium text-ink-800">
-          Display name
+          {role === "tutor" ? "Full name" : "Parent or student name"}
         </label>
         <input
           id="displayName"
@@ -117,7 +95,7 @@ export function SignupForm() {
           required
           disabled={!isSupabaseConfigured}
           autoComplete="name"
-          placeholder="This is what other platform users will see"
+          placeholder="This is what appears on your account"
           className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none placeholder:text-ink-300 focus:border-ink-400 disabled:bg-ink-50"
         />
       </div>
@@ -162,7 +140,7 @@ export function SignupForm() {
         disabled={!isSupabaseConfigured || status === "submitting"}
         className="w-full"
       >
-        {status === "submitting" ? "Creating account..." : "Create Account"}
+        {status === "submitting" ? "Submitting..." : submitLabel}
       </Button>
     </form>
   );

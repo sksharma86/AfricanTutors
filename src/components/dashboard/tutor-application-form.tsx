@@ -164,7 +164,7 @@ export function TutorApplicationForm({
 
       {status === "error" && errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
       {status === "success" ? (
-        <p className="text-sm text-brand-700">Saved. Our team will review your application.</p>
+        <p className="text-sm text-gold-700">Saved. Our team will review your application.</p>
       ) : null}
 
       <Button type="submit" disabled={status === "submitting"}>

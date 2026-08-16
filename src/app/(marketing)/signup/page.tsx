@@ -5,25 +5,34 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Sign Up",
-  description: "Create your African Tutors account.",
+  title: "Get Started",
+  description: "Create your African Tutors account and book your student's first tutoring session.",
 };
 
 export default function SignupPage() {
   return (
     <AuthCard
-      title="Create your account"
-      description="Get started as a student, or apply to teach."
+      title="Create your student account"
+      description="Get started in a minute, then book your student's first session."
       footer={
         <>
-          Already have an account?{" "}
-          <Link href="/login" className="font-medium text-brand-600 hover:underline">
-            Log in
-          </Link>
+          <span>
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-gold-700 hover:underline">
+              Log in
+            </Link>
+          </span>
+          <span className="mt-2 block text-ink-400">
+            Interested in tutoring with African Tutors?{" "}
+            <Link href="/apply-to-tutor" className="font-medium text-gold-700 hover:underline">
+              Apply here
+            </Link>
+            .
+          </span>
         </>
       }
     >
-      <SignupForm />
+      <SignupForm role="student" submitLabel="Create Account" />
     </AuthCard>
   );
 }
