@@ -1,14 +1,22 @@
-# African Tutors — Database Design (Preliminary)
+# African Tutors — Database Design
 
-**Status:** Planning document only. No production tables have been created
-in this phase. This describes the intended shape of the schema so future
-prompts can implement it incrementally without redesigning it each time.
+**Status:** `profiles`, `student_profiles`, `tutor_profiles`, `subjects`,
+and `tutor_profile_subjects` are implemented as real migrations in
+`supabase/migrations/`, with Row Level Security enabled and tested (see
+"Row Level Security Policies (Implemented)" below). `bookings`, `payments`,
+`video_sessions`, `recordings`, `tutor_earnings`, `reviews`,
+`admin_settings`, `internal_messages`, and `circumvention_flags` remain
+planning-only — not yet built, deliberately, until the features that need
+them (booking, payments, video) are actually being built.
 
 Database: Supabase PostgreSQL. Authentication data (email, password hash,
 etc.) lives in Supabase's own `auth.users` table and is treated as
 **separate** from platform-visible profile data below — the tables here only
 ever reference `auth.users` by ID, never by copying the auth email into
-tables that other roles can read.
+tables that other roles can read. `authenticated` and `anon` are never
+granted any privilege on `auth.users` itself, so there is no query path —
+even a misconfigured one — from a tutor to a student's authentication email
+or vice versa. This has been verified with an automated test; see below.
 
 ## Design Principles
 
@@ -29,69 +37,90 @@ tables that other roles can read.
   show in the UI, prefer a short platform-generated public identifier or
   display name over a raw UUID.
 
-## Proposed Entities
+## Implemented Entities
 
-### `users` (conceptual — implemented as `auth.users` + a `public.profiles` row)
+The tables below exist for real (see `supabase/migrations/`) and have Row
+Level Security enabled with the policies described in "Row Level Security
+Policies (Implemented)" further down.
 
-A thin `public.profiles` table, one row per `auth.users.id`, holding only
-data every role is allowed to see about any account: platform role,
-display name/public handle, avatar, created_at. Notably **does not**
-duplicate the auth email.
+### `profiles` (implemented)
+
+A thin table, one row per `auth.users.id`, holding only data every role is
+allowed to see about any account: platform role, display name, avatar,
+timestamps. Notably **does not** duplicate the auth email or any other
+private contact info.
 
 | column | notes |
 | --- | --- |
 | `id` | PK, references `auth.users.id` |
-| `role` | `student` \| `tutor` \| `admin`. Set by trusted server logic only. |
+| `role` | `student` \| `tutor` \| `admin`. Set only by the `handle_new_user()` trigger at signup, or directly by the project owner via SQL for the very first admin (see `SETUP.md`). Never grantable to `authenticated` for UPDATE — no client request can change it. |
 | `display_name` | Shown to other users instead of an email address. |
 | `avatar_url` | Optional. |
-| `created_at` | |
+| `created_at` / `updated_at` | Maintained automatically. |
 
-### `student_profiles`
+### `student_profiles` (implemented)
 
-Extra data specific to students. One row per student `profiles.id`.
+Extra data specific to students. One row per student `profiles.id`, created
+automatically by the same signup trigger.
 
 | column | notes |
 | --- | --- |
-| `id` / `profile_id` | FK → `profiles.id` |
-| `grade_level` | Optional, free-form or enum later. |
+| `id` | PK, FK → `profiles.id` |
+| `grade_level` | Optional, free-form for now. |
 | `notes` | Student-visible-only notes/preferences. |
+| `created_at` / `updated_at` | Maintained automatically. |
 
 Deliberately does **not** include phone number, billing address, or payment
-method — those either don't need to be stored by us (Stripe holds them) or
-belong in a table tutors and other students can never query.
+method — those either don't need to be stored by us (Stripe will hold them
+once payments ship) or belong in a table tutors and other students can
+never query. Nothing here is collected until there's a real feature that
+needs it.
 
-### `tutor_profiles`
+### `tutor_profiles` (implemented)
 
-Extra data specific to tutors. One row per tutor `profiles.id`.
+Extra data specific to tutors. One row per tutor `profiles.id`, created
+automatically (with `status = 'pending'`) the moment someone signs up
+requesting the tutor path — signing up never grants approved access by
+itself.
 
 | column | notes |
 | --- | --- |
-| `id` / `profile_id` | FK → `profiles.id` |
-| `status` | `pending` \| `approved` \| `suspended`. Controls whether `role = 'tutor'` actually grants tutor access. Set by an admin. |
-| `bio` | Public-facing bio. |
-| `credentials` | Free-form for now (e.g. degrees, certifications). |
-| `approved_by` | FK → admin `profiles.id`, nullable. |
-| `approved_at` | Nullable. |
+| `id` | PK, FK → `profiles.id` |
+| `status` | `pending` \| `approved` \| `rejected` \| `suspended`. Controls whether this account actually has approved tutor access. The only way this column changes is the `admin_set_tutor_status(...)` function, which itself checks the caller is an admin. |
+| `headline`, `bio`, `education`, `years_experience`, `application_notes`, `submitted_at` | Tutor-editable "application" fields — the tutor can update these themselves at any time (column-level grant), regardless of status. |
+| `admin_notes` | Private administrative notes about the applicant. **Never** granted to `authenticated` for UPDATE, and never shown to the tutor or to students in the UI — admin-only. |
+| `approved_by`, `approved_at`, `status_updated_at` | Set automatically by `admin_set_tutor_status(...)`; never directly writable by any client. |
+| `created_at` / `updated_at` | Maintained automatically. |
 
-### `subjects`
+### `subjects` (implemented)
 
-Catalog of subjects tutors can teach and students can request.
+Small preliminary catalog of subjects, seeded with common subjects so the
+tutor application form has real choices. Public read-only data — not
+sensitive.
 
 | column | notes |
 | --- | --- |
 | `id` | PK |
-| `name` | e.g. "Algebra II" |
-| `category` | e.g. "Mathematics" |
-| `is_active` | Admin-managed. |
+| `name` | e.g. "Mathematics" (unique) |
+| `category` | e.g. "STEM" |
+| `is_active` | Admin-managed (no admin UI for this yet — direct SQL for now). |
 
-### `tutor_subjects`
+### `tutor_profile_subjects` (implemented)
 
-Join table: which tutors teach which subjects.
+Join table: which subjects a tutor applied to teach. A tutor can only
+insert/delete rows for their own `tutor_id`.
 
 | column | notes |
 | --- | --- |
 | `tutor_id` | FK → `tutor_profiles.id` |
 | `subject_id` | FK → `subjects.id` |
+| `created_at` | |
+
+## Planned Entities (not yet built)
+
+Everything below is still just a plan, to be implemented when the feature
+that needs it is actually being built (booking, payments, video). Nothing
+here exists as a real table yet.
 
 ### `tutor_availability`
 
@@ -231,23 +260,92 @@ only to admins.
 ## Relationships at a Glance
 
 ```
-auth.users 1—1 profiles 1—1 student_profiles
-                        1—1 tutor_profiles 1—N tutor_subjects N—1 subjects
-                                          1—N tutor_availability
+auth.users 1—1 profiles 1—1 student_profiles                [implemented]
+                        1—1 tutor_profiles 1—N tutor_profile_subjects N—1 subjects  [implemented]
+                                          1—N tutor_availability             [planned]
 
-profiles (student) 1—N bookings N—1 profiles (tutor)
-bookings 1—1 payments
-bookings 1—1 video_sessions 1—N recordings
-bookings 1—N tutor_earnings
-bookings 1—N reviews
-bookings 1—N internal_messages
-internal_messages 1—N circumvention_flags
+profiles (student) 1—N bookings N—1 profiles (tutor)          [planned]
+bookings 1—1 payments                                          [planned]
+bookings 1—1 video_sessions 1—N recordings                     [planned]
+bookings 1—N tutor_earnings                                    [planned]
+bookings 1—N reviews                                           [planned]
+bookings 1—N internal_messages                                 [planned]
+internal_messages 1—N circumvention_flags                      [planned]
 ```
 
-## Not Built Yet
+## Row Level Security Policies (Implemented)
 
-No migrations, RLS policies, or Supabase project have been created in this
-phase — this document is the plan those will be built from once a Supabase
-project is connected (see `SETUP.md`). We are intentionally not creating
-every table now to avoid over-engineering ahead of real requirements
-(pricing, booking flow specifics, etc.) from the owner.
+RLS is enabled on every implemented table
+(`supabase/migrations/20260816000000_roles_and_profiles.sql`). Policies are
+combined with **column-level `GRANT`s** for defense in depth — RLS decides
+which *rows* a role can see/touch; grants decide which *columns* it can
+write at all, regardless of RLS.
+
+| Table | Who can SELECT | Who can UPDATE (and which columns) |
+| --- | --- | --- |
+| `profiles` | The row's own owner, or an admin | Owner: `display_name`, `avatar_url` only. Admin: any column (via RLS; no `authenticated` grant makes `role` writable by anyone, including admins, through the normal client — the very first admin is set directly via SQL, see `SETUP.md`). |
+| `student_profiles` | Owner, or admin | Owner: `grade_level`, `notes`. |
+| `tutor_profiles` | Owner, or admin | Owner: `headline`, `bio`, `education`, `years_experience`, `application_notes`, `submitted_at` only. `status`, `admin_notes`, `approved_by`, `approved_at`, `status_updated_at` are not grantable to `authenticated` at all — the only way they change is `admin_set_tutor_status(...)`. |
+| `subjects` | Everyone (active subjects), admin (all) | Not writable by `authenticated` yet (no subject management UI exists). |
+| `tutor_profile_subjects` | Owning tutor, or admin | Owning tutor can insert/delete their own rows. |
+
+Notably, **no policy grants a tutor read access to any student's `profiles`
+or `student_profiles` row, or vice versa** — there is no booking
+relationship yet that would justify it. When booking ships, a new,
+narrowly-scoped policy will be added (e.g. "a tutor may see the display
+name of a student they have a confirmed booking with") rather than opening
+these tables up broadly.
+
+`public.is_admin(uid uuid default auth.uid())` is a `SECURITY DEFINER`
+helper used inside these policies so they can check "is this caller an
+admin?" without recursively re-evaluating `profiles`' own RLS.
+
+`public.admin_set_tutor_status(target_tutor_id, new_status, note)` is the
+only way `tutor_profiles.status` (and its approval metadata) can change. It
+is `SECURITY DEFINER`, checks `is_admin()` internally, and can safely be
+`GRANT EXECUTE`'d to every authenticated user — a non-admin calling it
+simply gets an authorization error back.
+
+## Anti-Poaching Verification
+
+The core requirement from this phase — *"an approved tutor should NOT be
+able to retrieve a student's private authentication email merely because
+the tutor has application access, and a student should NOT be able to
+retrieve private tutor contact information"* — is verified by an automated
+test suite, not just by inspection:
+
+- `supabase/tests/` bootstraps a throwaway local PostgreSQL database to
+  behave like a Supabase project (Supabase's `auth.users` table shape, the
+  `anon`/`authenticated` roles, and the real `auth.uid()` contract used by
+  `request.jwt.claims`), applies the **actual** migration files from
+  `supabase/migrations/` unmodified, seeds two students, two tutor
+  applicants, and one admin, and then runs 12 assertions as those specific
+  users (via `SET ROLE` + `SET request.jwt.claims`, exactly like
+  PostgREST/Supabase would for a real request).
+- Run it yourself with `npm run test:rls` (requires a local PostgreSQL
+  server; see the script for details). All 12 currently pass, including:
+  - An approved tutor querying `profiles`/`student_profiles` for either
+    student returns **zero rows**.
+  - A student querying `tutor_profiles` for either tutor returns **zero
+    rows**.
+  - Any `authenticated` (or `anon`) request to `auth.users` directly is
+    rejected with a permission error — there is no path to another user's
+    authentication email even if every policy above were misconfigured.
+  - A pending tutor cannot approve themselves, and cannot `UPDATE` their
+    own `status` column directly (only `admin_set_tutor_status(...)` can).
+  - A student cannot `UPDATE` their own `role` column to `admin`.
+  - An admin can see and act on tutor applications; a non-admin cannot.
+- This is a local approximation good enough for fast, offline regression
+  testing of the actual policy/grant logic — it is **not** a substitute for
+  a final smoke test against a real, connected Supabase project (see
+  `SETUP.md`).
+
+## Implementation Status
+
+`profiles`, `student_profiles`, `tutor_profiles`, `subjects`, and
+`tutor_profile_subjects` exist as real migrations with tested RLS. No
+Supabase *project* has been connected yet in this environment — see
+`SETUP.md` for what's needed from the owner to apply these migrations to a
+live project. Everything under "Planned Entities" above is intentionally
+still just a plan, to avoid over-engineering ahead of real requirements
+(booking flow specifics, pricing, etc.) from the owner.

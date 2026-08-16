@@ -21,22 +21,43 @@ actually done.
 
 ## Phase 2 — Supabase Connection & Real Authentication
 
-- [ ] Create/connect a real Supabase project; add credentials to `.env.local`
-      and Vercel
-- [ ] Create `profiles`, `student_profiles`, `tutor_profiles` tables +
-      row level security policies (see `DATABASE.md`)
-- [ ] Database trigger/function to create a `profiles` row on signup with
-      role `student` by default
-- [ ] Wire up email verification and password reset flows end-to-end
-- [ ] Add real server-enforced role checks to middleware (redirect a
-      student away from `/dashboard/tutor`, etc.)
-- [ ] Admin tooling (even minimal) to approve pending tutor applications
+- [x] Write `profiles`, `student_profiles`, `tutor_profiles`, `subjects`,
+      `tutor_profile_subjects` migrations with Row Level Security policies
+      and column-level grants (see `DATABASE.md`)
+- [x] Database trigger (`handle_new_user`) to create a `profiles` row (and
+      `student_profiles`/`tutor_profiles` row) on signup
+- [x] `admin_set_tutor_status(...)` function for admin-only tutor approval
+- [x] Verify the anti-poaching requirement with an automated local test
+      suite (`npm run test:rls`) — see `DATABASE.md` → "Anti-Poaching
+      Verification"
+- [x] Real Supabase Auth wiring for login/signup (client-side), with
+      friendly error messages
+- [x] Real server-enforced role checks in `src/proxy.ts` (redirect a
+      student away from `/dashboard/tutor`, etc., based on `profiles.role`
+      looked up from the database — not from anything client-supplied)
+- [x] Tutor application flow (form + Server Action) and pending/rejected/
+      suspended status screens
+- [x] Admin tooling to review and approve/reject/suspend tutor applications
+- [x] Password reset flow (`/forgot-password`, `/auth/confirm`,
+      `/reset-password`)
+- [x] `scripts/promote-admin.mjs` + documented SQL fallback for creating
+      the first administrator
+- [ ] **Owner action required:** connect a real Supabase project and add
+      credentials as Cursor secrets, then apply the migrations — see
+      `SETUP.md`. Once connected, do a real end-to-end smoke test (signup →
+      email confirmation → login → tutor application → admin approval →
+      tutor dashboard access) against the live project, since this
+      environment could only verify the database logic locally, not a real
+      connected project or real emails.
 
 ## Phase 3 — Subjects, Availability & Booking
 
-- [ ] `subjects` and `tutor_subjects` tables + admin management UI
+- [ ] Admin UI for managing the `subjects` catalog (currently seeded by
+      migration only)
 - [ ] `tutor_availability` model and a way for tutors to set it
-- [ ] Student-facing tutor search/matching flow
+- [ ] Student-facing tutor search/matching flow (will need a new,
+      narrowly-scoped RLS policy so students can see *some* approved tutor
+      profile fields — see `DATABASE.md`)
 - [ ] `bookings` table + booking creation flow (status lifecycle)
 - [ ] Booking views for student and tutor dashboards
 
@@ -83,9 +104,14 @@ actually done.
 ## Ongoing / Cross-Cutting
 
 - [ ] Transactional email provider integration (verification, reset,
-      notifications)
+      notifications) — Supabase's built-in emails are fine to start
 - [ ] Accessibility pass on all interactive components
 - [ ] Automated test coverage as features stabilize (avoid over-testing a
-      still-changing surface)
+      still-changing surface) — `npm run test:rls` now covers the database
+      authorization layer; consider Playwright/component tests once the UI
+      surface stabilizes further
+- [ ] Once a real Supabase project exists, regenerate
+      `src/lib/supabase/database.types.ts` with
+      `supabase gen types typescript` instead of maintaining it by hand
 - [ ] Legal pages (Terms of Service, Privacy Policy) once content is
       provided by the owner

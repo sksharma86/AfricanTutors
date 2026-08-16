@@ -1,7 +1,8 @@
 # African Tutors — Architecture
 
 This document describes the technical architecture established during
-Phase 1 (project foundation). It will grow as booking, payments, video, and
+Phase 1 (project foundation) and Phase 2 (authentication, database, and
+role/permission enforcement). It will grow as booking, payments, video, and
 messaging are built in later phases.
 
 ## Overall Application Architecture
@@ -9,8 +10,10 @@ messaging are built in later phases.
 African Tutors is a single Next.js application (App Router) that serves:
 
 - Public marketing pages (home, how it works, pricing, about, contact)
-- Authentication pages (login, signup)
-- Role-scoped dashboards (student, tutor, admin) under `/dashboard/*`
+- Authentication pages (login, signup, forgot/reset password, email
+  confirmation handling)
+- Role-scoped dashboards (student, tutor, admin) under `/dashboard/*`,
+  protected by real server-side authorization
 - Server-side API routes (`/api/*`) for logic that must not run in the
   browser (e.g. anything touching secrets, or future Stripe/Twilio calls)
 
@@ -32,21 +35,37 @@ no native mobile app.
 src/
   app/                    App Router routes (pages, layouts, API routes)
     (marketing pages)     /, /how-it-works, /pricing, /about, /contact
-    login/, signup/       Auth pages
+    (marketing)/login, signup, forgot-password, reset-password  Auth pages
+    auth/
+      confirm/route.ts     Handles email confirmation + password recovery links
+      error/               Friendly "that link didn't work" page
     dashboard/
-      student/, tutor/, admin/   Role-scoped dashboard placeholders
+      student/             Student dashboard (real profile data)
+      tutor/                Tutor dashboard: application form, status banner, or
+                             approved functionality depending on tutor_profiles.status
+        actions.ts           Server Action: tutor submits/updates their own application
+      admin/                Admin dashboard: tutor application review queue
+        actions.ts           Server Action: admin approves/rejects/suspends a tutor
     api/                  Route handlers (server-only logic)
   components/
     ui/                   Small generic building blocks (Button, Container, Badge)
     layout/                Navbar, Footer, mobile menu
     marketing/             Homepage/marketing sections (Hero, FeatureGrid, Steps, CTA)
-    auth/                   Login/signup forms and auth UI
-    dashboard/              Dashboard shell and widgets
+    auth/                   Login/signup/forgot/reset forms and auth UI
+    dashboard/              Dashboard shell, tutor application form, admin review card
   lib/
-    supabase/               Supabase client/server factories + config
-    roles.ts                 Role types and role → dashboard path mapping
+    supabase/
+      client.ts, server.ts   Supabase client factories (typed with database.types.ts)
+      database.types.ts       Hand-written types mirroring supabase/migrations/*.sql
+      errors.ts                Friendly Auth error message mapping
+    roles.ts                 Role/TutorStatus types and role → dashboard path mapping
     constants.ts              Site-wide constants (nav links, site name)
-  middleware.ts              Session refresh + future route protection
+  proxy.ts                  Session refresh + real server-enforced route protection
+scripts/
+  promote-admin.mjs         One-off script to grant the admin role (service role key)
+supabase/
+  migrations/                Real SQL migrations (schema, RLS, triggers, RPCs)
+  tests/                     Local RLS test harness (npm run test:rls)
 ```
 
 Components are intentionally split into small, reusable pieces (e.g.
@@ -62,9 +81,10 @@ in:
   operations (e.g. the contact form handler today; Stripe webhooks and
   Twilio token minting in later phases).
 - **Supabase** (PostgreSQL + Row Level Security) as the system of record.
-  Business rules that must be trustworthy (e.g. "a tutor can only see
-  bookings assigned to them") will be enforced with RLS policies and/or
-  `SECURITY DEFINER` database functions, not just application code.
+  Business rules that must be trustworthy (e.g. "a tutor cannot approve
+  their own application" or "a student's identity row is invisible to
+  every tutor") are enforced with RLS policies and `SECURITY DEFINER`
+  database functions, not just application code — see `DATABASE.md`.
 
 This keeps the architecture simple while still giving us a clear place to
 enforce authorization on the server, which is required by the anti-poaching
@@ -79,53 +99,97 @@ which is the current recommended pattern for Next.js App Router:
 - `src/lib/supabase/client.ts` — browser client for Client Components
 - `src/lib/supabase/server.ts` — server client for Server Components, Route
   Handlers, and Server Actions (reads/writes the session via cookies)
-- `src/middleware.ts` — refreshes the session cookie on every request and is
-  the seam where future server-enforced route protection will be added
+- `src/proxy.ts` — Next.js 16's replacement for `middleware.ts`. Refreshes
+  the session cookie on every request **and** enforces real, server-side
+  route protection for `/dashboard/*` (see "Role Based Access Strategy"
+  below) — not just a session refresh anymore.
+- `src/app/auth/confirm/route.ts` — handles the links Supabase puts in
+  confirmation/recovery emails, using the current recommended `token_hash` +
+  `type` pattern (not the older, deprecated implicit hash-fragment flow).
+  One route covers both "confirm your email" and "reset your password"
+  links.
 
-Planned auth flows (email/password to start):
+Implemented auth flows (email/password):
 
-- **Registration** — email + password. Signup lets a visitor indicate
-  whether they want to learn (student) or apply to teach (tutor), but this
-  is only a *request*, stored as `requested_role` in Supabase Auth user
-  metadata. It does not itself grant any privileged access.
-- **Email verification** — required before full access, using Supabase's
-  built-in email confirmation flow.
-- **Password reset** — via Supabase's password recovery flow.
+- **Registration** — email + password via `supabase.auth.signUp()`. Signup
+  lets a visitor indicate whether they want to learn (student) or apply to
+  teach (tutor); this is sent as `requested_role` in Supabase Auth user
+  metadata and only ever used by a database trigger (see below) to decide
+  the *starting* state — it never grants privileged access by itself. A
+  "tutor" signup starts as `tutor_profiles.status = 'pending'`.
+- **Tutor application** — once logged in, a pending (or approved) tutor
+  fills out a short application form (headline, bio, education, years of
+  experience, subjects) via a Server Action
+  (`src/app/dashboard/tutor/actions.ts`) that only ever updates their own
+  row's application-editable columns (enforced at the database grant
+  level, not just by the form).
+- **Email verification** — Supabase's built-in email confirmation flow,
+  landing on `/auth/confirm` and then the user's dashboard.
+- **Password reset** — `/forgot-password` requests a reset email;
+  `/auth/confirm` exchanges the recovery link for a session; `/reset-password`
+  lets the user set a new password via `supabase.auth.updateUser()`.
 - **Session management** — handled by Supabase Auth cookies, refreshed by
-  the middleware above.
+  `src/proxy.ts` on every request.
+- **Friendly errors** — `src/lib/supabase/errors.ts` maps raw Supabase Auth
+  error messages (e.g. `Invalid login credentials`) to short, nontechnical
+  copy (e.g. "The email or password you entered is incorrect."). Nothing in
+  the UI shows a raw `AuthApiError` or similar.
 
 Until real Supabase credentials are configured (see `SETUP.md`), the app
 detects this via `isSupabaseConfigured` and renders login/signup forms in a
-disabled "not configured yet" state rather than crashing, and the middleware
-skips auth checks entirely. This keeps the foundation runnable and testable
+disabled "not configured yet" state rather than crashing, and `proxy.ts`
+skips auth checks entirely (dashboards stay reachable for local development
+without credentials). This keeps the foundation runnable and testable
 before a Supabase project exists, and turns on automatically once
 credentials are supplied — no code changes needed.
 
 ### Why role assignment is not client-controlled
 
 Nothing in the client can set a user's authoritative role. Authoritative
-role/authorization data will live in Postgres (see `DATABASE.md`), controlled
+role/authorization data lives in Postgres (see `DATABASE.md`), controlled
 by:
 
-- A default `student` role granted on verified signup.
+- A default `student` role granted by a database trigger
+  (`public.handle_new_user()`) the moment someone verifies their signup —
+  the same trigger creates their `student_profiles` row.
 - `tutor` access gated behind an admin-approved `tutor_profiles.status`
-  (e.g. `pending` → `approved`), set only by an administrator action running
-  with elevated (server-side) privileges.
+  (`pending` → `approved`/`rejected`/`suspended`), changeable only through
+  `public.admin_set_tutor_status(...)`, a `SECURITY DEFINER` Postgres
+  function that checks the caller is an admin before doing anything. A
+  brand-new tutor signup is always `pending` and gains zero elevated
+  access until that function is called by an admin.
 - `admin` accounts provisioned directly by the platform owner/engineering
-  team (e.g. via the Supabase dashboard or a trusted internal script), never
-  through public signup.
+  team by running SQL directly against the database (or the
+  `scripts/promote-admin.mjs` helper script, which uses the Supabase
+  service role key) — never through public signup, and never via any
+  column the `authenticated` role is granted UPDATE on. See `SETUP.md` →
+  "Creating the first administrator".
 
 ## Database Strategy
 
 Supabase PostgreSQL is the single system of record. See `DATABASE.md` for
-the preliminary schema. Key principles carried into the schema design:
+the full schema, implemented RLS policies, and the automated test suite
+that verifies them. Key principles carried into the schema:
 
 - Supabase Auth's `auth.users` table (which holds login email, password
   hash, etc.) is kept separate from platform-visible profile data. Public,
   cross-role visible information (display name, subjects, etc.) lives in
-  `student_profiles` / `tutor_profiles`, not in the auth table.
-- Row Level Security will restrict which rows a student, tutor, or admin can
-  read/write once real tables are created.
+  `student_profiles` / `tutor_profiles`, not in the auth table. Neither the
+  `authenticated` nor `anon` role is ever granted any privilege on
+  `auth.users` itself.
+- Row Level Security restricts which rows a student, tutor, or admin can
+  read/write for every implemented table (`profiles`, `student_profiles`,
+  `tutor_profiles`, `subjects`, `tutor_profile_subjects`), combined with
+  column-level `GRANT`s so that even a row a user *can* see isn't fully
+  writable (e.g. a tutor can see their own `tutor_profiles` row but cannot
+  `UPDATE` its `status` column).
+- Migrations live in `supabase/migrations/` and are meant to be applied to
+  a real Supabase project via the SQL Editor or the Supabase CLI (see
+  `SETUP.md`). They have been validated against a local PostgreSQL
+  instance bootstrapped to imitate Supabase's `auth` schema and role
+  model, via `npm run test:rls` (see `supabase/tests/`), since this
+  environment does not have a connected Supabase project to test against
+  directly.
 
 ## Planned Stripe Integration
 
@@ -159,27 +223,50 @@ Not implemented yet. Architectural intent:
 
 ## Role Based Access Strategy
 
-Three roles: `student`, `tutor`, `admin` (see `PROJECT_SPEC.md`).
+Three roles: `student`, `tutor`, `admin` (see `PROJECT_SPEC.md`). Route
+protection is enforced in two independent layers — either one alone would
+be reasonable, having both is deliberate defense in depth:
 
-- **No security-by-hidden-UI.** Hiding a nav link or a button is a UX nicety,
-  never the actual access control. Every sensitive read/write must be
-  enforced server-side (Route Handler checks, Server Component checks, and
-  ultimately Postgres RLS policies once real tables exist).
-- Route protection seam already exists in `src/middleware.ts`: paths under
-  `/dashboard/*` are treated as protected. Today, with no Supabase project
-  connected, the middleware is a pass-through so the placeholder dashboards
-  remain reachable for development and testing. Once Supabase is connected,
-  it will redirect unauthenticated visitors to `/login`, and a follow-up
-  change will add role-specific checks (e.g. a student hitting
-  `/dashboard/tutor` gets redirected, not just visually blocked).
-- Admin-only server actions (approving tutors, viewing payments, reviewing
-  circumvention flags, etc.) will run with checks against the authoritative
-  role stored in Postgres, not against client-supplied data.
+1. **Routing layer (`src/proxy.ts`).** On every request to `/dashboard/*`,
+   the proxy:
+   - Redirects to `/login` (with a `redirectTo` back-link) if there is no
+     logged-in user at all.
+   - Otherwise looks up the user's `role` from `public.profiles` and
+     redirects to that role's own dashboard (`/dashboard/student`,
+     `/dashboard/tutor`, or `/dashboard/admin`) if the requested path isn't
+     already theirs. A student manually typing `/dashboard/admin` into the
+     address bar is redirected away — the admin dashboard is never
+     rendered for them, regardless of what the UI would or wouldn't have
+     linked to.
+   - A pending/rejected/suspended tutor *is* allowed onto
+     `/dashboard/tutor` (it's their own dashboard) — the page itself, not
+     the router, decides whether to show the application/status screen or
+     full tutor functionality, based on `tutor_profiles.status`.
+2. **Data layer (Postgres RLS + column grants, see `DATABASE.md`).** This is
+   the actual, final authority: even if the routing layer were somehow
+   bypassed, no query run by a student can return another user's private
+   data, and no update from a non-admin can touch `profiles.role` or
+   `tutor_profiles.status`.
+- **No security-by-hidden-UI.** Hiding a nav link or a button is a UX
+  nicety, never the actual access control — everything above is enforced
+  server-side/database-side, not by what the client chooses to render.
+- Admin actions (approving/rejecting/suspending a tutor application) run
+  through `public.admin_set_tutor_status(...)`, which independently checks
+  the caller's role in Postgres — a Server Action or API route calling it
+  cannot itself grant authority it doesn't have.
 
 ## Tutor to Client Circumvention Prevention
 
 This is a first-class architectural concern, established now so it does not
 require a rewrite later.
+
+**Status as of Phase 2:** principle 1 (minimize contact exposure) and 2
+(platform-generated identifiers over personal ones) are now implemented
+and automatically tested for `profiles`/`student_profiles`/`tutor_profiles`
+— see `DATABASE.md` → "Anti-Poaching Verification". Principles 3–10 remain
+architectural commitments for when messaging, video, payments, and
+circumvention detection are actually built (they have no code yet to
+verify).
 
 1. **Minimize contact exposure by default.** Student and tutor personal
    contact information (auth email, phone number, etc.) is not
