@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CtaSection } from "@/components/marketing/cta-section";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Steps } from "@/components/marketing/steps";
 import { Container } from "@/components/ui/container";
+import { HOURLY_RATE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "How It Works",
-  description: "See how students and tutors connect and complete sessions on African Tutors.",
+  description: "See how live one-on-one tutoring works on African Tutors, from sign up to session.",
 };
 
 export default function HowItWorksPage() {
@@ -15,70 +17,58 @@ export default function HowItWorksPage() {
     <>
       <PageHeader
         eyebrow="How It Works"
-        title="A simple path from sign up to your first session."
+        title="A simple, managed path from sign up to your first session."
         description="African Tutors handles matching, scheduling, and sessions in one place, so you can spend less time coordinating and more time learning."
       />
 
       <Steps
-        title="For Students"
+        title="From sign up to your first session."
         steps={[
           {
-            title: "Create an account",
-            description: "Sign up with your email and set up a student profile.",
+            title: "Tell Us What You Need",
+            description: "Create a free account and share the subject and grade level your student needs help with.",
           },
           {
-            title: "Share what you need",
-            description: "Tell us the subject, level, and times that work for you.",
+            title: "Choose a Convenient Time",
+            description: "Pick an available tutoring session time that works for your family's schedule.",
           },
           {
-            title: "Get matched with a tutor",
-            description: "We connect you with a qualified tutor for your subject.",
+            title: "Meet Online",
+            description: "Join a private, live one-on-one session with your tutor through African Tutors.",
           },
           {
-            title: "Meet online",
-            description: "Join your session directly through African Tutors.",
-          },
-        ]}
-      />
-
-      <Steps
-        title="For Tutors"
-        steps={[
-          {
-            title: "Apply to teach",
-            description: "Submit an application with your subjects and background.",
-          },
-          {
-            title: "Get approved",
-            description: "Our team reviews applications before granting tutor access.",
-          },
-          {
-            title: "Set your availability",
-            description: "Share the times you're available to teach.",
-          },
-          {
-            title: "Teach and get paid",
-            description: "Run sessions and track your earnings, all on the platform.",
+            title: "Keep Building Progress",
+            description: "Book additional sessions whenever your student needs more support.",
           },
         ]}
       />
 
       <Container className="py-4">
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 sm:p-8">
+        <div className="rounded-2xl border border-gold-200 bg-gold-50 p-6 sm:p-8">
           <h2 className="font-display text-xl font-semibold text-ink-900">
-            Everything stays on African Tutors
+            Fully managed by African Tutors
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-600">
-            Messaging, scheduling, sessions, and payments all happen inside the platform.
-            Students and tutors don&apos;t need to exchange personal contact information to work
-            together.
+            Messaging, scheduling, sessions, and payments all happen through African Tutors.
+            Every tutor is recruited, reviewed, and approved by our team &mdash; you&apos;re
+            never on your own to find and vet a tutor independently.
           </p>
         </div>
       </Container>
 
+      <Container className="py-8">
+        <p className="text-sm text-ink-400">
+          Interested in teaching with African Tutors instead?{" "}
+          <Link href="/apply-to-tutor" className="font-medium text-gold-700 hover:underline">
+            Apply to tutor
+          </Link>
+          .
+        </p>
+      </Container>
+
       <CtaSection
         title="See it for yourself"
-        description="Create a free account to explore African Tutors as a student, or apply to teach."
+        description={`Create a free account and book your student's first session for ${HOURLY_RATE} an hour.`}
         secondaryHref="/pricing"
         secondaryLabel="View Pricing"
       />

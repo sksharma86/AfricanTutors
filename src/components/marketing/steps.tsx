@@ -19,7 +19,7 @@ export function Steps({
       <Container>
         <div className="max-w-2xl">
           {eyebrow ? (
-            <p className="text-sm font-semibold tracking-wide text-brand-600 uppercase">
+            <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">
               {eyebrow}
             </p>
           ) : null}
@@ -31,7 +31,7 @@ export function Steps({
         <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, index) => (
             <li key={step.title} className="relative rounded-2xl bg-white p-6 shadow-sm">
-              <span className="font-display text-2xl font-semibold text-brand-500">
+              <span className="font-display text-2xl font-semibold text-gold-500">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <h3 className="mt-4 text-base font-semibold text-ink-900">{step.title}</h3>

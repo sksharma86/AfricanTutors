@@ -2,25 +2,27 @@ import type { Metadata } from "next";
 
 import { CtaSection } from "@/components/marketing/cta-section";
 import { PageHeader } from "@/components/marketing/page-header";
+import { PriceHighlight } from "@/components/marketing/price-highlight";
 import { Container } from "@/components/ui/container";
+import { HOURLY_RATE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Simple, transparent pricing for online tutoring on African Tutors.",
+  description: `Live one-on-one online tutoring for ${HOURLY_RATE} an hour. Simple, transparent pricing.`,
 };
 
-const principles = [
+const details = [
   {
     title: "Pay per session",
-    description: "You pay for the sessions you book. There are no long-term contracts.",
+    description: "You pay for the sessions you book. There are no packages to buy and no long-term contract.",
   },
   {
-    title: "Transparent pricing",
-    description: "The price of a session is shown clearly before you book it.",
+    title: "One transparent price",
+    description: `Every one-on-one session is ${HOURLY_RATE} an hour, whatever the subject.`,
   },
   {
     title: "Payments stay on platform",
-    description: "All payments are processed securely through African Tutors.",
+    description: "All payments are processed securely through African Tutors \u2014 nothing to arrange separately.",
   },
 ];
 
@@ -29,35 +31,36 @@ export default function PricingPage() {
     <>
       <PageHeader
         eyebrow="Pricing"
-        title="Straightforward pricing for one-on-one tutoring."
-        description="We're finalizing exact session rates ahead of launch. Here's how pricing on African Tutors will work."
+        title="Real tutoring. One on one. Just $19.50 an hour."
+        description="No tiers, no packages, no surprises \u2014 one simple price for live, one-on-one tutoring."
       />
 
-      <Container className="py-16">
+      <PriceHighlight eyebrow="African Tutors" title="One student. One tutor. One hour." />
+
+      <Container className="py-4 pb-20">
         <div className="grid gap-6 sm:grid-cols-3">
-          {principles.map((principle) => (
-            <div key={principle.title} className="rounded-2xl border border-ink-100 bg-white p-6">
-              <h3 className="text-base font-semibold text-ink-900">{principle.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-ink-500">{principle.description}</p>
+          {details.map((detail) => (
+            <div key={detail.title} className="rounded-2xl border border-ink-100 bg-white p-6">
+              <h3 className="text-base font-semibold text-ink-900">{detail.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-ink-500">{detail.description}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-10 rounded-2xl border border-ink-100 bg-ink-50/60 p-6 sm:p-8">
           <p className="text-sm leading-6 text-ink-600">
-            Detailed pricing tiers and subject-specific rates will be published here before
-            checkout is enabled. In the meantime, reach out via the{" "}
-            <a href="/contact" className="font-medium text-brand-600 underline">
+            Questions about pricing or getting your student started? Reach out via the{" "}
+            <a href="/contact" className="font-medium text-gold-700 underline">
               contact page
             </a>{" "}
-            with any pricing questions.
+            and our team will help.
           </p>
         </div>
       </Container>
 
       <CtaSection
-        title="Want to be notified when pricing is live?"
-        description="Create an account now and we'll let you know as soon as booking opens."
+        title="Ready to book your student's first session?"
+        description="Create a free account to get started \u2014 it only takes a minute."
       />
     </>
   );

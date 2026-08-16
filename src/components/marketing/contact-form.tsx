@@ -43,7 +43,7 @@ export function ContactForm() {
 
   if (status === "success") {
     return (
-      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-6 text-sm text-brand-800">
+      <div className="rounded-2xl border border-gold-200 bg-gold-50 p-6 text-sm text-gold-800">
         Thanks for reaching out! We&apos;ve received your message and will get back to you soon.
       </div>
     );

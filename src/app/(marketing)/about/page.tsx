@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 
 import { CtaSection } from "@/components/marketing/cta-section";
+import { InfoSplit } from "@/components/marketing/info-split";
+import { MissionVisual } from "@/components/marketing/mission-visual";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "African Tutors is an online tutoring platform connecting students with qualified tutors.",
+  description:
+    "African Tutors is a managed online tutoring company connecting American families with carefully selected African academics for live, one-on-one tutoring.",
 };
 
 export default function AboutPage() {
@@ -14,32 +17,58 @@ export default function AboutPage() {
     <>
       <PageHeader
         eyebrow="About"
-        title="A modern platform for one-on-one online tutoring."
-        description="African Tutors connects students with qualified tutors for convenient, focused academic support, entirely online."
+        title="Academic talent has no borders."
+        description="African Tutors was built around a simple insight, and a better way to act on it."
       />
 
       <Container className="py-16">
         <div className="max-w-2xl space-y-6 text-base leading-7 text-ink-600">
           <p>
-            African Tutors was built to make it easy for students to find and work with
-            qualified tutors, and for tutors to teach without the overhead of managing
-            scheduling, payments, and communication across multiple tools.
+            There is tremendous academic talent throughout Africa &mdash; qualified educators
+            and subject-matter experts equipped to teach at the highest level. At the same
+            time, many American families want consistent, personalized tutoring for their
+            students but run into high prices for traditional one-on-one instruction.
           </p>
           <p>
-            Every part of a tutoring relationship &mdash; from the first conversation to
-            scheduling, sessions, and payment &mdash; is designed to happen on the platform.
-            That keeps things simple and consistent for both students and tutors.
+            African Tutors bridges those two realities. We built a company around recruiting,
+            vetting, and managing a network of qualified African academics, and connecting
+            them with American students who need one-on-one academic support &mdash; live,
+            online, for {" "}
+            <span className="font-semibold text-ink-900">just $19.50 an hour</span>.
           </p>
           <p>
-            We&apos;re in the early stages of building African Tutors and are focused on
-            getting the fundamentals right before expanding to more features.
+            American students get affordable, personal academic support from a real tutor.
+            Qualified African academics get access to meaningful, paid teaching opportunities.
+            African Tutors manages every part of the experience in between &mdash; recruiting,
+            approving, scheduling, and supporting every session &mdash; so families can simply
+            focus on learning.
           </p>
         </div>
       </Container>
 
+      <InfoSplit
+        eyebrow="How We Work"
+        title="A professionally managed tutoring company."
+        tone="muted"
+        visual={<MissionVisual />}
+      >
+        <p>
+          African Tutors is not an open marketplace where students and tutors find each other
+          independently. We recruit and approve every tutor, manage scheduling, and handle
+          payments, so families always know they&apos;re working with a qualified, vetted
+          professional.
+        </p>
+        <p>
+          That structure lets us stand behind the quality of every session, and lets tutors
+          focus on teaching instead of running their own independent business.
+        </p>
+      </InfoSplit>
+
       <CtaSection
         title="Interested in African Tutors?"
-        description="Create an account to get started as a student, or apply to teach as a tutor."
+        description="Create a free account to get your student started, or apply to join our tutor network."
+        secondaryHref="/apply-to-tutor"
+        secondaryLabel="Apply to Tutor"
       />
     </>
   );

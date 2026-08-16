@@ -1,18 +1,22 @@
 export const SITE_NAME = "African Tutors";
 
+export const HOURLY_RATE = "$19.50";
+
 export const SITE_DESCRIPTION =
-  "African Tutors connects students with qualified tutors for convenient, one-on-one online tutoring.";
+  "Live, one-on-one online tutoring for American students from carefully selected African academics — just $19.50 an hour.";
 
 export const PUBLIC_NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "How It Works", href: "/how-it-works" },
+  { label: "Subjects", href: "/subjects" },
   { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
 ] as const;
 
 export const FOOTER_LINKS = [
   { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-  { label: "Pricing", href: "/pricing" },
   { label: "How It Works", href: "/how-it-works" },
+  { label: "Subjects", href: "/subjects" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Contact", href: "/contact" },
 ] as const;
