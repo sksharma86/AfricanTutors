@@ -6,6 +6,49 @@
 shell, public marketing pages, responsive navigation, reusable component
 library, and core project documentation. See git history for full detail.
 
+**Phase 2.5 (final brand, pricing, customer positioning, visual identity):**
+
+- Corrected the public business model framing: African Tutors now reads
+  as a managed tutoring company (not an open marketplace) throughout the
+  site — audited and rewrote homepage, How It Works, About, Pricing,
+  navigation, and signup copy to remove marketplace/equal-prominence
+  language ("Learn/Teach" toggle, "find a tutor," etc.).
+  See `DECISIONS.md`.
+- New brand color system: near-black + warm gold (sampled from the actual
+  brand mark, `#e2a121`) + warm ivory, replacing the Phase 1 amber/navy
+  palette. Renamed the `brand-*` Tailwind tokens to `gold-*` across the
+  entire codebase to match.
+- New brand mark: `public/brand/mark.png`, a cleaned, transparent
+  recreation of the supplied Africa-silhouette + human-profile +
+  graduation-cap reference image, with true alpha transparency (verified
+  programmatically, not just visually). Wired into a `BrandMark` +
+  `BrandLockup` component pair used in the navbar and footer, plus
+  Next.js's file-based `icon.png`/`apple-icon.png` favicon convention. See
+  `DECISIONS.md` for why it was recreated rather than cropped from the
+  original.
+- Real pricing is live everywhere it matters: **$19.50/hour** appears in
+  the hero (with a dedicated price card), a dedicated homepage pricing
+  section, the Pricing page, and the footer tagline. Tutor compensation is
+  recorded only as internal information in `PROJECT_SPEC.md` and never
+  appears in any customer-facing surface.
+- Rebuilt the homepage into a deliberate conversion journey: Hero → Why
+  African Tutors → How It Works → Why Parents Choose Us → The Global
+  Advantage → Subjects → Simple Pricing → Our Mission → Final CTA. Added a
+  new `/subjects` page and rewrote `/pricing`, `/about`, and
+  `/how-it-works` around the managed-service, parent-facing positioning.
+- Signup framing split by prominence, with **no change to the underlying
+  account/authorization logic**: `/signup` (primary, in nav and every CTA)
+  now shows a "Create your student account" form with no Learn/Teach
+  toggle; a new, secondary `/apply-to-tutor` page (linked only from the
+  footer and a small text link) handles the tutor path. Both call the same
+  `SignupForm` component with a fixed `role` prop instead of a toggle.
+- Verified Phase 2's authentication, database, RLS, and anti-circumvention
+  architecture is fully intact after all of the above: `npm run test:rls`
+  (12/12 assertions) still passes unchanged, and no migration, RLS policy,
+  grant, trigger, or `proxy.ts` logic was touched this phase.
+- Quality tooling re-verified: TypeScript, ESLint, and a production build
+  all pass with zero errors after the redesign.
+
 **Phase 2 (authentication, database, roles, anti-poaching foundation):**
 
 - Real database schema implemented as migrations
@@ -66,21 +109,24 @@ library, and core project documentation. See git history for full detail.
 
 ## Currently Working On
 
-Nothing in progress. Phase 2 is code-complete and has been verified as
-thoroughly as possible without a live Supabase project. Waiting on the
-owner action described below before the next phase can be fully verified
-end-to-end.
+Nothing in progress. Phase 2.5 is complete. Phase 2's authentication and
+database work is still code-complete and verified as thoroughly as
+possible without a live Supabase project. Waiting on the owner action
+described below before either phase can be fully verified end-to-end
+against a real, connected Supabase project.
 
 ## Next
 
 Once a Supabase project is connected (see "Blocked"): do a real end-to-end
-smoke test against it (sign up as a student, sign up as a tutor, confirm
-the tutor starts pending, promote an admin, approve the tutor from the
-Admin Dashboard, confirm the tutor then sees full Tutor Dashboard content,
-confirm a student can never reach `/dashboard/tutor` or `/dashboard/admin`
-by typing the URL). After that, Phase 3 (subjects catalog admin UI, tutor
-availability, and the beginning of booking) is the recommended next
-development task — see `TODO.md`.
+smoke test against it (sign up as a student, sign up as a tutor via
+`/apply-to-tutor`, confirm the tutor starts pending, promote an admin,
+approve the tutor from the Admin Dashboard, confirm the tutor then sees
+full Tutor Dashboard content, confirm a student can never reach
+`/dashboard/tutor` or `/dashboard/admin` by typing the URL). After that,
+Phase 3 (subjects catalog admin UI, tutor availability, and the beginning
+of booking) is the recommended next development task — see `TODO.md`.
+Prompt 2.5 was explicitly scoped to stop before both live Supabase setup
+and Phase 3.
 
 ## Blocked
 
@@ -99,6 +145,12 @@ credentials are still not needed yet (see `SETUP.md`).
 
 ## Known Issues
 
+- **The brand mark asset is a recreated raster, not a final production
+  vector file.** `public/brand/mark.png` closely recreates the supplied
+  reference's graphic concept and has real, verified transparency, but a
+  proper vector (SVG) or high-resolution production file from a designer
+  should replace it when available — see `PROJECT_SPEC.md` → "Open Items"
+  and `DECISIONS.md`.
 - **Not yet tested against a real Supabase project.** Everything in this
   phase has been verified either by a local PostgreSQL test harness (for
   the database/RLS logic — see `DATABASE.md`) or by running the Next.js
@@ -125,10 +177,16 @@ credentials are still not needed yet (see `SETUP.md`).
 
 ## Last Verified
 
-2026-08-16 — `npm run build` (production build), `npx tsc --noEmit`,
-`npm run lint`, and `npm run test:rls` (12/12 database RLS/anti-poaching
-assertions) all pass with zero errors. Verified via local dev server that
-every route (public pages, login, signup, forgot-password, reset-password,
-auth/error, and all three dashboards) returns HTTP 200 and renders
-correctly in the "Supabase not configured" fallback state — this is the
-most that could be verified without a live, connected Supabase project.
+2026-08-16 (Phase 2.5) — `npm run build` (production build),
+`npx tsc --noEmit`, `npm run lint`, and `npm run test:rls` (12/12 database
+RLS/anti-poaching assertions, unchanged and still passing) all pass with
+zero errors. Verified via local dev server, at both desktop and mobile
+(390px) widths, that: the homepage's full new section sequence renders
+correctly with no layout bugs; the new brand mark renders correctly in the
+navbar, footer, and browser tab (favicon); $19.50/hour is visible above
+the fold on both desktop and mobile without scrolling; `/pricing`,
+`/how-it-works`, `/about`, and `/subjects` all render the new copy
+correctly; `/signup` shows the student-only form with no Learn/Teach
+toggle and a secondary tutor-application link; `/apply-to-tutor` renders
+its own distinct form; and every route returns HTTP 200 with no console
+errors.

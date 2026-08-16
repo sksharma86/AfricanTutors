@@ -1,9 +1,16 @@
 # African Tutors — Architecture
 
 This document describes the technical architecture established during
-Phase 1 (project foundation) and Phase 2 (authentication, database, and
-role/permission enforcement). It will grow as booking, payments, video, and
+Phase 1 (project foundation), Phase 2 (authentication, database, and
+role/permission enforcement), and Phase 2.5 (final brand, pricing, and
+customer-facing positioning). It will grow as booking, payments, video, and
 messaging are built in later phases.
+
+Phase 2.5 changed public-facing copy, navigation, signup framing, and the
+visual/brand system (see "Brand & Visual System" below). It made **no**
+changes to authentication, the database schema, Row Level Security, or
+role/permission enforcement — everything in this document about those
+topics from Phase 2 is unchanged and still applies.
 
 ## Overall Application Architecture
 
@@ -34,8 +41,8 @@ no native mobile app.
 ```
 src/
   app/                    App Router routes (pages, layouts, API routes)
-    (marketing pages)     /, /how-it-works, /pricing, /about, /contact
-    (marketing)/login, signup, forgot-password, reset-password  Auth pages
+    (marketing pages)     /, /how-it-works, /subjects, /pricing, /about, /contact
+    (marketing)/signup, apply-to-tutor, login, forgot-password, reset-password  Auth pages
     auth/
       confirm/route.ts     Handles email confirmation + password recovery links
       error/               Friendly "that link didn't work" page
@@ -47,10 +54,13 @@ src/
       admin/                Admin dashboard: tutor application review queue
         actions.ts           Server Action: admin approves/rejects/suspends a tutor
     api/                  Route handlers (server-only logic)
+    icon.png, apple-icon.png   Favicon / Apple touch icon (Next.js file-based icon convention)
   components/
     ui/                   Small generic building blocks (Button, Container, Badge)
+    brand/                 BrandMark (icon) and BrandLockup (icon + wordmark)
     layout/                Navbar, Footer, mobile menu
-    marketing/             Homepage/marketing sections (Hero, FeatureGrid, Steps, CTA)
+    marketing/             Homepage/marketing sections (Hero, FeatureGrid, Steps, CTA,
+                             PriceHighlight, SubjectsGrid, InfoSplit, mission/advantage visuals)
     auth/                   Login/signup/forgot/reset forms and auth UI
     dashboard/              Dashboard shell, tutor application form, admin review card
   lib/
@@ -59,8 +69,10 @@ src/
       database.types.ts       Hand-written types mirroring supabase/migrations/*.sql
       errors.ts                Friendly Auth error message mapping
     roles.ts                 Role/TutorStatus types and role → dashboard path mapping
-    constants.ts              Site-wide constants (nav links, site name)
+    constants.ts              Site-wide constants (nav links, site name, hourly rate)
   proxy.ts                  Session refresh + real server-enforced route protection
+public/
+  brand/mark.png            Production brand mark asset (see "Brand & Visual System")
 scripts/
   promote-admin.mjs         One-off script to grant the admin role (service role key)
 supabase/
@@ -71,6 +83,40 @@ supabase/
 Components are intentionally split into small, reusable pieces (e.g.
 `FeatureGrid`, `Steps`, `CtaSection`, `DashboardShell`) so future pages can be
 assembled from existing building blocks instead of duplicating markup.
+
+## Brand & Visual System
+
+- **Graphic mark.** `public/brand/mark.png` is the production brand asset:
+  a transparent-background, tightly cropped silhouette of Africa merged
+  with a human profile wearing a graduation cap (gold/near-black split).
+  It was produced by generating a clean icon-style recreation of the
+  supplied reference image and removing its background programmatically
+  (thresholding + alpha compositing), because the reference was a flattened
+  raster with a busy background rather than an extractable transparent
+  asset. See `DECISIONS.md` for the reasoning and what should replace it.
+- **Components.** `src/components/brand/brand-mark.tsx` renders the icon
+  alone (used for compact/mobile placements); `brand-lockup.tsx` pairs it
+  with the "African Tutors" wordmark horizontally (used in the navbar and
+  footer) — a deliberate adaptation of the reference's tall, stacked
+  composition for a website header. `src/app/icon.png` and
+  `src/app/apple-icon.png` (Next.js's file-based icon convention) are
+  derived from the same source, so the favicon and Apple touch icon match
+  the in-page mark automatically.
+- **Color tokens.** Defined in `src/app/globals.css` as CSS variables
+  consumed by Tailwind v4's `@theme inline`: a `gold-*` ramp (sampled from
+  the brand mark's actual gold, `#e2a121`) and an `ink-*` ramp (a warm,
+  neutral near-black scale anchored at the mark's black, `#131311` — not a
+  blue-tinted navy). `--background`/`--foreground` are warm ivory/near-black.
+  Gold is used deliberately sparingly (primary CTAs, pricing emphasis,
+  small accents/icons) rather than as a flooded section background — see
+  `DECISIONS.md`.
+- **Contrast.** Gold-background buttons/badges use near-black text
+  (`text-ink-900`), not white — white text on the gold ramp fails
+  accessible contrast ratios at the lightness levels that read as "gold"
+  rather than "brown." Small text on light backgrounds (eyebrow labels,
+  inline links) uses `gold-700`, which clears WCAG AA contrast against
+  white/ivory; earlier, lighter steps of the ramp are reserved for
+  backgrounds/accents, not text.
 
 ## Backend Strategy
 
@@ -111,12 +157,17 @@ which is the current recommended pattern for Next.js App Router:
 
 Implemented auth flows (email/password):
 
-- **Registration** — email + password via `supabase.auth.signUp()`. Signup
-  lets a visitor indicate whether they want to learn (student) or apply to
-  teach (tutor); this is sent as `requested_role` in Supabase Auth user
-  metadata and only ever used by a database trigger (see below) to decide
-  the *starting* state — it never grants privileged access by itself. A
-  "tutor" signup starts as `tutor_profiles.status = 'pending'`.
+- **Registration** — email + password via `supabase.auth.signUp()`.
+  `SignupForm` takes a fixed `role` prop rather than presenting a
+  Learn/Teach toggle: `/signup` (the primary, customer-facing path) renders
+  it with `role="student"`; `/apply-to-tutor` (a secondary, lower-prominence
+  page linked from the footer and a small text link) renders it with
+  `role="tutor"`. Either way the role is sent as `requested_role` in
+  Supabase Auth user metadata and only ever used by a database trigger (see
+  below) to decide the *starting* state — it never grants privileged access
+  by itself. A tutor signup starts as `tutor_profiles.status = 'pending'`.
+  This is a presentation-only change from Phase 2 (see `DECISIONS.md`) —
+  the signUp call, trigger, and pending-by-default behavior are identical.
 - **Tutor application** — once logged in, a pending (or approved) tutor
   fills out a short application form (headline, bio, education, years of
   experience, subjects) via a Server Action

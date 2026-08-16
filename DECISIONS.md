@@ -144,6 +144,109 @@ logic (RLS policies, grants, triggers, functions) that will run unmodified
 on the real project, though a final smoke test against a live, connected
 Supabase project is still recommended once one exists (see `SETUP.md`).
 
+## 2026-08-16 — African Tutors is a managed tutoring company, not an open marketplace
+
+**Decision:** African Tutors is positioned publicly as a managed online
+tutoring company that recruits, vets, approves, and manages a network of
+tutors, and sells tutoring directly to customers — not as a two-sided
+marketplace where students and tutors find and choose each other. Students
+and tutors are never given equal prominence in public navigation, CTAs, or
+homepage messaging.
+
+**Reasoning:** This reflects the actual business model: African Tutors
+controls customer acquisition, pricing, tutor recruiting/approval, and
+scheduling/payments. Marketplace-style framing ("browse tutors," "students
+and tutors join equally") would misrepresent that model to customers and
+would also work against the anti-circumvention architecture from Phase 2 —
+a marketplace mental model encourages the exact independent, direct
+tutor↔student relationships that architecture is designed to avoid.
+
+## 2026-08-16 — Primary customer: American parents; secondary: American students
+
+**Decision:** The public site speaks primarily to American parents
+purchasing tutoring for their children, secondarily to American students
+purchasing tutoring for themselves. The brand is designed to resonate
+particularly strongly with African American families, while remaining
+broadly welcoming.
+
+**Reasoning:** This is the actual target customer for the business. A
+parent-first homepage (leading with price, professionalism, and trust
+signals rather than a generic "connects students and tutors" pitch)
+answers the questions a paying parent actually has, in the order they have
+them — see `PROJECT_SPEC.md` → "Primary Customer".
+
+## 2026-08-16 — Customer price is $19.50/hour; tutor compensation is private
+
+**Decision:** The public customer price for live, one-on-one online
+tutoring is $19.50/hour, displayed prominently across the site (hero,
+pricing page, homepage pricing section, footer). Tutor compensation
+($5/completed hour) is recorded only in `PROJECT_SPEC.md` as internal
+business information and never appears in any customer-facing surface —
+copy, metadata, or UI.
+
+**Reasoning:** A real, final price is a stronger and more honest
+acquisition tool than a placeholder, and the task was explicit that this
+is a real business decision. Tutor compensation and customer price are
+different concerns for different audiences; showing both invites
+unhelpful comparisons ("the tutor only gets...") that don't serve either a
+customer's or a tutor's understanding of the value they're each getting,
+and internal margin information is not something a commercial company
+publishes. This mirrors the existing `payments` vs. `tutor_earnings`
+separation already established in `DATABASE.md`.
+
+## 2026-08-16 — Brand mark: recreated from the supplied reference, not extracted from it
+
+**Decision:** The production brand asset (`public/brand/mark.png`) is a
+freshly generated icon that closely recreates the supplied reference
+image's graphic concept (Africa silhouette + human profile + graduation
+cap, gold/black split), rather than a crop of the original file, with its
+background removed programmatically to produce a real transparent PNG.
+
+**Reasoning:** The supplied reference was a flattened raster (a phone
+screenshot–style composition with the wordmark baked in and a background
+that wasn't cleanly separable into a transparent icon) — cropping it
+directly would have produced a visible rectangular background artifact in
+the navbar, which the task explicitly said to avoid. Recreating the same
+graphic concept as a clean icon, then verifying true alpha transparency
+programmatically (not just visually), produces a usable production asset
+now while preserving the graphic identity exactly as specified. This
+should be treated as a placeholder for a real vector/production file from
+a designer — see `PROJECT_SPEC.md` → "Open Items".
+
+## 2026-08-16 — Typography and color system derived from, but not copied from, the reference image
+
+**Decision:** The supplied reference image's wordmark typography is not
+used anywhere on the site — "African Tutors" is set in the site's existing
+type system (Geist Sans for body copy, Fraunces for display/headings). The
+color system was rebuilt around the reference's actual gold (`#e2a121`,
+sampled directly from the generated mark) and a warm, neutral near-black
+(`#131311`), replacing the previous amber/navy palette from Phase 1.
+
+**Reasoning:** The task explicitly said the reference's typography is not
+mandatory and that the graphic mark, not the wordmark font, is the
+important brand element. Deriving the color ramp from a real sampled color
+(rather than an approximate "gold-ish" choice) keeps the site visually
+tied to the actual brand mark wherever gold appears.
+
+## 2026-08-16 — Signup framing changed; underlying account/application mechanics unchanged
+
+**Decision:** `/signup` (primary, in main navigation and every CTA) no
+longer presents a Learn/Teach toggle — it renders `SignupForm` fixed to
+`role="student"`. A new, secondary `/apply-to-tutor` page (linked only from
+the footer and a small secondary text link) renders the same form fixed to
+`role="tutor"`. Nothing about the Supabase `signUp()` call, the
+`requested_role` metadata, the `handle_new_user` trigger, or a tutor
+starting as `tutor_profiles.status = 'pending'` changed — only which page
+presents which role, and how prominently.
+
+**Reasoning:** The task was explicit that student and tutor signup must
+not be presented as equal choices. Since the actual account/authorization
+mechanics from Phase 2 were already correct and already thoroughly tested,
+the right fix was a presentation-layer change (which page shows which
+fixed role) rather than touching the authentication or database logic at
+all — minimizing risk to already-verified functionality while fully
+addressing the positioning requirement.
+
 ## 2026-08-16 — The first administrator is created by direct SQL/service-role script, never through the app
 
 **Decision:** There is no in-app path — no button, no hidden route, no
