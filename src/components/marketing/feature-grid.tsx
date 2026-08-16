@@ -24,7 +24,7 @@ export function FeatureGrid({
       <Container>
         <div className="max-w-2xl">
           {eyebrow ? (
-            <p className="text-sm font-semibold tracking-wide text-brand-600 uppercase">
+            <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">
               {eyebrow}
             </p>
           ) : null}
@@ -42,7 +42,7 @@ export function FeatureGrid({
               key={feature.title}
               className="rounded-2xl border border-ink-100 bg-white p-6 transition-shadow hover:shadow-md"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-50 text-gold-700">
                 {feature.icon}
               </div>
               <h3 className="mt-5 text-base font-semibold text-ink-900">{feature.title}</h3>
