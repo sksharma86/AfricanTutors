@@ -2,16 +2,36 @@ import type { Metadata } from "next";
 
 import { ComingSoonCard } from "@/components/dashboard/coming-soon-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Student Dashboard",
 };
 
-export default function StudentDashboardPage() {
+// Always personalized, private data — never statically cache this page.
+export const dynamic = "force-dynamic";
+
+export default async function StudentDashboardPage() {
+  const supabase = await createSupabaseServerClient();
+
+  let displayName = "there";
+
+  if (supabase) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", userData.user.id)
+        .single();
+      if (profile) displayName = profile.display_name;
+    }
+  }
+
   return (
     <DashboardShell
       role="student"
-      title="Welcome back"
+      title={`Welcome back, ${displayName}`}
       description="This is where you'll manage tutoring sessions, bookings, and messages."
       navItems={[
         { label: "Overview", available: true },
