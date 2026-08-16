@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+import type { Database } from "./database.types";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./config";
 
 /**
@@ -12,14 +13,14 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./config"
  *
  * Returns `null` when Supabase has not been configured yet.
  */
-export async function createSupabaseServerClient(): Promise<SupabaseClient | null> {
+export async function createSupabaseServerClient(): Promise<SupabaseClient<Database> | null> {
   if (!isSupabaseConfigured) {
     return null;
   }
 
   const cookieStore = await cookies();
 
-  return createServerClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+  return createServerClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
