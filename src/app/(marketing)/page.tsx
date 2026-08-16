@@ -1,7 +1,9 @@
 import { CtaSection } from "@/components/marketing/cta-section";
 import { FeatureGrid, type Feature } from "@/components/marketing/feature-grid";
 import { Hero } from "@/components/marketing/hero";
+import { PricingTiers } from "@/components/marketing/pricing-tiers";
 import { Steps } from "@/components/marketing/steps";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 const features: Feature[] = [
   {
@@ -38,7 +40,7 @@ const features: Feature[] = [
   {
     title: "Affordable Access",
     description:
-      "Pay per session through the platform with clear, transparent pricing &mdash; no hidden fees.",
+      "Your first 30-minute session is free. After that it's a flat $12 for 30 minutes or $20 for 60 &mdash; clear pricing, no hidden fees.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1-3.5 2.4c0 3 7 1.4 7 4.3 0 1.5-1.6 2.6-3.5 2.6s-3.5-1-3.5-2.5" />
@@ -98,15 +100,19 @@ export default function HomePage() {
             description: "We connect you with a qualified tutor available for your subject.",
           },
           {
-            title: "Attend your session",
-            description: "Meet online through the platform &mdash; no extra apps required.",
+            title: "Start with a free session",
+            description:
+              "Your first 30-minute session is free &mdash; meet online, no extra apps or card required.",
           },
         ]}
       />
 
+      <PricingTiers />
+
       <CtaSection
-        title="Ready to get started?"
-        description="Create a free account and take the first step toward focused, one-on-one tutoring."
+        title="Ready to try your first session free?"
+        description="Create a free account and book your student's free 30-minute session with a real tutor."
+        primaryLabel={FREE_TRIAL_CTA}
       />
     </>
   );

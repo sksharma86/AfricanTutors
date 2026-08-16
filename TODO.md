@@ -32,12 +32,24 @@ actually done.
       student away from `/dashboard/tutor`, etc.)
 - [ ] Admin tooling (even minimal) to approve pending tutor applications
 
+## Pricing & Free Trial (finalized — Prompt 2.7)
+
+- [x] Customer pricing finalized: $12 / 30 min, $20 / 60 min (replaces the
+      obsolete $19.50/hour figure)
+- [x] First 30-minute session free for new students; no card/payment required
+- [x] Public site + docs updated; tutor compensation kept private
+      (`BUSINESS_MODEL.md`)
+
 ## Phase 3 — Subjects, Availability & Booking
 
 - [ ] `subjects` and `tutor_subjects` tables + admin management UI
 - [ ] `tutor_availability` model and a way for tutors to set it
 - [ ] Student-facing tutor search/matching flow
-- [ ] `bookings` table + booking creation flow (status lifecycle)
+- [ ] `bookings` table + booking creation flow (status lifecycle), supporting
+      **both 30-minute and 60-minute** sessions
+- [ ] Free-trial eligibility: let a new student book one free 30-minute session
+      (no card), and track claimed / booked / completed / tutor / converted
+- [ ] Wire the "Try 30 Minutes Free" CTA into the real booking flow
 - [ ] Booking views for student and tutor dashboards
 
 ## Phase 4 — Payments (Stripe)
@@ -79,6 +91,11 @@ actually done.
 - [ ] Admin dashboards: bookings overview, payments overview, tutor
       performance review
 - [ ] `admin_settings` table for platform-wide configuration
+- [ ] Free-trial conversion analytics (critical): visitor→signup,
+      signup→trial booked, trial booked→completed, completed→first paid,
+      first→second paid, 30/60/90-day retention, avg hours/active student,
+      CAC, cost per completed free trial, trial→paid rate (overall and
+      per-tutor). See `BUSINESS_MODEL.md` for the full metric set.
 
 ## Ongoing / Cross-Cutting
 

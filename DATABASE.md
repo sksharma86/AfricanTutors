@@ -117,6 +117,8 @@ The central hub entity.
 | `subject_id` | FK → `subjects.id` |
 | `scheduled_start` | timestamptz |
 | `scheduled_end` | timestamptz |
+| `duration_minutes` | `30` \| `60`. Booking must support both finalized session lengths. |
+| `is_free_trial` | boolean. True for a new student's free 30-minute introductory session. |
 | `status` | `requested` \| `confirmed` \| `completed` \| `cancelled` \| `no_show` etc. |
 | `payment_id` | FK → `payments.id`, nullable until paid. |
 | `video_session_id` | FK → `video_sessions.id`, nullable until a session is created. |
@@ -244,10 +246,40 @@ bookings 1—N internal_messages
 internal_messages 1—N circumvention_flags
 ```
 
+### Free-trial tracking (planned)
+
+The finalized business model gives each legitimate new student one free
+30-minute introductory session (see `PROJECT_SPEC.md` / `BUSINESS_MODEL.md`).
+The data model must eventually answer, per student:
+
+- Whether the student has **claimed** the free trial.
+- Whether the free session was **booked** (a `bookings` row with
+  `is_free_trial = true`).
+- Whether it was **completed** (that booking reaching `status = 'completed'`).
+- **Which tutor** conducted it (the booking's `tutor_id`).
+- Whether the student **subsequently purchased a paid session** (a later
+  `bookings` row with `is_free_trial = false` and a succeeded payment).
+
+Intended shape (to be built in Prompt 3, not now):
+
+- `bookings.is_free_trial` and `bookings.duration_minutes` (added above) carry
+  most of this; free-trial status per student is derived from the student's
+  bookings rather than duplicated.
+- Optionally a narrow `student_profiles.free_trial_claimed_at` timestamp for a
+  fast "has this student already used the free trial?" check, set the first time
+  a free-trial booking is created.
+
+Keep anti-abuse **simple** at launch: a small amount of free-trial abuse is an
+accepted acquisition cost. Do **not** add card verification, fingerprinting, or
+invasive surveillance. The above is enough to *measure* abuse and free-trial →
+paid conversion before deciding whether any friction is warranted.
+
 ## Not Built Yet
 
-No migrations, RLS policies, or Supabase project have been created in this
-phase — this document is the plan those will be built from once a Supabase
-project is connected (see `SETUP.md`). We are intentionally not creating
-every table now to avoid over-engineering ahead of real requirements
-(pricing, booking flow specifics, etc.) from the owner.
+The booking-related tables above (including `bookings.duration_minutes` /
+`is_free_trial` and the free-trial tracking) are **not built yet** — they are
+the plan for Prompt 3's booking system, which must support both 30-minute and
+60-minute sessions plus free-trial eligibility. This pricing/free-trial update
+(Prompt 2.7) intentionally changes only customer-facing content and
+documentation; no database migrations are added or rerun here. We avoid creating
+booking tables ahead of the real booking requirements.

@@ -36,7 +36,7 @@ export function Navbar() {
             Log In
           </LinkButton>
           <LinkButton href="/signup" variant="primary" size="sm">
-            Get Started
+            Try 30 Min Free
           </LinkButton>
         </div>
 

@@ -73,3 +73,48 @@ charity/nonprofit visual language.
 technology company that happens to focus on Africa, not a stereotype of
 "African" visual tropes or a nonprofit aesthetic. This keeps the platform
 positioned as a serious commercial product.
+
+## 2026-08-16 — Finalized pricing: $12 / 30 min and $20 / 60 min
+
+**Decision:** Customer pricing is $12 for a 30-minute session and $20 for a
+60-minute session. The earlier `$19.50/hour` planning figure is obsolete and
+removed everywhere.
+
+**Reasoning:** The owner finalized a per-session model with two clear session
+lengths. Flat, per-session pricing is simpler to communicate than an hourly rate
+and maps cleanly onto the two session lengths Prompt 3's booking system will
+support.
+
+## 2026-08-16 — First 30-minute session is free, with no card required
+
+**Decision:** Every legitimate new student gets one free 30-minute one-on-one
+tutoring session. No credit card, debit card, deposit, subscription, or payment
+authorization is required to claim or book it. It is a real tutoring session,
+never marketed as a "free consultation."
+
+**Reasoning:** Fulfillment cost for a 30-minute intro session is very low
+(~$2.50 of tutor labor — internal, see `BUSINESS_MODEL.md`), and reducing
+customer-acquisition friction at launch matters more than preventing every case
+of free-trial abuse. Requiring a card would suppress conversions from a
+new, unfamiliar service more than trial abuse would cost.
+
+## 2026-08-16 — Accept low-level free-trial abuse; monitor before adding friction
+
+**Decision:** We will not build invasive fraud prevention, fingerprinting, or
+card verification for the free trial now. We accept that a small amount of abuse
+may occur, will track free-trial usage in the data model, and will monitor abuse
+before introducing any stronger friction.
+
+**Reasoning:** Over-engineering anti-abuse ahead of real data would add friction
+and complexity for little benefit given the low per-trial cost. The future data
+model still records enough to measure abuse and free-trial → paid conversion.
+
+## 2026-08-16 — Tutor compensation is private internal information
+
+**Decision:** Tutor compensation and unit economics ($5/hour planned pay, and
+the derived labor costs) live only in `BUSINESS_MODEL.md` and never in
+customer-facing code, content, or `src/lib/pricing.ts`.
+
+**Reasoning:** Exposing tutor pay or margins publicly would harm negotiating
+position and brand perception. Keeping a hard separation between customer-facing
+pricing (`src/lib/pricing.ts`) and internal economics prevents accidental leaks.
