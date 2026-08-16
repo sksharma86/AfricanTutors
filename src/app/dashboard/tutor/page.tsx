@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 
 import { ComingSoonCard } from "@/components/dashboard/coming-soon-card";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Tutor Dashboard",
 };
 
-export default function TutorDashboardPage() {
+export default async function TutorDashboardPage() {
+  await requireRole("tutor", "/dashboard/tutor");
+
   return (
     <DashboardShell
       role="tutor"
