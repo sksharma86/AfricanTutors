@@ -39,7 +39,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/signup" className="text-sm text-ink-600 hover:text-ink-900">
-                  Get Started
+                  Try a free session
                 </Link>
               </li>
             </ul>

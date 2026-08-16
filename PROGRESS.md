@@ -39,6 +39,12 @@
   profile data, bookings as the hub for payments/sessions/recordings,
   `internal_messages` + `circumvention_flags` planned as the only sanctioned
   communication channel).
+- Pricing & free trial finalized (Prompt 2.7): public site now shows $12 /
+  30 min and $20 / 60 min, with a prominent "first 30 minutes free, no credit
+  card required" acquisition message across the hero, pricing page, homepage,
+  and nav CTAs. Customer-facing pricing is centralized in `src/lib/pricing.ts`;
+  tutor compensation/economics stay private in `BUSINESS_MODEL.md`. The obsolete
+  $19.50/hour figure is not present anywhere.
 - Quality tooling verified: TypeScript (`tsc --noEmit`), ESLint
   (`npm run lint`), and a production build (`npm run build`) all pass with
   zero errors/warnings.
@@ -77,8 +83,9 @@ only be requested once the corresponding feature is actually being built
 - The contact form accepts submissions and logs them server-side but does
   not yet send an email anywhere, since no transactional email provider is
   connected yet.
-- Pricing page intentionally has no real dollar amounts yet, pending
-  business input from the owner (see `PROJECT_SPEC.md` → "Open Items").
+- Pricing is finalized ($12 / 30 min, $20 / 60 min, first 30-minute session
+  free with no card). The booking flow that the "Try 30 Minutes Free" CTA will
+  eventually lead into is a Prompt 3 item and is intentionally not built yet.
 - No automated test suite exists yet. Given how much of the current
   surface is placeholder UI that will change shape once Supabase/Stripe/
   Twilio are wired in, TypeScript + ESLint + a passing production build
