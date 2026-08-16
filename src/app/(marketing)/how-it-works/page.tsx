@@ -4,6 +4,7 @@ import { CtaSection } from "@/components/marketing/cta-section";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Steps } from "@/components/marketing/steps";
 import { Container } from "@/components/ui/container";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "How It Works",
@@ -36,7 +37,8 @@ export default function HowItWorksPage() {
           },
           {
             title: "Meet online",
-            description: "Join your session directly through African Tutors.",
+            description:
+              "Join your session directly through African Tutors. Your first 30 minutes are free.",
           },
         ]}
       />
@@ -78,7 +80,8 @@ export default function HowItWorksPage() {
 
       <CtaSection
         title="See it for yourself"
-        description="Create a free account to explore African Tutors as a student, or apply to teach."
+        description="Don't take our word for it &mdash; let your student experience a real tutor with a free 30-minute session."
+        primaryLabel={FREE_TRIAL_CTA}
         secondaryHref="/pricing"
         secondaryLabel="View Pricing"
       />

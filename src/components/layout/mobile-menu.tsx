@@ -53,7 +53,7 @@ export function MobileMenu() {
               Log In
             </LinkButton>
             <LinkButton href="/signup" variant="primary" className="w-full" onClick={() => setOpen(false)}>
-              Get Started
+              Try 30 Min Free
             </LinkButton>
           </div>
         </div>

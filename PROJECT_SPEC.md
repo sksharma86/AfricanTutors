@@ -13,6 +13,30 @@
 African Tutors is a responsive web-based tutoring platform that connects
 students with tutors in Africa for online, one-on-one tutoring.
 
+## Pricing & Free Trial (finalized — Prompt 2.7)
+
+Customer-facing pricing:
+
+- **30-minute session: $12**
+- **60-minute session: $20**
+- **A new student's first 30-minute session is FREE.**
+
+The free session is a **real one-on-one tutoring session** (never described as a
+"free consultation" or sales call). **No credit card or payment method is
+required** to claim or book it. Minimizing acquisition friction is prioritized
+over eliminating every instance of free-trial abuse; a small amount of abuse is
+an accepted launch cost and should be monitored before stronger friction is
+added.
+
+`$19.50/hour` is **obsolete** and must not appear anywhere. Tutor compensation
+and unit economics are **private internal information** (see `BUSINESS_MODEL.md`)
+and must never appear in customer-facing code or content.
+
+The only approved customer-facing policies are the three above (30 min = $12,
+60 min = $20, first 30-minute session free with no card). Do not promise
+rescheduling, cancellation, refund, replacement, subscription, or package terms
+until they are finalized.
+
 ## Core Business Requirement: Anti-Poaching / Anti-Circumvention
 
 This is a **central** requirement, not a minor feature:
@@ -76,7 +100,6 @@ patterns, charity/nonprofit visual language, and unverified marketing claims
 
 ## Open Items Requiring Owner Input (not yet specified)
 
-- Final pricing model and specific session rates
 - Subject catalog and grade/level coverage
 - Tutor vetting/approval criteria and process details
 - Target countries/regions and any regulatory considerations
