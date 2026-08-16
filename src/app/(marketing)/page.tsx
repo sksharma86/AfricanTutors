@@ -1,41 +1,41 @@
 import { CtaSection } from "@/components/marketing/cta-section";
-import { FeatureGrid, type Feature } from "@/components/marketing/feature-grid";
 import { GlobalAdvantageVisual } from "@/components/marketing/global-advantage-visual";
 import { Hero } from "@/components/marketing/hero";
 import { InfoSplit } from "@/components/marketing/info-split";
 import { MissionVisual } from "@/components/marketing/mission-visual";
+import { PhotoFrame } from "@/components/marketing/photo-frame";
 import { PriceHighlight } from "@/components/marketing/price-highlight";
 import { Steps } from "@/components/marketing/steps";
-import { SubjectsGrid } from "@/components/marketing/subjects-grid";
+import { SubjectsPreview } from "@/components/marketing/subjects-preview";
+import { ValueList, type ValueItem } from "@/components/marketing/value-list";
 
-const whyAfricanTutors: Feature[] = [
+const qualityPoints: ValueItem[] = [
   {
-    title: "Real Human Tutors",
+    title: "A real tutor, not a chatbot",
     description:
-      "Every session is live and one-on-one with a real tutor \u2014 not a chatbot. Patient explanations and real accountability, every time.",
+      "AI can explain a concept. A great tutor notices when a student still isn't getting it, and adjusts. Every session is live and one-on-one.",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 9.5 12 5l7.5 4.5-7.5 4.5-7.5-4.5Z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V16c0 1 2.5 2.5 5 2.5s5-1.5 5-2.5v-4.5" />
       </svg>
     ),
   },
   {
-    title: "Genuinely Affordable",
-    description:
-      "Consistent one-on-one tutoring can get expensive fast. Our global academic network lets us offer real tutoring for just $19.50 an hour.",
+    title: "Selected and approved",
+    description: "Every tutor is reviewed by our team before they teach a single session.",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1-3.5 2.4c0 3 7 1.4 7 4.3 0 1.5-1.6 2.6-3.5 2.6s-3.5-1-3.5-2.5" />
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-5 w-5">
+        <circle cx="10" cy="10" r="8.25" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 10.25 9 12.75l4.5-5.5" />
       </svg>
     ),
   },
   {
-    title: "Fully Managed",
-    description:
-      "African Tutors selects, approves, and manages every tutor, and handles scheduling and payments from start to finish.",
+    title: "Fully managed by African Tutors",
+    description: "We handle scheduling and payments, so you can focus on your student's progress.",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-5 w-5">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -47,67 +47,23 @@ const whyAfricanTutors: Feature[] = [
   },
 ];
 
-const whyParentsChooseUs: Feature[] = [
-  {
-    title: "One-on-One Attention",
-    description: "Every session is just your student and their tutor \u2014 no group classes, no distractions.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <circle cx="12" cy="8" r="3.25" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 19.5c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6" />
-      </svg>
-    ),
-  },
-  {
-    title: "Qualified, Approved Tutors",
-    description: "Every tutor is reviewed and approved by our team before they teach a single session.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 9.5 12 5l7.5 4.5-7.5 4.5-7.5-4.5Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V16c0 1 2.5 2.5 5 2.5s5-1.5 5-2.5v-4.5" />
-      </svg>
-    ),
-  },
-  {
-    title: "Just $19.50 an Hour",
-    description: "Transparent, affordable pricing with no hidden fees and no long-term contract.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M15.5 9.5c0-1.4-1.6-2.5-3.5-2.5s-3.5 1-3.5 2.4c0 3 7 1.4 7 4.3 0 1.5-1.6 2.6-3.5 2.6s-3.5-1-3.5-2.5" />
-      </svg>
-    ),
-  },
-  {
-    title: "Flexible Online Scheduling",
-    description: "Book sessions that fit your family's schedule, and reschedule when life happens.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v3M17.25 3v3M4 8.25h16M5.5 6h13A1.5 1.5 0 0 1 20 7.5v11A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6Z" />
-      </svg>
-    ),
-  },
-  {
-    title: "Professionally Managed",
-    description: "African Tutors handles scheduling, payments, and support so you don't have to.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75A1.5 1.5 0 0 1 5.25 5.25h13.5a1.5 1.5 0 0 1 1.5 1.5v7.5a1.5 1.5 0 0 1-1.5 1.5H12l-3.75 3v-3H5.25a1.5 1.5 0 0 1-1.5-1.5v-7.5Z" />
-      </svg>
-    ),
-  },
-];
-
 export default function HomePage() {
   return (
     <>
       <Hero />
 
-      <FeatureGrid
+      <InfoSplit
         eyebrow="Why African Tutors"
-        title="A smarter way to get real academic help."
-        description="African Tutors is a professionally managed tutoring service, built around live, one-on-one instruction from carefully selected tutors."
-        features={whyAfricanTutors}
-      />
+        title="A real tutor, not a chatbot."
+        visual={
+          <PhotoFrame
+            src="/images/student-tutoring-session.jpg"
+            alt="A student engaged in a live online tutoring session at home"
+          />
+        }
+      >
+        <ValueList items={qualityPoints} />
+      </InfoSplit>
 
       <Steps
         eyebrow="How It Works"
@@ -118,8 +74,8 @@ export default function HomePage() {
             description: "Share the subject and grade level your student needs help with.",
           },
           {
-            title: "Choose a Convenient Time",
-            description: "Pick a session time that works for your family's schedule.",
+            title: "Choose a Time",
+            description: "Pick a session time that works for your family.",
           },
           {
             title: "Meet Online",
@@ -127,16 +83,14 @@ export default function HomePage() {
           },
           {
             title: "Keep Building Progress",
-            description: "Book additional sessions whenever your student needs more support.",
+            description: "Book more sessions whenever your student needs support.",
           },
         ]}
       />
 
-      <FeatureGrid
-        eyebrow="Why Parents Choose Us"
-        title="Personalized support parents can trust."
-        features={whyParentsChooseUs}
-      />
+      <SubjectsPreview />
+
+      <PriceHighlight />
 
       <InfoSplit
         eyebrow="The Global Advantage"
@@ -145,48 +99,31 @@ export default function HomePage() {
         visual={<GlobalAdvantageVisual />}
       >
         <p>
-          Consistent, high-quality one-on-one tutoring can be surprisingly expensive in the
-          United States. At the same time, there is tremendous academic talent throughout
-          Africa &mdash; qualified educators ready to teach.
-        </p>
-        <p>
-          African Tutors connects the two. By building a tutoring network with carefully
-          selected African academics, we&apos;re able to offer live, one-on-one instruction at
-          a price most American families can actually afford &mdash; without cutting corners
-          on quality.
+          Consistent, one-on-one tutoring can be surprisingly expensive in the United States.
+          African Tutors builds its network from the tremendous academic talent across Africa
+          instead &mdash; live, one-on-one instruction at a price most families can actually
+          afford.
         </p>
       </InfoSplit>
 
-      <SubjectsGrid
-        eyebrow="Subjects"
-        title="Support across the subjects that matter most."
-        description="Popular subjects families request. Tell us what your student needs and we'll match a qualified tutor."
-      />
-
-      <PriceHighlight />
-
       <InfoSplit
         eyebrow="Our Mission"
-        title="Opportunity, both ways."
+        title="Academic talent has no borders."
         reverse
         visual={<MissionVisual />}
         ctaHref="/about"
         ctaLabel="Read Our Story"
       >
         <p>
-          American families get consistent, affordable, one-on-one academic support &mdash;
-          without the price tag traditional tutoring often carries.
-        </p>
-        <p>
-          At the same time, talented academics across Africa gain access to meaningful, paid
-          teaching opportunities. African Tutors manages the entire experience, so both sides
-          can focus on what matters: learning.
+          American families get affordable, one-on-one academic support. Talented academics
+          across Africa get access to meaningful, paid teaching work. African Tutors manages
+          the experience in between, so both sides can focus on learning.
         </p>
       </InfoSplit>
 
       <CtaSection
         title="Ready to get your student started?"
-        description="Create a free account and book your student's first session with African Tutors."
+        description="Create a free account and book your student's first session."
         secondaryHref="/pricing"
         secondaryLabel="See Pricing"
       />

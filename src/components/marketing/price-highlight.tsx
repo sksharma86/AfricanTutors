@@ -31,8 +31,7 @@ export function PriceHighlight({
               <span className="pb-2 text-lg font-medium text-ink-200 sm:pb-3">/ hour</span>
             </div>
             <p className="max-w-md text-sm leading-6 text-ink-300">
-              Live, one-on-one online tutoring. No packages to buy, no long-term contract
-              &mdash; pay for the sessions your student needs.
+              Live, one-on-one online tutoring, billed simply by the session.
             </p>
             <LinkButton href={ctaHref} variant="secondary" size="lg">
               {ctaLabel}
