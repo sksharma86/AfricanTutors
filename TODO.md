@@ -50,7 +50,53 @@ actually done.
       environment could only verify the database logic locally, not a real
       connected project or real emails.
 
+## Phase 2.6 — Premium Conversion, Human Connection & Public Website Polish
+
+- [x] Shorten and de-repeat the homepage: consolidate feature-card grids
+      into a card-free `ValueList`, replace the full subject grid with a
+      compact pill preview linking to `/subjects`, and keep the literal
+      price "$19.50" to just the hero + a dedicated pricing section
+- [x] Refine hero copy so African Tutors clearly provides the service
+      ("gives your student...") rather than sounding like an introduction
+      service ("connects your student with...")
+- [x] Add human visual storytelling: two photographs connecting an
+      American student with a professional African tutor (currently
+      AI-generated placeholders — see `public/images/README.md` and the
+      "BUSINESS DECISION REQUIRED" item below)
+- [x] Consolidate the "real tutor, not a chatbot" idea to one strong,
+      well-reasoned expression instead of repeating it
+- [x] Remove/neutralize unapproved commercial policy promises ("no
+      long-term contract," "no packages," "no hidden fees," "reschedule
+      when life happens") from all public copy
+- [x] Preserve $19.50/hour, the hero headline, the Global Advantage flow,
+      "Academic talent has no borders," the Simple Pricing concept, and
+      all Phase 2 auth/database/RLS/anti-circumvention architecture
+      (re-verified with `npm run test:rls`, 12/12 passing)
+
+- [ ] **BUSINESS DECISION REQUIRED (pre-launch):** replace the AI-generated
+      placeholder photography (`public/images/student-tutoring-session.jpg`,
+      `public/images/tutor-portrait.jpg`) with commissioned photography
+      (signed model releases) or properly licensed commercial stock
+      photography. See `PROJECT_SPEC.md` → "Visual Identity & Photography."
+- [ ] **BUSINESS DECISION REQUIRED (pre-launch):** finalize a formal tutor
+      vetting standard (what "reviewed and approved" concretely requires).
+      Once decided, update public copy to state it specifically — this is
+      an important trust/conversion feature once it's real.
+- [ ] **BUSINESS DECISION REQUIRED (before Phase 3):** finalize the
+      initial student age/grade scope (K–12? middle/high school only?
+      K–college? broad academic tutoring?) and the initial launch subject
+      list. This directly shapes Phase 3's subject catalog, tutor
+      recruiting criteria, and matching logic — do not guess at this.
+- [ ] **BUSINESS DECISION REQUIRED (before advertising any of it):**
+      session length options beyond the standard hour, and
+      cancellation/rescheduling/refund policy. Nothing about this should
+      be published in public copy until it's decided — see
+      `PROJECT_SPEC.md` → "Public Copy Standards."
+
 ## Phase 3 — Subjects, Availability & Booking
+
+*Do not start until the two "before Phase 3" business decisions above are
+made.*
 
 - [ ] Admin UI for managing the `subjects` catalog (currently seeded by
       migration only)

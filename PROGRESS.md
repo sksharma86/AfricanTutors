@@ -6,6 +6,50 @@
 shell, public marketing pages, responsive navigation, reusable component
 library, and core project documentation. See git history for full detail.
 
+**Phase 2.6 (premium conversion, human connection, and public website polish):**
+
+- Shortened and de-repeated the homepage: merged two 5+3-card feature
+  grids into one consolidated, card-free "Why African Tutors" section
+  (`ValueList` + photography), and replaced the full 8-card subject grid
+  with a compact row of subject pills linking to `/subjects`. The literal
+  price "$19.50" now appears on the homepage only in the hero and the
+  dedicated pricing section, not in nearly every section.
+- Refined the hero: headline unchanged ("Great tutoring shouldn't cost a
+  fortune."), body copy rewritten so African Tutors clearly *provides* the
+  service ("African Tutors gives your student...") instead of sounding
+  like an introduction/marketplace service ("connects your student
+  with..."). Simplified the price card from a 3-item checklist to one
+  clean line.
+- Added real human visual storytelling: two photographs connecting an
+  American student with a professional African tutor, used on the
+  homepage ("Why African Tutors" and "Our Mission" sections) and the About
+  page. These are **AI-generated development placeholders** (not real
+  photographs, not stock images, not scraped from search results) —
+  documented in `public/images/README.md` and tracked as a required
+  pre-launch replacement in `TODO.md`.
+- Consolidated the "real tutor, not a chatbot" idea to a single, well-
+  reasoned expression ("AI can explain a concept. A great tutor notices
+  when a student still isn't getting it, and adjusts.") instead of
+  repeating "not a chatbot" in multiple places.
+- Removed or neutralized unapproved commercial policy promises from public
+  copy: "no long-term contract," "no packages," "no hidden fees," and
+  "reschedule when life happens" are gone — replaced with neutral,
+  accurate statements about the current pricing structure. See
+  `DECISIONS.md`.
+- Preserved (unchanged, per instructions): the $19.50/hour price, the
+  "Great tutoring shouldn't cost a fortune" headline concept, the Global
+  Advantage flow (American Families → African Tutors → Qualified African
+  Academics), the "Academic talent has no borders" mission line, the
+  Simple Pricing concept ("One student. One tutor. One hour."), the
+  student-first signup flow with a secondary tutor application path, and
+  all authentication/database/RLS/anti-circumvention architecture from
+  Phase 2.
+- Verified Phase 2's architecture is fully intact: `npm run test:rls`
+  (12/12 assertions) still passes unchanged; no migration, RLS policy,
+  grant, trigger, or `proxy.ts` logic was touched this phase.
+- Quality tooling re-verified: TypeScript, ESLint, and a production build
+  all pass with zero errors after the refinement pass.
+
 **Phase 2.5 (final brand, pricing, customer positioning, visual identity):**
 
 - Corrected the public business model framing: African Tutors now reads
@@ -109,11 +153,11 @@ library, and core project documentation. See git history for full detail.
 
 ## Currently Working On
 
-Nothing in progress. Phase 2.5 is complete. Phase 2's authentication and
+Nothing in progress. Phase 2.6 is complete. Phase 2's authentication and
 database work is still code-complete and verified as thoroughly as
-possible without a live Supabase project. Waiting on the owner action
-described below before either phase can be fully verified end-to-end
-against a real, connected Supabase project.
+possible without a live Supabase project. Waiting on the owner actions
+described below (a technical one and two business decisions) before
+either phase can be fully verified/finalized.
 
 ## Next
 
@@ -124,27 +168,41 @@ approve the tutor from the Admin Dashboard, confirm the tutor then sees
 full Tutor Dashboard content, confirm a student can never reach
 `/dashboard/tutor` or `/dashboard/admin` by typing the URL). After that,
 Phase 3 (subjects catalog admin UI, tutor availability, and the beginning
-of booking) is the recommended next development task — see `TODO.md`.
-Prompt 2.5 was explicitly scoped to stop before both live Supabase setup
-and Phase 3.
+of booking) is the recommended next development task — see `TODO.md`, but
+it should not start until the owner has decided the initial student
+age/grade and subject scope (see "Blocked"). Prompt 2.6 was explicitly
+scoped to stop before both live Supabase setup and Phase 3.
 
 ## Blocked
 
-**Needs owner action:** a real Supabase project needs to be created and
-connected before this phase's authentication/database work can be tested
-end-to-end for real (real signup emails, real login sessions, real admin
-approval against a live database). Step-by-step instructions — written for
-a nontechnical owner, no coding required — are in `SETUP.md` under
-"Supabase (Auth + Database) — action needed now". In short: create a free
-Supabase project, copy three values from its dashboard into Cursor's
-Secrets (Cloud Agents → Secrets), and either paste two SQL files into
-Supabase's SQL Editor or ask the agent to do it for you next session.
+**Needs owner action (technical):** a real Supabase project needs to be
+created and connected before Phase 2's authentication/database work can be
+tested end-to-end for real (real signup emails, real login sessions, real
+admin approval against a live database). Step-by-step instructions —
+written for a nontechnical owner, no coding required — are in `SETUP.md`
+under "Supabase (Auth + Database) — action needed now."
+
+**Needs owner decision (business, before Phase 3/booking):**
+
+1. **Student age/grade and subject scope.** K–12? Middle/high school
+   only? K–college? Broad academic tutoring? This shapes the subject
+   catalog, tutor recruiting, and matching logic — see `PROJECT_SPEC.md` →
+   "Open Items."
+2. **A formal tutor vetting standard.** What "reviewed and approved"
+   concretely requires (beyond what's already true today). Once decided,
+   this becomes a real trust/conversion feature we can state specifically
+   in public copy instead of generally.
 
 Nothing else is blocked — Stripe, Twilio, Vercel, and email provider
 credentials are still not needed yet (see `SETUP.md`).
 
 ## Known Issues
 
+- **The two homepage/About-page photographs are AI-generated development
+  placeholders, not real photography.** They are documented in
+  `public/images/README.md` and must be replaced with commissioned or
+  properly licensed photography before public launch — see
+  `PROJECT_SPEC.md` → "Visual Identity & Photography."
 - **The brand mark asset is a recreated raster, not a final production
   vector file.** `public/brand/mark.png` closely recreates the supplied
   reference's graphic concept and has real, verified transparency, but a
@@ -177,16 +235,15 @@ credentials are still not needed yet (see `SETUP.md`).
 
 ## Last Verified
 
-2026-08-16 (Phase 2.5) — `npm run build` (production build),
+2026-08-16 (Phase 2.6) — `npm run build` (production build),
 `npx tsc --noEmit`, `npm run lint`, and `npm run test:rls` (12/12 database
 RLS/anti-poaching assertions, unchanged and still passing) all pass with
-zero errors. Verified via local dev server, at both desktop and mobile
-(390px) widths, that: the homepage's full new section sequence renders
-correctly with no layout bugs; the new brand mark renders correctly in the
-navbar, footer, and browser tab (favicon); $19.50/hour is visible above
-the fold on both desktop and mobile without scrolling; `/pricing`,
-`/how-it-works`, `/about`, and `/subjects` all render the new copy
-correctly; `/signup` shows the student-only form with no Learn/Teach
-toggle and a secondary tutor-application link; `/apply-to-tutor` renders
-its own distinct form; and every route returns HTTP 200 with no console
-errors.
+zero errors. Verified via a live preview server, at both desktop and
+mobile (390px) widths, that: the shortened homepage renders correctly with
+no layout bugs and no leftover repeated pricing/policy copy; both
+photographs load correctly and look natural/professional (no broken
+images); $19.50/hour is visible above the fold on mobile without
+scrolling; `/pricing` shows no unapproved policy promises; `/about`,
+`/how-it-works`, and `/subjects` all render correctly; `/signup` still
+shows the student-only form with no Learn/Teach toggle; and every checked
+route returns HTTP 200 with no console errors.

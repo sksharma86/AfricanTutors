@@ -65,13 +65,22 @@ answering those questions, in that rough order — see `ARCHITECTURE.md`.
    one-on-one with the student, live — not an AI chatbot. AI may eventually
    support the service behind the scenes (tutor prep, practice generation,
    session summaries, progress reports), but the human tutor is the core
-   product and the public-facing positioning.
+   product and the public-facing positioning. The site should express this
+   with one strong, well-placed articulation rather than repeating "not a
+   chatbot" throughout every section — as of Prompt 2.6, that articulation
+   lives in the homepage's "Why African Tutors" section: *"AI can explain a
+   concept. A great tutor notices when a student still isn't getting it,
+   and adjusts."*
 2. **Affordability.** $19.50/hour, made possible by a global academic
    talent model — not by underpaying "cheap overseas labor" framing, which
    must never appear in customer-facing copy.
 3. **Global opportunity.** African Tutors creates meaningful, paid teaching
    opportunities for talented African academics, presented proudly and
    commercially — never with charity, pity, or poverty framing.
+
+Human visual storytelling (real photography of students/families and
+tutors) is a major, intentional part of the brand — see "Visual
+Identity & Photography" below.
 
 ## Core Business Requirement: Anti-Circumvention
 
@@ -131,6 +140,60 @@ require controlled, server-enforced authorization (see `ARCHITECTURE.md`).
   never like a discount marketplace, charity, or low-budget template. See
   `DECISIONS.md`.
 
+## Visual Identity & Photography
+
+African Tutors sells a human relationship, not just a service — the site
+should look and feel that way, not just say it.
+
+- Real photography connecting an American student/family with a
+  professional African tutor is a major, ongoing part of the brand — not a
+  one-time decoration. Prefer authentic-feeling, warm, contemporary,
+  professional imagery over generic corporate stock photography.
+- Imagery should visually welcome African American families in
+  particular (parents, children, teenagers, college-age students) without
+  any copy that explicitly calls that out — representation should do the
+  work, not a slogan.
+- African tutors should always be depicted as professional, educated,
+  confident, and modern — never with poverty, charity, or stereotypical
+  imagery.
+- **Current status (as of Prompt 2.6):** the two photographs in use
+  (`public/images/student-tutoring-session.jpg`,
+  `public/images/tutor-portrait.jpg`) are AI-generated development
+  placeholders, not real photographs of real people, and not sourced from
+  any stock library. They are documented in
+  `public/images/README.md`. **Before public launch, these must be
+  replaced** with either professionally commissioned photography (with
+  signed model releases) or properly licensed stock photography for
+  commercial web use. See `TODO.md`.
+- Avoid card-grid-heavy layouts where photography, typography, and
+  whitespace would communicate the same idea more premium-ly. See
+  `DECISIONS.md` → "avoid card overload."
+
+## Public Copy Standards
+
+- Do not publish commercial policy promises (cancellation terms,
+  rescheduling flexibility, refund guarantees, "no packages," "no
+  contracts," tutor-replacement guarantees, etc.) unless the owner has
+  explicitly approved that specific policy. It is easy for this kind of
+  copy to sound appealing and slip in during content writing — it must be
+  treated as a real commercial commitment, not marketing flourish.
+- Do not invent specific tutor vetting procedures (background checks,
+  credential verification, teaching demonstrations, degree verification,
+  criminal checks, English proficiency testing, etc.). Until the owner
+  establishes a formal tutor vetting standard, public copy should only say
+  tutors are recruited, reviewed, and approved by African Tutors — nothing
+  more specific. See "Open Items" below.
+- Do not fabricate social proof: no testimonials, quotes, ratings, star
+  counts, student/tutor counts, success statistics, university
+  affiliations, or awards unless real evidence exists.
+- Reduce repetition deliberately. Core messages ($19.50/hour, one-on-one,
+  carefully selected, managed by African Tutors) should each appear
+  clearly but sparingly — a premium company states its value once, well,
+  and moves on, rather than repeating the same phrase in every section.
+  $19.50/hour specifically should remain prominent in the homepage hero and
+  in a dedicated pricing section (homepage and/or the Pricing page), not
+  echoed in nearly every section.
+
 ## Technology Stack (fixed decisions)
 
 - Next.js + TypeScript
@@ -163,13 +226,29 @@ unless real evidence exists.
 
 ## Open Items Requiring Owner Input (not yet specified)
 
-- Exact subject/grade coverage limits (the current subject list is a
-  starting catalog, not an exhaustive guarantee)
-- Detailed tutor vetting/approval criteria beyond "reviewed and approved"
+- **BUSINESS DECISION REQUIRED — student age/grade and subject scope.**
+  The initial launch scope (e.g. K–12, middle/high school only, K–college,
+  or broad academic tutoring) has not been decided by the owner. This must
+  be finalized before booking functionality is built, since it will shape
+  the subject catalog, tutor recruiting criteria, and matching logic. The
+  current subject list (`src/components/marketing/subjects-grid.tsx`) is a
+  reasonable starting catalog, not an exhaustive guarantee, and was
+  deliberately not expanded in Prompt 2.6.
+- **BUSINESS DECISION REQUIRED — formal tutor vetting standard.** Public
+  copy currently says tutors are "recruited, reviewed, and approved" —
+  true today, and deliberately general. The owner needs to define an
+  actual, formal vetting standard (what "approved" concretely requires)
+  before launch; once defined, this becomes an important trust and
+  conversion feature and the copy can become more specific.
 - Session length options beyond the standard hour, and
-  cancellation/refund policy specifics
-- Legal entity, Terms of Service, and Privacy Policy content
+  cancellation/refund/rescheduling policy specifics (see "Public Copy
+  Standards" above — none of this exists as policy yet, so none of it is
+  advertised).
+- Legal entity, Terms of Service, and Privacy Policy content.
 - A production-quality, vector version of the brand mark (see
   `DECISIONS.md` — the current asset is a cleaned raster derived from the
   supplied reference and should be replaced with a proper vector file when
-  one exists)
+  one exists).
+- Real, licensed/commissioned photography to replace the current
+  AI-generated placeholders — see "Visual Identity & Photography" above
+  and `public/images/README.md`.

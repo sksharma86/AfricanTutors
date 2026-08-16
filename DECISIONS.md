@@ -247,6 +247,84 @@ fixed role) rather than touching the authentication or database logic at
 all — minimizing risk to already-verified functionality while fully
 addressing the positioning requirement.
 
+## 2026-08-16 — Shortened the homepage and consolidated repeated messaging
+
+**Decision:** Merged the two homepage feature-card grids ("Why African
+Tutors" and "Why Parents Choose Us" — 8 cards combined) into one
+consolidated "Why African Tutors" section using a plain, card-free list
+(`ValueList`) paired with a photograph. Replaced the full 8-card subject
+grid on the homepage with a compact row of subject pills linking to the
+dedicated `/subjects` page. Removed the literal price "$19.50" from every
+homepage section except the hero and the dedicated pricing section.
+
+**Reasoning:** The task was explicit that a premium company states its
+value once, clearly, and moves on — repeating "$19.50/hour," "one-on-one,"
+"carefully selected," and "managed by African Tutors" in nearly every
+section reads as insecure rather than confident, and duplicating the full
+subject grid that already exists on its own page told the visitor nothing
+new. Shortening the page and removing redundant restatements makes the
+homepage easier to skim and more premium, while every fact that was
+removed from a section is still stated clearly somewhere on the page (or
+one click away on its own page).
+
+## 2026-08-16 — Avoid card overload: `ValueList` and `PhotoFrame` instead of more feature-card grids
+
+**Decision:** Added `ValueList` (plain icon + text rows, no card borders)
+and `PhotoFrame` (a responsive, cropped photo container) as the preferred
+way to present a short set of related points, instead of defaulting to
+another bordered-rounded-rectangle feature-card grid.
+
+**Reasoning:** The task explicitly warned against "AI generated SaaS
+template" visual patterns — a page built entirely from rounded feature
+cards and icon grids reads as generic and can undercut the "premium"
+perception the brand needs at this price point. Typography, whitespace,
+and photography communicate the same information with more visual variety
+and a more editorial, premium feel. Existing card-based components
+(`FeatureGrid`, `Steps`) are still used where a card/step actually has a
+distinct visual identity worth calling out (e.g. numbered process steps),
+just not for every list of ideas.
+
+## 2026-08-16 — Added AI-generated placeholder photography, clearly documented as a placeholder
+
+**Decision:** Added two photographs
+(`public/images/student-tutoring-session.jpg`,
+`public/images/tutor-portrait.jpg`) generated fresh for this project (not
+sourced from any stock library or search engine), used on the homepage and
+About page to visually connect an American student with a professional
+African tutor. Documented their provenance and required pre-launch
+replacement in `public/images/README.md`.
+
+**Reasoning:** The task required adding real human visual storytelling to
+the site, but explicitly prohibited scraping images from search engines or
+using imagery without a clear right to use it, and offered "create polished
+placeholders and document what's needed later" as the fallback when
+reliable, properly licensed real photography isn't available in the
+current environment (no stock-photo API access, no ability to commission
+real photography). Freshly generated images created specifically for this
+project carry no known third-party copyright claim, making them a safe,
+honest placeholder — as long as they are clearly labeled as such and
+tracked for replacement before launch, which they are.
+
+## 2026-08-16 — Removed unapproved commercial policy promises from public copy
+
+**Decision:** Removed or neutralized several phrases that read as
+commercial policy commitments the owner has not actually made: "no
+long-term contract," "no packages to buy" / "no packages," "no hidden
+fees," and "reschedule when life happens." Replaced them with neutral,
+accurate descriptions of the current pricing structure (e.g. "sessions are
+billed individually" instead of "no packages to buy and no long-term
+contract").
+
+**Reasoning:** These phrases sounded appealing while drafting copy in
+Prompt 2.5, but none of them were ever actually approved as company
+policy — cancellation, rescheduling, and contract terms are real
+commercial decisions the owner has not made yet. Publishing them as if
+they were settled policy would create a real obligation (and potential
+customer-facing liability) the business hasn't agreed to. The task was
+explicit that Cursor must not independently establish commercial policy
+just because it reads well; see `PROJECT_SPEC.md` → "Public Copy
+Standards" and "Open Items."
+
 ## 2026-08-16 — The first administrator is created by direct SQL/service-role script, never through the app
 
 **Decision:** There is no in-app path — no button, no hidden route, no
