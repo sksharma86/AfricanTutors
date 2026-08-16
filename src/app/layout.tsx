@@ -23,7 +23,7 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} | Online Tutoring, Simplified`,
+    default: `${SITE_NAME} | Live 1-on-1 Online Tutoring, $19.50/hr`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
