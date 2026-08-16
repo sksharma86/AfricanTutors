@@ -15,7 +15,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Contact"
         title="We'd love to hear from you."
-        description="Questions about African Tutors, tutoring, or applying to teach? Send us a message."
+        description="Questions about tutoring, pricing, or getting your student started? Send us a message and our team will follow up."
       />
 
       <Container className="py-16">

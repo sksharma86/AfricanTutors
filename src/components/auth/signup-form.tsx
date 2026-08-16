@@ -9,9 +9,15 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { RequestableRole } from "@/lib/roles";
 
-export function SignupForm() {
+export function SignupForm({
+  defaultRole = "student",
+  submitLabel = "Create Account",
+}: {
+  defaultRole?: RequestableRole;
+  submitLabel?: string;
+} = {}) {
   const router = useRouter();
-  const [role, setRole] = useState<RequestableRole>("student");
+  const [role, setRole] = useState<RequestableRole>(defaultRole);
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -159,7 +165,7 @@ export function SignupForm() {
         disabled={!isSupabaseConfigured || status === "submitting"}
         className="w-full"
       >
-        {status === "submitting" ? "Creating account..." : "Create Account"}
+        {status === "submitting" ? "Creating account..." : submitLabel}
       </Button>
     </form>
   );

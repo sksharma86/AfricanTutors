@@ -1,30 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbfaf7;
-  --foreground: #1b1a17;
+  /* Prompt 2.6 brand system: warm ivory background, near-black foreground,
+     warm gold accent (see DECISIONS.md). */
+  --background: #fbf9f4;
+  --foreground: #131311;
 
-  --color-brand-50: #fbf6ee;
-  --color-brand-100: #f5e9d4;
-  --color-brand-200: #e9cda3;
-  --color-brand-300: #dcae72;
-  --color-brand-400: #cf9247;
-  --color-brand-500: #b9762e;
-  --color-brand-600: #995f26;
-  --color-brand-700: #784a20;
-  --color-brand-800: #573619;
-  --color-brand-900: #3a2411;
+  /* Warm gold, sampled from the African Tutors brand mark. Exposed under two
+     token families so both the original components (brand-*) and the ported
+     2.6 components (gold-*) render the same premium gold. */
+  --color-gold-50: #fcf3e3;
+  --color-gold-100: #f8e4bc;
+  --color-gold-200: #f0cc82;
+  --color-gold-300: #e9b754;
+  --color-gold-400: #e2a121;
+  --color-gold-500: #c98816;
+  --color-gold-600: #a96d0e;
+  --color-gold-700: #86540b;
+  --color-gold-800: #614009;
+  --color-gold-900: #3d2a08;
 
-  --color-ink-50: #f4f6f8;
-  --color-ink-100: #e5e8ec;
-  --color-ink-200: #c8cdd6;
-  --color-ink-300: #a3abb9;
-  --color-ink-400: #788295;
-  --color-ink-500: #4b5568;
-  --color-ink-600: #384155;
-  --color-ink-700: #262e40;
-  --color-ink-800: #171d2b;
-  --color-ink-900: #0d1220;
+  --color-brand-50: #fcf3e3;
+  --color-brand-100: #f8e4bc;
+  --color-brand-200: #f0cc82;
+  --color-brand-300: #e9b754;
+  --color-brand-400: #e2a121;
+  --color-brand-500: #c98816;
+  --color-brand-600: #a96d0e;
+  --color-brand-700: #86540b;
+  --color-brand-800: #614009;
+  --color-brand-900: #3d2a08;
+
+  /* Warm, neutral near-black scale (not navy). */
+  --color-ink-50: #f6f5f3;
+  --color-ink-100: #e9e7e2;
+  --color-ink-200: #d3cfc7;
+  --color-ink-300: #b3ada1;
+  --color-ink-400: #8b8377;
+  --color-ink-500: #6b6459;
+  --color-ink-600: #4f4a41;
+  --color-ink-700: #383430;
+  --color-ink-800: #221f1c;
+  --color-ink-900: #131311;
 }
 
 @theme inline {
@@ -33,6 +50,17 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-fraunces);
+
+  --color-gold-50: var(--color-gold-50);
+  --color-gold-100: var(--color-gold-100);
+  --color-gold-200: var(--color-gold-200);
+  --color-gold-300: var(--color-gold-300);
+  --color-gold-400: var(--color-gold-400);
+  --color-gold-500: var(--color-gold-500);
+  --color-gold-600: var(--color-gold-600);
+  --color-gold-700: var(--color-gold-700);
+  --color-gold-800: var(--color-gold-800);
+  --color-gold-900: var(--color-gold-900);
 
   --color-brand-50: var(--color-brand-50);
   --color-brand-100: var(--color-brand-100);
