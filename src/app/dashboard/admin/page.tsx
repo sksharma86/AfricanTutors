@@ -21,10 +21,12 @@ export default async function AdminDashboardPage() {
   await requireRole("admin", "/dashboard/admin");
 
   const supabase = await createSupabaseServerClient();
+  // `tutor_profiles` has two FKs to `profiles` (profile_id and approved_by), so
+  // the embed must name the applicant relationship explicitly to disambiguate.
   const { data } = supabase
     ? await supabase
         .from("tutor_profiles")
-        .select("profile_id, profiles(display_name)")
+        .select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)")
         .eq("status", "pending")
     : { data: null };
   const pendingTutors = (data ?? []) as unknown as PendingTutor[];
