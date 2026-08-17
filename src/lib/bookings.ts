@@ -23,6 +23,7 @@ export function partitionBookings<T extends TimedBooking>(bookings: T[]): {
       b.status === "completed" ||
       b.status === "cancelled" ||
       b.status === "no_show" ||
+      b.status === "expired" ||
       (b.scheduled_start != null && new Date(b.scheduled_start).getTime() < now && b.status === "confirmed"),
   );
   const next = upcoming.find((b) => b.scheduled_start) ?? null;

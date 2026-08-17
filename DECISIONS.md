@@ -223,3 +223,28 @@ authenticated-only.
 **Reasoning:** Booking is a logged-in action; anonymous callers have no
 legitimate need to enumerate availability, and locking it down supports the
 anti-poaching/privacy posture.
+
+## 2026-08-17 — Unpaid paid bookings are pending with an expiring hold (Prompt 3D)
+
+**Decision:** A paid booking before payment is `status = pending`,
+`payment_status = awaiting_payment`, with `payment_hold_expires_at = now() + 15m`
+(configurable dev default). It is never treated as a confirmed session. A new
+`expired` status marks timed-out unpaid holds; `release_expired_holds()` frees
+those slots, and availability logic ignores expired holds. Free trials remain
+`confirmed`/`not_required`. Verified Stripe payment (Prompt 4) will move a paid
+booking to `confirmed`/`paid`.
+
+**Reasoning:** Marking an unpaid session `confirmed` is semantically wrong and
+would let an abandoned checkout block a tutor's slot forever. A short expiring
+hold reserves the slot briefly, then releases it — the clean seam Stripe attaches
+to. A CASE assigning the status enum must be cast (`::booking_status`) to avoid a
+text/enum mismatch.
+
+## 2026-08-17 — Video rooms attach only to confirmed bookings
+
+**Decision:** A future Twilio room may only attach to a `confirmed` booking (free
+trial or paid-and-verified). `pending`/`awaiting_payment`/`expired` bookings never
+receive a room.
+
+**Reasoning:** No unpaid or lapsed booking should grant a live tutoring session;
+gating on `confirmed` keeps fulfillment aligned with payment/eligibility.

@@ -66,9 +66,14 @@ actually done.
 - [x] Tutor availability + exceptions UI; privacy-safe tutor session views
 - [x] Admin subject management, tutor-subject qualification, filterable booking ops + Other requests
 
-### Prompt 3D / later — NOT built yet
-- [ ] Any remaining booking polish deferred to 3D
-- [ ] Stripe payments (attach to `bookings`; `awaiting_payment` → `paid`)
+### Prompt 3D — Booking lifecycle hardening (DONE)
+- [x] Paid bookings pending + payment hold (not falsely confirmed); `expired` status
+- [x] `release_expired_holds()`; availability ignores expired holds
+- [x] Parent-friendly error handling; admin `expired` filter
+- [x] State machine + Stripe handoff contract + Twilio confirmed-only documented
+
+### Prompt 4 / later — NOT built yet
+- [ ] Stripe payments (attach to `bookings`; `awaiting_payment` → `paid`; verified webhook, idempotent)
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards

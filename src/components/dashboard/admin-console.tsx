@@ -47,6 +47,7 @@ const BOOKING_FILTERS = [
   "completed",
   "cancelled",
   "no_show",
+  "expired",
 ] as const;
 
 const CATEGORIES = ["math", "science", "english_writing", "test_prep", "college", "other"];
