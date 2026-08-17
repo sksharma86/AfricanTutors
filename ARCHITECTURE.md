@@ -227,3 +227,85 @@ require a rewrite later.
 No invasive surveillance or complex detection is implemented in Phase 1. This
 section exists so later phases can implement these protections correctly
 instead of retrofitting them.
+
+## Booking & Scheduling Architecture (Prompt 3A foundation)
+
+African Tutors is a **managed** service, not an open marketplace. Students do
+not browse or negotiate with independent tutors; the family tells African
+Tutors what help they need and when, and the platform assigns an approved
+tutor. All booking-critical rules are enforced in Postgres (RLS + SECURITY
+DEFINER functions + constraints), never trusted from the client.
+
+### Data model (see DATABASE.md)
+- `students` — the learners. Parent-first: one account (`profiles.id`) can own
+  many students; the free trial belongs to the **student**, not the login.
+- `subjects` + `tutor_subjects` — admin-managed catalog and the authoritative
+  per-tutor subject approvals. Tutors can never self-approve subjects.
+- `tutor_availability` — recurring weekly blocks in the tutor's local tz.
+- `tutor_availability_exceptions` — one-off unavailable windows (UTC).
+- `bookings` — the hub; authoritative times in UTC, privacy-safe denormalized
+  display fields (student first name + grade, subject name, tutor display name)
+  so tutors never read the learner table.
+
+### Booking lifecycle
+`pending` → `confirmed` → `completed`, with `cancelled` and `no_show` branches.
+Auto-matched sessions are created `confirmed`; unlisted-subject ("Other")
+requests are created `pending` for admin triage. `payment_status` is
+`not_required` (free trial) or `awaiting_payment` (paid) — see Stripe below.
+
+### Tutor matching (managed, automatic)
+`create_booking()` selects an eligible tutor where the tutor is **approved**,
+**approved for the subject**, **available** for the whole slot (recurring
+availability minus exceptions), and **not already booked**. Ordering:
+1. Repeat-tutor preference (a tutor who previously completed a session with
+   this student), then
+2. Least upcoming workload, then
+3. Deterministic tie-break by id.
+This is intentionally simple; the ordering is the seam where future ranking
+(performance, conversion, ratings, compatibility) will plug in. No tutor
+contact info is ever exposed to the student.
+
+### Double-booking prevention
+A gist exclusion constraint (`bookings_no_tutor_overlap`) makes it impossible
+for a tutor to hold two overlapping active sessions, even under concurrent
+requests — the loser's insert fails and matching falls through to the next
+eligible tutor or reports no availability.
+
+### Free-trial enforcement
+One free 30-minute session per student, enforced in three layers: a partial
+unique index (`bookings_one_free_trial_per_student`), a server check in
+`create_booking()`, and a `has_used_free_trial()` predicate the UI reads. Free
+trials are 30 minutes only and require no payment method.
+
+### Timezone strategy
+Authoritative appointment times are stored in UTC (`timestamptz`). Tutor
+availability is stored as weekday + local time and interpreted in the tutor's
+IANA timezone; exceptions and bookings are UTC instants. The UI converts to the
+tutor's and the student's own timezones for display (`src/lib/timezone.ts`). A
+Houston parent booking 7 PM Central and a Lagos tutor both see their own local
+time for the same instant.
+
+### Anti-poaching in bookings
+`bookings` stores no email, phone, address, or billing. A tutor may read only
+bookings assigned to them (RLS), and only the minimum needed to teach (student
+first name + grade + subject + request note). A student/parent reads only their
+own bookings. Admins manage operational data. Enforced by RLS and verified by
+live tests.
+
+### Future Stripe attachment point
+Paid bookings are created with `payment_status = 'awaiting_payment'` and no
+money is collected, faked, or given an invented transaction id. Stripe will
+attach by adding a payments table/columns keyed on `bookings.id`, moving
+`awaiting_payment` → `paid` via a verified webhook, and gating `confirmed`
+state on payment for paid sessions. Free trials bypass payment entirely.
+
+### Future Twilio attachment point
+A confirmed booking is the anchor for a future `video_sessions` row; a Twilio
+room/token will be minted per booking at session time. No external meeting
+links are stored or exposed.
+
+### Unresolved policy
+Cancellation / rescheduling / refund policy is deliberately **not** encoded.
+`cancel_booking()` exists (owner of the booking or admin) and admins can cancel,
+but no free-cancellation, refund, or reschedule guarantee is implied. This
+remains an owner decision before launch.

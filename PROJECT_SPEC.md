@@ -37,6 +37,17 @@ The only approved customer-facing policies are the three above (30 min = $12,
 rescheduling, cancellation, refund, replacement, subscription, or package terms
 until they are finalized.
 
+## Booking & Scheduling (Prompt 3A onward)
+
+African Tutors is a managed service (not a marketplace). Supported scope at
+launch: grades 6 through college. A parent account may manage multiple students;
+the free trial belongs to each student. Families book through African Tutors by
+choosing a student, a subject (or "Other" request), a duration (30 min $12 /
+60 min $20, or the free 30-minute trial), and a time; an approved tutor is
+matched automatically. Sessions are one-on-one and timezone-aware. Cancellation,
+rescheduling, and refund policy are **not yet finalized** and must not be
+promised. Payments (Stripe) and live video (Twilio) are later phases.
+
 ## Core Business Requirement: Anti-Poaching / Anti-Circumvention
 
 This is a **central** requirement, not a minor feature:

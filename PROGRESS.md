@@ -1,5 +1,24 @@
 # African Tutors Development Progress
 
+## Prompt 3A — Booking data & server foundation (complete; UI in 3B–3D)
+
+Foundation only — no customer/tutor/admin booking UI in this stage.
+
+- Managed booking data model live on Supabase
+  (`supabase/migrations/0002_prompt3_booking.sql`): `students` (parent-first
+  learners), `subjects` + `tutor_subjects` (admin-controlled), `tutor_availability`
+  + `tutor_availability_exceptions`, and `bookings`.
+- Timezone-safe design: authoritative times in UTC; availability stored in the
+  tutor's local tz + IANA `tutor_profiles.timezone`.
+- DB-enforced double-booking prevention (gist exclusion) and one-free-30min-trial
+  per student (partial unique index + server check).
+- Server-side managed matching (`create_booking`): approved + subject-approved +
+  available + not-double-booked; repeat-tutor preference then least workload.
+- 32/32 live Supabase tests pass (13 Phase 2 regression + 19 Prompt 3A
+  foundation). No Stripe/Twilio (documented attachment points).
+- Deliberately NOT built in 3A: booking wizard, tutor availability UI, admin
+  booking/subject UI (Prompts 3B–3D).
+
 ## Completed
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 project initialized

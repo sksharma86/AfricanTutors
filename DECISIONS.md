@@ -118,3 +118,75 @@ customer-facing code, content, or `src/lib/pricing.ts`.
 **Reasoning:** Exposing tutor pay or margins publicly would harm negotiating
 position and brand perception. Keeping a hard separation between customer-facing
 pricing (`src/lib/pricing.ts`) and internal economics prevents accidental leaks.
+
+## 2026-08-16 — Managed matching, not a tutor marketplace (Prompt 3)
+
+**Decision:** Students never browse or pick from a public tutor catalog. They
+tell African Tutors what they need and when; `create_booking()` auto-assigns an
+eligible approved tutor (repeat-tutor preference → least workload → id).
+
+**Reasoning:** The business owns the student and tutor relationships, pricing,
+and quality control. Managed assignment supports the anti-poaching model (no
+tutor profiles/contact exposed) and lets us evolve ranking later without
+changing the family-facing flow.
+
+## 2026-08-16 — Authoritative times in UTC; availability interpreted in local tz
+
+**Decision:** All appointment instants are stored as UTC `timestamptz`. Tutor
+recurring availability is stored as weekday + local time interpreted in the
+tutor's IANA timezone; the UI renders every time in the viewer's own timezone.
+
+**Reasoning:** Tutors in Africa and students in the US must both see correct
+local times for the same instant. Storing ambiguous local timestamps as the
+source of truth would cause DST/offset bugs that are disastrous for a scheduling
+product.
+
+## 2026-08-16 — Booking-critical rules enforced in the database
+
+**Decision:** Double-booking prevention (gist exclusion constraint), one-free-
+trial-per-student (partial unique index + server check), pricing, matching, and
+authorization all live in Postgres (constraints + SECURITY DEFINER functions +
+RLS), never trusted from the client.
+
+**Reasoning:** Client checks can be bypassed. DB-level enforcement guarantees
+correctness under concurrency and against tampering, which is essential for
+money-adjacent scheduling and free-trial abuse limits.
+
+## 2026-08-16 — Privacy-safe denormalization on bookings
+
+**Decision:** Bookings carry only the minimum a tutor needs (student first name,
+grade, subject, request note) as denormalized columns; tutors have no access to
+the `students` table and no contact fields exist on bookings.
+
+**Reasoning:** Lets a tutor read their assigned sessions under simple RLS
+without ever exposing parent/student contact info — enforcing the anti-poaching
+requirement at the data layer.
+
+## 2026-08-16 — Parent-first: the free trial belongs to the student
+
+**Decision:** A `students` table represents learners owned by an account; the
+free trial and booking history belong to the student, not the login. The current
+auth architecture is unchanged.
+
+**Reasoning:** The primary customer is often a parent with multiple children.
+Modeling learners separately avoids a costly rebuild later while keeping the
+existing authentication intact.
+
+## 2026-08-16 — Cancellation/rescheduling/refund policy deferred
+
+**Decision:** The system supports cancellation structurally (`cancel_booking()`,
+admin cancel) but promises no free cancellation, reschedule, or refund. Booking
+horizon and lead time are configurable constants (`src/lib/booking-config.ts`).
+
+**Reasoning:** The owner has not finalized commercial policy. We avoid inventing
+policy and keep the knobs configurable so the decision can be applied later
+without scattered code changes.
+
+## 2026-08-16 — No fake payments or video before their phases
+
+**Decision:** Paid bookings are created `awaiting_payment` with no money moved,
+no card stored, and no invented transaction id. No Twilio rooms/links are
+created. Both have documented, clean attachment points on `bookings`.
+
+**Reasoning:** Prompt 3 is a scheduling foundation. Faking payment/video state
+would corrupt data the Stripe/Twilio phases depend on.

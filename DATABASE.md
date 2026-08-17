@@ -274,12 +274,52 @@ accepted acquisition cost. Do **not** add card verification, fingerprinting, or
 invasive surveillance. The above is enough to *measure* abuse and free-trial →
 paid conversion before deciding whether any friction is warranted.
 
+## Implemented in Prompt 3A (`supabase/migrations/0002_prompt3_booking.sql`)
+
+The managed booking data model + server functions are now built and live (this
+is the foundation stage — booking/tutor/admin UI arrives in Prompts 3B–3D). New
+tables (all RLS-enabled):
+
+- **`students`** — the learners. `account_id` → `profiles.id` (parent-first: one
+  account may own many students). Holds `full_name`, `grade_level`,
+  `school_level`, `school_name`, and IANA `timezone`. RLS: account owner + admin.
+- **`subjects`** — admin-managed catalog: `name`, `category`
+  (`math|science|english_writing|test_prep|college|other`), `is_active`. RLS:
+  everyone reads active subjects; only admins write.
+- **`tutor_subjects`** — authoritative per-tutor subject approvals
+  (`tutor_id`, `subject_id`). RLS: tutor reads own; **only admins write** (a
+  tutor cannot self-approve subjects).
+- **`tutor_availability`** — recurring weekly blocks (`day_of_week` 0–6,
+  `start_time`, `end_time`) in the tutor's local timezone
+  (`tutor_profiles.timezone`, added in this migration). RLS: tutor + admin.
+  Guards against zero-length/inverted ranges and duplicates.
+- **`tutor_availability_exceptions`** — one-off unavailable windows
+  (`starts_at`/`ends_at`, UTC). RLS: tutor + admin.
+- **`bookings`** — the hub. UTC `scheduled_start`/`scheduled_end`,
+  `duration_minutes` (30/60), `is_free_trial`, `price_cents`, `status`
+  (`pending|confirmed|completed|cancelled|no_show`), `payment_status`
+  (`not_required|awaiting_payment`), and **privacy-safe denormalized** fields
+  (`student_first_name`, `student_grade`, `subject_name`, `tutor_display_name`).
+  No email/phone/address/billing anywhere. RLS: account owner reads own; assigned
+  tutor reads theirs; admin all; writes via SECURITY DEFINER functions (+ admin).
+
+Constraints/functions:
+- `bookings_no_tutor_overlap` — gist exclusion constraint preventing overlapping
+  tutor sessions (concurrency-safe double-booking prevention).
+- `bookings_one_free_trial_per_student` — partial unique index enforcing one
+  non-cancelled free trial per student.
+- `create_booking()` — auth + free-trial + pricing + matching + insert (SECURITY
+  DEFINER). `get_available_slots()`, `tutor_is_available()`,
+  `has_used_free_trial()`, `cancel_booking()`, `set_booking_status()`.
+
+Free-trial conversion + tutor-performance analytics are **derivable** from
+`bookings` (is_free_trial, status, completed_at, tutor_id, created_at); the
+analytics dashboards themselves are intentionally not built yet.
+
 ## Not Built Yet
 
-The booking-related tables above (including `bookings.duration_minutes` /
-`is_free_trial` and the free-trial tracking) are **not built yet** — they are
-the plan for Prompt 3's booking system, which must support both 30-minute and
-60-minute sessions plus free-trial eligibility. This pricing/free-trial update
-(Prompt 2.7) intentionally changes only customer-facing content and
-documentation; no database migrations are added or rerun here. We avoid creating
-booking tables ahead of the real booking requirements.
+- Payments (Stripe): `bookings.payment_status` is prepared (`awaiting_payment`),
+  but no payments table, charges, or transaction ids exist yet.
+- Live video (Twilio): `video_sessions`/`recordings` will attach to a confirmed
+  `booking` in a later phase.
+- Messaging, reviews, and analytics dashboards remain future phases.
