@@ -40,17 +40,28 @@ actually done.
 - [x] Public site + docs updated; tutor compensation kept private
       (`BUSINESS_MODEL.md`)
 
-## Phase 3 — Subjects, Availability & Booking
+## Phase 3 — Subjects, Availability & Booking (staged 3A → 3D)
 
-- [ ] `subjects` and `tutor_subjects` tables + admin management UI
-- [ ] `tutor_availability` model and a way for tutors to set it
-- [ ] Student-facing tutor search/matching flow
-- [ ] `bookings` table + booking creation flow (status lifecycle), supporting
-      **both 30-minute and 60-minute** sessions
-- [ ] Free-trial eligibility: let a new student book one free 30-minute session
-      (no card), and track claimed / booked / completed / tutor / converted
-- [ ] Wire the "Try 30 Minutes Free" CTA into the real booking flow
-- [ ] Booking views for student and tutor dashboards
+### Prompt 3A — data & server foundation (DONE)
+- [x] `students` (parent-first learners), `subjects`, `tutor_subjects` tables
+- [x] `tutor_availability` + `tutor_availability_exceptions` + tutor timezone
+- [x] `bookings` table + lifecycle statuses (30- and 60-min); free-trial = 30 only
+- [x] Server-side managed matching (`create_booking`) — no public tutor catalog
+- [x] Free-trial eligibility enforced at the DB (one free 30-min per student)
+- [x] Timezone-safe design (UTC + local-tz availability), double-booking &
+      free-trial enforcement, RLS/anti-poaching, live foundation tests
+
+### Prompt 3B–3D — UI (NOT built yet)
+- [ ] Student/parent booking wizard wired to `create_booking` (3B)
+- [ ] Tutor availability + exceptions UI; tutor session views (3C)
+- [ ] Admin subject management, tutor-subject approvals, booking oversight (3C)
+- [ ] Dashboard booking views for student/tutor/admin (3B–3D)
+
+### Deferred to later phases (not Prompt 3)
+- [ ] Stripe payments (attach to `bookings`; move `awaiting_payment` → `paid`)
+- [ ] Twilio video rooms (attach to a confirmed booking)
+- [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
+- [ ] Free-trial conversion + tutor-performance analytics dashboards
 
 ## Phase 4 — Payments (Stripe)
 
