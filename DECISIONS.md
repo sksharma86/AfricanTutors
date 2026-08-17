@@ -190,3 +190,36 @@ created. Both have documented, clean attachment points on `bookings`.
 
 **Reasoning:** Prompt 3 is a scheduling foundation. Faking payment/video state
 would corrupt data the Stripe/Twilio phases depend on.
+
+## 2026-08-17 — Repeat-tutor continuity is same-subject and never overrides scheduling (Prompt 3B)
+
+**Decision:** `create_booking` prefers a tutor only if they *completed* a prior
+session with the same student **for the same subject** and are still approved,
+qualified, and available; otherwise it falls back to least-workload matching.
+
+**Reasoning:** Continuity should be subject-specific (a tutor a student liked for
+Algebra isn't necessarily their Chemistry tutor) and must never assign an
+unavailable or now-unqualified tutor. Scheduling correctness wins.
+
+## 2026-08-17 — Free-trial consumption rule
+
+**Decision:** One free 30-min trial per student. A trial **cancelled** before it
+happens **restores** eligibility; a **completed** trial consumes it; a
+**no_show** consumes it. Enforced by the partial unique index
+`(student_id) where is_free_trial and status <> 'cancelled'` plus a server check.
+
+**Reasoning:** This is the simplest rule compatible with the existing 3A
+constraint and matches the intent (only a genuinely delivered/served trial
+should burn eligibility; a clean cancellation shouldn't penalize the family).
+No refund/payment policy is implied.
+
+## 2026-08-17 — Availability/booking engine is not anonymous-callable (Prompt 3B)
+
+**Decision:** Execute on `get_available_slots`, `tutor_is_available`, and
+`has_used_free_trial` is revoked from `public`; only authenticated users (and the
+service role) can call the booking engine. `create_booking` was already
+authenticated-only.
+
+**Reasoning:** Booking is a logged-in action; anonymous callers have no
+legitimate need to enumerate availability, and locking it down supports the
+anti-poaching/privacy posture.

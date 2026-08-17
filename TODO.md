@@ -51,11 +51,19 @@ actually done.
 - [x] Timezone-safe design (UTC + local-tz availability), double-booking &
       free-trial enforcement, RLS/anti-poaching, live foundation tests
 
-### Prompt 3B–3D — UI (NOT built yet)
-- [ ] Student/parent booking wizard wired to `create_booking` (3B)
+### Prompt 3B — server-side booking engine (DONE)
+- [x] Hardened `get_available_slots` (configurable interval, duration-fit,
+      exceptions/bookings, horizon, authenticated-only)
+- [x] Hardened `create_booking` matching (same-subject repeat → workload → id)
+- [x] Documented free-trial consumption rule + price integrity + Stripe point
+- [x] Server-only booking service layer (`src/lib/booking-service.ts`)
+- [x] 49/49 live tests (incl. slot math, concurrency, DST, security)
+
+### Prompt 3C–3D — UI (NOT built yet)
+- [ ] Student/parent booking wizard wired to the booking service (3C)
 - [ ] Tutor availability + exceptions UI; tutor session views (3C)
 - [ ] Admin subject management, tutor-subject approvals, booking oversight (3C)
-- [ ] Dashboard booking views for student/tutor/admin (3B–3D)
+- [ ] Dashboard booking views for student/tutor/admin (3C–3D)
 
 ### Deferred to later phases (not Prompt 3)
 - [ ] Stripe payments (attach to `bookings`; move `awaiting_payment` → `paid`)
