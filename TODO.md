@@ -59,11 +59,19 @@ actually done.
 - [x] Server-only booking service layer (`src/lib/booking-service.ts`)
 - [x] 49/49 live tests (incl. slot math, concurrency, DST, security)
 
-### Prompt 3C–3D — UI (NOT built yet)
-- [ ] Student/parent booking wizard wired to the booking service (3C)
-- [ ] Tutor availability + exceptions UI; tutor session views (3C)
-- [ ] Admin subject management, tutor-subject approvals, booking oversight (3C)
-- [ ] Dashboard booking views for student/tutor/admin (3C–3D)
+### Prompt 3C — Booking / tutor / admin UI (DONE)
+- [x] Student/parent booking wizard (student, subject/Other, session, time, review, confirm)
+- [x] Multiple-student selection + inline add; per-student free-trial state
+- [x] Student dashboard bookings + payment-required presentation
+- [x] Tutor availability + exceptions UI; privacy-safe tutor session views
+- [x] Admin subject management, tutor-subject qualification, filterable booking ops + Other requests
+
+### Prompt 3D / later — NOT built yet
+- [ ] Any remaining booking polish deferred to 3D
+- [ ] Stripe payments (attach to `bookings`; `awaiting_payment` → `paid`)
+- [ ] Twilio video rooms (attach to a confirmed booking)
+- [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
+- [ ] Free-trial conversion + tutor-performance analytics dashboards
 
 ### Deferred to later phases (not Prompt 3)
 - [ ] Stripe payments (attach to `bookings`; move `awaiting_payment` → `paid`)

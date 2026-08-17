@@ -1,5 +1,26 @@
 # African Tutors Development Progress
 
+## Prompt 3C — Booking, tutor & admin UI (complete)
+
+Built the user-facing interfaces on the verified 3A/3B backend (no new booking
+logic, no Stripe/Twilio):
+
+- Student/parent booking wizard (`/dashboard/student/book`): student select/add,
+  subject (+ Other), session (free trial via server eligibility / 30 / 60), real
+  slot pick in student tz, review, confirm via `create_booking`.
+- Paid bookings shown as "Booking held — payment required" (never "paid"
+  pre-Stripe); free trials shown confirmed.
+- Student dashboard: next/upcoming/past bookings, per-student free-trial state
+  (Available/Booked/Used), payment-required badge, Book CTA.
+- Multiple students: add child inline; bookings belong to the selected student.
+- Tutor dashboard: assigned sessions (privacy-safe fields only) + weekly
+  availability editor + one-off exceptions editor (local time).
+- Admin: subject catalog (add/enable/disable), tutor↔subject qualification
+  (admin-only), filterable booking operations table incl. Other requests.
+- Preserves the 2.6 black/gold/ivory design; mobile-first booking flow.
+- Quality gates: 49/49 live backend tests still pass; eslint, tsc, build pass.
+
+
 ## Prompt 3B — Booking engine hardening (complete; server-side only)
 
 - Hardened `get_available_slots` (`supabase/migrations/0003_prompt3b_booking_engine.sql`):

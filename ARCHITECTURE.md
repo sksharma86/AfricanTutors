@@ -374,3 +374,51 @@ and no money moved. Prompt 4 will: create a Stripe Checkout/PaymentIntent for th
 booking, return the client secret/redirect, confirm payment only via a verified
 webhook (moving `awaiting_payment` → `paid`), and handle failure/expiration
 (leaving or reverting the booking). Free trials bypass payment.
+
+## Booking UI (Prompt 3C)
+
+The user-facing interfaces on top of the verified 3A/3B backend. No new booking
+logic — the UI calls the authoritative SQL functions (via the browser Supabase
+client for interactive steps, and `src/lib/booking-service.ts` server helpers in
+server components), all under RLS.
+
+### Student / parent booking flow (`/dashboard/student/book`)
+A premium multi-step wizard: (1) select/add student, (2) pick an active subject
+or "Other" with a private description, (3) choose 30-min $12 / 60-min $20, or —
+if the **server** (`has_used_free_trial`) says the selected student is eligible —
+the free 30-minute trial ($0), (4) pick a real slot from `get_available_slots`
+shown in the student's timezone, (5) review, (6) confirm via `create_booking`.
+The client never sends price or a tutor choice.
+
+### Paid booking presentation
+Paid bookings created with `payment_status = 'awaiting_payment'` are presented as
+**"Booking held — payment required"** (wizard) and a **"Payment required"** badge
+(dashboard). We never say "paid" or "payment complete" pre-Stripe. Free trials
+are shown as confirmed (backend confirms them; no payment needed).
+
+### Multiple students
+A parent account can hold multiple `students` and add another inline in the
+wizard (`account_id` defaults to `auth.uid()` under RLS). Bookings belong to the
+selected student, and the student dashboard shows **per-student** free-trial
+state (Available / Booked / Used) — the trial belongs to the student.
+
+### Tutor dashboard & availability UI
+Approved tutors see upcoming/past assigned sessions with only teach-necessary,
+privacy-safe fields (student first name, grade, subject, private request, local
+time, duration, status) — no email/phone/address/billing. A weekly availability
+editor (add/remove recurring blocks in local time) and an exceptions editor
+(add/remove one-off unavailable windows) write directly under RLS.
+
+### Admin controls
+Admin dashboard adds: subject catalog management (add / enable / disable — prefer
+disable over destructive delete), authoritative tutor↔subject qualification
+(add/remove; tutors can never self-qualify), and a filterable booking operations
+table (all / pending / confirmed / awaiting-payment / free-trial / **other
+requests** / completed / cancelled / no-show) with admin cancel. "Other" requests
+surface as `pending`, tutor-less rows for manual follow-up/assignment.
+
+### Anti-poaching in the UI
+No customer contact fields are fetched on any tutor-facing screen — `bookings`
+carries none, and tutors have no access to the `students` table (RLS). Students
+never see tutor contact info; only a platform-controlled display name appears
+after assignment.
