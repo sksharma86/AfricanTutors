@@ -1,5 +1,26 @@
 # African Tutors Development Progress
 
+## Prompt 3B — Booking engine hardening (complete; server-side only)
+
+- Hardened `get_available_slots` (`supabase/migrations/0003_prompt3b_booking_engine.sql`):
+  configurable slot interval, whole-duration-fits check, exception/booking
+  filtering, horizon window; returns authoritative UTC instants (UI converts to
+  student tz). Locked down to authenticated users only.
+- Hardened `create_booking` matching: same-subject repeat-tutor continuity (only
+  if still approved/qualified/available), then least-workload, then deterministic
+  tie-break; server-authoritative pricing + free-trial rules.
+- Added `src/lib/booking-service.ts` — a server-only service layer (RLS session,
+  never service role) for the future UI (subjects, students, slots, booking,
+  cancel, confirmation).
+- Documented free-trial consumption rule (cancelled restores; completed/no_show
+  consume) and the Stripe attachment point for Prompt 4.
+- 49/49 live Supabase tests pass (13 Phase 2 + 19 Prompt 3A + 17 Prompt 3B):
+  slot math (30/60 + interval), matching, repeat/fallback/workload, free-trial &
+  price integrity, double-booking (exact/partial/60-over-30/back-to-back/
+  concurrent), timezone incl. Chicago DST, RLS/privacy, anon rejection.
+- No UI, Stripe, or Twilio (out of scope for 3B).
+
+
 ## Prompt 3A — Booking data & server foundation (complete; UI in 3B–3D)
 
 Foundation only — no customer/tutor/admin booking UI in this stage.

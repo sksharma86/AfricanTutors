@@ -309,3 +309,68 @@ Cancellation / rescheduling / refund policy is deliberately **not** encoded.
 `cancel_booking()` exists (owner of the booking or admin) and admins can cancel,
 but no free-cancellation, refund, or reschedule guarantee is implied. This
 remains an owner decision before launch.
+
+## Booking Engine (Prompt 3B — server-side hardening)
+
+Prompt 3B hardens the server-side booking engine (no UI). A server-only service
+layer (`src/lib/booking-service.ts`, guarded by `import "server-only"`) is the
+single entry point the future UI will call; it runs with the authenticated
+user's session (RLS enforced) and never uses the service role.
+
+### Slot generation algorithm (`get_available_slots`)
+Inputs: subject, duration (30/60), a `[from, to]` UTC window (the caller passes
+the configurable horizon from `booking-config.ts`), and a configurable
+`p_slot_minutes` interval (default 30). For every approved tutor qualified for
+the subject with a valid timezone, it steps candidate starts by the slot
+interval from each recurring block's start (in the tutor's local tz), keeps only
+candidates where the **whole duration fits** inside the block, then removes any
+that overlap an availability exception or an existing active booking, and any
+outside `[from, to]`. Returns the distinct set of bookable **UTC** start instants
+(authoritative); the UI converts to the student's IANA timezone for display.
+Example: a 17:00–19:00 block yields 17:00/17:30/18:00/18:30 for 30-min and
+17:00/17:30/18:00 for 60-min (never 18:30, which would overrun). Not callable by
+anonymous users (execute revoked from public).
+
+### Matching order (`create_booking`)
+Eligible tutor = role `tutor` + status `approved` + admin-qualified for the
+subject + valid timezone + available for the whole slot (recurring minus
+exceptions) + no booking conflict. Order:
+1. **Same-subject repeat-tutor continuity** — a tutor who *completed* a prior
+   session with this student **for this subject**, only if still approved,
+   still qualified, and actually available (checked in the loop, so continuity
+   never overrides scheduling correctness; otherwise it falls back).
+2. Fair least-upcoming-workload distribution.
+3. Deterministic `profile_id` tie-break (predictable under concurrency).
+The gist exclusion constraint remains the final concurrency guard: on a
+concurrent collision the insert fails and matching advances to the next tutor.
+
+### Free-trial consumption rule (documented)
+One free 30-minute trial per student. Enforced by the partial unique index
+`(student_id) where is_free_trial and status <> 'cancelled'` plus a server check.
+Chosen rule: **cancelled** (before completion) **restores** eligibility;
+**completed** consumes it; **no_show** consumes it (it is not `cancelled`). A
+60-minute session can never be free; price snapshot is `$0` / `not_required`.
+
+### Price integrity
+Price is derived server-side from duration + free-trial eligibility inside
+`create_booking` (30→$12, 60→$20, trial→$0), mirroring `src/lib/pricing.ts`.
+Clients cannot pass a price, choose a tutor, mark a booking paid, or flag a
+60-min session as free — there are no such parameters, direct booking inserts
+are denied by RLS, and booking updates are admin-only.
+
+### Booking horizon
+`BOOKING_HORIZON_DAYS` and `MIN_BOOKING_NOTICE_MINUTES` (`booking-config.ts`) are
+configurable constants, not hardcoded policy. The current values are development
+defaults, not a final public commitment.
+
+### "Other" subject requests
+An "Other" request creates a `pending`, tutor-less booking (subject_id null,
+`other_subject_text` + private note) for **admin review/assignment** — the engine
+never guesses tutor qualification. The admin assignment UI is Prompt 3C.
+
+### Stripe attachment point (Prompt 4)
+Paid bookings are created `confirmed` with `payment_status = 'awaiting_payment'`
+and no money moved. Prompt 4 will: create a Stripe Checkout/PaymentIntent for the
+booking, return the client secret/redirect, confirm payment only via a verified
+webhook (moving `awaiting_payment` → `paid`), and handle failure/expiration
+(leaving or reverting the booking). Free trials bypass payment.

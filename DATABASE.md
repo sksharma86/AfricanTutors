@@ -312,6 +312,15 @@ Constraints/functions:
   DEFINER). `get_available_slots()`, `tutor_is_available()`,
   `has_used_free_trial()`, `cancel_booking()`, `set_booking_status()`.
 
+Prompt 3B (`supabase/migrations/0003_prompt3b_booking_engine.sql`, functions
+only — no schema changes): `get_available_slots()` gains a configurable
+`p_slot_minutes` interval (default 30) and requires the whole duration to fit
+inside availability; `create_booking()` repeat-tutor preference now requires a
+*completed* prior session with the same student **and same subject** (still
+approved/qualified/available). Execute on `get_available_slots`,
+`tutor_is_available`, and `has_used_free_trial` is revoked from `public` (anon)
+and granted only to `authenticated`/`service_role`.
+
 Free-trial conversion + tutor-performance analytics are **derivable** from
 `bookings` (is_free_trial, status, completed_at, tutor_id, created_at); the
 analytics dashboards themselves are intentionally not built yet.
