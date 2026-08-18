@@ -84,3 +84,22 @@ the dashboards:
 Tutor compensation remains private and never appears in customer-facing code.
 Cancellation/refund policy (which affects unit economics) is still an open owner
 decision.
+
+## Phase 4A — packages, credits & tutor pay (INTERNAL)
+
+Authoritative pricing/products now live in the database (integer cents), not code:
+
+- **Packages** (`package_products`, never-expiring minutes): 10h/600min = $190,
+  20h/1200min = $360, 40h/2400min = $680. Per-minute effective price drops with
+  larger packages (≈$0.317 → $0.283 per minute) vs pay-as-you-go ($12/30min =
+  $0.40/min). Purchasable independently of a booking.
+- **Dollar account credit** (never expires): admin comp, service resolutions,
+  future promotions/referrals — all as ledger entries.
+- **Tutor compensation** is admin-set per tutor (`comp_rate_cents_per_hour`),
+  private, separate from customer price; 30-min pays 50% of hourly; each
+  `tutor_earnings` row snapshots the rate so history is stable. The free trial
+  costs the customer $0 but still records a normal tutor earning (fulfillment
+  cost, as documented above). Payouts are manual for now.
+
+Margins per session/package are derivable from `payments` (revenue/credit) minus
+`tutor_earnings` (labor). Tutor pay/margins never appear in customer-facing code.

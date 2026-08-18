@@ -477,3 +477,69 @@ booking must never receive an active room. No external meeting links are stored.
 Cancellation / rescheduling / refund policy is still an owner decision. Admin can
 cancel; students/tutors have only conservative, non-committal actions; no refund
 or free-reschedule is promised.
+
+## Financial Architecture (Phase 4A — Stripe & ledger foundation)
+
+Foundation only: no checkout UI, no payouts. All money is **integer cents**;
+never floating point. Ledgers are the source of truth; balances are derived.
+
+### Stripe foundation
+- `stripe` SDK; server-only client `src/lib/stripe/client.ts` (lazy, throws if
+  unconfigured); env in `src/lib/stripe/config.ts` (`STRIPE_SECRET_KEY`,
+  `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`) — nothing throws
+  at import so the app builds without keys.
+- Webhook `POST /api/stripe/webhook` (Node runtime): verifies the Stripe
+  signature against the raw body (success redirects are never trusted), then
+  records the event id via `mark_stripe_event_processed` for idempotency
+  (duplicate deliveries are safe no-ops), and has a typed switch where Phase 4B
+  fulfillment attaches. Uses a server-only service-role Supabase client
+  (`src/lib/supabase/service.ts`) so it can call the SECURITY DEFINER money
+  functions without a user session. Returns 503 when unconfigured, 400 on bad
+  signature.
+
+### Data model (`supabase/migrations/0005_phase4a_financial.sql`)
+- `package_products` — admin catalog (code, name, minutes, `price_cents`,
+  active, sort); seeded 600min/$190, 1200min/$360, 2400min/$680. Not hard-coded
+  in app logic.
+- `payments` — money via Stripe and/or credit: `gross_cents`,
+  `stripe_paid_cents`, `credit_applied_cents`, `refunded_cents`, `status`,
+  Stripe ids (`payment_intent`/`checkout_session`/`charge`), `idempotency_key`.
+- `package_minute_ledger` — signed `minutes_delta` movements (purchase /
+  consumption / restoration / admin_adjustment); balance = SUM.
+- `dollar_credit_ledger` — signed `amount_cents` movements (issuance /
+  consumption / restoration / refund / admin_adjustment / promotion / referral);
+  balance = SUM. Package minutes and dollar credit are kept distinct.
+- `tutor_earnings` — one per booking; **snapshots `rate_cents_per_hour`** at
+  earning time so future rate changes never rewrite history; `amount = round(rate
+  × minutes / 60)` (30-min = 50%); statuses pending/earned/paid/voided/adjusted.
+- `stripe_events` — processed webhook event ids (idempotency).
+- `financial_audit_log` — actor/action/entity/prev/new/reason for financial
+  mutations; `actor_id`/`created_by` are `ON DELETE SET NULL` so history survives
+  user deletion.
+- Additive: `profiles.stripe_customer_id` (unique), `tutor_profiles.comp_rate_cents_per_hour`
+  (admin-only via a guard trigger + `admin_set_tutor_rate`).
+
+### Balances, atomicity, idempotency
+Derivation via `get_package_minutes` / `get_dollar_credit` (owner or admin only).
+Mutations are SECURITY DEFINER functions (`issue/consume/restore_package_minutes`,
+`issue/consume_dollar_credit`, `record_tutor_earning`, `admin_set_tutor_rate`,
+`mark_stripe_event_processed`) callable only by admins or the service role
+(`is_financial_actor`). Idempotency via unique `reference` (ledgers), unique
+`booking_id` (earnings), and the `stripe_events` table. Consumption takes a
+per-account `pg_advisory_xact_lock` and re-checks balance, preventing concurrent
+overspend. Free trials: customer price `$0` (a payment with `gross_cents=0`/no
+Stripe charge) while a normal tutor earning is still recorded.
+
+### RLS
+Customers read only their own `payments`/ledgers and never mutate them or set
+prices. Tutors read only their own `tutor_earnings`, cannot set their pay rate,
+and cannot mark earnings paid. `package_products` active rows are public-read,
+admin-write. `stripe_events`/`financial_audit_log` are admin-read only. All
+writes go through SECURITY DEFINER functions / the service role.
+
+### Deferred
+4B: checkout (Checkout/PaymentIntent), webhook fulfillment handlers, package
+purchase + booking payment UI. 4C: admin financial UI, payouts tracking UI. 4D:
+disputes/arbitration. Cancellation/refund policy and promo/referral systems
+remain future work (the ledger already supports restoration/refund/promotion
+entry types).

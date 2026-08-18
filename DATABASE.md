@@ -333,10 +333,30 @@ Free-trial conversion + tutor-performance analytics are **derivable** from
 `bookings` (is_free_trial, status, completed_at, tutor_id, created_at); the
 analytics dashboards themselves are intentionally not built yet.
 
+## Implemented in Phase 4A (`supabase/migrations/0005_phase4a_financial.sql`)
+
+Financial foundation (all money in integer cents; RLS on every table):
+- `package_products` (seeded: 600/$190, 1200/$360, 2400/$680), `payments`,
+  `package_minute_ledger`, `dollar_credit_ledger`, `tutor_earnings`,
+  `stripe_events`, `financial_audit_log`.
+- Additive: `profiles.stripe_customer_id` (unique), `tutor_profiles.comp_rate_cents_per_hour`
+  (admin-only, guarded).
+- Functions: `get_package_minutes`, `get_dollar_credit`,
+  `issue/consume/restore_package_minutes`, `issue/consume_dollar_credit`,
+  `record_tutor_earning` (rate snapshot; 30-min = 50%; one per booking),
+  `admin_set_tutor_rate`, `mark_stripe_event_processed`, `is_financial_actor`.
+- Ledgers are the source of truth; balances are SUM-derived. Idempotency via
+  unique `reference`/`booking_id`/`stripe_events.id`; consumption uses per-account
+  advisory locks. `created_by`/`actor_id` FKs are `ON DELETE SET NULL`.
+- Customers/tutors cannot mutate ledgers, set prices, or set pay rates (RLS +
+  SECURITY DEFINER functions). Phase 3 booking-state model unchanged.
+
 ## Not Built Yet
 
-- Payments (Stripe): `bookings.payment_status` is prepared (`awaiting_payment`),
-  but no payments table, charges, or transaction ids exist yet.
-- Live video (Twilio): `video_sessions`/`recordings` will attach to a confirmed
-  `booking` in a later phase.
-- Messaging, reviews, and analytics dashboards remain future phases.
+- Stripe checkout/fulfillment (Phase 4B): the webhook verifies + dedupes events,
+  but checkout creation and event→ledger fulfillment handlers are not built.
+- Admin financial UI / payout tracking UI (4C); disputes/arbitration (4D).
+- Live video (Twilio): `video_sessions`/`recordings` attach to a confirmed
+  `booking` later.
+- Messaging, reviews, analytics dashboards; promo/referral systems (ledger
+  entry types exist as hooks).

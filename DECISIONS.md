@@ -248,3 +248,42 @@ receive a room.
 
 **Reasoning:** No unpaid or lapsed booking should grant a live tutoring session;
 gating on `confirmed` keeps fulfillment aligned with payment/eligibility.
+
+## 2026-08-18 — Ledger-based finances in integer cents (Phase 4A)
+
+**Decision:** Financial state is auditable ledgers (`package_minute_ledger`,
+`dollar_credit_ledger`), not mutable balance columns. Balances are derived by
+SUM. All monetary values are integer cents; no floating point. Package products
+live in a `package_products` table (seeded), never as authoritative frontend
+constants. Package minutes and dollar credit are distinct instruments; both never
+expire.
+
+**Reasoning:** Auditability and correctness for money require an immutable
+transaction history; cached balances can drift. Cents-as-integers avoid
+floating-point rounding bugs. Table-driven products let pricing/offerings change
+without code.
+
+## 2026-08-18 — Tutor compensation is separate, admin-only, and rate-snapshotted
+
+**Decision:** `tutor_profiles.comp_rate_cents_per_hour` is admin-only (guard
+trigger + `admin_set_tutor_rate`); tutors can't set it. Customer pricing and
+tutor pay are unrelated. `tutor_earnings` snapshots the rate used, so later rate
+changes never rewrite historical earnings. 30-minute sessions pay 50% of the
+hourly rate. The free trial charges the customer $0 but still records a normal
+tutor earning.
+
+**Reasoning:** Pay is confidential company-controlled supply economics, distinct
+from customer price. Snapshotting preserves accurate history for future payouts.
+
+## 2026-08-18 — Financial mutations are SECURITY DEFINER, idempotent, concurrency-safe
+
+**Decision:** Only admins or the service role (`is_financial_actor`) can move
+money, via SECURITY DEFINER functions. Idempotency uses unique `reference`
+(ledgers), unique `booking_id` (earnings), and a `stripe_events` table (webhook
+event ids). Consumption takes a per-account advisory lock and re-checks balance.
+Stripe webhook signature verification (raw body) is authoritative; success
+redirects are never trusted.
+
+**Reasoning:** Browsers must never do read-then-write money logic; duplicate
+Stripe deliveries and concurrent spends must be safe. Webhooks are the only
+trustworthy payment signal.
