@@ -1,5 +1,28 @@
 # African Tutors Development Progress
 
+## Phase 4A — Stripe & financial foundation (complete; no checkout UI/payouts)
+
+- Financial data model (`supabase/migrations/0005_phase4a_financial.sql`, all
+  integer cents, RLS on all): `package_products` (seeded 600/$190, 1200/$360,
+  2400/$680), `payments`, `package_minute_ledger`, `dollar_credit_ledger`,
+  `tutor_earnings`, `stripe_events`, `financial_audit_log`; additive
+  `profiles.stripe_customer_id`, `tutor_profiles.comp_rate_cents_per_hour` (admin-only).
+- Ledgers are the source of truth; balances derived. Atomic, idempotent,
+  concurrency-safe SECURITY DEFINER money functions (issue/consume/restore minutes
+  + credit, record tutor earnings with rate snapshot, admin rate set, stripe event
+  dedupe). Customers/tutors can't mutate ledgers, set prices, or set pay rates.
+- Stripe foundation: `stripe` SDK, server-only client + env config, and
+  `POST /api/stripe/webhook` with signature verification + event idempotency
+  (fulfillment handlers deferred to 4B). Success redirects never trusted.
+- Review fixes (`0006_phase4a_review_fixes.sql`): robust Stripe event lifecycle
+  (claim→fulfill→complete; failed events retryable; concurrent deliveries can't
+  double-fulfill); ledger `reference` NOT NULL + non-blank; `record_tutor_earning`
+  derives tutor+duration from the booking; financial FKs changed CASCADE→RESTRICT
+  so financial history can't be destroyed by profile deletion.
+- 74/74 live tests pass (58 prior + 16 Phase 4A); eslint, tsc, production build
+  pass. No checkout UI, no payouts, no promo/referrals (ledger hooks exist).
+
+
 ## Prompt 3D — Booking lifecycle hardening + Stripe readiness (complete)
 
 - Paid bookings now created `pending` + `awaiting_payment` with a payment hold

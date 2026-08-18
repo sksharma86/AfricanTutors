@@ -248,3 +248,69 @@ receive a room.
 
 **Reasoning:** No unpaid or lapsed booking should grant a live tutoring session;
 gating on `confirmed` keeps fulfillment aligned with payment/eligibility.
+
+## 2026-08-18 — Ledger-based finances in integer cents (Phase 4A)
+
+**Decision:** Financial state is auditable ledgers (`package_minute_ledger`,
+`dollar_credit_ledger`), not mutable balance columns. Balances are derived by
+SUM. All monetary values are integer cents; no floating point. Package products
+live in a `package_products` table (seeded), never as authoritative frontend
+constants. Package minutes and dollar credit are distinct instruments; both never
+expire.
+
+**Reasoning:** Auditability and correctness for money require an immutable
+transaction history; cached balances can drift. Cents-as-integers avoid
+floating-point rounding bugs. Table-driven products let pricing/offerings change
+without code.
+
+## 2026-08-18 — Tutor compensation is separate, admin-only, and rate-snapshotted
+
+**Decision:** `tutor_profiles.comp_rate_cents_per_hour` is admin-only (guard
+trigger + `admin_set_tutor_rate`); tutors can't set it. Customer pricing and
+tutor pay are unrelated. `tutor_earnings` snapshots the rate used, so later rate
+changes never rewrite historical earnings. 30-minute sessions pay 50% of the
+hourly rate. The free trial charges the customer $0 but still records a normal
+tutor earning.
+
+**Reasoning:** Pay is confidential company-controlled supply economics, distinct
+from customer price. Snapshotting preserves accurate history for future payouts.
+
+## 2026-08-18 — Financial mutations are SECURITY DEFINER, idempotent, concurrency-safe
+
+**Decision:** Only admins or the service role (`is_financial_actor`) can move
+money, via SECURITY DEFINER functions. Idempotency uses unique `reference`
+(ledgers), unique `booking_id` (earnings), and a `stripe_events` table (webhook
+event ids). Consumption takes a per-account advisory lock and re-checks balance.
+Stripe webhook signature verification (raw body) is authoritative; success
+redirects are never trusted.
+
+**Reasoning:** Browsers must never do read-then-write money logic; duplicate
+Stripe deliveries and concurrent spends must be safe. Webhooks are the only
+trustworthy payment signal.
+
+## 2026-08-18 — Stripe events use a claim→fulfill→complete lifecycle (4A review)
+
+**Decision:** Replace the record-then-done webhook idempotency with a
+`begin_stripe_event` (claimed/duplicate/in_progress) → fulfill →
+`complete_stripe_event`/`fail_stripe_event` lifecycle. An event is "completed"
+only after fulfillment succeeds; failed events are retryable; a concurrent
+duplicate delivery gets `in_progress` (409) and never double-fulfills.
+
+**Reasoning:** Recording an event as processed before fulfillment would (once 4B
+adds fulfillment) let a failed-then-retried delivery skip fulfillment, so a paid
+customer might never be credited. The lifecycle makes success the only terminal
+state that suppresses retries.
+
+## 2026-08-18 — Financial history is never physically deleted (4A review)
+
+**Decision:** Financial FKs to profiles (`payments.account_id`, both ledgers'
+`account_id`, `tutor_earnings.tutor_id`) are `ON DELETE RESTRICT`; ledger/audit
+`created_by`/`actor_id` are `ON DELETE SET NULL`. Ledger idempotency `reference`
+is NOT NULL + non-blank. Tutor earnings derive tutor + duration from the
+authoritative booking.
+
+**Reasoning:** Cascading deletes would erase auditable financial history when a
+profile is removed. RESTRICT forces a deliberate soft-delete/anonymize path
+instead. Non-null references keep idempotency guarantees real (Postgres unique
+allows multiple NULLs). Deriving earnings from the booking prevents wrong-tutor
+or arbitrary-duration earnings.

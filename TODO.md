@@ -72,8 +72,20 @@ actually done.
 - [x] Parent-friendly error handling; admin `expired` filter
 - [x] State machine + Stripe handoff contract + Twilio confirmed-only documented
 
-### Prompt 4 / later — NOT built yet
-- [ ] Stripe payments (attach to `bookings`; `awaiting_payment` → `paid`; verified webhook, idempotent)
+## Phase 4 — Payments & finance (staged)
+
+### Phase 4A — Stripe & financial foundation (DONE)
+- [x] Package products table (seeded), package-minute + dollar-credit ledgers
+- [x] `payments`, `tutor_earnings` (rate snapshot), `stripe_events`, `financial_audit_log`
+- [x] Admin-only tutor comp rate; atomic idempotent money functions; RLS
+- [x] Stripe SDK + server client + webhook (signature verify + idempotency)
+
+### Phase 4B–4D — NOT built yet
+- [ ] 4B: Stripe checkout (Checkout/PaymentIntent), webhook fulfillment handlers,
+      package purchase + booking payment UI (`awaiting_payment` → `paid`/`confirmed`)
+- [ ] 4C: admin financial UI + tutor payout tracking (payouts remain manual)
+- [ ] 4D: dispute/arbitration workflow
+- [ ] Cancellation/refund policy (owner decision); promo-code + referral systems
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards
