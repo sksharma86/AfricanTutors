@@ -14,8 +14,13 @@
 - Stripe foundation: `stripe` SDK, server-only client + env config, and
   `POST /api/stripe/webhook` with signature verification + event idempotency
   (fulfillment handlers deferred to 4B). Success redirects never trusted.
-- 70/70 live tests pass (58 prior + 12 new Phase 4A); eslint, tsc, production
-  build pass. No checkout UI, no payouts, no promo/referrals (ledger hooks exist).
+- Review fixes (`0006_phase4a_review_fixes.sql`): robust Stripe event lifecycle
+  (claim→fulfill→complete; failed events retryable; concurrent deliveries can't
+  double-fulfill); ledger `reference` NOT NULL + non-blank; `record_tutor_earning`
+  derives tutor+duration from the booking; financial FKs changed CASCADE→RESTRICT
+  so financial history can't be destroyed by profile deletion.
+- 74/74 live tests pass (58 prior + 16 Phase 4A); eslint, tsc, production build
+  pass. No checkout UI, no payouts, no promo/referrals (ledger hooks exist).
 
 
 ## Prompt 3D — Booking lifecycle hardening + Stripe readiness (complete)

@@ -489,13 +489,19 @@ never floating point. Ledgers are the source of truth; balances are derived.
   `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`) — nothing throws
   at import so the app builds without keys.
 - Webhook `POST /api/stripe/webhook` (Node runtime): verifies the Stripe
-  signature against the raw body (success redirects are never trusted), then
-  records the event id via `mark_stripe_event_processed` for idempotency
-  (duplicate deliveries are safe no-ops), and has a typed switch where Phase 4B
-  fulfillment attaches. Uses a server-only service-role Supabase client
-  (`src/lib/supabase/service.ts`) so it can call the SECURITY DEFINER money
-  functions without a user session. Returns 503 when unconfigured, 400 on bad
-  signature.
+  signature against the raw body (success redirects are never trusted), then runs
+  a **claim → fulfill → complete** lifecycle so an event is only "done" after
+  fulfillment succeeds:
+  - `begin_stripe_event(id,type)` atomically claims the event and returns
+    `claimed` (new, or reclaiming a prior `failed`), `duplicate` (already
+    `completed` → 200 no-op), or `in_progress` (another delivery is processing →
+    409 so Stripe retries later).
+  - On `claimed`, Phase 4B fulfillment runs in the typed switch; on success →
+    `complete_stripe_event` (200); on error → `fail_stripe_event` (500 so Stripe
+    retries, and the failed event is reclaimable). A failure never permanently
+    suppresses an event.
+  Uses a server-only service-role Supabase client (`src/lib/supabase/service.ts`).
+  Returns 503 unconfigured, 400 on bad signature.
 
 ### Data model (`supabase/migrations/0005_phase4a_financial.sql`)
 - `package_products` — admin catalog (code, name, minutes, `price_cents`,
@@ -509,9 +515,13 @@ never floating point. Ledgers are the source of truth; balances are derived.
 - `dollar_credit_ledger` — signed `amount_cents` movements (issuance /
   consumption / restoration / refund / admin_adjustment / promotion / referral);
   balance = SUM. Package minutes and dollar credit are kept distinct.
-- `tutor_earnings` — one per booking; **snapshots `rate_cents_per_hour`** at
-  earning time so future rate changes never rewrite history; `amount = round(rate
-  × minutes / 60)` (30-min = 50%); statuses pending/earned/paid/voided/adjusted.
+- `tutor_earnings` — one per booking; tutor id and duration are **derived from
+  the booking** (`record_tutor_earning(booking)`; rejects missing booking/tutor/
+  duration), so a caller can't create an earning with the wrong tutor or an
+  arbitrary duration. **Snapshots `rate_cents_per_hour`** at earning time so
+  future rate changes never rewrite history; `amount = round(rate × minutes / 60)`
+  (30-min = 50%); statuses pending/earned/paid/voided/adjusted (future admin
+  changes use an explicit adjustment, never rewriting the original).
 - `stripe_events` — processed webhook event ids (idempotency).
 - `financial_audit_log` — actor/action/entity/prev/new/reason for financial
   mutations; `actor_id`/`created_by` are `ON DELETE SET NULL` so history survives
@@ -523,12 +533,25 @@ never floating point. Ledgers are the source of truth; balances are derived.
 Derivation via `get_package_minutes` / `get_dollar_credit` (owner or admin only).
 Mutations are SECURITY DEFINER functions (`issue/consume/restore_package_minutes`,
 `issue/consume_dollar_credit`, `record_tutor_earning`, `admin_set_tutor_rate`,
-`mark_stripe_event_processed`) callable only by admins or the service role
-(`is_financial_actor`). Idempotency via unique `reference` (ledgers), unique
-`booking_id` (earnings), and the `stripe_events` table. Consumption takes a
-per-account `pg_advisory_xact_lock` and re-checks balance, preventing concurrent
-overspend. Free trials: customer price `$0` (a payment with `gross_cents=0`/no
-Stripe charge) while a normal tutor earning is still recorded.
+Stripe lifecycle `begin/complete/fail_stripe_event`) callable only by admins or
+the service role (`is_financial_actor`). Ledger `reference` is **NOT NULL +
+non-blank** (schema check and function validation) and unique, so idempotency
+cannot be defeated by null references; earnings are unique per `booking_id`;
+Stripe events keyed by event id. Consumption takes a per-account
+`pg_advisory_xact_lock` and re-checks balance, preventing concurrent overspend.
+Concurrent duplicate Stripe deliveries are serialized by the `stripe_events` PK:
+the first `begin_stripe_event` wins (`claimed`); a simultaneous delivery returns
+`in_progress` (409) rather than double-fulfilling. Free trials: customer price
+`$0` (payment `gross_cents=0`/no Stripe charge) while a normal tutor earning is
+still recorded.
+
+### Financial history preservation
+`payments.account_id`, both ledgers' `account_id`, and `tutor_earnings.tutor_id`
+use `ON DELETE RESTRICT` — a profile with financial history cannot be physically
+deleted (use a soft-delete/anonymize path), so financial records are never
+silently destroyed. `created_by`/`actor_id` on ledgers/earnings/audit use
+`ON DELETE SET NULL` so those references don't block deletion while the rows
+persist.
 
 ### RLS
 Customers read only their own `payments`/ledgers and never mutate them or set

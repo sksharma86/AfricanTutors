@@ -351,6 +351,20 @@ Financial foundation (all money in integer cents; RLS on every table):
 - Customers/tutors cannot mutate ledgers, set prices, or set pay rates (RLS +
   SECURITY DEFINER functions). Phase 3 booking-state model unchanged.
 
+Phase 4A review fixes (`0006_phase4a_review_fixes.sql`):
+- `stripe_events` gains `status` (processing/completed/failed), `attempts`,
+  `last_error`, `updated_at`, `completed_at`; new `begin/complete/fail_stripe_event`
+  lifecycle replaces `mark_stripe_event_processed` (event completed only after
+  fulfillment; failed events retryable; concurrent deliveries → one claims).
+- Ledger `reference` is now NOT NULL + non-blank (schema + function validation).
+- `record_tutor_earning(booking, reason)` derives tutor + duration from the
+  booking (rejects missing booking/tutor/duration); rate snapshot + one-per-booking
+  preserved.
+- `payments.account_id`, `package_minute_ledger.account_id`,
+  `dollar_credit_ledger.account_id`, `tutor_earnings.tutor_id` changed from
+  CASCADE to `ON DELETE RESTRICT` so financial history is never destroyed by
+  profile deletion.
+
 ## Not Built Yet
 
 - Stripe checkout/fulfillment (Phase 4B): the webhook verifies + dedupes events,

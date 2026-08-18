@@ -12,12 +12,24 @@ export const dynamic = "force-dynamic";
 /**
  * Stripe webhook endpoint (foundation).
  *
- * Authoritative for Stripe payment state. Verifies the signature, then records
- * the event id for idempotency so duplicate deliveries are safe no-ops. The
- * actual fulfillment handlers (issue package minutes, confirm booking, issue
- * credit, record refunds — all via the atomic SECURITY DEFINER ledger
- * functions) are wired in Phase 4B. Success redirects are never trusted as
- * proof of payment; only verified webhook events are.
+ * Authoritative for Stripe payment state. Success redirects are never trusted;
+ * only verified webhook events are. Signature is verified before any processing.
+ *
+ * Event lifecycle (see 0006 migration): `begin_stripe_event` atomically claims
+ * an event for processing and returns:
+ *   - "claimed"     → this delivery owns fulfillment (a new event, or a retry of
+ *                     a previously *failed* event). Run fulfillment, then mark
+ *                     `complete_stripe_event` on success or `fail_stripe_event`
+ *                     on error (returning 500 so Stripe retries).
+ *   - "duplicate"   → already completed → safe 200 no-op.
+ *   - "in_progress" → another delivery is currently processing this same event →
+ *                     return 409 so Stripe retries later (prevents two
+ *                     simultaneous deliveries fulfilling the same event twice).
+ *
+ * An event is only "completed" AFTER fulfillment succeeds, so a failure never
+ * permanently suppresses retries. Phase 4B implements the fulfillment handlers
+ * (issue package minutes, confirm booking, issue credit, record refunds — via
+ * the atomic SECURITY DEFINER ledger functions).
  */
 export async function POST(request: NextRequest) {
   if (!isStripeWebhookConfigured) {
@@ -35,33 +47,42 @@ export async function POST(request: NextRequest) {
   try {
     event = getStripe().webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET as string);
   } catch {
-    // Do not leak verification internals.
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   const supabase = getServiceSupabase();
 
-  // Idempotency: record the event id; if it already existed, this is a duplicate.
-  const { data: isNew, error } = await supabase.rpc("mark_stripe_event_processed", {
-    p_event_id: event.id,
+  const { data: claim, error: claimError } = await supabase.rpc("begin_stripe_event", {
+    p_id: event.id,
     p_type: event.type,
   });
-  if (error) {
-    // 500 so Stripe retries; we have not yet fulfilled anything.
+  if (claimError) {
     return NextResponse.json({ error: "Event processing failed." }, { status: 500 });
   }
-  if (!isNew) {
+  if (claim === "duplicate") {
     return NextResponse.json({ received: true, duplicate: true });
   }
-
-  switch (event.type) {
-    // Phase 4B will handle fulfillment here, e.g.:
-    //   case "checkout.session.completed":
-    //   case "payment_intent.succeeded":  -> confirm booking / issue package minutes
-    //   case "charge.refunded":           -> record refund / restore value
-    default:
-      break;
+  if (claim === "in_progress") {
+    // Another delivery is fulfilling this event; ask Stripe to retry later.
+    return NextResponse.json({ received: false, inProgress: true }, { status: 409 });
   }
 
+  // claim === "claimed": we own fulfillment.
+  try {
+    switch (event.type) {
+      // Phase 4B fulfillment attaches here, e.g.:
+      //   case "checkout.session.completed":
+      //   case "payment_intent.succeeded":  -> confirm booking / issue package minutes
+      //   case "charge.refunded":           -> record refund / restore value
+      default:
+        break;
+    }
+  } catch {
+    // Mark failed so Stripe's retry can reclaim and fulfill; do not leak internals.
+    await supabase.rpc("fail_stripe_event", { p_id: event.id, p_error: "fulfillment_error" });
+    return NextResponse.json({ error: "Fulfillment failed." }, { status: 500 });
+  }
+
+  await supabase.rpc("complete_stripe_event", { p_id: event.id });
   return NextResponse.json({ received: true });
 }

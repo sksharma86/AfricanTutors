@@ -287,3 +287,30 @@ redirects are never trusted.
 **Reasoning:** Browsers must never do read-then-write money logic; duplicate
 Stripe deliveries and concurrent spends must be safe. Webhooks are the only
 trustworthy payment signal.
+
+## 2026-08-18 — Stripe events use a claim→fulfill→complete lifecycle (4A review)
+
+**Decision:** Replace the record-then-done webhook idempotency with a
+`begin_stripe_event` (claimed/duplicate/in_progress) → fulfill →
+`complete_stripe_event`/`fail_stripe_event` lifecycle. An event is "completed"
+only after fulfillment succeeds; failed events are retryable; a concurrent
+duplicate delivery gets `in_progress` (409) and never double-fulfills.
+
+**Reasoning:** Recording an event as processed before fulfillment would (once 4B
+adds fulfillment) let a failed-then-retried delivery skip fulfillment, so a paid
+customer might never be credited. The lifecycle makes success the only terminal
+state that suppresses retries.
+
+## 2026-08-18 — Financial history is never physically deleted (4A review)
+
+**Decision:** Financial FKs to profiles (`payments.account_id`, both ledgers'
+`account_id`, `tutor_earnings.tutor_id`) are `ON DELETE RESTRICT`; ledger/audit
+`created_by`/`actor_id` are `ON DELETE SET NULL`. Ledger idempotency `reference`
+is NOT NULL + non-blank. Tutor earnings derive tutor + duration from the
+authoritative booking.
+
+**Reasoning:** Cascading deletes would erase auditable financial history when a
+profile is removed. RESTRICT forces a deliberate soft-delete/anonymize path
+instead. Non-null references keep idempotency guarantees real (Postgres unique
+allows multiple NULLs). Deriving earnings from the booking prevents wrong-tutor
+or arbitrary-duration earnings.
