@@ -1,5 +1,24 @@
 # African Tutors Development Progress
 
+## Prompt 3D — Booking lifecycle hardening + Stripe readiness (complete)
+
+- Paid bookings now created `pending` + `awaiting_payment` with a payment hold
+  (`payment_hold_expires_at`, 15-min dev default) — no longer falsely `confirmed`.
+  Free trials remain `confirmed` + `not_required`.
+- Added booking_status `expired` + `release_expired_holds()`; availability
+  functions ignore expired holds so lapsed unpaid holds never block a tutor slot
+  (`supabase/migrations/0004_prompt3d_booking_lifecycle.sql`).
+- Fixed a status enum-cast bug in `create_booking` (CASE → `::booking_status`).
+- UI: wizard/dashboard present paid bookings as "Booking held — payment required";
+  parent-friendly error sanitization (no DB/SQL/security internals surfaced);
+  admin booking filter includes `expired`.
+- Documented the authoritative booking/payment state machine, payment holds, the
+  full Prompt 4 Stripe handoff contract, and the Twilio confirmed-only rule.
+- 58/58 live tests pass (13 Phase 2 + 19 3A + 17 3B + 9 3D); eslint, tsc, build
+  pass. Prompt 3 is a coherent, production-ready booking foundation ready for
+  Stripe.
+
+
 ## Prompt 3C — Booking, tutor & admin UI (complete)
 
 Built the user-facing interfaces on the verified 3A/3B backend (no new booking

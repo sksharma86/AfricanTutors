@@ -32,6 +32,15 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const GRADE_OPTIONS = ["6", "7", "8", "9", "10", "11", "12", "College"];
 
+// Only surface parent-friendly messages; never leak DB/SQL/security internals.
+const TECHNICAL_ERROR = /permission denied|violates|constraint|null value|relation|column|function|syntax|jwt|supabase|fetch failed|network|exclusion|duplicate key|rls|policy/i;
+function friendlyError(message?: string | null): string {
+  if (!message || TECHNICAL_ERROR.test(message)) {
+    return "Something went wrong. Please try again.";
+  }
+  return message;
+}
+
 type Step = "student" | "subject" | "duration" | "time" | "confirm" | "done";
 
 export function BookingWizard({
@@ -105,7 +114,7 @@ export function BookingWizard({
       .single();
     setBusy(false);
     if (e) {
-      setError(e.message);
+      setError(friendlyError(e.message));
       return;
     }
     setStudents((prev) => [...prev, data as StudentRow]);
@@ -128,7 +137,7 @@ export function BookingWizard({
     });
     setSlotsLoading(false);
     if (e) {
-      setError(e.message);
+      setError(friendlyError(e.message));
       return;
     }
     setSlots((data ?? []).map((r: { slot_start: string }) => r.slot_start));
@@ -149,7 +158,7 @@ export function BookingWizard({
     });
     setBusy(false);
     if (e) {
-      setError(e.message);
+      setError(friendlyError(e.message));
       return;
     }
     // fetch the public reference

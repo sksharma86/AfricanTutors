@@ -321,6 +321,14 @@ approved/qualified/available). Execute on `get_available_slots`,
 `tutor_is_available`, and `has_used_free_trial` is revoked from `public` (anon)
 and granted only to `authenticated`/`service_role`.
 
+Prompt 3D (`supabase/migrations/0004_prompt3d_booking_lifecycle.sql`): adds
+booking_status value `expired` and column `bookings.payment_hold_expires_at`.
+Paid bookings are now created `pending` + `awaiting_payment` with a payment hold
+(not `confirmed`); free trials remain `confirmed` + `not_required`. New
+`release_expired_holds()` flips timed-out unpaid holds to `expired`; availability
+functions ignore expired holds so slots free up. See ARCHITECTURE.md for the full
+state machine and the Prompt 4 Stripe handoff contract.
+
 Free-trial conversion + tutor-performance analytics are **derivable** from
 `bookings` (is_free_trial, status, completed_at, tutor_id, created_at); the
 analytics dashboards themselves are intentionally not built yet.

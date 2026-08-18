@@ -422,3 +422,58 @@ No customer contact fields are fetched on any tutor-facing screen — `bookings`
 carries none, and tutors have no access to the `students` table (RLS). Students
 never see tutor contact info; only a platform-controlled display name appears
 after assignment.
+
+## Booking Lifecycle & Payment Readiness (Prompt 3D)
+
+### Authoritative state machine
+| Case | `status` | `payment_status` | `payment_hold_expires_at` |
+| --- | --- | --- | --- |
+| Free trial | `confirmed` | `not_required` | null |
+| Paid, pre-payment | `pending` | `awaiting_payment` | now + hold window |
+| Paid, after verified Stripe (Prompt 4) | `confirmed` | `paid` | null |
+| Hold expired (unpaid) | `expired` | `awaiting_payment` | (past) |
+| "Other" request | `pending` | `not_required`/`awaiting_payment` | null (no tutor/time) |
+
+An unpaid paid booking is **not** operationally treated as a confirmed session:
+it is `pending` with a payment hold. Only a free trial (or, later, a Stripe-verified
+payment) yields `confirmed`.
+
+### Payment holds
+Paid bookings get `payment_hold_expires_at = now() + 15 minutes`
+(`PAYMENT_HOLD_MINUTES` / the SQL `v_hold` constant — a configurable dev default,
+not final policy). `release_expired_holds()` flips timed-out unpaid holds to
+`expired`; it is called at the top of `create_booking` and can also be run by a
+future scheduled job. Availability (`get_available_slots`, `tutor_is_available`)
+treats a booking as blocking only when it is `confirmed`/`completed` or a
+**still-live** `pending` hold — so an expired hold never blocks a tutor's slot.
+
+### Free-trial lifecycle
+One free 30-minute session per student: `completed`/`no_show` consume eligibility;
+`cancelled` before completion restores it (partial unique index
+`(student_id) where is_free_trial and status <> 'cancelled'`). Verified per student
+(Student A's usage does not affect Student B).
+
+### Stripe handoff contract (Prompt 4)
+1. Parent selects a paid session; the server creates the booking `pending` /
+   `awaiting_payment` with the authoritative `price_cents` and a payment hold.
+2. Server creates a Stripe Checkout Session or PaymentIntent referencing the
+   `booking.id` and `price_cents` (never a client-supplied amount).
+3. Parent completes payment on Stripe.
+4. Stripe webhook is verified server-side (signature check).
+5. On verified success: `payment_status → paid`, `status → confirmed`, clear the
+   hold. Implement idempotently (ignore duplicate webhook deliveries via the
+   Stripe event id / a processed-events guard).
+6. On failure/expiration: do **not** confirm; the hold lapses and
+   `release_expired_holds()` frees the slot.
+The Checkout-vs-PaymentIntent choice is left to Prompt 4; the schema supports
+either (add a `payments`/event table keyed on `booking.id`).
+
+### Twilio readiness
+A video room may only ever attach to a booking that is `status = 'confirmed'`
+(free trial, or paid-and-verified). An `awaiting_payment`/`pending` or `expired`
+booking must never receive an active room. No external meeting links are stored.
+
+### Unresolved policy
+Cancellation / rescheduling / refund policy is still an owner decision. Admin can
+cancel; students/tutors have only conservative, non-committal actions; no refund
+or free-reschedule is promised.
