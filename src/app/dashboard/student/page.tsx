@@ -77,6 +77,14 @@ function BookingCard({ b }: { b: BookingRow }) {
             Payment required
           </span>
         ) : null}
+        {b.status === "confirmed" && b.scheduled_start ? (
+          <Link
+            href={`/dashboard/session/${b.id}`}
+            className="rounded-lg bg-gold-400 px-3 py-1.5 text-xs font-semibold text-ink-900 hover:bg-gold-300"
+          >
+            Join session
+          </Link>
+        ) : null}
         <CustomerBookingActions
           bookingId={b.id}
           canCancel={b.status === "pending" || b.status === "confirmed"}
