@@ -80,9 +80,18 @@ actually done.
 - [x] Admin-only tutor comp rate; atomic idempotent money functions; RLS
 - [x] Stripe SDK + server client + webhook (signature verify + idempotency)
 
-### Phase 4B–4D — NOT built yet
-- [ ] 4B: Stripe checkout (Checkout/PaymentIntent), webhook fulfillment handlers,
-      package purchase + booking payment UI (`awaiting_payment` → `paid`/`confirmed`)
+### Phase 4B — Customer checkout & fulfillment (DONE)
+- [x] `book_session` funding orchestration (package → credit → Stripe); `purchase_package`
+- [x] `booking_quote`, `get_customer_balances`; consume-and-restore credit reservation
+- [x] Stripe Checkout Session routes (booking/package) + status route; hosted checkout
+- [x] Webhook fulfillment (`fulfill_booking_payment`/`fulfill_package_payment`), double idempotency
+- [x] Expiry restores reserved credit; delayed-payment-after-expiry credits the account
+- [x] Customer UI: wizard quote breakdown + balances, packages page, authoritative return page
+- [x] Email stub (booking confirmed / hold expired / package purchased)
+- [ ] Live Stripe redirect + signed webhook E2E — needs `STRIPE_*` env keys (secrets)
+- [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
+
+### Phase 4C–4D — NOT built yet
 - [ ] 4C: admin financial UI + tutor payout tracking (payouts remain manual)
 - [ ] 4D: dispute/arbitration workflow
 - [ ] Cancellation/refund policy (owner decision); promo-code + referral systems

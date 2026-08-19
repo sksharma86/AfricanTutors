@@ -314,3 +314,56 @@ profile is removed. RESTRICT forces a deliberate soft-delete/anonymize path
 instead. Non-null references keep idempotency guarantees real (Postgres unique
 allows multiple NULLs). Deriving earnings from the booking prevents wrong-tutor
 or arbitrary-duration earnings.
+
+## 2026-08-18 — Booking funding priority: package → credit → Stripe (Phase 4B)
+
+**Decision:** `book_session` prices a session server-side and picks funding in a
+fixed order: use package minutes ONLY if they cover the ENTIRE session (partial
+minutes are never touched); otherwise apply available dollar credit; then charge
+the remainder through Stripe. Fully-internal outcomes (package, full credit, free
+trial) confirm the booking inside one transaction with no Stripe object. Mixed /
+Stripe-only bookings stay `pending`/`awaiting_payment` on the existing 15-minute
+hold until a verified webhook confirms them.
+
+**Reasoning:** Matches the authoritative business rule and keeps zero-Stripe cases
+free of fake $0 charges while still writing auditable payment/ledger records.
+
+## 2026-08-18 — Partial credit uses consume-and-restore, not a separate hold (Phase 4B)
+
+**Decision:** When a booking (or package) needs partial credit + Stripe, the
+credit is consumed immediately as a ledger `consumption` linked to the payment.
+If the hold expires or payment fails, `release_expired_holds` restores the exact
+amount via an idempotent `restore:<payment_id>` entry and cancels the payment. On
+success the consumption stands.
+
+**Reasoning:** Consuming up front makes the credit un-spendable elsewhere while a
+Stripe payment is outstanding (no double-spend), and the idempotent restore keeps
+it from being stranded. Simpler and more auditable than a parallel reservation
+state on the balance.
+
+## 2026-08-18 — Delayed Stripe success after expiry credits the account (Phase 4B)
+
+**Decision:** If a Stripe payment for a booking succeeds AFTER the slot expired,
+`fulfill_booking_payment` does not reactivate the slot. It restores any reserved
+credit and issues the Stripe amount as dollar credit (`delayed:<payment_id>`),
+marks the payment succeeded with a note, and the return page shows a "value
+credited" state. The customer keeps 100% of the value for a future booking.
+
+**Reasoning:** Re-confirming an expired slot could double-book a tutor; refusing
+the money would strand the customer. Crediting the balance is the safe,
+foundation-compatible behavior.
+
+## 2026-08-18 — Hosted Stripe Checkout Sessions; webhook is authoritative (Phase 4B)
+
+**Decision:** Use Stripe Checkout Sessions (hosted), not raw PaymentIntents.
+Amount/currency/metadata are set server-side; idempotency keys guard session
+creation; `ensureStripeCustomer` is concurrency-safe. Fulfillment happens only in
+the signature-verified webhook via `fulfill_booking_payment` /
+`fulfill_package_payment`, which are idempotent at the payment-object and ledger
+levels. The `/checkout/return` page reads internal state and never trusts the
+redirect. Customer emails are a documented stub (`src/lib/email.ts`) that upgrades
+to Resend when `RESEND_API_KEY` is set.
+
+**Reasoning:** Checkout Sessions need no card UI and keep the app out of PCI
+scope. Double-layer idempotency prevents duplicate minutes/confirmations from
+Stripe re-delivery or overlapping session/payment_intent events.
