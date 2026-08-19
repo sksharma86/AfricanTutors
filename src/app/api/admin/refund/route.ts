@@ -51,9 +51,15 @@ export async function POST(request: NextRequest) {
 
   let refundId: string;
   try {
+    // Idempotency key is derived from the payment's CURRENT refunded total + the
+    // amount, NOT free text. If a prior attempt succeeded at Stripe but our DB
+    // write failed, `refunded_cents` is unchanged, so a retry produces the SAME
+    // key → Stripe returns the same refund (no double cash). Two legitimate
+    // partial refunds of the same amount have different prior totals → distinct
+    // keys, so both are allowed.
     const refund = await getStripe().refunds.create(
       { payment_intent: paymentIntent, amount: body.amountCents, metadata: { payment_id: pay.id, reason } },
-      { idempotencyKey: `refund-${pay.id}-${body.amountCents}-${reason}` },
+      { idempotencyKey: `refund-${pay.id}-${pay.refunded_cents}-${body.amountCents}` },
     );
     refundId = refund.id;
   } catch {
