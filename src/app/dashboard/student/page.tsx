@@ -150,9 +150,14 @@ export default async function StudentDashboardPage() {
               : "Book a 30- or 60-minute session with an approved African Tutors tutor."}
           </p>
         </div>
-        <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
-          Book a Session
-        </LinkButton>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
+            Book a Session
+          </LinkButton>
+          <Link href="/dashboard/student/packages" className="text-sm font-medium text-gold-300 hover:text-gold-200">
+            Buy tutoring minutes →
+          </Link>
+        </div>
       </div>
 
       {(myStudents ?? []).length > 0 ? (
