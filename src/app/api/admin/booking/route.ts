@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { adminApiContext } from "@/lib/admin-service";
 import { notifyReassignment } from "@/lib/notify";
+import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,15 @@ export async function POST(request: NextRequest) {
     res = await supabase.rpc("admin_reassign_tutor", { p_booking: body.bookingId, p_new_tutor: body.newTutorId, p_reason: reason ?? "reassignment" });
   }
   if (res.error) return NextResponse.json({ error: res.error.message.replace(/^.*:\s*/, "") }, { status: 400 });
+
+  // Resolve any open tutor-cancellation request now that admin has acted.
+  if (body.action === "reassign" || body.action === "release") {
+    try {
+      await getServiceSupabase().rpc("resolve_tutor_cancellation_by_booking", { p_booking: body.bookingId });
+    } catch {
+      /* best-effort */
+    }
+  }
 
   // Customer + affected-tutor notifications for tutor-side outcomes (best-effort, idempotent).
   if (body.action === "reassign") {
