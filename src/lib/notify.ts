@@ -51,6 +51,10 @@ async function deliver(opts: {
       p_account: opts.accountId ?? null,
       p_to: to,
       p_booking: opts.bookingId ?? null,
+      // Persist rendered content so a failed delivery can be retried later.
+      p_subject: opts.rendered.subject,
+      p_html: opts.rendered.html,
+      p_text: opts.rendered.text,
     });
     if (claim.error) return { status: "error" };
     if (claim.data !== true) return { status: "duplicate" }; // already claimed → do not resend
@@ -129,10 +133,14 @@ export async function notifyBookingConfirmed(bookingId: string) {
       bookingId,
     }),
   });
-  // Tutor's copy (their timezone).
+  // Tutor's copy (their timezone). The key includes the tutor id so a
+  // reassignment to a DIFFERENT tutor sends a fresh assignment email, while
+  // repeat attempts for the same tutor stay idempotent. (Reassigning back to a
+  // tutor who was already notified for this booking is treated as the same
+  // assignment event and is not re-sent — a deliberate, deterministic rule.)
   if (b.tutor_id && b.scheduled_start) {
     await deliver({
-      key: `tutor-new-session:${bookingId}`,
+      key: `tutor-new-session:${bookingId}:${b.tutor_id}`,
       type: "tutor_new_session",
       accountId: b.tutor_id,
       bookingId,

@@ -110,26 +110,46 @@ export function AdminFinanceConsole({
   );
 }
 
-function NotificationsTab({ rows }: { rows: EmailFailureRow[] }) {
+function NotificationsTab({ rows: initial }: { rows: EmailFailureRow[] }) {
+  const [rows, setRows] = useState(initial);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function retry(id: string) {
+    setBusy(id);
+    setNote(null);
+    const res = await fetch("/api/admin/notifications/retry", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deliveryId: id }) });
+    const data = await res.json().catch(() => null);
+    setBusy(null);
+    if (res.ok && data?.retried) {
+      setRows((p) => p.filter((r) => r.id !== id)); // no longer a failure
+      setNote(data.status === "sent" ? "Notification resent." : `Retry recorded (${data.status}).`);
+    } else {
+      setNote(data?.reason ?? data?.error ?? "Retry failed.");
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-ink-100 bg-white p-6">
       <h3 className="font-display text-lg font-semibold text-ink-900">Notification failures</h3>
-      <p className="mt-1 text-sm text-ink-500">Transactional emails that failed to send. Business actions completed normally regardless.</p>
+      <p className="mt-1 text-sm text-ink-500">Transactional emails that failed to send. Business actions completed normally regardless. Retry re-sends the same message; it never re-runs the underlying operation.</p>
+      {note ? <p className="mt-2 rounded-lg border border-ink-200 bg-ink-50 p-2 text-sm text-ink-700">{note}</p> : null}
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-ink-400">
-            <tr><th className="py-2 pr-3">Type</th><th className="py-2 pr-3">Recipient</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3">Error</th><th className="py-2">When</th></tr>
+            <tr><th className="py-2 pr-3">Type</th><th className="py-2 pr-3">Recipient</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3">Error</th><th className="py-2 pr-3">When</th><th className="py-2"></th></tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
             {rows.length === 0 ? (
-              <tr><td colSpan={5} className="py-6 text-center text-ink-400">No notification failures.</td></tr>
+              <tr><td colSpan={6} className="py-6 text-center text-ink-400">No notification failures.</td></tr>
             ) : rows.map((r) => (
               <tr key={r.id}>
                 <td className="py-2 pr-3 text-ink-800">{r.notification_type}</td>
                 <td className="py-2 pr-3 text-ink-600">{r.to_email ?? "—"}</td>
                 <td className="py-2 pr-3"><StatusPill s={r.status} /></td>
                 <td className="py-2 pr-3 text-ink-500">{r.error ?? ""}</td>
-                <td className="py-2 text-ink-400">{new Date(r.updated_at).toLocaleString()}</td>
+                <td className="py-2 pr-3 text-ink-400">{new Date(r.updated_at).toLocaleString()}</td>
+                <td className="py-2"><button onClick={() => retry(r.id)} disabled={busy === r.id} className="text-xs font-medium text-gold-700 hover:underline disabled:opacity-50">{busy === r.id ? "Retrying…" : "Retry"}</button></td>
               </tr>
             ))}
           </tbody>
