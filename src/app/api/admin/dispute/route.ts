@@ -39,12 +39,25 @@ export async function POST(request: NextRequest) {
   // If a Stripe refund is part of the resolution, create it first to get an id.
   let refundStripeId: string | null = null;
   if (refundCents > 0 && refundPaymentId) {
+    // Authoritatively confirm the refund payment belongs to THIS dispute BEFORE
+    // touching Stripe, so we never send cash for an unrelated payment and only
+    // discover the mismatch afterward. The DB function re-enforces this too.
+    const { data: dispute } = await supabase
+      .from("disputes")
+      .select("account_id, booking_id")
+      .eq("id", body.disputeId)
+      .maybeSingle();
+    if (!dispute) return NextResponse.json({ error: "Dispute not found." }, { status: 404 });
+
     const { data: pay } = await supabase
       .from("payments")
-      .select("id, stripe_paid_cents, refunded_cents, stripe_charge_id, stripe_payment_intent_id")
+      .select("id, account_id, booking_id, purpose, stripe_paid_cents, refunded_cents, stripe_charge_id, stripe_payment_intent_id")
       .eq("id", refundPaymentId)
       .maybeSingle();
     if (!pay) return NextResponse.json({ error: "Refund payment not found." }, { status: 404 });
+    if (pay.purpose !== "booking" || pay.account_id !== dispute.account_id || pay.booking_id !== dispute.booking_id) {
+      return NextResponse.json({ error: "That payment does not belong to this dispute." }, { status: 400 });
+    }
     if (refundCents > pay.stripe_paid_cents - pay.refunded_cents) {
       return NextResponse.json({ error: "Refund exceeds refundable Stripe amount." }, { status: 400 });
     }
