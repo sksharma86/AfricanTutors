@@ -97,9 +97,18 @@ actually done.
 - [ ] Live Stripe redirect + signed webhook E2E — needs `STRIPE_*` env keys (secrets)
 - [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
 
-### Phase 4C–4D — NOT built yet
-- [ ] 4C: admin financial UI + tutor payout tracking (payouts remain manual)
-- [ ] 4D: dispute/arbitration workflow
+### Phase 4C — Admin ops, earnings, cancellations, refunds, disputes (DONE)
+- [x] Cancellation engine (24h rule), no-show/complete, admin release/reassign
+- [x] Tutor earnings lifecycle (event-driven, rate snapshot) + admin pay/adjust/void/restore
+- [x] Admin credit/minute adjustments (negative-balance prevention); refunds (capped, idempotent)
+- [x] Internal disputes (submit / admin resolve: denied/courtesy/upheld) + hidden admin notes
+- [x] Admin finance console + customer cancel/report UI; audit on every mutation
+- [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
+- [ ] `bookings.recording_ref` is a placeholder; wire real session-recording review in 4D
+
+### Phase 4D — NOT built yet
+- [ ] End-to-end financial hardening, concurrency/refund race testing, full RLS/security review
+- [ ] Stripe test-mode E2E (needs `STRIPE_*` keys), operational readiness, `release_expired_checkouts()` cron
 - [ ] Cancellation/refund policy (owner decision); promo-code + referral systems
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
