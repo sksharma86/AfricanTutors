@@ -1,0 +1,57 @@
+import { NextResponse, type NextRequest } from "next/server";
+
+import { adminApiContext, lookupEmail } from "@/lib/admin-service";
+import { sendTutorReassignment } from "@/lib/email";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const ACTIONS = new Set(["no_show", "complete", "release", "reassign"]);
+
+/** Admin booking lifecycle operations with server-side transition validation. */
+export async function POST(request: NextRequest) {
+  let ctx;
+  try {
+    ctx = await adminApiContext();
+  } catch (e) {
+    const m = e instanceof Error ? e.message : "";
+    return NextResponse.json({ error: m }, { status: /authenticated/i.test(m) ? 401 : 403 });
+  }
+  const { supabase } = ctx;
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body.bookingId !== "string" || !ACTIONS.has(body.action)) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+  const reason = typeof body.reason === "string" ? body.reason : null;
+
+  let res;
+  if (body.action === "no_show") {
+    res = await supabase.rpc("admin_no_show", { p_booking: body.bookingId });
+  } else if (body.action === "complete") {
+    res = await supabase.rpc("admin_complete_booking", { p_booking: body.bookingId });
+  } else if (body.action === "release") {
+    const comp = Number.isInteger(body.compCreditCents) && body.compCreditCents > 0 ? body.compCreditCents : 0;
+    res = await supabase.rpc("admin_release_booking", { p_booking: body.bookingId, p_reason: reason ?? "booking released", p_comp_credit_cents: comp });
+  } else {
+    if (typeof body.newTutorId !== "string") return NextResponse.json({ error: "newTutorId required." }, { status: 400 });
+    res = await supabase.rpc("admin_reassign_tutor", { p_booking: body.bookingId, p_new_tutor: body.newTutorId, p_reason: reason ?? "reassignment" });
+  }
+  if (res.error) return NextResponse.json({ error: res.error.message.replace(/^.*:\s*/, "") }, { status: 400 });
+
+  // Customer notifications for tutor-side outcomes (best-effort).
+  if (body.action === "reassign" || body.action === "release") {
+    const { data: b } = await supabase.from("bookings").select("account_id, public_reference").eq("id", body.bookingId).maybeSingle();
+    if (b?.account_id) {
+      const email = await lookupEmail(b.account_id);
+      if (email) {
+        void sendTutorReassignment({
+          to: email,
+          reassigned: body.action === "reassign",
+          reference: b.public_reference,
+          compCreditCents: body.action === "release" ? (body.compCreditCents ?? 0) : 0,
+        });
+      }
+    }
+  }
+  return NextResponse.json(res.data);
+}
