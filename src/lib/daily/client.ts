@@ -1,6 +1,7 @@
 import "server-only";
 
-import { DAILY_API_KEY, DAILY_DOMAIN } from "./config";
+import { DAILY_API_KEY, DAILY_DOMAIN, recordingBucketConfig } from "./config";
+import { buildMeetingTokenProps } from "./token-props.mjs";
 
 /**
  * Minimal server-side Daily REST client (no secret ever reaches the browser).
@@ -40,9 +41,13 @@ export interface DailyRoom {
 /**
  * Create (or reuse) a private room with a deterministic name so concurrent join
  * requests converge on ONE room. Room auto-expires at `notAfterUnix`; nbf gates
- * early creation misuse. Enables screen share + chat; no recording (Phase 5B).
+ * early creation misuse. Enables screen share + chat and CLOUD RECORDING so the
+ * token-driven auto-start can begin recording on first join. If custom S3 is
+ * configured (Mode B), recordings are written to that private bucket; otherwise
+ * Daily-managed storage (Mode A) is used.
  */
 export async function ensureRoom(name: string, notBeforeUnix: number, notAfterUnix: number): Promise<DailyRoom> {
+  const bucket = recordingBucketConfig();
   const body = {
     name,
     privacy: "private",
@@ -53,7 +58,8 @@ export async function ensureRoom(name: string, notBeforeUnix: number, notAfterUn
       exp: notAfterUnix,
       nbf: notBeforeUnix,
       eject_at_room_exp: true,
-      enable_recording: false,
+      enable_recording: "cloud",
+      ...(bucket ? { recordings_bucket: bucket } : {}),
     },
   };
   const res = await dailyFetch("/rooms", { method: "POST", body: JSON.stringify(body) });
@@ -99,26 +105,37 @@ export interface TokenParams {
   userId: string;
   isOwner: boolean;
   expUnix: number;
+  /** When true, cloud recording auto-starts as this participant joins. */
+  autoStartRecording?: boolean;
 }
 
 /** Mint a short-lived meeting token scoped to one room + participant. */
 export async function createMeetingToken(p: TokenParams): Promise<string> {
   const res = await dailyFetch("/meeting-tokens", {
     method: "POST",
-    body: JSON.stringify({
-      properties: {
-        room_name: p.room,
-        user_name: p.userName,
-        user_id: p.userId,
-        is_owner: p.isOwner,
-        exp: p.expUnix,
-        // Participants start with media on; screen share allowed at room level.
-        start_video_off: false,
-        start_audio_off: false,
-      },
-    }),
+    body: JSON.stringify({ properties: buildMeetingTokenProps(p) }),
   });
   if (!res.ok) throw new DailyUnavailableError();
   const data = (await res.json()) as { token: string };
   return data.token;
+}
+
+export interface RecordingAccess {
+  url: string;
+  expiresAt: string;
+}
+
+/**
+ * Generate a SHORT-LIVED access link for a cloud recording (server-side only,
+ * after admin authorization). We never store or expose permanent recording URLs.
+ */
+export async function getRecordingAccessLink(recordingId: string): Promise<RecordingAccess | null> {
+  const res = await dailyFetch(`/recordings/${encodeURIComponent(recordingId)}/access-link`, { method: "GET" });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { download_link?: string; expires?: number };
+  if (!data.download_link) return null;
+  return {
+    url: data.download_link,
+    expiresAt: new Date((data.expires ? data.expires * 1000 : Date.now() + 15 * 60000)).toISOString(),
+  };
 }

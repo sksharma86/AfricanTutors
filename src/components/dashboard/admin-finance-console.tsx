@@ -37,6 +37,7 @@ export interface DisputeRow {
   subject?: string | null;
   when?: string | null;
   tutor_name?: string | null;
+  recordings?: { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[];
 }
 export interface PaymentRow {
   id: string;
@@ -220,6 +221,7 @@ function DisputesTab({ rows, payments, onOk, onErr }: { rows: DisputeRow[]; paym
                 <p className="text-sm font-medium text-ink-900">{d.subject ?? "Session"} · {d.category}</p>
                 <p className="text-xs text-ink-500">{d.ref ? `Ref ${d.ref} · ` : ""}{d.when ? new Date(d.when).toLocaleString() : ""}{d.tutor_name ? ` · Tutor ${d.tutor_name}` : ""}</p>
                 {d.complaint ? <p className="mt-1 text-sm text-ink-600">“{d.complaint}”</p> : null}
+                <RecordingStatus recordings={d.recordings ?? []} onErr={onErr} />
               </div>
               <Button size="sm" variant="outline" onClick={() => setOpenId(openId === d.id ? null : d.id)}>{openId === d.id ? "Close" : "Resolve"}</Button>
             </div>
@@ -430,6 +432,59 @@ function Ledger({ title, rows }: { title: string; rows: { delta: string; type: s
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function RecordingStatus({
+  recordings,
+  onErr,
+}: {
+  recordings: { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[];
+  onErr: (m: string) => void;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  if (recordings.length === 0) {
+    return <p className="mt-2 text-xs text-ink-400">Recording: none available yet (may still be processing).</p>;
+  }
+  async function review(id: string) {
+    setBusy(id);
+    const res = await fetch("/api/admin/recording/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recordingId: id }),
+    });
+    const data = await res.json().catch(() => null);
+    setBusy(null);
+    if (!res.ok || !data?.url) {
+      onErr(data?.error ?? "Could not open the recording.");
+      return;
+    }
+    window.open(data.url as string, "_blank", "noopener,noreferrer");
+  }
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+      <span className="font-medium text-ink-600">Recording:</span>
+      {recordings.map((r) => {
+        const mins = r.duration_seconds ? ` · ${Math.round(r.duration_seconds / 60)} min` : "";
+        if (r.status === "completed") {
+          return (
+            <button
+              key={r.id}
+              onClick={() => review(r.id)}
+              disabled={busy === r.id}
+              className="rounded-full border border-gold-300 bg-gold-50 px-2.5 py-0.5 font-medium text-gold-700 hover:bg-gold-100 disabled:opacity-50"
+            >
+              {busy === r.id ? "Opening…" : `Review recording${mins}`}
+            </button>
+          );
+        }
+        return (
+          <span key={r.id} className={`rounded-full border px-2 py-0.5 ${r.status === "failed" ? "border-red-200 bg-red-50 text-red-600" : "border-ink-200 bg-ink-50 text-ink-500"}`}>
+            {r.status === "failed" ? "Recording failed" : "Recording processing"}
+          </span>
+        );
+      })}
     </div>
   );
 }

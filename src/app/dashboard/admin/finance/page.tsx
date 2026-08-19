@@ -33,6 +33,21 @@ export default async function AdminFinancePage() {
       supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
     ]);
 
+  // Recording metadata for the disputes under review (admin-only RLS).
+  const disputeBookingIds = Array.from(new Set(((disputes ?? []) as { booking_id: string }[]).map((d) => d.booking_id)));
+  const { data: recordings } = disputeBookingIds.length
+    ? await supabase!
+        .from("session_recordings")
+        .select("id, booking_id, status, duration_seconds, completed_at")
+        .in("booking_id", disputeBookingIds)
+    : { data: [] };
+  const recordingsByBooking = new Map<string, { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[]>();
+  for (const r of (recordings ?? []) as { id: string; booking_id: string; status: string; duration_seconds: number | null; completed_at: string | null }[]) {
+    const arr = recordingsByBooking.get(r.booking_id) ?? [];
+    arr.push({ id: r.id, status: r.status, duration_seconds: r.duration_seconds, completed_at: r.completed_at });
+    recordingsByBooking.set(r.booking_id, arr);
+  }
+
   const tutorName = new Map<string, string>();
   for (const t of (tutors ?? []) as unknown as { profile_id: string; profiles: { display_name: string | null } | null }[]) {
     tutorName.set(t.profile_id, t.profiles?.display_name ?? t.profile_id.slice(0, 8));
@@ -54,6 +69,7 @@ export default async function AdminFinancePage() {
     subject: bookingMap.get(d.booking_id)?.subject ?? null,
     when: bookingMap.get(d.booking_id)?.when ?? null,
     tutor_name: d.tutor_id ? tutorName.get(d.tutor_id) ?? null : null,
+    recordings: recordingsByBooking.get(d.booking_id) ?? [],
   }));
   const paymentRows: PaymentRow[] = ((payments ?? []) as PaymentRow[]).map((p) => ({
     ...p,

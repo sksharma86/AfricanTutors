@@ -576,3 +576,50 @@ sweep (the internal deadline is self-enforced at fulfillment, see 0009); it only
 releases abandoned holds and restores reserved credit proactively.
 
 **Reasoning:** Provides production-ready cleanup without assuming infrastructure.
+
+## 2026-08-19 — Automatic mandatory session recording via Daily cloud recording (Phase 5B)
+
+**Decision:** Recording is server-configured and automatic, not tutor-initiated.
+Rooms are created with `enable_recording: "cloud"`; each participant meeting token
+carries `start_cloud_recording: true` (+ `start_cloud_recording_opts` 1280×720),
+so a composed 720p cloud recording starts the moment the first participant joins
+(no empty-room recordings, no reliance on pressing Record). Participant tokens do
+NOT include `enable_recording`, so normal students/tutors get no recording-
+management controls and cannot stop the mandatory recording; only admins are
+owners. 720p keeps screen-share/documents legible while controlling cost.
+
+**Reasoning:** Meets "all real sessions recorded automatically" reliably without
+webhook orchestration, tied to actual participant activity, with least-privilege
+participant tokens.
+
+## 2026-08-19 — Normalized recording model + authoritative booking association (Phase 5B)
+
+**Decision:** New `session_recordings` (many-per-booking) is the source of truth;
+`bookings.recording_ref` is now legacy/convenience (unused). Recordings are
+associated to a booking by reversing the deterministic Phase 5A room name
+(`at-<uuid>` → booking) from the verified webhook payload — never client input, so
+a recording from room A cannot attach to booking B (FK + room mapping enforce it).
+`record_recording_event` is idempotent per Daily `recording_id` (completed) or
+`instance_id` (errors), so duplicate/out-of-order deliveries and reconnect/restart
+artifacts are represented without duplication or corruption. Lifecycle fields
+(status, started/completed, duration, storage_provider/key, error, archived_at,
+retention_until) support future S3/archival without schema churn.
+
+**Reasoning:** Real sessions produce multiple artifacts; a single string field
+can't model that safely, and association must be provider-verified.
+
+## 2026-08-19 — Admin-only recordings; secure, ephemeral playback; recording never affects money (Phase 5B)
+
+**Decision:** `session_recordings` RLS is admin-only (customers/tutors/anon have
+zero access; no client writes). No permanent/public URL is ever stored or shown;
+admin playback generates a SHORT-LIVED Daily access link server-side
+(`/api/admin/recording/access`) only after verifying admin authorization, and the
+Daily API secret never reaches the browser. Recording status is surfaced in the
+admin dispute review. Recording is operational evidence ONLY — failures are
+recorded for admin visibility and NEVER cancel a booking, change payment, or alter
+tutor earnings; the session continues if recording fails. Optional custom private
+S3 (Mode B) is supported via `DAILY_S3_*` env (assume-role, no AWS secret keys);
+default is Daily-managed storage (Mode A).
+
+**Reasoning:** Minimizes privacy exposure, keeps financial integrity authoritative
+(Phase 4), and leaves a clean path to private-bucket storage at scale.

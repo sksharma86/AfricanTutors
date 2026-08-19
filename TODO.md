@@ -128,8 +128,18 @@ actually done.
 - [ ] Real Daily test-mode E2E — needs `DAILY_API_KEY`/`DAILY_DOMAIN`
 - [ ] Wire Daily webhook (`DAILY_WEBHOOK_SECRET`) for reliable leave/attendance
 
-### Phase 5B — NOT built yet
-- [ ] Cloud recording + storage, transcription, AI session analysis (build on `recording_ref` + `session_presence`)
+### Phase 5B — Automatic session recording (DONE)
+- [x] Automatic Daily cloud recording (room `enable_recording:"cloud"` + token `start_cloud_recording`, composed 720p)
+- [x] Normalized `session_recordings` (many-per-booking); `record_recording_event` idempotent per recording/instance id
+- [x] Recording lifecycle via Daily webhook (`recording.ready-to-download` / `recording.error`); room→booking verified
+- [x] Admin-only RLS + secure ephemeral playback (`/api/admin/recording/access`); no permanent public URLs
+- [x] Recording status/review integrated into admin dispute workflow; failure never affects booking/payment/earnings
+- [x] Optional custom private S3 storage hooks (`DAILY_S3_*`, Mode B); Daily-managed default (Mode A)
+- [ ] Real Daily recording E2E — needs `DAILY_API_KEY`/`DAILY_DOMAIN` (paid plan) + `DAILY_WEBHOOK_SECRET`
+- [ ] Finalize recording-consent Terms/Privacy language (launch/legal readiness)
+
+### Phase 5C+ — NOT built yet
+- [ ] Transcription, AI session analysis, ratings, advanced tutor-quality analytics, customer/tutor recording access
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards

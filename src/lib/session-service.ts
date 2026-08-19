@@ -95,6 +95,8 @@ export async function joinSession(bookingId: string): Promise<JoinResult> {
       userId: (info.role as string) ?? "participant",
       isOwner: Boolean(info.is_owner),
       expUnix: win.tokenExp,
+      // Mandatory automatic recording: begins when the first participant joins.
+      autoStartRecording: true,
     });
 
     // Record which Daily room backs this booking (opaque; observability only).
