@@ -412,3 +412,29 @@ minutes are issued exactly once and only on the still-pending path.
 
 **Reasoning:** Consistency with the booking delayed-payment principle — an expired
 transaction must not silently resurrect — while never losing the customer's money.
+
+## 2026-08-19 — Payment expiry is self-enforcing at fulfillment (4B review 2)
+
+**Decision:** `fulfill_booking_payment` and `fulfill_package_payment` now evaluate
+the authoritative deadline themselves (while the payment/booking rows are locked)
+instead of trusting that a sweeper already ran. A booking is treated as expired if
+`payments.expires_at <= now()` OR `bookings.payment_hold_expires_at <= now()` (and
+not already confirmed) OR the row was already swept to a terminal/expired state; a
+package is expired if `payments.expires_at <= now()` OR already canceled/failed.
+When expired, fulfillment runs the delayed-payment path (restore reserved credit +
+credit the Stripe amount, both idempotent) and never confirms the booking or
+issues package minutes. `release_expired_checkouts()` remains a proactive cleanup
+but is NOT required for correctness.
+
+**Runtime scheduling:** `release_expired_holds()` still runs opportunistically at
+the top of `create_booking`/`book_session`; `release_expired_checkouts()` has no
+automated cron yet (invoked on demand and via Stripe `checkout.session.expired` /
+`*payment_failed` webhooks). Because fulfillment self-enforces the deadline, the
+absence of a cron can no longer cause a wrong confirmation/issuance — the cron is
+future operational polish, tracked in TODO.
+
+**Race safety:** the payment row `FOR UPDATE` lock (shared by fulfillment and the
+sweeper's `cancel_pending_payment`) serializes the two paths; unique ledger
+references (`restore:<payment_id>`, `delayed:<payment_id>`) guarantee reserved
+credit is restored once and the Stripe amount is credited once, with no duplicate
+ledger rows and no booking confirmation / package issuance after expiry.
