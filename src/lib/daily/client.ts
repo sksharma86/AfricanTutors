@@ -72,6 +72,22 @@ export async function ensureRoom(name: string, notBeforeUnix: number, notAfterUn
   throw new DailyUnavailableError();
 }
 
+/**
+ * Widen an existing room's access bounds (used for admin support access when the
+ * room was created for the normal window). Best-effort: failure to update is not
+ * fatal to the join, so we swallow non-OK responses.
+ */
+export async function updateRoomBounds(name: string, notBeforeUnix: number, notAfterUnix: number): Promise<void> {
+  try {
+    await dailyFetch(`/rooms/${encodeURIComponent(name)}`, {
+      method: "POST",
+      body: JSON.stringify({ properties: { nbf: notBeforeUnix, exp: notAfterUnix } }),
+    });
+  } catch {
+    // best-effort; the room may already permit access
+  }
+}
+
 /** Deterministic room URL for a room name (used as a fallback). */
 export function roomUrl(name: string): string {
   return `https://${DAILY_DOMAIN}.daily.co/${name}`;

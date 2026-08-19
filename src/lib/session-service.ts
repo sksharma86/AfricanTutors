@@ -1,6 +1,7 @@
 import "server-only";
 
-import { DailyUnavailableError, createMeetingToken, ensureRoom, roomUrl } from "@/lib/daily/client";
+import { computeSessionAccessWindow } from "@/lib/daily/access-window.mjs";
+import { DailyUnavailableError, createMeetingToken, ensureRoom, roomUrl, updateRoomBounds } from "@/lib/daily/client";
 import { isDailyConfigured } from "@/lib/daily/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/service";
@@ -72,19 +73,28 @@ export async function joinSession(bookingId: string): Promise<JoinResult> {
     throw new SessionError("video_unavailable");
   }
 
-  const openUnix = info.join_open_at ? Math.floor(new Date(info.join_open_at).getTime() / 1000) : Math.floor(Date.now() / 1000) - 60;
-  const closeUnix = info.join_close_at ? Math.floor(new Date(info.join_close_at).getTime() / 1000) : Math.floor(Date.now() / 1000) + 2 * 3600;
   const roomName = info.room_name as string;
+  // Normal students/tutors use the 10-min-before .. 15-min-after window; admins
+  // get an immediate, short-lived support window (server time).
+  const win = computeSessionAccessWindow(
+    { role: info.role, joinOpenAt: info.join_open_at, joinCloseAt: info.join_close_at },
+    Date.now(),
+  );
 
   const service = getServiceSupabase();
   try {
-    const room = await ensureRoom(roomName, openUnix - 60, closeUnix);
+    const room = await ensureRoom(roomName, win.roomNbf, win.roomExp);
+    // A reused room created for the normal window could otherwise lock an admin
+    // out before it opens / after it expires — widen its bounds for support.
+    if (info.role === "admin") {
+      await updateRoomBounds(roomName, win.roomNbf, win.roomExp);
+    }
     const token = await createMeetingToken({
       room: roomName,
       userName: info.safe_name ?? "Participant",
       userId: (info.role as string) ?? "participant",
       isOwner: Boolean(info.is_owner),
-      expUnix: closeUnix,
+      expUnix: win.tokenExp,
     });
 
     // Record which Daily room backs this booking (opaque; observability only).
@@ -97,7 +107,7 @@ export async function joinSession(bookingId: string): Promise<JoinResult> {
     return {
       roomUrl: room.url || roomUrl(roomName),
       token,
-      expiresAt: new Date(closeUnix * 1000).toISOString(),
+      expiresAt: new Date(win.tokenExp * 1000).toISOString(),
       role: info.role as string,
       safeName: info.safe_name ?? "Participant",
     };

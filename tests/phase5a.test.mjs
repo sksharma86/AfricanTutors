@@ -128,6 +128,13 @@ describe("Phase 5A — session room authorization, window, presence (live)", { s
     assert.equal((await authz(cA, open)).data.join_state, "open");
   });
 
+  it("assigned tutor after the close time is blocked (too_late)", async () => {
+    const id = await mk({ account: custA.id, student: stuA, tutor: tutor.id, startMinFromNow: -180, duration: 60 });
+    const { data } = await authz(cT, id);
+    assert.equal(data.role, "tutor");
+    assert.equal(data.join_state, "too_late", "tutor cannot join after the 15-min post-end close");
+  });
+
   it("admin is owner and may join a confirmed scheduled session outside the normal window", async () => {
     const id = await mk({ account: custA.id, student: stuA, startMinFromNow: 300 }); // way early for others
     const { data } = await authz(adminC, id);
