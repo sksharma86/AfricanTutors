@@ -106,9 +106,17 @@ actually done.
 - [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
 - [ ] `bookings.recording_ref` is a placeholder; wire real session-recording review in 4D
 
-### Phase 4D — NOT built yet
-- [ ] End-to-end financial hardening, concurrency/refund race testing, full RLS/security review
-- [ ] Stripe test-mode E2E (needs `STRIPE_*` keys), operational readiness, `release_expired_checkouts()` cron
+### Phase 4D — Financial hardening & operational readiness (DONE)
+- [x] Concurrency/race tests (refund race, payout race, cancel-vs-complete/no-show, package double-submit, same-slot double-submit)
+- [x] Refund idempotency closes the Stripe-then-DB failure window (`refund-<payment>-<refunded_before>-<amount>`)
+- [x] `purchase_package` dedupe for duplicate submissions (advisory-lock serialized)
+- [x] RLS/security red-team: RLS enabled on all financial tables, no unsafe write policies, all definer fns set `search_path`, internal helpers not client-executable
+- [x] Booking/payment state-transition integrity + client-tampering tests; 24h cancellation boundary verified
+- [x] Secret-protected cron route for `release_expired_checkouts()`; `.env.example` corrected (email/cron/db-url)
+- [ ] Real Stripe test-mode E2E — needs `STRIPE_*` keys (not present in this environment)
+- [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
+- [ ] Wire the cron route to a scheduler once the deployment target is chosen
+- [ ] Session-recording review integration (consume `bookings.recording_ref` securely) — future
 - [ ] Cancellation/refund policy (owner decision); promo-code + referral systems
 
 ### Phase 5A — Live tutoring room with Daily (DONE)

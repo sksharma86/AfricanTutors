@@ -537,3 +537,42 @@ recording and later tutor-quality work.
 
 **Reasoning:** Preserves financial integrity while capturing useful attendance
 evidence for admin decisions and future phases.
+
+## 2026-08-19 — Refund idempotency closes the Stripe-then-DB failure window (Phase 4D)
+
+**Decision:** The Stripe refund idempotency key is derived from the payment id +
+its CURRENT `refunded_cents` + the amount (`refund-<payment>-<refunded_before>-<amount>`),
+not free text. If Stripe succeeded but the internal `admin_record_refund` write
+failed, a retry recomputes the SAME key (refunded_cents unchanged) so Stripe
+returns the same refund — no duplicate cash — and the DB then reconciles. Two
+legitimate partial refunds of the same amount have different prior totals, so
+both are allowed. `admin_record_refund` remains idempotent per `stripe_refund_id`
+and caps at the refundable amount under a row lock.
+
+**Reasoning:** Removes the unsafe external-API-then-DB window without a new schema
+or reserve-row state machine.
+
+## 2026-08-19 — Duplicate package-checkout submissions are deduped (Phase 4D)
+
+**Decision:** `purchase_package` reuses an existing OPEN (unexpired,
+awaiting-Stripe) package payment for the same account+product instead of creating
+a duplicate, serialized by the existing per-account advisory lock. Booking
+checkout is already deduped by the tutor/slot exclusion constraint; full-credit
+package purchases by the advisory lock + balance re-check. Trade-off: a customer
+cannot open two simultaneous Stripe checkouts for the same package until the first
+resolves or its 15-minute hold expires.
+
+**Reasoning:** Prevents double credit reservation / double Stripe sessions from a
+double-click or retry, relying on DB serialization rather than disabled buttons.
+
+## 2026-08-19 — Expired-checkout cleanup scheduling (Phase 4D operational)
+
+**Decision:** Added a secret-protected route `/api/admin/cron/release-expired`
+(`CRON_SECRET`) that runs `release_expired_checkouts()` via the service role;
+disabled (503) when the secret is unset. Not wired to a specific scheduler
+because the deployment target isn't fixed — documented for Vercel Cron / Supabase
+pg_cron / any external scheduler. Fulfillment correctness does NOT depend on this
+sweep (the internal deadline is self-enforced at fulfillment, see 0009); it only
+releases abandoned holds and restores reserved credit proactively.
+
+**Reasoning:** Provides production-ready cleanup without assuming infrastructure.
