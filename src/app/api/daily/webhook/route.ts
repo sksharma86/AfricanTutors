@@ -3,18 +3,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { DAILY_WEBHOOK_SECRET } from "@/lib/daily/config";
+import { roomToBooking } from "@/lib/daily/room-mapping.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// Room name is `at-<uuid-without-hyphens>`; reverse to the booking uuid.
-function roomToBooking(room: string | undefined | null): string | null {
-  if (!room || !room.startsWith("at-")) return null;
-  const hex = room.slice(3);
-  if (!/^[0-9a-f]{32}$/i.test(hex)) return null;
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
 
 function verify(rawBody: string, timestamp: string | null, signature: string | null): boolean {
   if (!DAILY_WEBHOOK_SECRET || !timestamp || !signature) return false;
@@ -55,17 +48,68 @@ export async function POST(request: NextRequest) {
 
   const type = parsed?.type;
   const payload = (parsed?.payload ?? {}) as Record<string, unknown>;
-  const event = type === "participant.joined" ? "join" : type === "participant.left" ? "leave" : null;
-  if (!event) return NextResponse.json({ received: true });
+  const supabase = getServiceSupabase();
 
-  const bookingId = roomToBooking((payload.room ?? payload.room_name) as string | undefined);
-  const role = payload.user_id === "student" || payload.user_id === "tutor" ? (payload.user_id as string) : null;
-  if (bookingId && role) {
-    try {
-      await getServiceSupabase().rpc("record_session_presence", { p_booking: bookingId, p_role: role, p_event: event });
-    } catch {
-      // best-effort
+  // --- Presence (Phase 5A) ---
+  if (type === "participant.joined" || type === "participant.left") {
+    const bookingId = roomToBooking((payload.room ?? payload.room_name) as string | undefined);
+    const role = payload.user_id === "student" || payload.user_id === "tutor" ? (payload.user_id as string) : null;
+    if (bookingId && role) {
+      try {
+        await supabase.rpc("record_session_presence", { p_booking: bookingId, p_role: role, p_event: type === "participant.joined" ? "join" : "leave" });
+      } catch {
+        /* best-effort */
+      }
     }
+    return NextResponse.json({ received: true });
   }
+
+  // --- Recording lifecycle (Phase 5B) ---
+  // recording.started has no room_name (cannot be authoritatively associated) →
+  // safe no-op. recording.ready-to-download and recording.error carry room_name,
+  // which we reverse to the booking (never client-supplied). Idempotent per Daily
+  // recording id / instance id in record_recording_event.
+  if (type === "recording.ready-to-download" || type === "recording.error") {
+    const bookingId = roomToBooking(payload.room_name as string | undefined);
+    if (!bookingId) return NextResponse.json({ received: true }); // unmappable → ignore safely
+    const args =
+      type === "recording.ready-to-download"
+        ? {
+            p_booking: bookingId,
+            p_status: "completed",
+            p_recording_id: (payload.recording_id as string) ?? null,
+            p_instance_id: null,
+            p_room_name: payload.room_name as string,
+            p_started_at: payload.start_ts ? new Date((payload.start_ts as number) * 1000).toISOString() : null,
+            p_completed_at: new Date().toISOString(),
+            p_duration: typeof payload.duration === "number" ? payload.duration : null,
+            p_max_participants: typeof payload.max_participants === "number" ? payload.max_participants : null,
+            p_storage_key: (payload.s3_key as string) ?? null,
+            p_share_token: (payload.share_token as string) ?? null,
+            p_error: null,
+          }
+        : {
+            p_booking: bookingId,
+            p_status: "failed",
+            p_recording_id: null,
+            p_instance_id: (payload.instance_id as string) ?? null,
+            p_room_name: payload.room_name as string,
+            p_started_at: null,
+            p_completed_at: null,
+            p_duration: null,
+            p_max_participants: null,
+            p_storage_key: null,
+            p_share_token: null,
+            p_error: (payload.error_msg as string) ?? "recording error",
+          };
+    try {
+      await supabase.rpc("record_recording_event", args);
+    } catch {
+      /* best-effort; recording is evidence only and never blocks anything */
+    }
+    return NextResponse.json({ received: true });
+  }
+
+  // Any other event (incl. recording.started) → safe no-op.
   return NextResponse.json({ received: true });
 }

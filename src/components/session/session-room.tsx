@@ -113,6 +113,14 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
         </span>
       </div>
 
+      <div className="mt-4 flex items-start gap-2 rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-xs text-ink-200">
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-gold-300">
+          <circle cx="12" cy="12" r="9" />
+          <path strokeLinecap="round" d="M12 8h.01M11 12h1v4h1" />
+        </svg>
+        <span>This tutoring session is recorded for quality assurance, safety, and dispute resolution.</span>
+      </div>
+
       <div className="mt-6">
         {inCall ? (
           <div ref={containerRef} className="h-[70vh] w-full overflow-hidden rounded-2xl bg-black" />
