@@ -92,7 +92,8 @@ actually done.
 - [x] Package checkout expiry lifecycle (`payments.expires_at`, `release_expired_checkouts`)
 - [x] Safe rollback on Stripe-create failure/unavailable (`cancel_pending_payment`, booking+package)
 - [x] Late package payment credits account (mirrors booking delayed-payment)
-- [ ] Schedule `release_expired_checkouts()` (cron) — currently swept on demand + on Stripe events
+- [x] Expiry is self-enforcing inside `fulfill_booking_payment`/`fulfill_package_payment` (sweeper not required for correctness)
+- [ ] Schedule `release_expired_checkouts()` (cron) — operational polish; currently on-demand + Stripe expiry/failure webhooks
 - [ ] Live Stripe redirect + signed webhook E2E — needs `STRIPE_*` env keys (secrets)
 - [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
 
