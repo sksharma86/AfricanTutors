@@ -12,6 +12,7 @@ import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
 import { formatCents } from "@/lib/pricing";
+import { tutorSessionAction, tutorTimezone } from "@/lib/tutor-schedule.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
@@ -51,7 +52,7 @@ function splitToday(upcoming: TutorBooking[]): { today: TutorBooking[]; later: T
 }
 
 function UpcomingCard({ b, tz, openRequest }: { b: TutorBooking; tz: string; openRequest: boolean }) {
-  const joinable = (b.status === "confirmed" || b.status === "pending") && b.scheduled_start;
+  const action = tutorSessionAction(b.status, Boolean(b.scheduled_start));
   return (
     <div className="rounded-xl border border-ink-100 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
@@ -70,10 +71,12 @@ function UpcomingCard({ b, tz, openRequest }: { b: TutorBooking; tz: string; ope
         </div>
         <div className="flex flex-col items-end gap-2">
           <span className="rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">{BOOKING_STATUS_LABEL[b.status]}</span>
-          {joinable ? (
+          {action === "join" ? (
             <Link href={`/dashboard/session/${b.id}`} className="rounded-lg bg-gold-400 px-3 py-1 text-xs font-semibold text-ink-900 hover:bg-gold-300">
               Join session
             </Link>
+          ) : action === "awaiting" ? (
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">Awaiting confirmation</span>
           ) : null}
           {b.status === "confirmed" || b.status === "pending" ? <TutorCancelRequest bookingId={b.id} alreadyRequested={openRequest} /> : null}
         </div>
@@ -116,7 +119,7 @@ export default async function TutorDashboardPage() {
       supabase!.from("tutor_cancellation_requests").select("booking_id").eq("status", "open"),
     ]);
 
-  const tz = profile?.timezone ?? "Africa/Lagos";
+  const tz = tutorTimezone(profile?.timezone);
   const bookings = (bookingsRaw ?? []) as unknown as TutorBooking[];
   const earnings = (earningsRaw ?? []) as Earning[];
   const openReqBookings = new Set(((reqs ?? []) as { booking_id: string }[]).map((r) => r.booking_id));
