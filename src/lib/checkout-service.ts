@@ -1,9 +1,9 @@
 import "server-only";
 
-import { PAYMENT_HOLD_MINUTES } from "@/lib/booking-config";
 import { sendBookingConfirmed, sendPackagePurchased } from "@/lib/email";
 import { formatCents } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe/config";
+import { stripeCheckoutExpiresAt } from "@/lib/stripe/checkout-expiry.mjs";
 import { getStripe } from "@/lib/stripe/client";
 import { ensureStripeCustomer } from "@/lib/stripe/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,6 +44,19 @@ async function authed() {
   const { data } = await supabase.auth.getUser();
   if (!data?.user) throw new Error("Not authenticated");
   return { supabase, user: data.user };
+}
+
+/**
+ * Idempotently release a pending reservation (restore reserved credit, cancel the
+ * payment, and release any booking slot) when Stripe Checkout creation fails or
+ * Stripe is unavailable AFTER the DB reservation. Never leaves value stranded.
+ */
+async function rollbackReservation(
+  service: ReturnType<typeof getServiceSupabase>,
+  paymentId: string,
+  reason: string,
+): Promise<void> {
+  await service.rpc("cancel_pending_payment", { p_payment_id: paymentId, p_reason: reason });
 }
 
 export async function createBookingCheckout(
@@ -110,61 +123,70 @@ export async function createBookingCheckout(
     };
   }
 
-  // Stripe amount is due → create a hosted Checkout Session for exactly that amount.
-  if (!isStripeConfigured) {
-    throw new Error("Online payment is not available yet. Please try again later.");
-  }
+  // Stripe amount is due → create a hosted Checkout Session for exactly that
+  // amount. If anything fails after book_session reserved credit, roll it back so
+  // no customer value is stranded. The Stripe session lifetime (>= 30 min) is
+  // deliberately longer than the authoritative 15-min internal hold.
   const service = getServiceSupabase();
-  const customerId = await ensureStripeCustomer(service, user.id, user.email);
-  const stripe = getStripe();
+  try {
+    if (!isStripeConfigured) throw new Error("STRIPE_NOT_CONFIGURED");
+    const customerId = await ensureStripeCustomer(service, user.id, user.email);
+    const stripe = getStripe();
 
-  const session = await stripe.checkout.sessions.create(
-    {
-      mode: "payment",
-      customer: customerId,
-      client_reference_id: q.payment_id,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: q.stripe_cents_due,
-            product_data: { name: `Tutoring session (${params.duration} min)` },
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        customer: customerId,
+        client_reference_id: q.payment_id,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: q.stripe_cents_due,
+              product_data: { name: `Tutoring session (${params.duration} min)` },
+            },
           },
-        },
-      ],
-      metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
-      payment_intent_data: {
+        ],
         metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+        payment_intent_data: {
+          metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+        },
+        expires_at: stripeCheckoutExpiresAt(),
+        success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,
+        cancel_url: `${baseUrl}/checkout/return?payment=${q.payment_id}&canceled=1`,
       },
-      expires_at: Math.floor(Date.now() / 1000) + PAYMENT_HOLD_MINUTES * 60,
-      success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,
-      cancel_url: `${baseUrl}/checkout/return?payment=${q.payment_id}&canceled=1`,
-    },
-    { idempotencyKey: `checkout-booking-${q.payment_id}` },
-  );
+      { idempotencyKey: `checkout-booking-${q.payment_id}` },
+    );
 
-  await service
-    .from("payments")
-    .update({
-      stripe_checkout_session_id: session.id,
-      stripe_customer_id: customerId,
-      idempotency_key: `checkout-booking-${q.payment_id}`,
+    await service
+      .from("payments")
+      .update({
+        stripe_checkout_session_id: session.id,
+        stripe_customer_id: customerId,
+        idempotency_key: `checkout-booking-${q.payment_id}`,
+        status: "requires_payment",
+      })
+      .eq("id", q.payment_id);
+
+    return {
       status: "requires_payment",
-    })
-    .eq("id", q.payment_id);
-
-  return {
-    status: "requires_payment",
-    checkoutUrl: session.url ?? undefined,
-    paymentId: q.payment_id,
-    bookingId: q.booking_id,
-    funding: q.funding,
-    sessionPriceCents: q.session_price_cents,
-    packageMinutesUsed: q.package_minutes_used,
-    creditCentsUsed: q.credit_cents_used,
-    stripeCentsDue: q.stripe_cents_due,
-  };
+      checkoutUrl: session.url ?? undefined,
+      paymentId: q.payment_id,
+      bookingId: q.booking_id,
+      funding: q.funding,
+      sessionPriceCents: q.session_price_cents,
+      packageMinutesUsed: q.package_minutes_used,
+      creditCentsUsed: q.credit_cents_used,
+      stripeCentsDue: q.stripe_cents_due,
+    };
+  } catch (err) {
+    await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
+    if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
+      throw new Error("Online payment is not available yet. Please try again later.");
+    }
+    throw new Error("We couldn't start secure checkout. Your account credit was not used — please try again.");
+  }
 }
 
 export async function createPackageCheckout(packageId: string, baseUrl: string): Promise<StartResult> {
@@ -194,54 +216,61 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
     };
   }
 
-  if (!isStripeConfigured) {
-    throw new Error("Online payment is not available yet. Please try again later.");
-  }
   const service = getServiceSupabase();
-  const customerId = await ensureStripeCustomer(service, user.id, user.email);
-  const stripe = getStripe();
+  try {
+    if (!isStripeConfigured) throw new Error("STRIPE_NOT_CONFIGURED");
+    const customerId = await ensureStripeCustomer(service, user.id, user.email);
+    const stripe = getStripe();
 
-  const session = await stripe.checkout.sessions.create(
-    {
-      mode: "payment",
-      customer: customerId,
-      client_reference_id: q.payment_id,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: q.stripe_cents_due,
-            product_data: { name: `Tutoring package (${q.minutes} minutes)` },
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        customer: customerId,
+        client_reference_id: q.payment_id,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: q.stripe_cents_due,
+              product_data: { name: `Tutoring package (${q.minutes} minutes)` },
+            },
           },
-        },
-      ],
-      metadata: { kind: "package", payment_id: q.payment_id, account_id: user.id },
-      payment_intent_data: { metadata: { kind: "package", payment_id: q.payment_id, account_id: user.id } },
-      success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,
-      cancel_url: `${baseUrl}/checkout/return?payment=${q.payment_id}&canceled=1`,
-    },
-    { idempotencyKey: `checkout-package-${q.payment_id}` },
-  );
+        ],
+        metadata: { kind: "package", payment_id: q.payment_id, account_id: user.id },
+        payment_intent_data: { metadata: { kind: "package", payment_id: q.payment_id, account_id: user.id } },
+        expires_at: stripeCheckoutExpiresAt(),
+        success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,
+        cancel_url: `${baseUrl}/checkout/return?payment=${q.payment_id}&canceled=1`,
+      },
+      { idempotencyKey: `checkout-package-${q.payment_id}` },
+    );
 
-  await service
-    .from("payments")
-    .update({
-      stripe_checkout_session_id: session.id,
-      stripe_customer_id: customerId,
-      idempotency_key: `checkout-package-${q.payment_id}`,
+    await service
+      .from("payments")
+      .update({
+        stripe_checkout_session_id: session.id,
+        stripe_customer_id: customerId,
+        idempotency_key: `checkout-package-${q.payment_id}`,
+        status: "requires_payment",
+      })
+      .eq("id", q.payment_id);
+
+    return {
       status: "requires_payment",
-    })
-    .eq("id", q.payment_id);
-
-  return {
-    status: "requires_payment",
-    checkoutUrl: session.url ?? undefined,
-    paymentId: q.payment_id,
-    funding: q.funding,
-    creditCentsUsed: q.credit_cents_used,
-    stripeCentsDue: q.stripe_cents_due,
-  };
+      checkoutUrl: session.url ?? undefined,
+      paymentId: q.payment_id,
+      funding: q.funding,
+      creditCentsUsed: q.credit_cents_used,
+      stripeCentsDue: q.stripe_cents_due,
+    };
+  } catch (err) {
+    await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
+    if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
+      throw new Error("Online payment is not available yet. Please try again later.");
+    }
+    throw new Error("We couldn't start secure checkout. Your account credit was not used — please try again.");
+  }
 }
 
 export interface CheckoutStatus {

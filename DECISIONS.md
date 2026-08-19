@@ -367,3 +367,48 @@ to Resend when `RESEND_API_KEY` is set.
 **Reasoning:** Checkout Sessions need no card UI and keep the app out of PCI
 scope. Double-layer idempotency prevents duplicate minutes/confirmations from
 Stripe re-delivery or overlapping session/payment_intent events.
+
+## 2026-08-19 — Stripe session lifetime is separate from the 15-min internal hold (4B review)
+
+**Decision:** The African Tutors booking/payment hold stays **15 minutes** and is
+authoritative in the DB (`payments.expires_at`, `bookings.payment_hold_expires_at`).
+Stripe Checkout Sessions require `expires_at` in [30 min, 24 h], so the hosted
+session is created with a 30-minute lifetime (`src/lib/stripe/checkout-expiry.mjs`,
+`stripeCheckoutExpiresAt`). The internal 15-min expiry fires first and releases the
+slot / restores credit; a payment made via a still-open Stripe session in the
+15–30-min window is handled by delayed-payment logic (value credited, nothing
+resurrected). A pure unit test asserts the value sent to Stripe is always ≥ 30 min.
+
+**Reasoning:** The prior code sent a 15-min `expires_at`, which live Stripe would
+reject. Business hold and Stripe session lifetime are different concerns; the DB
+remains authoritative and the extra Stripe window is covered by delayed-payment.
+
+## 2026-08-19 — Package checkouts have an authoritative expiry; reserved credit is never stranded (4B review)
+
+**Decision:** `payments.expires_at` now applies to package Stripe reservations too
+(15-min internal). `release_expired_checkouts()` sweeps expired booking holds AND
+expired package reservations, restoring reserved credit (idempotent
+`restore:<payment_id>`) and canceling the payment without issuing minutes.
+`cancel_pending_payment(payment_id, reason)` is an explicit, idempotent rollback
+used when Stripe Checkout creation fails or Stripe is unavailable after a DB
+reservation — for both bookings (also releases the slot) and packages. The
+checkout service calls it on any Stripe failure and the webhook calls it on
+`checkout.session.expired` / `*payment_failed`. Package cleanup keys off
+`payments.expires_at`, never `bookings.payment_hold_expires_at` (a package has no
+booking).
+
+**Reasoning:** Package reservations previously had no release path, so abandoned
+or failed Stripe checkouts could strand credit indefinitely. A payment-level
+expiry + explicit rollback closes that gap and reuses the existing `payments`
+architecture instead of a parallel system.
+
+## 2026-08-19 — Late package payment credits the account (mirrors booking policy)
+
+**Decision:** If Stripe succeeds after a package reservation already expired,
+`fulfill_package_payment` does NOT issue the package: it restores any reserved
+credit (idempotent) and credits the Stripe-paid amount to the account balance
+(`delayed:<payment_id>`), marking the payment succeeded with a note. Package
+minutes are issued exactly once and only on the still-pending path.
+
+**Reasoning:** Consistency with the booking delayed-payment principle — an expired
+transaction must not silently resurrect — while never losing the customer's money.

@@ -90,8 +90,19 @@ export async function POST(request: NextRequest) {
         await fulfillFromMetadata(supabase, pi.metadata, pi.amount_received ?? pi.amount, pi.id);
         break;
       }
-      // Failure / expiry are handled by release_expired_holds (hold timeout) which
-      // restores reserved credit and releases the slot; no positive fulfillment here.
+      case "checkout.session.expired":
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await cancelFromMetadata(supabase, session.metadata, "Stripe checkout expired/failed");
+        break;
+      }
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        await cancelFromMetadata(supabase, pi.metadata, "Stripe payment failed");
+        break;
+      }
+      // Internal 15-minute expiry is authoritative and additionally swept by
+      // release_expired_checkouts (booking holds + package reservations).
       default:
         break;
     }
@@ -134,6 +145,23 @@ async function fulfillFromMetadata(
   if (error) throw new Error(error.message);
 
   await notifyFulfillment(supabase, kind, paymentId, data as Record<string, unknown> | null);
+}
+
+/**
+ * Idempotently cancel a pending reservation when Stripe reports the session
+ * expired or the payment failed. Restores reserved credit and releases the slot;
+ * a no-op once the payment is terminal (so a later success is unaffected).
+ */
+async function cancelFromMetadata(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  metadata: Meta,
+  reason: string,
+): Promise<void> {
+  const kind = metadata?.kind;
+  const paymentId = metadata?.payment_id;
+  if (!paymentId || (kind !== "booking" && kind !== "package")) return;
+  const { error } = await supabase.rpc("cancel_pending_payment", { p_payment_id: paymentId, p_reason: reason });
+  if (error) throw new Error(error.message);
 }
 
 /** Best-effort customer email after fulfillment (never blocks the webhook). */

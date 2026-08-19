@@ -88,6 +88,11 @@ actually done.
 - [x] Expiry restores reserved credit; delayed-payment-after-expiry credits the account
 - [x] Customer UI: wizard quote breakdown + balances, packages page, authoritative return page
 - [x] Email stub (booking confirmed / hold expired / package purchased)
+- [x] Stripe session lifetime (>=30 min) separated from 15-min internal hold; contract unit test
+- [x] Package checkout expiry lifecycle (`payments.expires_at`, `release_expired_checkouts`)
+- [x] Safe rollback on Stripe-create failure/unavailable (`cancel_pending_payment`, booking+package)
+- [x] Late package payment credits account (mirrors booking delayed-payment)
+- [ ] Schedule `release_expired_checkouts()` (cron) — currently swept on demand + on Stripe events
 - [ ] Live Stripe redirect + signed webhook E2E — needs `STRIPE_*` env keys (secrets)
 - [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
 
