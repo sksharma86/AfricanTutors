@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
@@ -76,6 +77,11 @@ function BookingCard({ b }: { b: BookingRow }) {
             Payment required
           </span>
         ) : null}
+        <CustomerBookingActions
+          bookingId={b.id}
+          canCancel={b.status === "pending" || b.status === "confirmed"}
+          canDispute={b.status === "completed" || b.status === "no_show"}
+        />
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import {
   type AdminTutorSubject,
 } from "@/components/dashboard/admin-console";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -67,6 +67,14 @@ export default async function AdminDashboardPage() {
         { label: "Settings", available: false },
       ]}
     >
+      <section className="mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-display text-lg font-semibold text-white">Financial operations</h2>
+          <p className="mt-1 text-sm text-ink-200">Tutor earnings &amp; payouts, customer balances &amp; adjustments, refunds, and disputes.</p>
+        </div>
+        <LinkButton href="/dashboard/admin/finance" variant="secondary" size="lg">Open finance console</LinkButton>
+      </section>
+
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-900">Tutor approvals</h2>

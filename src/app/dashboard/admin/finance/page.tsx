@@ -1,0 +1,79 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { AdminFinanceConsole, type EarningRow, type DisputeRow, type PaymentRow } from "@/components/dashboard/admin-finance-console";
+import { Container } from "@/components/ui/container";
+import { requireRole } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = { title: "Admin — Financial Operations" };
+
+export default async function AdminFinancePage() {
+  await requireRole("admin", "/dashboard/admin/finance");
+  const supabase = await createSupabaseServerClient();
+
+  const [{ data: earnings }, { data: disputes }, { data: payments }, { data: tutors }, { data: bookings }] =
+    await Promise.all([
+      supabase!
+        .from("tutor_earnings")
+        .select("id, tutor_id, booking_id, duration_minutes, rate_cents_per_hour, amount_cents, status, earned_at, paid_at, adjusted_from_cents, reason")
+        .order("earned_at", { ascending: false, nullsFirst: false })
+        .limit(200),
+      supabase!
+        .from("disputes")
+        .select("id, booking_id, account_id, tutor_id, category, complaint, status, resolution, created_at, reviewed_at")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase!
+        .from("payments")
+        .select("id, account_id, purpose, gross_cents, stripe_paid_cents, credit_applied_cents, refunded_cents, status, booking_id")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase!.from("tutor_profiles").select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)").eq("status", "approved"),
+      supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
+    ]);
+
+  const tutorName = new Map<string, string>();
+  for (const t of (tutors ?? []) as unknown as { profile_id: string; profiles: { display_name: string | null } | null }[]) {
+    tutorName.set(t.profile_id, t.profiles?.display_name ?? t.profile_id.slice(0, 8));
+  }
+  const bookingMap = new Map<string, { subject: string | null; when: string | null; ref: string | null; student: string | null }>();
+  for (const b of (bookings ?? []) as { id: string; subject_name: string | null; scheduled_start: string | null; public_reference: string | null; student_first_name: string | null }[]) {
+    bookingMap.set(b.id, { subject: b.subject_name, when: b.scheduled_start, ref: b.public_reference, student: b.student_first_name });
+  }
+
+  const earningRows: EarningRow[] = ((earnings ?? []) as EarningRow[]).map((e) => ({
+    ...e,
+    tutor_name: tutorName.get(e.tutor_id) ?? e.tutor_id.slice(0, 8),
+    subject: e.booking_id ? bookingMap.get(e.booking_id)?.subject ?? null : null,
+    when: e.booking_id ? bookingMap.get(e.booking_id)?.when ?? null : null,
+  }));
+  const disputeRows: DisputeRow[] = ((disputes ?? []) as DisputeRow[]).map((d) => ({
+    ...d,
+    ref: bookingMap.get(d.booking_id)?.ref ?? null,
+    subject: bookingMap.get(d.booking_id)?.subject ?? null,
+    when: bookingMap.get(d.booking_id)?.when ?? null,
+    tutor_name: d.tutor_id ? tutorName.get(d.tutor_id) ?? null : null,
+  }));
+  const paymentRows: PaymentRow[] = ((payments ?? []) as PaymentRow[]).map((p) => ({
+    ...p,
+    ref: p.booking_id ? bookingMap.get(p.booking_id)?.ref ?? null : null,
+  }));
+
+  return (
+    <div className="min-h-full bg-ink-50/50 py-10">
+      <Container className="max-w-6xl">
+        <Link href="/dashboard/admin" className="text-sm font-medium text-gold-700 hover:underline">
+          ← Back to admin
+        </Link>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900">Financial operations</h1>
+        <p className="mt-1 text-sm text-ink-500">
+          Tutor earnings &amp; payouts, customer balances &amp; adjustments, Stripe refunds, and dispute resolution.
+        </p>
+        <div className="mt-8">
+          <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} />
+        </div>
+      </Container>
+    </div>
+  );
+}

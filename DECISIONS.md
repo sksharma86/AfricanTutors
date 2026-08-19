@@ -438,3 +438,58 @@ sweeper's `cancel_pending_payment`) serializes the two paths; unique ledger
 references (`restore:<payment_id>`, `delayed:<payment_id>`) guarantee reserved
 credit is restored once and the Stripe amount is credited once, with no duplicate
 ledger rows and no booking confirmation / package issuance after expiry.
+
+## 2026-08-19 — Cancellation 24-hour rule is server-authoritative (Phase 4C)
+
+**Decision:** `customer_cancel_booking` computes early vs late from `scheduled_start`
+server-side (never a client flag). Early (≥24h or unscheduled) restores package
+minutes if the booking was package-funded, otherwise the FULL booking value
+(credit + Stripe) as account credit — mixed funding returns the total as credit,
+never credit + a separate Stripe refund. Late (<24h) restores nothing and pays
+the tutor 100%. Idempotent via booking status guard + unique restore references
+(`cancel:pkg:<booking>`, `cancel:credit:<booking>`). Ordinary cancellation never
+triggers an automatic Stripe cash refund.
+
+**Reasoning:** Matches the authoritative policy, prevents client tampering and
+double-restoration, and keeps cash refunds an explicit admin decision.
+
+## 2026-08-19 — Tutor earnings are event-driven, rate-snapshotted, admin-managed (Phase 4C)
+
+**Decision:** Full earnings are created by authoritative booking events
+(complete / late-cancel / no-show / free-trial completion) via
+`record_full_earning` (rate snapshot, one per booking). Early/tutor cancellation
+create no earning. `try_full_earning` never aborts a state change if a rate is
+missing (defers with an audit note). Reassignment makes the new tutor the
+authoritative earner (earnings are created later, keyed on the booking's current
+tutor). Admin lifecycle: mark paid (single/batch, no double-pay), adjust
+(preserves `adjusted_from_cents`), void/restore. Payouts are recorded only — no
+Stripe Connect.
+
+**Reasoning:** Ledger-style, auditable earnings with immutable historical rates;
+manual payouts in V1 as specified.
+
+## 2026-08-19 — Refunds are capped, idempotent, and separate from credit (Phase 4C)
+
+**Decision:** `refunds` table + `admin_record_refund` cap at the refundable Stripe
+amount (`stripe_paid_cents - refunded_cents`), are idempotent per
+`stripe_refund_id`, and update `payments.refunded_cents`/status. `/api/admin/refund`
+creates the Stripe refund server-side first (using the DB-stored payment intent),
+then reconciles. A Stripe refund and account credit are distinct and only both
+occur if an admin explicitly chooses both. Mixed bookings can never be Stripe-
+refunded beyond their Stripe-paid portion.
+
+**Reasoning:** Prevents over-refunding and double-application; keeps cash vs
+internal credit unambiguous.
+
+## 2026-08-19 — Internal disputes with hidden admin notes (Phase 4C)
+
+**Decision:** `disputes` (one active per booking via a partial unique index).
+Customers submit via `create_dispute` (own eligible booking) and read a safe
+projection via `get_my_disputes` — the base table is admin-RLS-only so
+`admin_notes`/reviewer identity are never exposed. `admin_resolve_dispute`
+supports denied / courtesy / upheld with any explicit mix of minute restore,
+account credit, Stripe refund, and tutor-earning void/adjust (no hard-coded
+outcome). `bookings.recording_ref` is a placeholder for future recording review.
+
+**Reasoning:** Company-arbitrated quality control with no automatic
+satisfaction-guarantee refund and strict separation of customer vs admin views.

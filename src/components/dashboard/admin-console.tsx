@@ -122,14 +122,33 @@ export function AdminConsole({
     setTs((p) => p.filter((x) => !(x.tutor_id === tutor_id && x.subject_id === subject_id)));
   }
 
-  async function cancelBooking(id: string) {
-    if (!supabase) return;
-    const { error: e } = await supabase.rpc("set_booking_status", { p_booking: id, p_status: "cancelled" });
-    if (e) {
-      setError(e.message);
-      return;
+  async function bookingOp(id: string, action: "complete" | "no_show" | "release" | "reassign") {
+    setError(null);
+    const payload: Record<string, unknown> = { bookingId: id, action };
+    if (action === "release") {
+      const comp = window.prompt("Courtesy account credit in dollars (0 for none):", "0");
+      if (comp === null) return;
+      payload.compCreditCents = Math.max(0, Math.round(parseFloat(comp) * 100) || 0);
+      payload.reason = "admin/tutor cancellation";
     }
-    setBookings((p) => p.map((b) => (b.id === id ? { ...b, status: "cancelled" as BookingStatus } : b)));
+    if (action === "reassign") {
+      const b = bookings.find((x) => x.id === id);
+      const eligible = tutors.filter((t) => (b?.subject_id ? ts.some((x) => x.tutor_id === t.profile_id && x.subject_id === b.subject_id) : true));
+      if (eligible.length === 0) { setError("No eligible tutors for this subject."); return; }
+      const list = eligible.map((t, i) => `${i + 1}) ${t.display_name ?? t.profile_id.slice(0, 8)}`).join("\n");
+      const pick = window.prompt(`Reassign to which tutor?\n${list}`);
+      if (pick === null) return;
+      const idx = parseInt(pick, 10) - 1;
+      if (!(idx >= 0 && idx < eligible.length)) { setError("Invalid choice."); return; }
+      payload.newTutorId = eligible[idx].profile_id;
+      payload.reason = "tutor reassignment";
+    }
+    const res = await fetch("/api/admin/booking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) { setError(data?.error ?? "Operation failed."); return; }
+    const newStatus: BookingStatus | null =
+      action === "complete" ? "completed" : action === "no_show" ? "no_show" : action === "release" ? "cancelled" : null;
+    setBookings((p) => p.map((b) => (b.id === id ? { ...b, status: (newStatus ?? b.status) as BookingStatus } : b)));
   }
 
   const filteredBookings = useMemo(() => {
@@ -236,9 +255,14 @@ export function AdminConsole({
                     <td className="py-2.5 pr-4 text-ink-600">{BOOKING_STATUS_LABEL[b.status]}</td>
                     <td className="py-2.5">
                       {b.status === "confirmed" || b.status === "pending" ? (
-                        <button onClick={() => cancelBooking(b.id)} className="text-xs font-medium text-red-600 hover:underline">
-                          Cancel
-                        </button>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <button onClick={() => bookingOp(b.id, "complete")} className="font-medium text-gold-700 hover:underline">Complete</button>
+                          <button onClick={() => bookingOp(b.id, "no_show")} className="font-medium text-ink-600 hover:underline">No-show</button>
+                          {b.subject_id && b.scheduled_start ? (
+                            <button onClick={() => bookingOp(b.id, "reassign")} className="font-medium text-ink-600 hover:underline">Reassign</button>
+                          ) : null}
+                          <button onClick={() => bookingOp(b.id, "release")} className="font-medium text-red-600 hover:underline">Release</button>
+                        </div>
                       ) : null}
                     </td>
                   </tr>
