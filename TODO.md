@@ -110,6 +110,18 @@ actually done.
 - [ ] End-to-end financial hardening, concurrency/refund race testing, full RLS/security review
 - [ ] Stripe test-mode E2E (needs `STRIPE_*` keys), operational readiness, `release_expired_checkouts()` cron
 - [ ] Cancellation/refund policy (owner decision); promo-code + referral systems
+
+### Phase 5A — Live tutoring room with Daily (DONE)
+- [x] `authorize_session_join` (server-time gate: parties only, confirmed + join window)
+- [x] Deterministic private Daily rooms + short-lived, room-scoped, least-privilege meeting tokens (server-only key)
+- [x] Session page `/dashboard/session/[bookingId]` + Daily Prebuilt room; student/tutor dashboard join links
+- [x] `session_presence` (join/leave evidence; not a completion signal) + signature-verified Daily webhook foundation
+- [x] Fail-safe when Daily unconfigured (503, no state change); anti-poaching-safe display names
+- [ ] Real Daily test-mode E2E — needs `DAILY_API_KEY`/`DAILY_DOMAIN`
+- [ ] Wire Daily webhook (`DAILY_WEBHOOK_SECRET`) for reliable leave/attendance
+
+### Phase 5B — NOT built yet
+- [ ] Cloud recording + storage, transcription, AI session analysis (build on `recording_ref` + `session_presence`)
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards

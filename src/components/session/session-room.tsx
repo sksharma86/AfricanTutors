@@ -1,0 +1,172 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import type { SessionInfo } from "@/lib/session-service";
+
+type Frame = { join: (o: { url: string; token?: string }) => Promise<unknown>; leave: () => Promise<unknown>; destroy: () => void; on: (e: string, cb: () => void) => void };
+
+function formatWhen(iso?: string | null): string {
+  if (!iso) return "To be scheduled";
+  try {
+    return new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  } catch {
+    return iso;
+  }
+}
+
+export function SessionRoom({ bookingId, info }: { bookingId: string; info: SessionInfo }) {
+  const [state, setState] = useState(info.join_state ?? "not_joinable");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [inCall, setInCall] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const frameRef = useRef<Frame | null>(null);
+
+  const leaveBeacon = useCallback(() => {
+    try {
+      navigator.sendBeacon?.(`/api/session/${bookingId}/leave`);
+    } catch {
+      /* best-effort */
+    }
+  }, [bookingId]);
+
+  useEffect(() => {
+    return () => {
+      if (frameRef.current) {
+        try {
+          frameRef.current.destroy();
+        } catch {
+          /* ignore */
+        }
+        frameRef.current = null;
+        leaveBeacon();
+      }
+    };
+  }, [leaveBeacon]);
+
+  async function join() {
+    setBusy(true);
+    setError(null);
+    let res: Response;
+    try {
+      res = await fetch(`/api/session/${bookingId}/join`, { method: "POST" });
+    } catch {
+      setBusy(false);
+      setError("Network error. Please try again.");
+      return;
+    }
+    const payload = await res.json().catch(() => null);
+    if (!res.ok) {
+      setBusy(false);
+      if (payload?.code === "too_early") setState("too_early");
+      else if (payload?.code === "too_late") setState("too_late");
+      setError(payload?.error ?? "Unable to join the session.");
+      return;
+    }
+    try {
+      const mod = await import("@daily-co/daily-js");
+      const DailyIframe = mod.default;
+      if (!containerRef.current) throw new Error("no container");
+      // Reuse any existing global frame to avoid duplicate-instance errors.
+      const existing = (DailyIframe as unknown as { getCallInstance?: () => Frame | null }).getCallInstance?.();
+      if (existing) existing.destroy();
+      const frame = DailyIframe.createFrame(containerRef.current, {
+        showLeaveButton: true,
+        iframeStyle: { width: "100%", height: "100%", border: "0", borderRadius: "16px" },
+      }) as unknown as Frame;
+      frameRef.current = frame;
+      frame.on("left-meeting", () => {
+        setInCall(false);
+        leaveBeacon();
+        try {
+          frame.destroy();
+        } catch {
+          /* ignore */
+        }
+        frameRef.current = null;
+      });
+      await frame.join({ url: payload.roomUrl, token: payload.token });
+      setInCall(true);
+    } catch {
+      setError("Could not start the video room. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const subject = info.subject ?? "Tutoring session";
+
+  return (
+    <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">African Tutors · Live session</p>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-white">{subject}</h1>
+          <p className="mt-1 text-sm text-ink-300">
+            {info.role === "tutor" ? "Student" : "Tutor"}: {info.counterpart ?? "—"} · {formatWhen(info.scheduled_start)}
+            {info.duration_minutes ? ` · ${info.duration_minutes} min` : ""}
+          </p>
+        </div>
+        <span className="rounded-full border border-ink-600 bg-ink-900 px-3 py-1 text-xs font-medium text-ink-200 capitalize">
+          {info.status}
+        </span>
+      </div>
+
+      <div className="mt-6">
+        {inCall ? (
+          <div ref={containerRef} className="h-[70vh] w-full overflow-hidden rounded-2xl bg-black" />
+        ) : (
+          <div className="rounded-2xl border border-ink-700 bg-ink-900 p-8 text-center">
+            {/* Keep a container present so createFrame can mount into it. */}
+            <div ref={containerRef} className="hidden" />
+            {state === "open" ? (
+              <>
+                <h2 className="font-display text-xl font-semibold text-white">You&apos;re ready to join</h2>
+                <p className="mt-1 text-sm text-ink-300">Camera, microphone, and screen sharing are available in the room.</p>
+                {info.videoConfigured === false ? (
+                  <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+                    Video service is not configured in this environment.
+                  </p>
+                ) : null}
+                <button
+                  onClick={join}
+                  disabled={busy}
+                  className="mt-6 rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
+                >
+                  {busy ? "Connecting…" : "Join session"}
+                </button>
+              </>
+            ) : state === "too_early" ? (
+              <>
+                <h2 className="font-display text-xl font-semibold text-white">The room isn&apos;t open yet</h2>
+                <p className="mt-1 text-sm text-ink-300">
+                  You can join from <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> (10 minutes before start).
+                </p>
+                <button onClick={() => location.reload()} className="mt-6 rounded-xl border border-ink-600 px-5 py-2.5 text-sm font-medium text-ink-100 hover:border-ink-400">
+                  Check again
+                </button>
+              </>
+            ) : state === "too_late" ? (
+              <>
+                <h2 className="font-display text-xl font-semibold text-white">This session has ended</h2>
+                <p className="mt-1 text-sm text-ink-300">The room closed 15 minutes after the scheduled end time.</p>
+              </>
+            ) : state === "not_scheduled" ? (
+              <>
+                <h2 className="font-display text-xl font-semibold text-white">No scheduled time yet</h2>
+                <p className="mt-1 text-sm text-ink-300">Our team is still arranging this session.</p>
+              </>
+            ) : (
+              <>
+                <h2 className="font-display text-xl font-semibold text-white">Session not available</h2>
+                <p className="mt-1 text-sm text-ink-300">This booking is {info.status}, so the live room is closed.</p>
+              </>
+            )}
+            {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

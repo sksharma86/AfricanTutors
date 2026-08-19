@@ -493,3 +493,47 @@ outcome). `bookings.recording_ref` is a placeholder for future recording review.
 
 **Reasoning:** Company-arbitrated quality control with no automatic
 satisfaction-guarantee refund and strict separation of customer vs admin views.
+
+## 2026-08-19 — Live tutoring rooms via Daily; booking stays authoritative (Phase 5A)
+
+**Decision:** Realtime media is delegated to Daily (Prebuilt via `@daily-co/daily-js`),
+but African Tutors owns authorization, booking state, room access, and identity.
+There is no permanent/public room URL: each eligible booking maps to an opaque,
+deterministic private room `at-<booking-uuid-without-hyphens>` created server-side
+on first join. `authorize_session_join(booking)` (SECURITY DEFINER, server time)
+is the single gate — only the booking's student, the assigned tutor, or an admin
+pass; everyone else gets `{authorized:false}` with no data leak. Join window is
+10 min before start .. 15 min after end; only `confirmed`, scheduled bookings are
+joinable (completed/cancelled/expired/no_show/pending are not). Admins may enter a
+confirmed scheduled session outside the window for support.
+
+**Reasoning:** Keeps the booking the source of truth and prevents booking-id
+manipulation from granting access, while avoiding a custom conferencing UI.
+
+## 2026-08-19 — Daily tokens, identity, and secret handling (Phase 5A)
+
+**Decision:** Meeting tokens are minted server-side, scoped to one room + one
+participant, short-lived (expire at the room's close time), non-owner for
+students/tutors and owner only for admins. Display identity is a safe first name
+(`student_first_name` / tutor first name) — never email/phone — to reduce
+off-platform circumvention. `DAILY_API_KEY` is server-only (never `NEXT_PUBLIC_`);
+`src/lib/daily/*` is `server-only`. If Daily is unconfigured or the API fails,
+the join route returns 503 and NO booking/payment/earning state changes; retry is
+safe (room + presence are idempotent).
+
+**Reasoning:** Least-privilege realtime access, anti-poaching-aware identity, and
+fail-safe behavior that never corrupts financial state.
+
+## 2026-08-19 — Session presence is evidence, not a completion signal (Phase 5A)
+
+**Decision:** `session_presence` records student/tutor first-joined, last-seen,
+and last-left per booking (written only by service/admin via
+`record_session_presence`, RLS-readable by the booking's parties). Join is
+recorded server-side at token mint; leave via a signature-verified Daily webhook
+(and a best-effort client beacon). This does NOT drive completion/earnings — a
+browser closing is not proof tutoring happened; Phase 4 admin-authoritative
+completion/no-show/earnings are unchanged. Presence is a foundation for Phase 5B
+recording and later tutor-quality work.
+
+**Reasoning:** Preserves financial integrity while capturing useful attendance
+evidence for admin decisions and future phases.

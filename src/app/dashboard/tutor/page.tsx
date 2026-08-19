@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import {
   AvailabilityManager,
@@ -38,9 +39,19 @@ function SessionCard({ b, tz }: { b: TutorBooking; tz: string }) {
           {subject}
           {b.is_free_trial ? <span className="ml-2 text-xs font-semibold text-gold-600">FREE TRIAL</span> : null}
         </p>
-        <span className="rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">
-          {BOOKING_STATUS_LABEL[b.status]}
-        </span>
+        <div className="flex items-center gap-2">
+          {b.status === "confirmed" && b.scheduled_start ? (
+            <Link
+              href={`/dashboard/session/${b.id}`}
+              className="rounded-lg bg-gold-400 px-3 py-1 text-xs font-semibold text-ink-900 hover:bg-gold-300"
+            >
+              Join session
+            </Link>
+          ) : null}
+          <span className="rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">
+            {BOOKING_STATUS_LABEL[b.status]}
+          </span>
+        </div>
       </div>
       <p className="mt-1 text-sm text-ink-500">
         {b.student_first_name ?? "Student"}
