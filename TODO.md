@@ -138,8 +138,18 @@ actually done.
 - [ ] Real Daily recording E2E — needs `DAILY_API_KEY`/`DAILY_DOMAIN` (paid plan) + `DAILY_WEBHOOK_SECRET`
 - [ ] Finalize recording-consent Terms/Privacy language (launch/legal readiness)
 
-### Phase 5C+ — NOT built yet
-- [ ] Transcription, AI session analysis, ratings, advanced tutor-quality analytics, customer/tutor recording access
+### Phase 6 — Production email, notifications & reminders (DONE)
+- [x] Central idempotent notification service (Resend) + `email_deliveries` log (stable business-event keys)
+- [x] Customer + tutor transactional emails (booking/free-trial/package/cancellation/reassignment/refund/dispute/tutor-approved)
+- [x] Session reminders (day-before + final-hour) via secret cron; idempotent; excludes cancelled/expired/completed/no-show
+- [x] Timezone-correct rendering (student vs tutor); app-route join links (never Daily URLs); server-resolved recipients
+- [x] Resend Svix delivery webhook (delivered/bounced) + admin notification-failure visibility
+- [ ] Real Resend E2E — needs `RESEND_API_KEY` + verified sender
+- [ ] Wire crons (reminders + release-expired) to a scheduler; set `RESEND_WEBHOOK_SECRET`, `ADMIN_ALERT_EMAIL`
+- [ ] Welcome email wiring on signup (function ready; not wired to avoid touching Supabase auth flow)
+
+### Phase 7+ — NOT built yet
+- [ ] SMS/WhatsApp/push, marketing, notification preferences, transcription/AI, ratings, advanced analytics
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards

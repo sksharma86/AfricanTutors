@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { sendDisputeReceived } from "@/lib/email";
+import { notifyDisputeReceived } from "@/lib/notify";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
         : "Unable to submit your concern.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-  const { data: b } = await supabase.from("bookings").select("public_reference").eq("id", body.bookingId).maybeSingle();
-  void sendDisputeReceived({ to: userRes.user.email ?? "", reference: b?.public_reference });
+  void notifyDisputeReceived(data as string, body.bookingId);
   return NextResponse.json({ id: data, status: "open" });
 }

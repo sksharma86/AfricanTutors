@@ -623,3 +623,46 @@ default is Daily-managed storage (Mode A).
 
 **Reasoning:** Minimizes privacy exposure, keeps financial integrity authoritative
 (Phase 4), and leaves a clean path to private-bucket storage at scale.
+
+## 2026-08-19 — Central, idempotent transactional email via Resend (Phase 6)
+
+**Decision:** All transactional email flows through a single service (`src/lib/notify.ts`
++ pure templates in `src/lib/email/templates.mjs` + `src/lib/email/transport.ts`),
+not scattered Resend calls. Every business email is claimed under a STABLE key
+(`booking-confirmed:<booking_id>`, `package-purchased:<payment_id>`,
+`refund-issued:<refund_id>`, `reminder-<kind>:<booking>:<role>`, …) in a new
+`email_deliveries` table before sending, so duplicate Stripe/Daily webhooks, the
+checkout-service+webhook double path, and repeated cron runs never send the same
+email twice. Recipients are resolved server-side from authoritative profile/auth
+data — never from a client-supplied address. Email is best-effort: `notify.*` never
+throws and nothing rolls back a booking/payment/session/dispute/recording when a
+send fails (failures are recorded, visible to admins in the finance console).
+
+**Reasoning:** Operational visibility + hard idempotency backed by the DB (not app
+memory), with strict server-determined recipients for privacy/anti-poaching.
+
+## 2026-08-19 — Session reminders via secret-protected cron (Phase 6)
+
+**Decision:** `/api/cron/reminders` (reusing the Phase 4D `CRON_SECRET` pattern)
+finds confirmed, scheduled, upcoming bookings and sends customer + tutor reminders
+for a "day-before" window (start in 1h–24h) and a "final hour" window (start in
+0–1h). Each recipient/kind is claimed idempotently, so running the cron twice never
+duplicates reminders; cancelled/expired/completed/no-show bookings never enter the
+window. Times render in the recipient's stored timezone (student → `students.timezone`,
+tutor → `tutor_profiles.timezone`), so the same session shows correctly for each
+party. Session links point at `APP_URL/dashboard/session/<booking_id>` (the app
+authorizes and mints Daily access at click time) — never a Daily room URL/token.
+
+**Reasoning:** Window-tolerant + idempotent reminders without new infrastructure;
+timezone-correct, anti-poaching-safe links.
+
+## 2026-08-19 — Resend delivery webhook (Svix) updates delivery status (Phase 6)
+
+**Decision:** `/api/resend/webhook` verifies Svix signatures (`RESEND_WEBHOOK_SECRET`)
+and maps delivered/bounced to `email_deliveries.status` by provider message id
+(idempotent; disabled 503 when unset). Admin alerts (`ADMIN_ALERT_EMAIL`) cover
+operational failures. The Resend API key is server-only; emails never include
+provider secrets, Daily tokens, or personal contact info.
+
+**Reasoning:** Minimal, authenticated delivery observability without a tracking
+platform; safe-by-default when unconfigured.

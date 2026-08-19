@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminApiContext, lookupEmail } from "@/lib/admin-service";
-import { sendDisputeResolved } from "@/lib/email";
+import { adminApiContext } from "@/lib/admin-service";
+import { notifyDisputeResolved } from "@/lib/notify";
 import { isStripeConfigured } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/client";
 
@@ -92,19 +92,15 @@ export async function POST(request: NextRequest) {
   });
   if (error) return NextResponse.json({ error: error.message.replace(/^.*:\s*/, "") }, { status: 400 });
 
-  // Notify the customer (best-effort).
+  // Notify the customer (best-effort, idempotent).
   const { data: d } = await supabase.from("disputes").select("account_id").eq("id", body.disputeId).maybeSingle();
   if (d?.account_id) {
-    const email = await lookupEmail(d.account_id);
-    if (email) {
-      void sendDisputeResolved({
-        to: email,
-        resolution: body.resolution,
-        creditCents,
-        restoredMinutes: restoreMinutes,
-        refundCents: refundStripeId ? refundCents : 0,
-      });
-    }
+    void notifyDisputeResolved(body.disputeId, d.account_id, {
+      resolution: body.resolution,
+      creditCents,
+      restoredMinutes: restoreMinutes,
+      refundCents: refundStripeId ? refundCents : 0,
+    });
   }
   return NextResponse.json(data);
 }

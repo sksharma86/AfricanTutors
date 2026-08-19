@@ -1,6 +1,6 @@
 import "server-only";
 
-import { sendBookingConfirmed, sendPackagePurchased } from "@/lib/email";
+import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { formatCents } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe/config";
 import { stripeCheckoutExpiresAt } from "@/lib/stripe/checkout-expiry.mjs";
@@ -98,18 +98,7 @@ export async function createBookingCheckout(
   // Non-Stripe outcomes are already final in the DB transaction.
   if (q.stripe_cents_due <= 0) {
     if (q.funding !== "request") {
-      const conf = await supabase
-        .from("bookings")
-        .select("public_reference, subject_name, scheduled_start, student_first_name")
-        .eq("id", q.booking_id)
-        .maybeSingle();
-      void sendBookingConfirmed({
-        to: user.email ?? "",
-        studentName: conf.data?.student_first_name,
-        subject: conf.data?.subject_name,
-        when: conf.data?.scheduled_start,
-        reference: conf.data?.public_reference,
-      });
+      void notifyBookingConfirmed(q.booking_id);
     }
     return {
       status: q.funding === "request" ? "request" : "confirmed",
@@ -206,7 +195,7 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
   };
 
   if (q.stripe_cents_due <= 0) {
-    void sendPackagePurchased({ to: user.email ?? "", minutes: q.minutes, amountCents: q.gross_cents });
+    void notifyPackagePurchased(q.payment_id);
     return {
       status: "completed",
       paymentId: q.payment_id,
