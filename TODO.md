@@ -148,8 +148,15 @@ actually done.
 - [ ] Wire crons (reminders + release-expired) to a scheduler; set `RESEND_WEBHOOK_SECRET`, `ADMIN_ALERT_EMAIL`
 - [ ] Welcome email wiring on signup (function ready; not wired to avoid touching Supabase auth flow)
 
-### Phase 7+ — NOT built yet
-- [ ] SMS/WhatsApp/push, marketing, notification preferences, transcription/AI, ratings, advanced analytics
+### Phase 7 — Tutor operations, earnings visibility & performance controls (DONE)
+- [x] Tutor dashboard: today/upcoming schedule (tz), session history, earnings summary + payout history, read-only rate
+- [x] Safe tutor cancellation *requests* (admin-mediated; auto-resolved on release/reassign) + admin alert
+- [x] Admin tutor detail page (ops/earnings/dispute+cancel counts) + open-request queue + tutor directory
+- [x] RLS/anti-poaching verified: tutor sees only own data, no customer contact info, no recording access
+- [ ] Wire crons (reminders/release-expired) + email/Daily/Stripe secrets for full live operation
+
+### Phase 8+ — NOT built yet
+- [ ] SMS/WhatsApp/push, marketing, notification preferences, transcription/AI, public ratings, advanced analytics, customer redesign
 - [ ] Twilio video rooms (attach to a confirmed booking)
 - [ ] Cancellation/rescheduling/refund policy (owner decision) + UI
 - [ ] Free-trial conversion + tutor-performance analytics dashboards

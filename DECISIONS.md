@@ -666,3 +666,33 @@ provider secrets, Daily tokens, or personal contact info.
 
 **Reasoning:** Minimal, authenticated delivery observability without a tracking
 platform; safe-by-default when unconfigured.
+
+## 2026-08-19 — Tutor operations: read-only earnings/rate + safe cancellation requests (Phase 7)
+
+**Decision:** The tutor dashboard is now operationally complete using existing
+data: today/upcoming schedule (tutor timezone, safe student first name, Phase 5
+join link), session history with per-session earning + status, an earnings
+summary (earned/paid/outstanding) and payout history read straight from the
+authoritative snapshotted `tutor_earnings` (never recomputed from the current
+rate), and the tutor's own compensation rate shown READ-ONLY. RLS already scopes
+`tutor_profiles`/`tutor_earnings`/`bookings` to the tutor; `guard_tutor_privileges`
+blocks self-editing status/rate; `tutor_earnings`/`tutor_subjects` have no tutor
+write policy. Tutors get NO recording access (Phase 5B admin-only preserved) and
+tutor-facing queries expose no customer email/phone.
+
+**Reasoning:** Completes the tutor experience without new financial systems or
+weakening privacy/anti-poaching or Phase 4 authority.
+
+## 2026-08-19 — Tutor cancellation is a request, not an action (Phase 7)
+
+**Decision:** New `tutor_cancellation_requests` + `request_tutor_cancellation`
+(assigned-tutor-only, upcoming pending/confirmed only, reason required, one open
+per booking) records tutor-side intent and alerts admin (Phase 6). It performs NO
+financial restoration/refund/credit/reassignment — admin resolves via the
+authoritative `admin_release_booking` / `admin_reassign_tutor`, which now also
+auto-resolve the open request. Tutor cancellation still yields no tutor earning.
+Admin gets an open-requests queue + a read-only tutor detail page (operations,
+earnings, disputes/cancellation counts) — visibility only, no scoring/auto-penalty.
+
+**Reasoning:** Gives tutors a safe way to say "I can't attend" without granting any
+admin/financial power, keeping Phase 4 rules authoritative.
