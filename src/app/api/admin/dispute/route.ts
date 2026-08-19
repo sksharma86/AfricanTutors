@@ -66,9 +66,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Stripe not configured for refunds; resolve without a Stripe refund." }, { status: 503 });
     }
     try {
+      // Key on the payment's current refunded total (see /api/admin/refund) so a
+      // retry after an uncertain outcome cannot double-refund cash.
       const refund = await getStripe().refunds.create(
-        { payment_intent: pi, amount: refundCents, metadata: { dispute: body.disputeId } },
-        { idempotencyKey: `dispute-refund-${body.disputeId}` },
+        { payment_intent: pi, amount: refundCents, metadata: { dispute: body.disputeId, payment_id: pay.id } },
+        { idempotencyKey: `refund-${pay.id}-${pay.refunded_cents}-${refundCents}` },
       );
       refundStripeId = refund.id;
     } catch {
