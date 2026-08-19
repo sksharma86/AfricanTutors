@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { sendCancellation } from "@/lib/email";
+import { notifyCancellation } from "@/lib/notify";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -25,13 +25,10 @@ export async function POST(request: NextRequest) {
 
   const result = data as { status: string; early?: boolean; restored_minutes?: number; restored_credit_cents?: number };
   if (result.status === "cancelled") {
-    const { data: b } = await supabase.from("bookings").select("public_reference").eq("id", body.bookingId).maybeSingle();
-    void sendCancellation({
-      to: userRes.user.email ?? "",
+    void notifyCancellation(body.bookingId, {
       early: Boolean(result.early),
       restoredMinutes: result.restored_minutes ?? null,
       restoredCreditCents: result.restored_credit_cents ?? null,
-      reference: b?.public_reference,
     });
   }
   return NextResponse.json(result);

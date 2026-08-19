@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminApiContext, lookupEmail } from "@/lib/admin-service";
-import { sendTutorReassignment } from "@/lib/email";
+import { adminApiContext } from "@/lib/admin-service";
+import { notifyReassignment } from "@/lib/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,20 +38,12 @@ export async function POST(request: NextRequest) {
   }
   if (res.error) return NextResponse.json({ error: res.error.message.replace(/^.*:\s*/, "") }, { status: 400 });
 
-  // Customer notifications for tutor-side outcomes (best-effort).
-  if (body.action === "reassign" || body.action === "release") {
-    const { data: b } = await supabase.from("bookings").select("account_id, public_reference").eq("id", body.bookingId).maybeSingle();
-    if (b?.account_id) {
-      const email = await lookupEmail(b.account_id);
-      if (email) {
-        void sendTutorReassignment({
-          to: email,
-          reassigned: body.action === "reassign",
-          reference: b.public_reference,
-          compCreditCents: body.action === "release" ? (body.compCreditCents ?? 0) : 0,
-        });
-      }
-    }
+  // Customer + affected-tutor notifications for tutor-side outcomes (best-effort, idempotent).
+  if (body.action === "reassign") {
+    const removedTutorId = (res.data as { from_tutor?: string } | null)?.from_tutor ?? null;
+    void notifyReassignment(body.bookingId, { reassigned: true, removedTutorId });
+  } else if (body.action === "release") {
+    void notifyReassignment(body.bookingId, { reassigned: false, compCreditCents: body.compCreditCents ?? 0 });
   }
   return NextResponse.json(res.data);
 }

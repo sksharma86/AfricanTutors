@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminApiContext, lookupEmail } from "@/lib/admin-service";
-import { sendRefundIssued } from "@/lib/email";
+import { adminApiContext } from "@/lib/admin-service";
+import { notifyRefund } from "@/lib/notify";
 import { isStripeConfigured } from "@/lib/stripe/config";
 import { getStripe } from "@/lib/stripe/client";
 
@@ -74,8 +74,7 @@ export async function POST(request: NextRequest) {
   });
   if (error) return NextResponse.json({ error: "Refund recorded at Stripe but internal update failed; please reconcile." }, { status: 500 });
 
-  const email = await lookupEmail(pay.account_id);
-  if (email) void sendRefundIssued({ to: email, amountCents: body.amountCents, reason });
+  void notifyRefund(pay.id, refundId, body.amountCents, reason);
 
   return NextResponse.json(data);
 }

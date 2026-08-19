@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 
-import { sendBookingConfirmed, sendPackagePurchased } from "@/lib/email";
+import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { getStripe } from "@/lib/stripe/client";
 import { STRIPE_WEBHOOK_SECRET, isStripeWebhookConfigured } from "@/lib/stripe/config";
 import { getServiceSupabase } from "@/lib/supabase/service";
@@ -164,7 +164,11 @@ async function cancelFromMetadata(
   if (error) throw new Error(error.message);
 }
 
-/** Best-effort customer email after fulfillment (never blocks the webhook). */
+/**
+ * Best-effort customer email after fulfillment (never blocks the webhook). Uses
+ * the idempotent notification service so duplicate Stripe deliveries — and the
+ * checkout-service path for internally-funded purchases — never double-send.
+ */
 async function notifyFulfillment(
   supabase: ReturnType<typeof getServiceSupabase>,
   kind: "booking" | "package",
@@ -172,36 +176,11 @@ async function notifyFulfillment(
   result: Record<string, unknown> | null,
 ): Promise<void> {
   try {
-    const { data: pay } = await supabase
-      .from("payments")
-      .select("account_id, gross_cents, stripe_paid_cents, package_product_id, booking_id")
-      .eq("id", paymentId)
-      .maybeSingle();
-    if (!pay) return;
-    const { data: userRes } = await supabase.auth.admin.getUserById(pay.account_id as string);
-    const to = userRes?.user?.email ?? "";
-    if (!to) return;
-
     if (kind === "package") {
-      const { data: prod } = await supabase
-        .from("package_products")
-        .select("minutes")
-        .eq("id", pay.package_product_id)
-        .maybeSingle();
-      await sendPackagePurchased({ to, minutes: (prod?.minutes as number) ?? 0, amountCents: pay.gross_cents });
-    } else if (result?.status === "confirmed" && pay.booking_id) {
-      const { data: b } = await supabase
-        .from("bookings")
-        .select("public_reference, subject_name, scheduled_start, student_first_name")
-        .eq("id", pay.booking_id)
-        .maybeSingle();
-      await sendBookingConfirmed({
-        to,
-        studentName: b?.student_first_name,
-        subject: b?.subject_name,
-        when: b?.scheduled_start,
-        reference: b?.public_reference,
-      });
+      await notifyPackagePurchased(paymentId);
+    } else if (result?.status === "confirmed") {
+      const { data: pay } = await supabase.from("payments").select("booking_id").eq("id", paymentId).maybeSingle();
+      if (pay?.booking_id) await notifyBookingConfirmed(pay.booking_id as string);
     }
   } catch {
     // Emails are best-effort; ignore.

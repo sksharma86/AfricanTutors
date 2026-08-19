@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AdminFinanceConsole, type EarningRow, type DisputeRow, type PaymentRow } from "@/components/dashboard/admin-finance-console";
+import { AdminFinanceConsole, type EarningRow, type DisputeRow, type PaymentRow, type EmailFailureRow } from "@/components/dashboard/admin-finance-console";
 import { Container } from "@/components/ui/container";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -76,6 +76,14 @@ export default async function AdminFinancePage() {
     ref: p.booking_id ? bookingMap.get(p.booking_id)?.ref ?? null : null,
   }));
 
+  const { data: failures } = await supabase!
+    .from("email_deliveries")
+    .select("id, notification_type, to_email, status, error, updated_at")
+    .eq("status", "failed")
+    .order("updated_at", { ascending: false })
+    .limit(50);
+  const emailFailures = (failures ?? []) as EmailFailureRow[];
+
   return (
     <div className="min-h-full bg-ink-50/50 py-10">
       <Container className="max-w-6xl">
@@ -87,7 +95,7 @@ export default async function AdminFinancePage() {
           Tutor earnings &amp; payouts, customer balances &amp; adjustments, Stripe refunds, and dispute resolution.
         </p>
         <div className="mt-8">
-          <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} />
+          <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} emailFailures={emailFailures} />
         </div>
       </Container>
     </div>
