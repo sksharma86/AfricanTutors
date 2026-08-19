@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { SESSION_OPTIONS, formatCents, formatUsd } from "@/lib/pricing";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -43,6 +43,15 @@ function friendlyError(message?: string | null): string {
 
 type Step = "student" | "subject" | "duration" | "time" | "confirm" | "done";
 
+interface Quote {
+  session_price_cents: number;
+  is_free_trial: boolean;
+  package_minutes_used: number;
+  credit_cents_used: number;
+  stripe_cents_due: number;
+  funding: string;
+}
+
 export function BookingWizard({
   students: initialStudents,
   subjects,
@@ -72,7 +81,16 @@ export function BookingWizard({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const [confirmation, setConfirmation] = useState<{ ref: string; isFree: boolean; scheduled: boolean } | null>(null);
+  const [confirmation, setConfirmation] = useState<{
+    ref: string;
+    isFree: boolean;
+    scheduled: boolean;
+    funding: string;
+  } | null>(null);
+
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const [balances, setBalances] = useState<{ minutes: number; creditCents: number } | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
 
   // add-student form
   const [newName, setNewName] = useState("");
@@ -92,6 +110,42 @@ export function BookingWizard({
       active = false;
     };
   }, [supabase, studentId]);
+
+  // Load the signed-in account id + current balances (owner-scoped, server-derived).
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const uid = data?.user?.id ?? null;
+      if (!active) return;
+      setAccountId(uid);
+      if (uid) {
+        const { data: bal } = await supabase.rpc("get_customer_balances", { p_account: uid });
+        if (active && bal) {
+          setBalances({ minutes: bal.package_minutes ?? 0, creditCents: bal.dollar_credit_cents ?? 0 });
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
+
+  // Recompute the authoritative funding breakdown whenever the paid session
+  // changes. This is display-only; book_session recomputes under locks.
+  useEffect(() => {
+    if (!supabase || !accountId || isFreeTrial || subjectId === null) return;
+    let active = true;
+    supabase
+      .rpc("booking_quote", { p_account: accountId, p_duration: duration, p_is_free_trial: false })
+      .then(({ data }) => {
+        if (active && data) setQuote(data as Quote);
+      });
+    return () => {
+      active = false;
+    };
+  }, [supabase, accountId, duration, isFreeTrial, subjectId]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, SubjectRow[]> = {};
@@ -147,30 +201,54 @@ export function BookingWizard({
     if (!supabase) return;
     setBusy(true);
     setError(null);
-    const { data, error: e } = await supabase.rpc("create_booking", {
-      p_student_id: studentId,
-      p_subject_id: subjectId,
-      p_other_subject: subjectId ? null : otherText.trim(),
-      p_request_note: note.trim() || null,
-      p_duration: duration,
-      p_start: subjectId ? selectedSlot : null,
-      p_is_free_trial: isFreeTrial,
-    });
-    setBusy(false);
-    if (e) {
-      setError(friendlyError(e.message));
+    let res: Response;
+    try {
+      res = await fetch("/api/checkout/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          subjectId,
+          otherSubject: subjectId ? null : otherText.trim(),
+          note: note.trim() || null,
+          duration,
+          startISO: subjectId ? selectedSlot : null,
+          isFreeTrial,
+        }),
+      });
+    } catch {
+      setBusy(false);
+      setError("Something went wrong. Please try again.");
       return;
     }
-    // fetch the public reference
-    const { data: b } = await supabase
-      .from("bookings")
-      .select("public_reference")
-      .eq("id", data)
-      .single();
+    const payload = await res.json().catch(() => null);
+    if (!res.ok) {
+      setBusy(false);
+      setError(friendlyError(payload?.error));
+      return;
+    }
+
+    // Payment due → hand off to Stripe's hosted checkout.
+    if (payload?.checkoutUrl) {
+      window.location.assign(payload.checkoutUrl as string);
+      return;
+    }
+
+    setBusy(false);
+    let ref = "";
+    if (payload?.bookingId) {
+      const { data: b } = await supabase
+        .from("bookings")
+        .select("public_reference")
+        .eq("id", payload.bookingId)
+        .single();
+      ref = b?.public_reference ?? "";
+    }
     setConfirmation({
-      ref: b?.public_reference ?? "",
+      ref,
       isFree: isFreeTrial,
       scheduled: Boolean(subjectId),
+      funding: payload?.funding ?? "",
     });
     setStep("done");
   }
@@ -212,13 +290,21 @@ export function BookingWizard({
           </svg>
         </div>
         <h2 className="mt-5 font-display text-2xl font-semibold text-ink-900">
-          {confirmation.scheduled ? (confirmation.isFree ? "Session booked!" : "Booking held") : "Request received!"}
+          {confirmation.scheduled
+            ? confirmation.isFree || confirmation.funding === "package" || confirmation.funding === "credit"
+              ? "Session confirmed!"
+              : "Booking held"
+            : "Request received!"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-600">
           {confirmation.scheduled
             ? confirmation.isFree
               ? "Your free 30-minute introductory session is confirmed. We've matched an approved African Tutors tutor."
-              : "Your time is reserved and an approved African Tutors tutor is matched. Payment is required to confirm this session — we'll enable secure checkout shortly."
+              : confirmation.funding === "package"
+                ? "Your session is confirmed using your package minutes. An approved African Tutors tutor is matched."
+                : confirmation.funding === "credit"
+                  ? "Your session is confirmed using your account credit. An approved African Tutors tutor is matched."
+                  : "Your time is reserved and an approved African Tutors tutor is matched. Complete payment to confirm this session."
             : "Thanks — our team will review your request and follow up to arrange an approved tutor."}
         </p>
         <p className="mt-3 text-sm text-ink-500">
@@ -409,6 +495,16 @@ export function BookingWizard({
       {step === "duration" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a session</h2>
+          {balances && (balances.minutes > 0 || balances.creditCents > 0) ? (
+            <p className="mt-2 rounded-lg border border-gold-200 bg-gold-50 px-3 py-2 text-xs text-ink-600">
+              Your balance:{" "}
+              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{balances.minutes} package minutes</span> : null}
+              {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
+              {balances.creditCents > 0 ? (
+                <span className="font-medium text-ink-800">{formatCents(balances.creditCents)} account credit</span>
+              ) : null}
+            </p>
+          ) : null}
           <div className="mt-4 space-y-3">
             {freeTrialUsed === false ? (
               <button
@@ -536,11 +632,30 @@ export function BookingWizard({
             ) : (
               <Row label="Time" value="Our team will arrange a time with you" />
             )}
-            <Row label="Price" value={priceLabel} highlight={isFreeTrial} />
+            <Row label="Session price" value={priceLabel} highlight={isFreeTrial} />
+            {!isFreeTrial && subjectId && quote ? (
+              <>
+                {quote.package_minutes_used > 0 ? (
+                  <Row label="Package minutes" value={`−${quote.package_minutes_used} min`} />
+                ) : null}
+                {quote.credit_cents_used > 0 ? (
+                  <Row label="Account credit" value={`−${formatCents(quote.credit_cents_used)}`} />
+                ) : null}
+                <Row
+                  label="Due today"
+                  value={quote.stripe_cents_due > 0 ? formatCents(quote.stripe_cents_due) : "$0"}
+                  highlight={quote.stripe_cents_due === 0}
+                />
+              </>
+            ) : null}
           </dl>
           {!isFreeTrial && subjectId ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
-              Payment isn&apos;t collected yet — your session is reserved and we&apos;ll enable secure payment shortly.
+              {quote && quote.package_minutes_used > 0
+                ? `This session will use ${quote.package_minutes_used} of your ${balances?.minutes ?? quote.package_minutes_used} package minutes. No payment required.`
+                : quote && quote.stripe_cents_due === 0
+                  ? "This session is fully covered by your account credit. No payment required."
+                  : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
             </p>
           ) : null}
           <div className="mt-6 flex gap-3">

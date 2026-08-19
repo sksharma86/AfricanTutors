@@ -34,3 +34,9 @@ export const NO_CARD_REQUIRED = "No credit card required.";
 export function formatUsd(amount: number): string {
   return `$${amount}`;
 }
+
+/** Format integer cents as a USD string (e.g. 1300 -> "$13.00", 2000 -> "$20"). */
+export function formatCents(cents: number): string {
+  const dollars = cents / 100;
+  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}

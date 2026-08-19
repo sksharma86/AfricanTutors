@@ -314,3 +314,127 @@ profile is removed. RESTRICT forces a deliberate soft-delete/anonymize path
 instead. Non-null references keep idempotency guarantees real (Postgres unique
 allows multiple NULLs). Deriving earnings from the booking prevents wrong-tutor
 or arbitrary-duration earnings.
+
+## 2026-08-18 — Booking funding priority: package → credit → Stripe (Phase 4B)
+
+**Decision:** `book_session` prices a session server-side and picks funding in a
+fixed order: use package minutes ONLY if they cover the ENTIRE session (partial
+minutes are never touched); otherwise apply available dollar credit; then charge
+the remainder through Stripe. Fully-internal outcomes (package, full credit, free
+trial) confirm the booking inside one transaction with no Stripe object. Mixed /
+Stripe-only bookings stay `pending`/`awaiting_payment` on the existing 15-minute
+hold until a verified webhook confirms them.
+
+**Reasoning:** Matches the authoritative business rule and keeps zero-Stripe cases
+free of fake $0 charges while still writing auditable payment/ledger records.
+
+## 2026-08-18 — Partial credit uses consume-and-restore, not a separate hold (Phase 4B)
+
+**Decision:** When a booking (or package) needs partial credit + Stripe, the
+credit is consumed immediately as a ledger `consumption` linked to the payment.
+If the hold expires or payment fails, `release_expired_holds` restores the exact
+amount via an idempotent `restore:<payment_id>` entry and cancels the payment. On
+success the consumption stands.
+
+**Reasoning:** Consuming up front makes the credit un-spendable elsewhere while a
+Stripe payment is outstanding (no double-spend), and the idempotent restore keeps
+it from being stranded. Simpler and more auditable than a parallel reservation
+state on the balance.
+
+## 2026-08-18 — Delayed Stripe success after expiry credits the account (Phase 4B)
+
+**Decision:** If a Stripe payment for a booking succeeds AFTER the slot expired,
+`fulfill_booking_payment` does not reactivate the slot. It restores any reserved
+credit and issues the Stripe amount as dollar credit (`delayed:<payment_id>`),
+marks the payment succeeded with a note, and the return page shows a "value
+credited" state. The customer keeps 100% of the value for a future booking.
+
+**Reasoning:** Re-confirming an expired slot could double-book a tutor; refusing
+the money would strand the customer. Crediting the balance is the safe,
+foundation-compatible behavior.
+
+## 2026-08-18 — Hosted Stripe Checkout Sessions; webhook is authoritative (Phase 4B)
+
+**Decision:** Use Stripe Checkout Sessions (hosted), not raw PaymentIntents.
+Amount/currency/metadata are set server-side; idempotency keys guard session
+creation; `ensureStripeCustomer` is concurrency-safe. Fulfillment happens only in
+the signature-verified webhook via `fulfill_booking_payment` /
+`fulfill_package_payment`, which are idempotent at the payment-object and ledger
+levels. The `/checkout/return` page reads internal state and never trusts the
+redirect. Customer emails are a documented stub (`src/lib/email.ts`) that upgrades
+to Resend when `RESEND_API_KEY` is set.
+
+**Reasoning:** Checkout Sessions need no card UI and keep the app out of PCI
+scope. Double-layer idempotency prevents duplicate minutes/confirmations from
+Stripe re-delivery or overlapping session/payment_intent events.
+
+## 2026-08-19 — Stripe session lifetime is separate from the 15-min internal hold (4B review)
+
+**Decision:** The African Tutors booking/payment hold stays **15 minutes** and is
+authoritative in the DB (`payments.expires_at`, `bookings.payment_hold_expires_at`).
+Stripe Checkout Sessions require `expires_at` in [30 min, 24 h], so the hosted
+session is created with a 30-minute lifetime (`src/lib/stripe/checkout-expiry.mjs`,
+`stripeCheckoutExpiresAt`). The internal 15-min expiry fires first and releases the
+slot / restores credit; a payment made via a still-open Stripe session in the
+15–30-min window is handled by delayed-payment logic (value credited, nothing
+resurrected). A pure unit test asserts the value sent to Stripe is always ≥ 30 min.
+
+**Reasoning:** The prior code sent a 15-min `expires_at`, which live Stripe would
+reject. Business hold and Stripe session lifetime are different concerns; the DB
+remains authoritative and the extra Stripe window is covered by delayed-payment.
+
+## 2026-08-19 — Package checkouts have an authoritative expiry; reserved credit is never stranded (4B review)
+
+**Decision:** `payments.expires_at` now applies to package Stripe reservations too
+(15-min internal). `release_expired_checkouts()` sweeps expired booking holds AND
+expired package reservations, restoring reserved credit (idempotent
+`restore:<payment_id>`) and canceling the payment without issuing minutes.
+`cancel_pending_payment(payment_id, reason)` is an explicit, idempotent rollback
+used when Stripe Checkout creation fails or Stripe is unavailable after a DB
+reservation — for both bookings (also releases the slot) and packages. The
+checkout service calls it on any Stripe failure and the webhook calls it on
+`checkout.session.expired` / `*payment_failed`. Package cleanup keys off
+`payments.expires_at`, never `bookings.payment_hold_expires_at` (a package has no
+booking).
+
+**Reasoning:** Package reservations previously had no release path, so abandoned
+or failed Stripe checkouts could strand credit indefinitely. A payment-level
+expiry + explicit rollback closes that gap and reuses the existing `payments`
+architecture instead of a parallel system.
+
+## 2026-08-19 — Late package payment credits the account (mirrors booking policy)
+
+**Decision:** If Stripe succeeds after a package reservation already expired,
+`fulfill_package_payment` does NOT issue the package: it restores any reserved
+credit (idempotent) and credits the Stripe-paid amount to the account balance
+(`delayed:<payment_id>`), marking the payment succeeded with a note. Package
+minutes are issued exactly once and only on the still-pending path.
+
+**Reasoning:** Consistency with the booking delayed-payment principle — an expired
+transaction must not silently resurrect — while never losing the customer's money.
+
+## 2026-08-19 — Payment expiry is self-enforcing at fulfillment (4B review 2)
+
+**Decision:** `fulfill_booking_payment` and `fulfill_package_payment` now evaluate
+the authoritative deadline themselves (while the payment/booking rows are locked)
+instead of trusting that a sweeper already ran. A booking is treated as expired if
+`payments.expires_at <= now()` OR `bookings.payment_hold_expires_at <= now()` (and
+not already confirmed) OR the row was already swept to a terminal/expired state; a
+package is expired if `payments.expires_at <= now()` OR already canceled/failed.
+When expired, fulfillment runs the delayed-payment path (restore reserved credit +
+credit the Stripe amount, both idempotent) and never confirms the booking or
+issues package minutes. `release_expired_checkouts()` remains a proactive cleanup
+but is NOT required for correctness.
+
+**Runtime scheduling:** `release_expired_holds()` still runs opportunistically at
+the top of `create_booking`/`book_session`; `release_expired_checkouts()` has no
+automated cron yet (invoked on demand and via Stripe `checkout.session.expired` /
+`*payment_failed` webhooks). Because fulfillment self-enforces the deadline, the
+absence of a cron can no longer cause a wrong confirmation/issuance — the cron is
+future operational polish, tracked in TODO.
+
+**Race safety:** the payment row `FOR UPDATE` lock (shared by fulfillment and the
+sweeper's `cancel_pending_payment`) serializes the two paths; unique ledger
+references (`restore:<payment_id>`, `delayed:<payment_id>`) guarantee reserved
+credit is restored once and the Stripe amount is credited once, with no duplicate
+ledger rows and no booking confirmation / package issuance after expiry.

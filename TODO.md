@@ -80,9 +80,24 @@ actually done.
 - [x] Admin-only tutor comp rate; atomic idempotent money functions; RLS
 - [x] Stripe SDK + server client + webhook (signature verify + idempotency)
 
-### Phase 4B–4D — NOT built yet
-- [ ] 4B: Stripe checkout (Checkout/PaymentIntent), webhook fulfillment handlers,
-      package purchase + booking payment UI (`awaiting_payment` → `paid`/`confirmed`)
+### Phase 4B — Customer checkout & fulfillment (DONE)
+- [x] `book_session` funding orchestration (package → credit → Stripe); `purchase_package`
+- [x] `booking_quote`, `get_customer_balances`; consume-and-restore credit reservation
+- [x] Stripe Checkout Session routes (booking/package) + status route; hosted checkout
+- [x] Webhook fulfillment (`fulfill_booking_payment`/`fulfill_package_payment`), double idempotency
+- [x] Expiry restores reserved credit; delayed-payment-after-expiry credits the account
+- [x] Customer UI: wizard quote breakdown + balances, packages page, authoritative return page
+- [x] Email stub (booking confirmed / hold expired / package purchased)
+- [x] Stripe session lifetime (>=30 min) separated from 15-min internal hold; contract unit test
+- [x] Package checkout expiry lifecycle (`payments.expires_at`, `release_expired_checkouts`)
+- [x] Safe rollback on Stripe-create failure/unavailable (`cancel_pending_payment`, booking+package)
+- [x] Late package payment credits account (mirrors booking delayed-payment)
+- [x] Expiry is self-enforcing inside `fulfill_booking_payment`/`fulfill_package_payment` (sweeper not required for correctness)
+- [ ] Schedule `release_expired_checkouts()` (cron) — operational polish; currently on-demand + Stripe expiry/failure webhooks
+- [ ] Live Stripe redirect + signed webhook E2E — needs `STRIPE_*` env keys (secrets)
+- [ ] Production email provider (`RESEND_API_KEY`) — stub logs until configured
+
+### Phase 4C–4D — NOT built yet
 - [ ] 4C: admin financial UI + tutor payout tracking (payouts remain manual)
 - [ ] 4D: dispute/arbitration workflow
 - [ ] Cancellation/refund policy (owner decision); promo-code + referral systems
