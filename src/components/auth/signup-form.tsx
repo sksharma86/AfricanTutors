@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-notice";
 import { Button } from "@/components/ui/button";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { RequestableRole } from "@/lib/roles";
@@ -29,6 +30,7 @@ export function SignupForm({
 
     setStatus("submitting");
     setErrorMessage(null);
+    track(ANALYTICS_EVENTS.signupStarted, { role });
 
     const formData = new FormData(event.currentTarget);
     const displayName = String(formData.get("displayName") ?? "");
@@ -51,6 +53,8 @@ export function SignupForm({
       setErrorMessage(error.message);
       return;
     }
+
+    track(ANALYTICS_EVENTS.signupCompleted, { role });
 
     if (data.session) {
       router.push(role === "tutor" ? "/dashboard/tutor" : "/dashboard/student");

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { formatCents } from "@/lib/pricing";
 import { formatMoneyCents } from "@/lib/format.mjs";
 import { packageEconomics } from "@/lib/packages.mjs";
@@ -36,6 +37,7 @@ export function PackageStore({
   async function buy(pkg: PackageRow) {
     setBusyId(pkg.id);
     setError(null);
+    track(ANALYTICS_EVENTS.packagePurchaseStarted, { minutes: pkg.minutes });
     let res: Response;
     try {
       res = await fetch("/api/checkout/package", {
@@ -59,6 +61,7 @@ export function PackageStore({
       return;
     }
     setBusyId(null);
+    track(ANALYTICS_EVENTS.packagePurchaseCompleted, { minutes: pkg.minutes });
     setDone({ minutes: pkg.minutes });
   }
 
