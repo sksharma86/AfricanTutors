@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { SESSION_OPTIONS, formatCents, formatUsd } from "@/lib/pricing";
+import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -100,16 +101,18 @@ export function BookingWizard({
   const student = students.find((s) => s.id === studentId) ?? null;
   const studentTz = student?.timezone || browserTimezone();
 
+  // Free trial is ONE PER ACCOUNT (not per student), so eligibility keys on the
+  // signed-in account, not the selected student. Server remains authoritative.
   useEffect(() => {
-    if (!supabase || !studentId) return;
+    if (!supabase || !accountId) return;
     let active = true;
-    supabase.rpc("has_used_free_trial", { p_student: studentId }).then(({ data }) => {
+    supabase.rpc("account_has_used_free_trial", { p_account: accountId }).then(({ data }) => {
       if (active) setFreeTrialUsed(Boolean(data));
     });
     return () => {
       active = false;
     };
-  }, [supabase, studentId]);
+  }, [supabase, accountId]);
 
   // Load the signed-in account id + current balances (owner-scoped, server-derived).
   useEffect(() => {
@@ -267,7 +270,8 @@ export function BookingWizard({
   }, [slots, studentTz]);
 
   // ---- rendering helpers ----
-  const card = "rounded-2xl border border-ink-100 bg-white p-6 sm:p-8";
+  const card =
+    "rounded-2xl border border-ink-100 bg-white p-6 shadow-[0_1px_2px_rgba(19,19,17,0.04),0_10px_28px_-18px_rgba(19,19,17,0.16)] sm:p-8";
   const stepPill = (n: number, label: string, active: boolean, done: boolean) => (
     <div className="flex items-center gap-2">
       <span
@@ -496,12 +500,12 @@ export function BookingWizard({
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a session</h2>
           {balances && (balances.minutes > 0 || balances.creditCents > 0) ? (
-            <p className="mt-2 rounded-lg border border-gold-200 bg-gold-50 px-3 py-2 text-xs text-ink-600">
+            <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
               Your balance:{" "}
-              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{balances.minutes} package minutes</span> : null}
+              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of tutoring</span> : null}
               {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
               {balances.creditCents > 0 ? (
-                <span className="font-medium text-ink-800">{formatCents(balances.creditCents)} account credit</span>
+                <span className="font-medium text-ink-800">{formatMoneyCents(balances.creditCents)} account credit</span>
               ) : null}
             </p>
           ) : null}
@@ -636,14 +640,14 @@ export function BookingWizard({
             {!isFreeTrial && subjectId && quote ? (
               <>
                 {quote.package_minutes_used > 0 ? (
-                  <Row label="Package minutes" value={`−${quote.package_minutes_used} min`} />
+                  <Row label="Tutoring balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 ) : null}
                 {quote.credit_cents_used > 0 ? (
-                  <Row label="Account credit" value={`−${formatCents(quote.credit_cents_used)}`} />
+                  <Row label="Account credit" value={`−${formatMoneyCents(quote.credit_cents_used)}`} />
                 ) : null}
                 <Row
                   label="Due today"
-                  value={quote.stripe_cents_due > 0 ? formatCents(quote.stripe_cents_due) : "$0"}
+                  value={formatMoneyCents(quote.stripe_cents_due)}
                   highlight={quote.stripe_cents_due === 0}
                 />
               </>
@@ -651,10 +655,10 @@ export function BookingWizard({
           </dl>
           {!isFreeTrial && subjectId ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
-              {quote && quote.package_minutes_used > 0
-                ? `This session will use ${quote.package_minutes_used} of your ${balances?.minutes ?? quote.package_minutes_used} package minutes. No payment required.`
+              {quote && quote.package_minutes_used > 0 && quote.stripe_cents_due === 0
+                ? "This session is covered by your tutoring balance — no payment required."
                 : quote && quote.stripe_cents_due === 0
-                  ? "This session is fully covered by your account credit. No payment required."
+                  ? "This session is fully covered by your account credit — no payment required."
                   : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
             </p>
           ) : null}

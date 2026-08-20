@@ -158,18 +158,16 @@ describe("Prompt 3D — booking lifecycle hardening (live)", { skip: !hasSupabas
     assert.notEqual(after.status, "confirmed", "student must not confirm");
   });
 
-  it("multiple students: Student A's used free trial does not consume Student B's", async () => {
+  it("free trial is ONE PER ACCOUNT: a second student under the same account cannot get another", async () => {
     const c = await signIn(parent.email, parent.password);
-    // stuA already used a free trial in an earlier test
-    const aUsed = await c.rpc("has_used_free_trial", { p_student: stuA });
-    assert.equal(aUsed.data, true);
-    const bUsed = await c.rpc("has_used_free_trial", { p_student: stuB });
-    assert.equal(bUsed.data, false);
+    // The account already used its single free trial via Student A (earlier test),
+    // so no other student under the same account is eligible for a new one.
+    const acctUsed = await c.rpc("account_has_used_free_trial", { p_account: parent.id });
+    assert.equal(acctUsed.data, true, "account already used its free trial");
     const { data: id, error } = await book(c, { studentId: stuB, subjectId: subjMain, duration: 30, start: futureUtc(5, 9).toISOString(), free: true });
-    assert.equal(error, null, error && error.message);
-    const { data: b } = await svc.from("bookings").select("is_free_trial, price_cents").eq("id", id).single();
-    assert.equal(b.is_free_trial, true);
-    assert.equal(b.price_cents, 0);
+    assert.ok(error, "second student's free trial must be rejected (account-scoped)");
+    assert.match(error.message, /already used/i);
+    assert.equal(id, null);
   });
 
   it("timezone end-to-end: Lagos tutor + Chicago student share one UTC instant at correct local times", async () => {

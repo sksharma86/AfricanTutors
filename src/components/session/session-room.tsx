@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { SessionInfo } from "@/lib/session-service";
+import { customerBookingStatus } from "@/lib/status-labels.mjs";
 
 type Frame = { join: (o: { url: string; token?: string }) => Promise<unknown>; leave: () => Promise<unknown>; destroy: () => void; on: (e: string, cb: () => void) => void };
 
@@ -108,8 +109,8 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
             {info.duration_minutes ? ` · ${info.duration_minutes} min` : ""}
           </p>
         </div>
-        <span className="rounded-full border border-ink-600 bg-ink-900 px-3 py-1 text-xs font-medium text-ink-200 capitalize">
-          {info.status}
+        <span className="rounded-full border border-ink-600 bg-ink-900 px-3 py-1 text-xs font-medium text-ink-200">
+          {customerBookingStatus(info.status ?? "", undefined).label}
         </span>
       </div>
 
@@ -147,9 +148,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
               </>
             ) : state === "too_early" ? (
               <>
-                <h2 className="font-display text-xl font-semibold text-white">The room isn&apos;t open yet</h2>
+                <h2 className="font-display text-xl font-semibold text-white">Your session isn&apos;t open yet</h2>
                 <p className="mt-1 text-sm text-ink-300">
-                  You can join from <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> (10 minutes before start).
+                  You can join at <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> — 10 minutes before it starts.
                 </p>
                 <button onClick={() => location.reload()} className="mt-6 rounded-xl border border-ink-600 px-5 py-2.5 text-sm font-medium text-ink-100 hover:border-ink-400">
                   Check again
@@ -168,7 +169,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
             ) : (
               <>
                 <h2 className="font-display text-xl font-semibold text-white">Session not available</h2>
-                <p className="mt-1 text-sm text-ink-300">This booking is {info.status}, so the live room is closed.</p>
+                <p className="mt-1 text-sm text-ink-300">
+                  This session is {customerBookingStatus(info.status ?? "", undefined).label.toLowerCase()}, so the live room is closed.
+                </p>
               </>
             )}
             {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}

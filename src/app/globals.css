@@ -42,6 +42,19 @@
   --color-ink-700: #383430;
   --color-ink-800: #221f1c;
   --color-ink-900: #131311;
+
+  /* Rich, deep African-influenced green. Used sparingly for trust, positive
+     status, and premium depth — never as a loud fill (see DECISIONS.md). */
+  --color-forest-50: #eef3ef;
+  --color-forest-100: #d6e4da;
+  --color-forest-200: #aecbb6;
+  --color-forest-300: #7faa8b;
+  --color-forest-400: #4f8763;
+  --color-forest-500: #2e6a48;
+  --color-forest-600: #235539;
+  --color-forest-700: #1c442e;
+  --color-forest-800: #163524;
+  --color-forest-900: #0f241a;
 }
 
 @theme inline {
@@ -83,6 +96,27 @@
   --color-ink-700: var(--color-ink-700);
   --color-ink-800: var(--color-ink-800);
   --color-ink-900: var(--color-ink-900);
+
+  --color-forest-50: var(--color-forest-50);
+  --color-forest-100: var(--color-forest-100);
+  --color-forest-200: var(--color-forest-200);
+  --color-forest-300: var(--color-forest-300);
+  --color-forest-400: var(--color-forest-400);
+  --color-forest-500: var(--color-forest-500);
+  --color-forest-600: var(--color-forest-600);
+  --color-forest-700: var(--color-forest-700);
+  --color-forest-800: var(--color-forest-800);
+  --color-forest-900: var(--color-forest-900);
+}
+
+/* Subtle, tasteful entrance for premium surfaces (respects reduced motion). */
+@keyframes at-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.at-fade-in { animation: at-fade-in 0.35s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .at-fade-in { animation: none; }
 }
 
 body {

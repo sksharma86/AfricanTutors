@@ -56,10 +56,10 @@ export async function listMyStudents(): Promise<StudentDTO[]> {
   return (data ?? []) as StudentDTO[];
 }
 
-/** Whether a given student (owned by the caller) has consumed their free trial. */
-export async function studentFreeTrialUsed(studentId: string): Promise<boolean> {
+/** Whether the given customer account has consumed its one free trial (account-scoped). */
+export async function accountFreeTrialUsed(accountId: string): Promise<boolean> {
   const supabase = await client();
-  const { data, error } = await supabase.rpc("has_used_free_trial", { p_student: studentId });
+  const { data, error } = await supabase.rpc("account_has_used_free_trial", { p_account: accountId });
   if (error) throw new Error(error.message);
   return Boolean(data);
 }
