@@ -101,16 +101,18 @@ export function BookingWizard({
   const student = students.find((s) => s.id === studentId) ?? null;
   const studentTz = student?.timezone || browserTimezone();
 
+  // Free trial is ONE PER ACCOUNT (not per student), so eligibility keys on the
+  // signed-in account, not the selected student. Server remains authoritative.
   useEffect(() => {
-    if (!supabase || !studentId) return;
+    if (!supabase || !accountId) return;
     let active = true;
-    supabase.rpc("has_used_free_trial", { p_student: studentId }).then(({ data }) => {
+    supabase.rpc("account_has_used_free_trial", { p_account: accountId }).then(({ data }) => {
       if (active) setFreeTrialUsed(Boolean(data));
     });
     return () => {
       active = false;
     };
-  }, [supabase, studentId]);
+  }, [supabase, accountId]);
 
   // Load the signed-in account id + current balances (owner-scoped, server-derived).
   useEffect(() => {

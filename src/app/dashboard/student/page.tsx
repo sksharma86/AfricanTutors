@@ -13,6 +13,7 @@ import { TrustSignals } from "@/components/ui/trust-signals";
 import { requireRole } from "@/lib/auth";
 import { type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
+import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { formatDuration } from "@/lib/format.mjs";
 import { customerBookingStatus, issueStatus } from "@/lib/status-labels.mjs";
 import { customerJoinState } from "@/lib/session-window.mjs";
@@ -96,18 +97,9 @@ export default async function StudentDashboardPage() {
     issueByBooking.set(d.booking_id, d.status);
   }
 
-  // Per-student free-trial state (the trial belongs to the student, not the login).
-  type TrialState = "Available" | "Booked" | "Used";
-  const trialByStudent = new Map<string, TrialState>();
-  for (const s of students) {
-    const trial = bookings.find((b) => b.student_id === s.id && b.is_free_trial && b.status !== "cancelled");
-    trialByStudent.set(
-      s.id,
-      !trial ? "Available" : trial.status === "completed" || trial.status === "no_show" ? "Used" : "Booked",
-    );
-  }
-  const freeTrialAvailable =
-    students.length === 0 || Array.from(trialByStudent.values()).some((v) => v === "Available");
+  // Free trial is ONE PER ACCOUNT: eligible only if no non-cancelled free-trial
+  // booking exists across the account (adding a student never restores it).
+  const freeTrialAvailable = !accountFreeTrialUsed(bookings);
 
   const { upcoming, past, next } = partitionBookings(bookings);
   const laterUpcoming = upcoming.filter((b) => b.id !== next?.id);
@@ -285,27 +277,26 @@ export default async function StudentDashboardPage() {
           <SectionHeader
             title="Students"
             action={
-              <span className="text-xs text-ink-400">One account can book for multiple students</span>
+              freeTrialAvailable ? (
+                <StatusBadge tone="info">Free trial available</StatusBadge>
+              ) : (
+                <span className="text-xs text-ink-400">One account can book for multiple students</span>
+              )
             }
           />
           {students.length > 0 ? (
             <div className="space-y-2">
-              {students.map((s) => {
-                const state = trialByStudent.get(s.id) ?? "Available";
-                const tone = state === "Available" ? "info" : state === "Booked" ? "neutral" : "neutral";
-                return (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-ink-900">{s.full_name}</p>
-                      {s.grade_level ? <p className="text-xs text-ink-400">Grade {s.grade_level}</p> : null}
-                    </div>
-                    <StatusBadge tone={tone}>Free trial: {state}</StatusBadge>
+              {students.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-ink-900">{s.full_name}</p>
+                    {s.grade_level ? <p className="text-xs text-ink-400">Grade {s.grade_level}</p> : null}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           ) : (
             <EmptyState
