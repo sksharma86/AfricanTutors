@@ -25,8 +25,8 @@ export const SESSION_OPTIONS: SessionOption[] = [
 /** Length of the free introductory session a new student can claim. */
 export const FREE_TRIAL_MINUTES = 30;
 
-/** Primary acquisition call-to-action label. */
-export const FREE_TRIAL_CTA = "Try 30 Minutes Free";
+/** Primary acquisition call-to-action label (kept consistent site-wide). */
+export const FREE_TRIAL_CTA = "Start free session";
 
 /** Friction-reducing microcopy. Use sparingly — do not repeat site-wide. */
 export const NO_CARD_REQUIRED = "No credit card required.";
