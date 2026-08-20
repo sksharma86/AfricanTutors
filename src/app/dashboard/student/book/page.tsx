@@ -10,9 +10,17 @@ export const metadata: Metadata = {
   title: "Book a Session",
 };
 
-export default async function BookSessionPage() {
+export default async function BookSessionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ duration?: string }>;
+}) {
   await requireRole("student", "/dashboard/student/book");
   const supabase = await createSupabaseServerClient();
+
+  // Only 30 or 60 are valid; anything else falls back to the default (30).
+  const { duration } = await searchParams;
+  const initialDuration: 30 | 60 = duration === "60" ? 60 : 30;
 
   const [{ data: students }, { data: subjects }] = await Promise.all([
     supabase!.from("students").select("id, full_name, grade_level, timezone").order("created_at"),
@@ -33,6 +41,7 @@ export default async function BookSessionPage() {
           <BookingWizard
             students={(students ?? []) as StudentRow[]}
             subjects={(subjects ?? []) as SubjectRow[]}
+            initialDuration={initialDuration}
           />
         </div>
       </div>

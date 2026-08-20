@@ -57,9 +57,11 @@ interface Quote {
 export function BookingWizard({
   students: initialStudents,
   subjects,
+  initialDuration = 30,
 }: {
   students: StudentRow[];
   subjects: SubjectRow[];
+  initialDuration?: 30 | 60;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
@@ -76,7 +78,10 @@ export function BookingWizard({
   const [otherText, setOtherText] = useState("");
   const [note, setNote] = useState("");
 
-  const [duration, setDuration] = useState<30 | 60>(30);
+  // Duration may be preselected from the Pricing page ("Book 30/60 minutes").
+  // This is display state only — it never sets price or bypasses the free-trial
+  // option, which the duration step still presents when the account is eligible.
+  const [duration, setDuration] = useState<30 | 60>(initialDuration);
   const [isFreeTrial, setIsFreeTrial] = useState(false);
 
   const [slots, setSlots] = useState<string[]>([]);
