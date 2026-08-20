@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
 import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
@@ -204,6 +205,9 @@ export function BookingWizard({
     if (!supabase) return;
     setBusy(true);
     setError(null);
+    track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBookingStarted : ANALYTICS_EVENTS.paidBookingStarted, {
+      duration,
+    });
     let res: Response;
     try {
       res = await fetch("/api/checkout/booking", {
@@ -247,6 +251,9 @@ export function BookingWizard({
         .single();
       ref = b?.public_reference ?? "";
     }
+    track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBooked : ANALYTICS_EVENTS.paidBookingCompleted, {
+      funding: payload?.funding ?? "",
+    });
     setConfirmation({
       ref,
       isFree: isFreeTrial,
