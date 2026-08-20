@@ -8,6 +8,8 @@ import { PricingTiers } from "@/components/marketing/pricing-tiers";
 import { Steps } from "@/components/marketing/steps";
 import { SubjectsPreview } from "@/components/marketing/subjects-preview";
 import { ValueList, type ValueItem } from "@/components/marketing/value-list";
+import { Container } from "@/components/ui/container";
+import { TrustSignals } from "@/components/ui/trust-signals";
 import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 const qualityPoints: ValueItem[] = [
@@ -52,6 +54,12 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+
+      <div className="border-b border-ink-100 bg-white">
+        <Container className="py-5">
+          <TrustSignals className="justify-center" />
+        </Container>
+      </div>
 
       <InfoSplit
         eyebrow="Why African Tutors"
