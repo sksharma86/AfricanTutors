@@ -5,9 +5,9 @@ export function CtaSection({
   title,
   description,
   primaryHref = "/signup",
-  primaryLabel = "Try 30 Minutes Free",
-  secondaryHref = "/contact",
-  secondaryLabel = "Contact Us",
+  primaryLabel = "Start free session",
+  secondaryHref = "/how-it-works",
+  secondaryLabel = "See how it works",
 }: {
   title: string;
   description: string;
