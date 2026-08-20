@@ -3,12 +3,13 @@ import Link from "next/link";
 
 import { PackageStore, type PackageRow } from "@/components/booking/package-store";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
+import { SingleSessionCards } from "@/components/dashboard/single-session-cards";
 import { requireRole } from "@/lib/auth";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Packages",
+  title: "Pricing",
 };
 
 export default async function PackagesPage() {
@@ -37,10 +38,10 @@ export default async function PackagesPage() {
         <Link href="/dashboard/student" className="text-sm font-medium text-gold-700 hover:underline">
           ← Back to dashboard
         </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Tutoring packages</h1>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Pricing &amp; tutoring options</h1>
         <p className="mt-2 max-w-xl text-base leading-7 text-ink-500">
-          Prepay for tutoring and save on every hour. Package hours never expire and are used automatically when
-          they fully cover a session.
+          Book one session at a time, or save with prepaid tutoring hours. Prepaid hours never expire and are used
+          automatically when they fully cover a session.
         </p>
 
         {creditCents > 0 || minutes > 0 ? (
@@ -60,7 +61,15 @@ export default async function PackagesPage() {
         ) : null}
 
         <div className="mt-8">
-          <PackageStore packages={(packages ?? []) as PackageRow[]} creditCents={creditCents} />
+          <SingleSessionCards />
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Save with prepaid hours</h2>
+          <p className="mt-1 text-sm text-ink-500">Prepaid tutoring hours — not a subscription. Hours never expire.</p>
+          <div className="mt-4">
+            <PackageStore packages={(packages ?? []) as PackageRow[]} creditCents={creditCents} />
+          </div>
         </div>
       </div>
     </CustomerShell>
