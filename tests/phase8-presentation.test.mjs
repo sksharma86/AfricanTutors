@@ -5,6 +5,7 @@ import { formatDuration, formatMoneyCents } from "../src/lib/format.mjs";
 import { customerBookingStatus, issueStatus } from "../src/lib/status-labels.mjs";
 import { customerJoinState } from "../src/lib/session-window.mjs";
 import { packageEconomics } from "../src/lib/packages.mjs";
+import { accountFreeTrialUsed } from "../src/lib/free-trial.mjs";
 
 describe("Phase 8 — money & duration formatting", () => {
   it("renders account credit with two decimals", () => {
@@ -103,5 +104,26 @@ describe("Phase 8 — package economics (rate & savings vs $20/hr)", () => {
 
   it("never shows negative savings", () => {
     assert.equal(packageEconomics(60, 3000).savingsCents, 0);
+  });
+});
+
+describe("Phase 8 — free-trial CTA is account-scoped", () => {
+  it("shows the CTA only until the account's one trial is used", () => {
+    // No bookings → eligible.
+    assert.equal(accountFreeTrialUsed([]), false);
+    // A non-cancelled free trial (any student) → account has used it.
+    assert.equal(accountFreeTrialUsed([{ is_free_trial: true, status: "confirmed", student_id: "a" }]), true);
+    // Adding another student (with a paid session, no trial) does NOT restore it.
+    assert.equal(
+      accountFreeTrialUsed([
+        { is_free_trial: true, status: "completed", student_id: "a" },
+        { is_free_trial: false, status: "confirmed", student_id: "b" },
+      ]),
+      true,
+    );
+    // A cancelled trial does not count as used (matches server semantics).
+    assert.equal(accountFreeTrialUsed([{ is_free_trial: true, status: "cancelled" }]), false);
+    // A paid session alone never counts as a used trial.
+    assert.equal(accountFreeTrialUsed([{ is_free_trial: false, status: "confirmed" }]), false);
   });
 });
