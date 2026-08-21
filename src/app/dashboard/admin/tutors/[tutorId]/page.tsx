@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
 import { Container } from "@/components/ui/container";
 import { requireRole } from "@/lib/auth";
 import { formatCents } from "@/lib/pricing";
@@ -75,6 +76,9 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         <div className="flex flex-wrap gap-2">
           {subjects.length === 0 ? <span className="text-sm text-ink-400">None</span> : subjects.map((s) => <span key={s} className="rounded-full border border-gold-200 bg-gold-50 px-3 py-1 text-sm text-gold-700">{s}</span>)}
         </div>
+
+        <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Compensation</h2>
+        <TutorRateForm tutorId={tutorId} initialRateCents={profile?.comp_rate_cents_per_hour ?? null} />
 
         <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Operations</h2>
         <div className="grid gap-3 sm:grid-cols-4">
