@@ -18,6 +18,8 @@ export interface ParentSessionReport {
   scheduled_start: string | null;
   duration_minutes: number | null;
   timezone: string;
+  /** True when a Call Parent escalation occurred for this booking (PR7). */
+  had_parent_escalation?: boolean;
 }
 
 /**
@@ -54,6 +56,12 @@ export function SessionReportsList({ reports }: { reports: ParentSessionReport[]
                 {duration !== "—" ? <span className="text-ink-400"> · {duration}</span> : null}
               </p>
             </header>
+
+            {r.had_parent_escalation ? (
+              <p className="mt-2 text-xs font-medium text-ink-600">
+                A parent attention request was sent during this session.
+              </p>
+            ) : null}
 
             <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
               <div>

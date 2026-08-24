@@ -22,6 +22,13 @@ export default function PrivacyPage() {
             families and Guides, and records sessions for quality and safety.
           </p>
           <p>
+            If you provide a phone number for Study Hall alerts, we may use it to call or text you when
+            a Guide needs immediate parental attention during an active session. Guides never see your
+            phone number. These messages are operational (not marketing). Phone verification will be
+            added before broad public launch — this disclosure should receive attorney review before
+            public launch.
+          </p>
+          <p>
             If you have a question about how your information is handled before our full policy is
             published, please{" "}
             <Link href="/contact" className="font-medium text-gold-700 hover:underline">contact us</Link>.

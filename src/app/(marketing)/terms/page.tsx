@@ -24,6 +24,11 @@ export default function TermsPage() {
             <Link href="/faq" className="font-medium text-gold-700 hover:underline">FAQ</Link>.
           </p>
           <p>
+            During an active Study Hall session, we may contact you by automated phone call or SMS if
+            a Guide needs you to check on your child. This is a transactional operational message, not
+            marketing. Attorney review of this wording is recommended before public launch.
+          </p>
+          <p>
             If you have a question about our terms before then, please{" "}
             <Link href="/contact" className="font-medium text-gold-700 hover:underline">contact us</Link>.
           </p>

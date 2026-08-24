@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CallParentControl } from "@/components/session/call-parent-control";
 import type { SessionInfo } from "@/lib/session-service";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { customerBookingStatus } from "@/lib/status-labels.mjs";
@@ -127,9 +128,12 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <p className="font-medium text-forest-200">Guide expectations</p>
           <p className="mt-1">
             Stay present, encourage focus, redirect gently, and keep a calm study environment. Do not tutor, teach
-            lessons, or give homework answers. Parent call/escalation support is coming soon — for urgent issues today,
-            leave the room safely and contact Study Hall support through your usual admin channel.
+            lessons, or give homework answers. If you need a parent to check in physically, use Call Parent — you will
+            never see their phone number.
           </p>
+          <div className="mt-3 max-w-sm">
+            <CallParentControl bookingId={bookingId} enabled={state === "open" || inCall} />
+          </div>
         </div>
       ) : null}
 
