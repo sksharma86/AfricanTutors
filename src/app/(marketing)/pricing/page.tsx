@@ -11,18 +11,18 @@ import { getPublicPackages } from "@/lib/marketing";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, transparent pricing: your first session is free, then $12 for 30 minutes or $20 for 60 minutes. Save with prepaid hours that never expire.",
+    "Simple Study Hall pricing: your first session is free, then $12/hour pay as you go — or save with 14-hour and 28-hour prepaid routines that never expire.",
   alternates: { canonical: "/pricing" },
 };
 
 const principles = [
   {
-    title: "Pay per session or prepay & save",
-    description: "Book individual sessions, or buy prepaid hours for a lower rate. No subscriptions or recurring billing.",
+    title: "Pay as you go or prepay & save",
+    description: "Book a 60-minute session for $12, or buy prepaid hours for a lower effective rate.",
   },
   {
-    title: "Transparent pricing",
-    description: "$12 for 30 minutes, $20 for 60 minutes. The exact price is shown clearly before you book.",
+    title: "Built for routine",
+    description: "The 14 Hour Routine is designed for a consistent Study Hall habit — roughly two weeks of daily sessions.",
   },
   {
     title: "Hours never expire",
@@ -38,7 +38,7 @@ export default async function PricingPage() {
       <PageHeader
         eyebrow="Pricing"
         title="Simple pricing. Your first session is free."
-        description="Try Study Hall at Home with a real session at no cost and no credit card. After that, sessions are $12 for 30 minutes or $20 for 60 minutes — or save with prepaid hours."
+        description="Try Study Hall at Home with a real session at no cost and no credit card. After that, pay $12/hour as you go — or save with prepaid routines."
       />
 
       <PricingSection packages={packages} withHeader={false} />

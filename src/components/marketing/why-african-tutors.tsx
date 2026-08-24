@@ -51,7 +51,7 @@ const REASONS: Reason[] = [
   },
   {
     title: "Flexibility",
-    description: "Pay per session, or save with prepaid hours that never expire. No subscriptions.",
+    description: "Pay per session, or save with prepaid hours that never expire.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h10" />

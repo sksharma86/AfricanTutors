@@ -12,7 +12,7 @@ async function seedBooking({ account, student, tutor = undefined, minutes = 30 }
   if (tutor !== undefined) row.tutor_id = tutor;
   if (minutes !== undefined) {
     row.duration_minutes = minutes;
-    row.price_cents = minutes === 30 ? 1200 : minutes === 60 ? 2000 : 0;
+    row.price_cents = minutes === 30 ? 1200 : minutes === 60 ? 1200 : 0;
   }
   const { data, error } = await svc.from("bookings").insert(row).select("id").single();
   if (error) throw new Error("seedBooking: " + error.message);
@@ -50,12 +50,23 @@ describe("Phase 4A — financial foundation (live)", { skip: !hasSupabaseEnv }, 
   });
 
   it("package products are seeded with integer-cent pricing", async () => {
+    // Historical SKUs remain in DB (may be inactive after PR2).
     const { data } = await svc.from("package_products").select("code, minutes, price_cents").in("code", ["pkg_10h", "pkg_20h", "pkg_40h"]);
     const by = Object.fromEntries(data.map((p) => [p.code, p]));
     assert.deepEqual([by.pkg_10h.minutes, by.pkg_10h.price_cents], [600, 19000]);
     assert.deepEqual([by.pkg_20h.minutes, by.pkg_20h.price_cents], [1200, 36000]);
     assert.deepEqual([by.pkg_40h.minutes, by.pkg_40h.price_cents], [2400, 68000]);
     assert.ok(data.every((p) => Number.isInteger(p.price_cents)));
+
+    // Active purchasable packages after Study Hall PR2.
+    const { data: active } = await svc
+      .from("package_products")
+      .select("code, minutes, price_cents")
+      .eq("is_active", true)
+      .order("sort_order");
+    const activeBy = Object.fromEntries((active ?? []).map((p) => [p.code, p]));
+    assert.deepEqual([activeBy.pkg_14h.minutes, activeBy.pkg_14h.price_cents], [840, 14000]);
+    assert.deepEqual([activeBy.pkg_28h.minutes, activeBy.pkg_28h.price_cents], [1680, 25200]);
   });
 
   it("package minutes: issuance is idempotent and balance derives from the ledger", async () => {

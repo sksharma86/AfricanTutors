@@ -81,7 +81,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
   });
 
   async function creditBooking(a, stu) {
-    await issueCredit(a.id, 2000);
+    await issueCredit(a.id, 1200);
     const r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) });
     assert.equal(r.error, null, r.error && r.error.message);
     return r.data;
@@ -89,7 +89,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
   async function stripeBooking(a, stu, afterMs) {
     const r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60, afterMs) });
     assert.equal(r.error, null, r.error && r.error.message);
-    await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 2000, p_charge_id: "pi_" + ref("x") });
+    await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1200, p_charge_id: "pi_" + ref("x") });
     return r.data;
   }
 
@@ -101,14 +101,14 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
     const a = await acct("Boundary");
     const stu = await newStudent(a.id, "K");
     const c = await clientFor(a);
-    await issueCredit(a.id, 2000);
+    await issueCredit(a.id, 1200);
 
     let r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) });
     await setSchedule(r.data.booking_id, 24 + 2 / 60); // 24h+2min → early
     assert.equal((await c.rpc("customer_cancel_booking", { p_booking: r.data.booking_id })).data.early, true);
-    assert.equal(await credit(a.id), 2000, "early cancellation restores value");
+    assert.equal(await credit(a.id), 1200, "early cancellation restores value");
 
-    r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) }); // uses restored 2000
+    r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) }); // uses restored 1200
     await setSchedule(r.data.booking_id, 23 + 58 / 60); // 23h58m → late
     assert.equal((await c.rpc("customer_cancel_booking", { p_booking: r.data.booking_id })).data.early, false);
     assert.equal(await credit(a.id), 0, "late cancellation restores nothing");
@@ -131,12 +131,12 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
     const stu = await newStudent(a.id, "K");
     const b = await stripeBooking(a, stu, 3 * 3600_000);
     const [r1, r2] = await Promise.all([
-      adminC.rpc("admin_record_refund", { p_payment_id: b.payment_id, p_amount_cents: 2000, p_stripe_refund_id: ref("re"), p_reason: "a" }),
-      adminC.rpc("admin_record_refund", { p_payment_id: b.payment_id, p_amount_cents: 2000, p_stripe_refund_id: ref("re"), p_reason: "b" }),
+      adminC.rpc("admin_record_refund", { p_payment_id: b.payment_id, p_amount_cents: 1200, p_stripe_refund_id: ref("re"), p_reason: "a" }),
+      adminC.rpc("admin_record_refund", { p_payment_id: b.payment_id, p_amount_cents: 1200, p_stripe_refund_id: ref("re"), p_reason: "b" }),
     ]);
     const errs = [r1.error, r2.error].filter(Boolean);
     assert.equal(errs.length, 1, "exactly one refund rejected (over-cap)");
-    assert.equal((await getPayment(b.payment_id)).refunded_cents, 2000, "refunded exactly the Stripe-paid amount, once");
+    assert.equal((await getPayment(b.payment_id)).refunded_cents, 1200, "refunded exactly the Stripe-paid amount, once");
   });
 
   // ---- Concurrency: payout race ----
@@ -168,7 +168,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
     ]);
     const bk = await getBooking(b.booking_id);
     const e = await earningFor(b.booking_id);
-    const restored = (await credit(a.id)) === 2000;
+    const restored = (await credit(a.id)) === 1200;
     if (bk.status === "cancelled") {
       assert.ok(restored && !e, "cancelled → credit restored, no earning");
     } else {
@@ -198,7 +198,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
   // ---- Concurrency: package purchase double-submit dedupe ----
   it("duplicate package checkout submissions reserve credit once (dedupe)", async () => {
     const a = await acct("PkgDouble");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const c = await clientFor(a);
     const [r1, r2] = await Promise.all([
@@ -249,7 +249,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
     // mixed → pending awaiting payment; cancel it early first
     await setSchedule(r.data.booking_id, 48);
     await (await clientFor(a)).rpc("customer_cancel_booking", { p_booking: r.data.booking_id });
-    const f = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1300, p_charge_id: "pi_late" });
+    const f = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 500, p_charge_id: "pi_late" });
     assert.equal(f.data.status, "credited", "late payment credited, not confirmed");
     assert.notEqual((await getBooking(r.data.booking_id)).status, "confirmed");
   });

@@ -144,7 +144,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const q30 = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 30, p_is_free_trial: false })).data;
     assert.deepEqual([q30.session_price_cents, q30.stripe_cents_due, q30.funding], [1200, 1200, "stripe"]);
     const q60 = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 60, p_is_free_trial: false })).data;
-    assert.deepEqual([q60.session_price_cents, q60.stripe_cents_due, q60.funding], [2000, 2000, "stripe"]);
+    assert.deepEqual([q60.session_price_cents, q60.stripe_cents_due, q60.funding], [1200, 1200, "stripe"]);
     const qf = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 30, p_is_free_trial: true })).data;
     assert.deepEqual([qf.session_price_cents, qf.stripe_cents_due, qf.funding], [0, 0, "free_trial"]);
   });
@@ -166,7 +166,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     assert.equal(b.payment_hold_expires_at, null);
     const p = await getPayment(r.data.payment_id);
     assert.equal(p.status, "succeeded");
-    assert.equal(p.gross_cents, 2000); // server price authority
+    assert.equal(p.gross_cents, 1200); // server price authority ($12 / 60 min)
     assert.equal(await minutes(a.id), 540);
   });
 
@@ -180,7 +180,8 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start });
     assert.equal(r.error, null, r.error && r.error.message);
     assert.equal(r.data.funding, "stripe");
-    assert.deepEqual([r.data.package_minutes_used, r.data.credit_cents_used, r.data.stripe_cents_due], [0, 700, 1300]);
+    // 60-min list $12; $7 credit → $5 Stripe due.
+    assert.deepEqual([r.data.package_minutes_used, r.data.credit_cents_used, r.data.stripe_cents_due], [0, 700, 500]);
     assert.equal(await minutes(a.id), 30, "package minutes must be untouched");
   });
 
@@ -189,7 +190,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const a = await createUser({ requestedRole: "student", displayName: "CreditFull" });
     accounts.push(a.id);
     const stu = await newStudent(a.id, "CredKid");
-    await issueCredit(a.id, 2000);
+    await issueCredit(a.id, 1200);
     const start = await nextSlot(subject, 60);
     const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start });
     assert.equal(r.error, null, r.error && r.error.message);
@@ -198,7 +199,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const b = await getBooking(r.data.booking_id);
     assert.equal(b.status, "confirmed");
     const p = await getPayment(r.data.payment_id);
-    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", 2000]);
+    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", 1200]);
     assert.equal(await credit(a.id), 0);
   });
 
@@ -211,7 +212,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const start = await nextSlot(subject, 60);
     const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start });
     assert.equal(r.error, null, r.error && r.error.message);
-    assert.deepEqual([r.data.funding, r.data.credit_cents_used, r.data.stripe_cents_due], ["stripe", 700, 1300]);
+    assert.deepEqual([r.data.funding, r.data.credit_cents_used, r.data.stripe_cents_due], ["stripe", 700, 500]);
     const b = await getBooking(r.data.booking_id);
     assert.equal(b.status, "pending");
     assert.equal(b.payment_status, "awaiting_payment");
@@ -222,21 +223,20 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     // Webhook fulfillment (amount must match expected Stripe amount).
     const mism = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 999 });
     assert.ok(mism.error, "amount mismatch rejected");
-    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1300, p_charge_id: "pi_test" });
+    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 500, p_charge_id: "pi_test" });
     assert.equal(ok.error, null, ok.error && ok.error.message);
     assert.equal(ok.data.status, "confirmed");
     const b2 = await getBooking(r.data.booking_id);
     assert.equal(b2.status, "confirmed");
     assert.equal(b2.payment_status, "paid");
     const p2 = await getPayment(r.data.payment_id);
-    assert.deepEqual([p2.status, p2.stripe_paid_cents], ["succeeded", 1300]);
+    assert.deepEqual([p2.status, p2.stripe_paid_cents], ["succeeded", 500]);
     assert.equal(await credit(a.id), 0, "reserved credit stays consumed after success");
 
     // Idempotent: duplicate webhook is a safe no-op.
-    const dup = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1300 });
+    const dup = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 500 });
     assert.equal(dup.data.status, "already_fulfilled");
   });
-
   // ---- Free trial ----------------------------------------------------------
   it("free trial: $0 confirmed, no Stripe, one-per-student enforced", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "FreeTrial" });
@@ -263,26 +263,26 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
   it("package purchase fully funded by credit: minutes issued once, no Stripe", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyCredit" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, pkg.price_cents);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.error, null, r.error && r.error.message);
     assert.deepEqual([r.data.funding, r.data.status, r.data.stripe_cents_due], ["credit", "completed", 0]);
-    assert.equal(await minutes(a.id), pkg.minutes);
+    assert.equal(await minutes(a.id), pkg.minutes); // 840
     assert.equal(await credit(a.id), 0);
     const p = await getPayment(r.data.payment_id);
-    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", pkg.price_cents]);
+    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", pkg.price_cents]); // 14000
   });
 
   // ---- Package purchase: partial credit + Stripe --------------------------
   it("package purchase partial credit: minutes issued only after webhook", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyPartial" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.error, null, r.error && r.error.message);
-    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents - 5000]);
+    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents - 5000]); // 9000
     assert.equal(await minutes(a.id), 0, "minutes NOT issued before Stripe verification");
     assert.equal(await credit(a.id), 0, "credit reserved");
     // wrong amount rejected, then correct amount fulfills once
@@ -299,14 +299,13 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
   it("package purchase Stripe-only (no credit): minutes only after webhook", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyStripe" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_20h");
+    const pkg = await pkgId("pkg_28h");
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
-    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents]);
+    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents]); // 25200
     assert.equal(await minutes(a.id), 0);
     await svc.rpc("fulfill_package_payment", { p_payment_id: r.data.payment_id, p_amount_cents: pkg.price_cents });
-    assert.equal(await minutes(a.id), pkg.minutes);
+    assert.equal(await minutes(a.id), pkg.minutes); // 1680
   });
-
   it("inactive packages cannot be purchased", async () => {
     const r = await svc.rpc("purchase_package", { p_package_id: inactivePkg, p_account: parent.id });
     assert.ok(r.error);
@@ -343,17 +342,17 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     await issueCredit(a.id, 700);
     const start = await nextSlot(subject, 60);
     const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start });
-    assert.equal(r.data.stripe_cents_due, 1300);
+    assert.equal(r.data.stripe_cents_due, 500);
     await svc.from("bookings").update({ payment_hold_expires_at: new Date(Date.now() - 60000).toISOString() }).eq("id", r.data.booking_id);
     await svc.rpc("release_expired_holds");
     assert.equal(await credit(a.id), 700); // reserved credit already restored
     // Delayed webhook arrives AFTER expiry.
-    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1300, p_charge_id: "pi_late" });
+    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 500, p_charge_id: "pi_late" });
     assert.equal(ok.data.status, "credited");
     const b = await getBooking(r.data.booking_id);
     assert.equal(b.status, "expired", "expired slot must not be reactivated");
-    // Customer keeps ALL value: restored 700 + credited Stripe 1300 = 2000.
-    assert.equal(await credit(a.id), 2000, "no stranded customer value");
+    // Customer keeps ALL value: restored 700 + credited Stripe 500 = 1200.
+    assert.equal(await credit(a.id), 1200, "no stranded customer value");
     const p = await getPayment(r.data.payment_id);
     assert.equal(p.status, "succeeded");
     assert.ok(p.note && /credited/i.test(p.note));
@@ -382,7 +381,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const a = await createUser({ requestedRole: "student", displayName: "RaceCredit" });
     accounts.push(a.id);
     const stu = await newStudent(a.id, "RaceCredKid");
-    await issueCredit(a.id, 2000); // exactly one 60-min session
+    await issueCredit(a.id, 1200); // exactly one 60-min session at $12
     const [s1, s2] = await twoDisjointSlots(subject, 60);
     const [r1, r2] = await Promise.all([
       bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start: s1 }),
@@ -426,7 +425,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start }); // stripe path, pending
     const c = await signIn(a.email, a.password);
     await c.from("bookings").update({ status: "confirmed", payment_status: "paid" }).eq("id", r.data.booking_id);
-    await c.from("payments").update({ status: "succeeded", stripe_paid_cents: 2000 }).eq("id", r.data.payment_id);
+    await c.from("payments").update({ status: "succeeded", stripe_paid_cents: 1200 }).eq("id", r.data.payment_id);
     const b = await getBooking(r.data.booking_id);
     const p = await getPayment(r.data.payment_id);
     assert.notEqual(b.status, "confirmed", "customer cannot self-confirm a booking");

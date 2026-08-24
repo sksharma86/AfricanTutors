@@ -60,17 +60,17 @@ describe("Phase 6 — email templates (pure)", () => {
   });
 
   it("cancellation email reflects early vs late outcome", () => {
-    const early = T.cancellation({ early: true, restoredCreditCents: 2000 });
+    const early = T.cancellation({ early: true, restoredCreditCents: 1200 });
     assert.match(early.text, /returned to your account/i);
-    assert.match(early.text, /\$20/);
+    assert.match(early.text, /\$12/);
     const late = T.cancellation({ early: false });
     assert.match(late.text, /non-refundable/i);
   });
 
   it("package purchase shows minutes, amount, and never-expire", () => {
-    const r = T.packagePurchased({ minutes: 600, amountCents: 19000, balanceMinutes: 600, appUrl: APP });
-    assert.match(r.text, /600/);
-    assert.match(r.text, /\$190/);
+    const r = T.packagePurchased({ minutes: 840, amountCents: 14000, balanceMinutes: 840, appUrl: APP });
+    assert.match(r.text, /840/);
+    assert.match(r.text, /\$140/);
     assert.match(r.text, /never expire/i);
   });
 });

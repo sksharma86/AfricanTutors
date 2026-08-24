@@ -1,14 +1,18 @@
 /**
- * Customer-facing pricing for African Tutors.
+ * Customer-facing pricing for Study Hall at Home.
  *
- * IMPORTANT: This module holds ONLY customer-facing pricing. Never place tutor
+ * IMPORTANT: This module holds ONLY customer-facing pricing. Never place Guide
  * compensation or internal unit economics here (or anywhere shipped to the
  * browser). Those live in the internal `BUSINESS_MODEL.md` document.
  *
- * Finalized model (Prompt 2.7):
- *   - 30-minute session: $12
- *   - 60-minute session: $20
- *   - A new student's first 30-minute session is FREE (no card required).
+ * Study Hall PR2 model:
+ *   - Pay as you go: 60-minute session = $12 ($12/hour)
+ *   - 30-minute paid duration retained at $12 for internal/booking support
+ *     (free trial remains a separate $0 / 30-minute path)
+ *   - A new account's first 30-minute session is FREE (no card required)
+ *
+ * Server SQL (`session_list_price_cents` / booking_quote / book_session /
+ * create_booking) is the financial authority — keep these numbers in sync.
  */
 
 export interface SessionOption {
@@ -19,8 +23,12 @@ export interface SessionOption {
 
 export const SESSION_OPTIONS: SessionOption[] = [
   { minutes: 30, priceUsd: 12, label: "30 minutes" },
-  { minutes: 60, priceUsd: 20, label: "60 minutes" },
+  { minutes: 60, priceUsd: 12, label: "60 minutes" },
 ];
+
+/** Primary retail pay-as-you-go rate (60 minutes). */
+export const PAYG_MINUTES = 60;
+export const PAYG_PRICE_USD = 12;
 
 /** Length of the free introductory session a new student can claim. */
 export const FREE_TRIAL_MINUTES = 30;

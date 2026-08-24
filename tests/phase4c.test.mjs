@@ -98,12 +98,12 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
   // Build a confirmed booking with the requested funding; returns {bookingId, paymentId}.
   async function confirmedBooking(a, stu, funding) {
     if (funding === "package") await issueMinutes(a.id, 600);
-    if (funding === "credit") await issueCredit(a.id, 2000);
+    if (funding === "credit") await issueCredit(a.id, 1200);
     if (funding === "mixed") await issueCredit(a.id, 700);
     const r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) });
     assert.equal(r.error, null, r.error && r.error.message);
     if (funding === "mixed" || funding === "stripe") {
-      const due = funding === "mixed" ? 1300 : 2000;
+      const due = funding === "mixed" ? 500 : 1200;
       const f = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: due, p_charge_id: "pi_" + ref("x") });
       assert.equal(f.data.status, "confirmed", "fulfillment should confirm");
     }
@@ -135,7 +135,7 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     assert.equal(await credit(a.id), 0);
     await setSchedule(b.bookingId, 48);
     await (await clientFor(a)).rpc("customer_cancel_booking", { p_booking: b.bookingId });
-    assert.equal(await credit(a.id), 2000, "full value as account credit");
+    assert.equal(await credit(a.id), 1200, "full value as account credit");
     const { count } = await svc.from("refunds").select("*", { count: "exact", head: true }).eq("payment_id", b.paymentId);
     assert.equal(count, 0, "no Stripe refund created");
   });
@@ -143,11 +143,11 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
   it("early mixed-funding cancellation credits the correct TOTAL, not credit+refund", async () => {
     const a = await acct("EarlyMixed");
     const stu = await newStudent(a.id, "Kid");
-    const b = await confirmedBooking(a, stu, "mixed"); // $7 credit + $13 Stripe
+    const b = await confirmedBooking(a, stu, "mixed"); // $7 credit + $5 Stripe
     assert.equal(await credit(a.id), 0);
     await setSchedule(b.bookingId, 48);
     await (await clientFor(a)).rpc("customer_cancel_booking", { p_booking: b.bookingId });
-    assert.equal(await credit(a.id), 2000, "total $20 as credit (not $7 + refund)");
+    assert.equal(await credit(a.id), 1200, "total $12 as credit (not $7 + refund)");
     const { count } = await svc.from("refunds").select("*", { count: "exact", head: true }).eq("payment_id", b.paymentId);
     assert.equal(count, 0);
   });
@@ -216,7 +216,7 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     await setSchedule(b.bookingId, 2); // even <24h, release restores because company/tutor-side
     const r = await adminC.rpc("admin_release_booking", { p_booking: b.bookingId, p_reason: "tutor cancelled", p_comp_credit_cents: 500 });
     assert.equal(r.data.status, "cancelled");
-    assert.equal(await credit(a.id), 2000 + 500, "restored $20 + $5 courtesy");
+    assert.equal(await credit(a.id), 1200 + 500, "restored $12 + $5 courtesy");
     assert.equal(await earningFor(b.bookingId), null, "original tutor earns $0");
   });
 
@@ -225,7 +225,7 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     const a = await acct("Payout");
     const stu = await newStudent(a.id, "Kid");
     const b1 = await confirmedBooking(a, stu, "credit");
-    await issueCredit(a.id, 2000);
+    await issueCredit(a.id, 1200);
     const r2 = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60) });
     await adminC.rpc("admin_complete_booking", { p_booking: b1.bookingId });
     await adminC.rpc("admin_complete_booking", { p_booking: r2.data.booking_id });
@@ -281,19 +281,19 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
   it("refunds: partial then full, cannot exceed Stripe-paid, duplicate safe, non-admin blocked", async () => {
     const a = await acct("Refund");
     const stu = await newStudent(a.id, "Kid");
-    const b = await confirmedBooking(a, stu, "stripe"); // stripe_paid 2000
+    const b = await confirmedBooking(a, stu, "stripe"); // stripe_paid 1200
     const rid = ref("re");
-    const r1 = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 800, p_stripe_refund_id: rid + "-a", p_reason: "partial" });
-    assert.equal(r1.data.refunded_cents, 800);
+    const r1 = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 500, p_stripe_refund_id: rid + "-a", p_reason: "partial" });
+    assert.equal(r1.data.refunded_cents, 500);
     assert.equal((await getPayment(b.paymentId)).status, "partially_refunded");
-    const r2 = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 1200, p_stripe_refund_id: rid + "-b", p_reason: "rest" });
-    assert.equal(r2.data.refunded_cents, 2000);
+    const r2 = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 700, p_stripe_refund_id: rid + "-b", p_reason: "rest" });
+    assert.equal(r2.data.refunded_cents, 1200);
     assert.equal((await getPayment(b.paymentId)).status, "refunded");
     const over = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 1, p_stripe_refund_id: rid + "-c", p_reason: "x" });
     assert.ok(over.error, "cannot exceed refundable");
-    const dup = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 800, p_stripe_refund_id: rid + "-a", p_reason: "dup" });
+    const dup = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 500, p_stripe_refund_id: rid + "-a", p_reason: "dup" });
     assert.equal(dup.data.applied, false, "duplicate refund id is a no-op");
-    assert.equal((await getPayment(b.paymentId)).refunded_cents, 2000, "not double-counted");
+    assert.equal((await getPayment(b.paymentId)).refunded_cents, 1200, "not double-counted");
     const c = await clientFor(a);
     assert.ok((await c.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 100, p_stripe_refund_id: ref("x"), p_reason: "hack" })).error, "non-admin blocked");
   });
@@ -301,11 +301,11 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
   it("refund cannot exceed the Stripe-paid portion of a mixed booking", async () => {
     const a = await acct("RefundMixed");
     const stu = await newStudent(a.id, "Kid");
-    const b = await confirmedBooking(a, stu, "mixed"); // stripe_paid 1300
-    const over = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 1400, p_stripe_refund_id: ref("re"), p_reason: "x" });
-    assert.ok(over.error, "cannot refund more than $13 Stripe");
-    const ok = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 1300, p_stripe_refund_id: ref("re"), p_reason: "ok" });
-    assert.equal(ok.data.refunded_cents, 1300);
+    const b = await confirmedBooking(a, stu, "mixed"); // stripe_paid 500
+    const over = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 600, p_stripe_refund_id: ref("re"), p_reason: "x" });
+    assert.ok(over.error, "cannot refund more than $5 Stripe");
+    const ok = await adminC.rpc("admin_record_refund", { p_payment_id: b.paymentId, p_amount_cents: 500, p_stripe_refund_id: ref("re"), p_reason: "ok" });
+    assert.equal(ok.data.refunded_cents, 500);
   });
 
   // ---- REASSIGNMENT ----
@@ -315,14 +315,14 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     const a1 = await acct("ReassignC1");
     const stu1 = await newStudent(a1.id, "Kid1");
     const slot = await nextSlot(subject, 60, 14 * 86400_000); // far, clean slot: both tutors free
-    await issueCredit(a1.id, 2000);
+    await issueCredit(a1.id, 1200);
     const r1 = await book(a1, { studentId: stu1, subjectId: subject, duration: 60, start: slot });
     assert.equal(r1.error, null, r1.error && r1.error.message);
     const t1 = (await getBooking(r1.data.booking_id)).tutor_id;
 
     const a2 = await acct("ReassignC2");
     const stu2 = await newStudent(a2.id, "Kid2");
-    await issueCredit(a2.id, 2000);
+    await issueCredit(a2.id, 1200);
     const r2 = await book(a2, { studentId: stu2, subjectId: subject, duration: 60, start: slot });
     assert.equal(r2.error, null, r2.error && r2.error.message);
     const t2 = (await getBooking(r2.data.booking_id)).tutor_id;
@@ -337,7 +337,7 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     // Use a far, clean slot so BOTH tutors are free and one can be reassigned.
     const a = await acct("Reassign");
     const stu = await newStudent(a.id, "Kid");
-    await issueCredit(a.id, 2000);
+    await issueCredit(a.id, 1200);
     const slot = await nextSlot(subject, 60, 12 * 86400_000);
     const r = await book(a, { studentId: stu, subjectId: subject, duration: 60, start: slot });
     const bookingId = r.data.booking_id;
@@ -387,7 +387,7 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     // upheld with minutes + refund + earning void
     const a = await acct("Upheld");
     const stu = await newStudent(a.id, "Kid");
-    const b = await confirmedBooking(a, stu, "stripe"); // stripe_paid 2000
+    const b = await confirmedBooking(a, stu, "stripe"); // stripe_paid 1200
     await adminC.rpc("admin_complete_booking", { p_booking: b.bookingId });
     const e = await earningFor(b.bookingId);
     const c = await clientFor(a);

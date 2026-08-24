@@ -2,7 +2,7 @@ import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { TrackCta } from "@/components/marketing/track-cta";
-import { NO_CARD_REQUIRED, SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { NO_CARD_REQUIRED, PAYG_PRICE_USD, formatUsd } from "@/lib/pricing";
 
 export function SiteHero({
   primaryHref,
@@ -15,8 +15,6 @@ export function SiteHero({
   hourlyLowUsd: number;
   hourlyHighUsd: number;
 }) {
-  const thirty = SESSION_OPTIONS.find((o) => o.minutes === 30);
-  const sixty = SESSION_OPTIONS.find((o) => o.minutes === 60);
   void hourlyHighUsd;
 
   return (
@@ -62,16 +60,22 @@ export function SiteHero({
             </div>
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between rounded-xl border border-white/5 p-4">
-                <p className="text-sm text-ink-100">30-minute session</p>
-                <p className="text-sm font-medium text-ink-200">{formatUsd(thirty?.priceUsd ?? 12)}</p>
+                <div>
+                  <p className="text-sm text-ink-100">Pay as you go</p>
+                  <p className="mt-0.5 text-xs text-ink-300">60-minute Study Hall</p>
+                </div>
+                <p className="text-sm font-medium text-ink-200">{formatUsd(PAYG_PRICE_USD)}/hour</p>
               </div>
               <div className="flex items-center justify-between rounded-xl border border-white/5 p-4">
-                <p className="text-sm text-ink-100">60-minute session</p>
-                <p className="text-sm font-medium text-ink-200">{formatUsd(sixty?.priceUsd ?? 20)}</p>
+                <div>
+                  <p className="text-sm text-ink-100">Prepaid routines</p>
+                  <p className="mt-0.5 text-xs text-ink-300">14 or 28 hours · never expire</p>
+                </div>
+                <p className="text-sm font-medium text-ink-200">from {formatUsd(hourlyLowUsd)}/hour</p>
               </div>
             </div>
             <p className="mt-4 text-center text-xs text-ink-300">
-              Save with prepaid hours — from {formatUsd(hourlyLowUsd)}/hour.
+              Built for a consistent Study Hall routine — including daily use.
             </p>
           </div>
         </div>

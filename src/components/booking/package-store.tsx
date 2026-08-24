@@ -5,9 +5,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
-import { formatCents } from "@/lib/pricing";
+import { formatCents, PAYG_PRICE_USD, formatUsd } from "@/lib/pricing";
 import { formatMoneyCents } from "@/lib/format.mjs";
-import { packageEconomics } from "@/lib/packages.mjs";
+import { packageBadge, packageEconomics } from "@/lib/packages.mjs";
 import { cn } from "@/lib/utils";
 
 export interface PackageRow {
@@ -91,37 +91,45 @@ export function PackageStore({
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {packages.map((pkg, i) => {
+      <div className={cn("grid gap-4", packages.length <= 2 ? "sm:grid-cols-2" : "sm:grid-cols-3")}>
+        {packages.map((pkg) => {
           const { hours, effectiveHourlyCents, savingsCents } = packageEconomics(pkg.minutes, pkg.price_cents);
           const creditUsed = Math.min(creditCents, pkg.price_cents);
           const due = pkg.price_cents - creditUsed;
-          const featured = i === 1; // middle option — balanced choice (not "most popular")
+          const badge = packageBadge(pkg.minutes);
+          const featured = badge === "MOST POPULAR";
           return (
             <Card
               key={pkg.id}
               className={cn(
                 "flex flex-col p-6",
-                featured && "border-forest-300 ring-1 ring-forest-200",
+                featured && "border-forest-400 ring-2 ring-forest-200",
               )}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold tracking-wide text-gold-700 uppercase">
-                  {Number.isInteger(hours) ? `${hours} hours` : `${hours.toFixed(1)} hours`}
+                  {pkg.name}
                 </p>
-                {featured ? (
-                  <span className="rounded-full bg-forest-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-forest-700 uppercase">
-                    Balanced choice
+                {badge ? (
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase",
+                      featured ? "bg-forest-600 text-white" : "bg-forest-50 text-forest-700",
+                    )}
+                  >
+                    {badge}
                   </span>
                 ) : null}
               </div>
               <p className="mt-1 font-display text-3xl font-semibold text-ink-900">{formatCents(pkg.price_cents)}</p>
               <p className="mt-1 text-sm text-ink-500">
-                {formatCents(effectiveHourlyCents)}/hour · hours never expire
+                {formatCents(effectiveHourlyCents)}/hour
+                {Number.isInteger(hours) ? ` · ${hours} hours` : ` · ${hours.toFixed(1)} hours`}
+                {" · never expire"}
               </p>
               {savingsCents > 0 ? (
                 <p className="mt-2 inline-flex w-fit items-center rounded-full bg-forest-50 px-2.5 py-0.5 text-xs font-semibold text-forest-700">
-                  Save {formatCents(savingsCents)} vs. $20/hour
+                  Save {formatCents(savingsCents)} vs. {formatUsd(PAYG_PRICE_USD)}/hour
                 </p>
               ) : null}
               {creditUsed > 0 ? (
