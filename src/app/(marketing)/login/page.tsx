@@ -7,7 +7,7 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
   title: "Log In",
-  description: "Log in to your African Tutors account.",
+  description: "Log in to your Study Hall at Home account.",
 };
 
 export default function LoginPage() {

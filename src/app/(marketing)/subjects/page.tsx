@@ -6,9 +6,9 @@ import { SubjectsSection } from "@/components/marketing/subjects-section";
 import { getPublicSubjects } from "@/lib/marketing";
 
 export const metadata: Metadata = {
-  title: "Subjects",
+  title: "What Kids Work On",
   description:
-    "Subjects supported by African Tutors — Math, Science, English & Writing, Test Prep, and select college courses. Every session is matched to a qualified, approved tutor.",
+    "In Study Hall, kids bring their own homework across any subject — Math, Science, English & Writing, and more. A Guide keeps them focused and accountable; Study Hall is supervision, not subject-by-subject tutoring.",
   alternates: { canonical: "/subjects" },
 };
 
@@ -18,16 +18,16 @@ export default async function SubjectsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Subjects"
-        title="One-on-one help across the subjects that matter most."
-        description="Every session is matched to a qualified tutor for the subject and level you need. Here's what we currently support."
+        eyebrow="What kids work on"
+        title="Any subject, any homework."
+        description="Kids bring their own assignments and a Guide keeps them focused across whatever they're working on. Study Hall is homework supervision and accountability — not subject-by-subject tutoring."
       />
 
       <SubjectsSection categories={subjects} withHeader={false} />
 
       <CtaSection
         title="Not sure where to start?"
-        description="Get started and tell us what you're working on — we'll match a qualified tutor for that subject."
+        description="Just get started — your child brings their homework and the Guide takes it from there."
       />
     </>
   );

@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with the African Tutors team.",
+  description: "Get in touch with the Study Hall at Home team.",
 };
 
 export default function ContactPage() {
@@ -15,7 +15,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Contact"
         title="We'd love to hear from you."
-        description="Questions about tutoring, pricing, or getting your student started? Send us a message and our team will follow up."
+        description="Questions about Study Hall, pricing, or getting your child started? Send us a message and our team will follow up."
       />
 
       <Container className="py-16">

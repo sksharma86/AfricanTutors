@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 const SIGNALS: { label: string; icon: React.ReactNode }[] = [
   {
-    label: "Approved tutors",
+    label: "Approved Guides",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="h-4 w-4">
         <circle cx="12" cy="12" r="9" />

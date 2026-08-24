@@ -92,7 +92,7 @@ export default async function AdminFinancePage() {
         </Link>
         <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900">Financial operations</h1>
         <p className="mt-1 text-sm text-ink-500">
-          Tutor earnings &amp; payouts, customer balances &amp; adjustments, Stripe refunds, and dispute resolution.
+          Guide earnings &amp; payouts, customer balances &amp; adjustments, Stripe refunds, and dispute resolution.
         </p>
         <div className="mt-8">
           <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} emailFailures={emailFailures} />

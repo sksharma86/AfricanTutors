@@ -1,13 +1,13 @@
 import { Container } from "@/components/ui/container";
 
 const CONTROLS = [
-  "Tutors are reviewed and approved before they teach",
+  "Guides are reviewed and approved before they work with families",
   "Sessions happen on-platform, not through personal contact",
   "Sessions are recorded for quality and safety",
   "You can report an issue with any session, and our team reviews it",
-  "African Tutors can review session recordings when needed",
+  "Study Hall at Home can review session recordings when needed",
   "Payments are handled securely",
-  "Tutor and customer contact details aren't unnecessarily shared",
+  "Guide and family contact details aren't unnecessarily shared",
 ];
 
 export function TrustSafety() {
@@ -20,7 +20,7 @@ export function TrustSafety() {
             Built with real safeguards.
           </h2>
           <p className="mt-4 text-base leading-7 text-ink-500">
-            African Tutors manages the whole experience — so quality and safety are part of how the
+            Study Hall at Home manages the whole experience — so quality and safety are part of how the
             platform works, not an afterthought.
           </p>
         </div>

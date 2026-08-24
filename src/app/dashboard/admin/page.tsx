@@ -69,10 +69,10 @@ export default async function AdminDashboardPage() {
     <DashboardShell
       role="admin"
       title="Platform Overview"
-      description="Manage tutors, subjects, availability, and bookings."
+      description="Manage Guides, subjects, availability, and bookings."
       navItems={[
         { label: "Overview", available: true },
-        { label: "Tutor Approvals", available: true },
+        { label: "Guide Approvals", available: true },
         { label: "Bookings", available: true },
         { label: "Subjects", available: true },
         { label: "Payments", available: false },
@@ -82,21 +82,21 @@ export default async function AdminDashboardPage() {
       <section className="mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold text-white">Financial operations</h2>
-          <p className="mt-1 text-sm text-ink-200">Tutor earnings &amp; payouts, customer balances &amp; adjustments, refunds, and disputes.</p>
+          <p className="mt-1 text-sm text-ink-200">Guide earnings &amp; payouts, customer balances &amp; adjustments, refunds, and disputes.</p>
         </div>
         <LinkButton href="/dashboard/admin/finance" variant="secondary" size="lg">Open finance console</LinkButton>
       </section>
 
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink-900">Tutor approvals</h2>
+          <h2 className="font-display text-lg font-semibold text-ink-900">Guide approvals</h2>
           <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">
             {pendingTutors.length} pending
           </span>
         </div>
         {pendingTutors.length === 0 ? (
           <p className="mt-6 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
-            No pending tutor applications.
+            No pending Guide applications.
           </p>
         ) : (
           <ul className="mt-5 divide-y divide-ink-100">
@@ -122,11 +122,11 @@ export default async function AdminDashboardPage() {
 
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink-900">Tutor cancellation requests</h2>
+          <h2 className="font-display text-lg font-semibold text-ink-900">Guide cancellation requests</h2>
           <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">{cancellationRequests.length} open</span>
         </div>
         {cancellationRequests.length === 0 ? (
-          <p className="mt-4 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">No open tutor cancellation requests.</p>
+          <p className="mt-4 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">No open Guide cancellation requests.</p>
         ) : (
           <ul className="mt-4 divide-y divide-ink-100">
             {cancellationRequests.map((r) => (
@@ -147,11 +147,11 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
-        <h2 className="font-display text-lg font-semibold text-ink-900">Tutor directory</h2>
-        <p className="mt-1 text-sm text-ink-500">Open a tutor to view their operations, earnings, and availability.</p>
+        <h2 className="font-display text-lg font-semibold text-ink-900">Guide directory</h2>
+        <p className="mt-1 text-sm text-ink-500">Open a Guide to view their operations, earnings, and availability.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {tutors.length === 0 ? (
-            <span className="text-sm text-ink-400">No approved tutors yet.</span>
+            <span className="text-sm text-ink-400">No approved Guides yet.</span>
           ) : (
             tutors.map((t) => (
               <Link key={t.profile_id} href={`/dashboard/admin/tutors/${t.profile_id}`} className="rounded-full border border-ink-200 px-3 py-1 text-sm text-ink-700 hover:border-ink-300">

@@ -12,8 +12,8 @@ import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
  * server-authoritative and unchanged.
  */
 const COPY: Record<number, string> = {
-  30: "Quick, focused one-on-one help when you need it.",
-  60: "A full one-on-one session for deeper learning and ongoing support.",
+  30: "A quick, focused block of supervised study time.",
+  60: "A full Study Hall session to settle in and get homework done.",
 };
 
 export function SingleSessionCards() {

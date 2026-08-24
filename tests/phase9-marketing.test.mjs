@@ -17,7 +17,6 @@ const MARKETING_FILES = [
   "src/components/marketing/pricing-section.tsx",
   "src/components/marketing/free-trial-section.tsx",
   "src/components/marketing/why-african-tutors.tsx",
-  "src/components/marketing/talent-story.tsx",
   "src/components/marketing/trust-safety.tsx",
   "src/components/marketing/trust-row.tsx",
   "src/components/marketing/subjects-section.tsx",
@@ -67,7 +66,7 @@ describe("Phase 9 — marketing copy matches real business rules", () => {
   it("trust/safety avoids absolute claims and matches real controls (item 14)", () => {
     assert.doesNotMatch(marketingText, /100% safe|guaranteed safe|completely secure|totally safe/i);
     assert.match(trust, /recorded for quality and safety/i);
-    assert.match(trust, /approved before they teach/i);
+    assert.match(trust, /approved before they work with families/i);
   });
 
   it("no fabricated testimonials, reviews, ratings, or press claims (item 13)", () => {

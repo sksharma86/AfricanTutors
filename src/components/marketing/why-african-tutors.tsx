@@ -11,8 +11,8 @@ interface Reason {
 
 const REASONS: Reason[] = [
   {
-    title: "Quality",
-    description: "Every tutor is recruited, reviewed, and approved by African Tutors before they teach a single session.",
+    title: "Accountability",
+    description: "A Guide keeps your child on task and working through their own homework, session after session.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <circle cx="12" cy="12" r="8.5" />
@@ -22,7 +22,7 @@ const REASONS: Reason[] = [
   },
   {
     title: "Affordability",
-    description: "One-on-one tutoring without typical U.S. tutoring-center pricing — starting at just $17 per hour.",
+    description: "Live supervision at a fraction of private tutoring — and you save even more with prepaid hours.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <circle cx="12" cy="12" r="8.5" />
@@ -32,7 +32,7 @@ const REASONS: Reason[] = [
   },
   {
     title: "Convenience",
-    description: "Book online in minutes and join a private session from home — no commuting, no scheduling headaches.",
+    description: "Book online in minutes and your child joins from home — no driving, no scheduling headaches.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
@@ -41,8 +41,8 @@ const REASONS: Reason[] = [
     ),
   },
   {
-    title: "Accountability",
-    description: "Sessions stay on-platform and are recorded for quality and safety, and you can report any issue.",
+    title: "Routine & relief",
+    description: "Build a dependable homework routine and get your evenings back — you stay nearby, not hovering.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.5c2.5 1.3 4.4 1.5 6.5 1.5 0 7-2.6 10.4-6.5 12.5C8.1 15.4 5.5 12 5.5 5c2.1 0 4-.2 6.5-1.5Z" />
@@ -51,7 +51,7 @@ const REASONS: Reason[] = [
   },
   {
     title: "Flexibility",
-    description: "Pay per session, or save with prepaid tutoring hours that never expire. No subscriptions.",
+    description: "Pay per session, or save with prepaid hours that never expire. No subscriptions.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h10" />
@@ -65,13 +65,13 @@ export function WhyAfricanTutors() {
     <section id="why" className="scroll-mt-20 py-20">
       <Container>
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">Why African Tutors</p>
+          <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">Why Study Hall</p>
           <h2 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
-            Real tutoring, done right — and priced fairly.
+            Homework accountability, done right — and priced fairly.
           </h2>
           <p className="mt-4 text-base leading-7 text-ink-500">
-            African Tutors is a managed tutoring company, not an open marketplace. We handle the hard
-            parts so you can focus on learning.
+            Study Hall at Home is a managed service, not an open marketplace. We handle the hard parts
+            so your family can build a calm, dependable homework routine.
           </p>
         </div>
 

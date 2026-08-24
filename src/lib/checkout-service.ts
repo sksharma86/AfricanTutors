@@ -325,7 +325,7 @@ export async function getCheckoutStatus(paymentId: string): Promise<CheckoutStat
   } else if (pay.status === "succeeded") {
     if (pay.purpose === "package") {
       uiState = "completed";
-      message = "Payment confirmed — your tutoring minutes are now available.";
+      message = "Payment confirmed — your prepaid hours are now available.";
     } else {
       uiState = "confirmed";
       message = "Payment confirmed — your session is booked.";

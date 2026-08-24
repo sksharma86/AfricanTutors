@@ -22,7 +22,7 @@ export function BalanceCards({
             <circle cx="12" cy="12" r="8.5" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5V12l3 2" />
           </svg>
-          Tutoring balance
+          Study Hall balance
         </div>
         <p className="mt-2 font-display text-3xl font-semibold text-ink-900">
           {minutes > 0 ? formatDuration(minutes) : "None yet"}

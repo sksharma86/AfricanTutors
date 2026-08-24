@@ -16,7 +16,7 @@ import { tutorSessionAction, tutorTimezone } from "@/lib/tutor-schedule.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
-export const metadata: Metadata = { title: "Tutor Dashboard" };
+export const metadata: Metadata = { title: "Guide Dashboard" };
 
 interface TutorBooking {
   id: string;
@@ -239,7 +239,7 @@ export default async function TutorDashboardPage() {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by African Tutors.</p>
+          <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall at Home.</p>
         </section>
       ) : null}
 

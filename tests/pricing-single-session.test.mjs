@@ -35,7 +35,7 @@ describe("Pricing page — single sessions before packages", () => {
     const iSave = page.indexOf("Save with prepaid hours");
     const iStore = page.indexOf("PackageStore packages");
     assert.ok(iCards > 0 && iSave > iCards && iStore > iCards, "single sessions appear above packages");
-    assert.match(page, /Pricing &amp; tutoring options/);
+    assert.match(page, /Pricing &amp; Study Hall options/);
   });
 
   it("CTAs enter the existing booking flow with duration preselected (items 6,7)", () => {

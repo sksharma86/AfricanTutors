@@ -7,7 +7,7 @@ import "server-only";
  * it never throws.
  */
 export const RESEND_API_KEY = process.env.RESEND_API_KEY;
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "African Tutors <notifications@africantutors.example>";
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? "Study Hall at Home <notifications@studyhallathome.example>";
 
 /** True when a real provider is configured. */
 export const isEmailConfigured = Boolean(RESEND_API_KEY);

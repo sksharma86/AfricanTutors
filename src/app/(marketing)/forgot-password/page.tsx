@@ -6,7 +6,7 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata: Metadata = {
   title: "Reset Password",
-  description: "Request a link to reset your African Tutors password.",
+  description: "Request a link to reset your Study Hall at Home password.",
 };
 
 export default function ForgotPasswordPage() {

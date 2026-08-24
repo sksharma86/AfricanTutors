@@ -134,9 +134,9 @@ export function AdminConsole({
     if (action === "reassign") {
       const b = bookings.find((x) => x.id === id);
       const eligible = tutors.filter((t) => (b?.subject_id ? ts.some((x) => x.tutor_id === t.profile_id && x.subject_id === b.subject_id) : true));
-      if (eligible.length === 0) { setError("No eligible tutors for this subject."); return; }
+      if (eligible.length === 0) { setError("No eligible Guides for this subject."); return; }
       const list = eligible.map((t, i) => `${i + 1}) ${t.display_name ?? t.profile_id.slice(0, 8)}`).join("\n");
-      const pick = window.prompt(`Reassign to which tutor?\n${list}`);
+      const pick = window.prompt(`Reassign to which Guide?\n${list}`);
       if (pick === null) return;
       const idx = parseInt(pick, 10) - 1;
       if (!(idx >= 0 && idx < eligible.length)) { setError("Invalid choice."); return; }
@@ -216,7 +216,7 @@ export function AdminConsole({
               <tr>
                 <th className="py-2 pr-4">Student</th>
                 <th className="py-2 pr-4">Subject</th>
-                <th className="py-2 pr-4">Tutor</th>
+                <th className="py-2 pr-4">Guide</th>
                 <th className="py-2 pr-4">When (UTC)</th>
                 <th className="py-2 pr-4">Len</th>
                 <th className="py-2 pr-4">Type</th>
@@ -312,8 +312,8 @@ export function AdminConsole({
 
       {/* Tutor ↔ subject assignment */}
       <section className="rounded-2xl border border-ink-100 bg-white p-6">
-        <h3 className="font-display text-lg font-semibold text-ink-900">Tutor subject approvals</h3>
-        <p className="mt-1 text-sm text-ink-500">Only admins control which subjects each tutor may teach.</p>
+        <h3 className="font-display text-lg font-semibold text-ink-900">Guide subject approvals</h3>
+        <p className="mt-1 text-sm text-ink-500">Only admins control which subjects each Guide may teach.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <select value={assignTutor} onChange={(e) => setAssignTutor(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm">
             {tutors.map((t) => (
@@ -330,7 +330,7 @@ export function AdminConsole({
             ))}
           </select>
           <Button onClick={assign} variant="outline" size="sm">
-            Approve tutor for subject
+            Approve Guide for subject
           </Button>
         </div>
 

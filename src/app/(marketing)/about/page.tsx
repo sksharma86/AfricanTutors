@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { CtaSection } from "@/components/marketing/cta-section";
 import { InfoSplit } from "@/components/marketing/info-split";
-import { MissionVisual } from "@/components/marketing/mission-visual";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { FREE_TRIAL_CTA } from "@/lib/pricing";
@@ -10,7 +9,7 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "African Tutors is a managed online tutoring company connecting American families with carefully selected African academics for live, one-on-one tutoring.",
+    "Study Hall at Home is a managed service that gives families affordable, live homework supervision — helping kids build a dependable routine and giving parents their evenings back.",
 };
 
 export default function AboutPage() {
@@ -18,55 +17,52 @@ export default function AboutPage() {
     <>
       <PageHeader
         eyebrow="About"
-        title="Academic talent has no borders."
-        description="African Tutors was built around a simple insight, and a better way to act on it."
+        title="Homework routines shouldn't run the whole evening."
+        description="Study Hall at Home was built around a simple insight, and a better way to act on it."
       />
 
       <Container className="py-16">
         <div className="max-w-2xl space-y-6 text-base leading-7 text-ink-600">
           <p>
-            There is tremendous academic talent throughout Africa. At the same time, many
-            American families want consistent, personalized tutoring but run into high prices
-            for traditional one-on-one instruction.
+            Getting kids to sit down and finish their homework can take over the whole evening. Many
+            families want dependable support and accountability, but private tutoring is expensive and
+            more than most kids actually need.
           </p>
           <p>
-            African Tutors bridges those two realities: we built a company around recruiting,
-            approving, and managing a network of skilled African academics, and connecting
-            them with American students who need one-on-one support &mdash; live, online, and
-            genuinely affordable. Every new student&apos;s{" "}
-            <span className="font-semibold text-ink-900">first 30-minute session is free</span>.
+            Study Hall at Home offers something simpler: live, supervised study time. A trained Guide
+            keeps your children on task by video while they do their own schoolwork &mdash; affordable,
+            online, and easy to make a routine. Every new household&apos;s{" "}
+            <span className="font-semibold text-ink-900">first session is free</span>.
           </p>
           <p>
-            Families get affordable, personal academic support from a real tutor. Talented
-            academics get meaningful, paid teaching work. African Tutors manages everything in
-            between, so both sides can focus on learning.
+            Parents get relief from supervising homework every night. Kids get focus, accountability,
+            and encouragement. Study Hall at Home manages everything in between.
           </p>
         </div>
       </Container>
 
       <InfoSplit
         eyebrow="How We Work"
-        title="A professionally managed tutoring company."
+        title="A professionally managed service."
         tone="muted"
-        visual={<MissionVisual />}
       >
         <p>
-          African Tutors is not an open marketplace where students and tutors find each other
-          independently. We recruit and approve every tutor, and manage scheduling and
-          payments, so families always know who they&apos;re working with.
+          Study Hall at Home is not an open marketplace where families and Guides find each other
+          independently. We recruit and approve every Guide, and manage scheduling and payments, so
+          families always know who they&apos;re working with.
         </p>
         <p>
-          That structure lets us stand behind the quality of every session, and lets tutors
-          focus on teaching.
+          This is homework supervision and accountability &mdash; not subject-by-subject tutoring.
+          Guides keep kids focused and working; children bring their own assignments.
         </p>
       </InfoSplit>
 
       <CtaSection
-        title="Interested in African Tutors?"
-        description="Start with a free 30-minute session for your student, or apply to join our tutor network."
+        title="Interested in Study Hall at Home?"
+        description="Start with a free session for your child, or apply to become a Guide."
         primaryLabel={FREE_TRIAL_CTA}
         secondaryHref="/apply-to-tutor"
-        secondaryLabel="Apply to Tutor"
+        secondaryLabel="Become a Guide"
       />
     </>
   );

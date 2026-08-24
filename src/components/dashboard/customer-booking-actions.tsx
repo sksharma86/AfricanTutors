@@ -5,8 +5,8 @@ import { useState } from "react";
 
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "quality", label: "The instruction wasn't helpful" },
-  { value: "unprepared", label: "The tutor seemed unprepared" },
-  { value: "no_value", label: "The session didn't provide real tutoring" },
+  { value: "unprepared", label: "The Guide seemed unprepared" },
+  { value: "no_value", label: "The session wasn't properly supervised" },
   { value: "behavior", label: "Something felt inappropriate" },
   { value: "other", label: "Something else" },
 ];
@@ -63,7 +63,7 @@ export function CustomerBookingActions({
     if (data.early) {
       setNote(
         data.restored_minutes
-          ? `Cancelled — ${data.restored_minutes} minutes returned to your tutoring balance.`
+          ? `Cancelled — ${data.restored_minutes} minutes returned to your Study Hall balance.`
           : data.restored_credit_cents
             ? `Cancelled — $${(data.restored_credit_cents / 100).toFixed(2)} returned as account credit.`
             : "Cancelled — the session value was returned to your account.",

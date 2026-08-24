@@ -8,7 +8,7 @@ import { FAQ_ITEMS } from "@/lib/faq";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about African Tutors: how it works, who the tutors are, pricing, the free trial, recorded sessions, booking for multiple children, cancellations, and more.",
+    "Answers about Study Hall at Home: how it works, who the Guides are, pricing, the free session, recorded sessions, booking for multiple children, cancellations, and more.",
   alternates: { canonical: "/faq" },
 };
 
@@ -35,7 +35,7 @@ export default function FaqPage() {
       <Faq eyebrow="Common questions" title="Frequently asked questions" />
       <CtaSection
         title="Ready to try it?"
-        description="Your first 30-minute session is free — no credit card required."
+        description="Your first session is free — no credit card required."
       />
     </>
   );

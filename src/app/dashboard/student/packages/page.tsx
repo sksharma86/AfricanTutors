@@ -38,9 +38,9 @@ export default async function PackagesPage() {
         <Link href="/dashboard/student" className="text-sm font-medium text-gold-700 hover:underline">
           ← Back to dashboard
         </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Pricing &amp; tutoring options</h1>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Pricing &amp; Study Hall options</h1>
         <p className="mt-2 max-w-xl text-base leading-7 text-ink-500">
-          Book one session at a time, or save with prepaid tutoring hours. Prepaid hours never expire and are used
+          Book one session at a time, or save with prepaid hours. Prepaid hours never expire and are used
           automatically when they fully cover a session.
         </p>
 
@@ -48,7 +48,7 @@ export default async function PackagesPage() {
           <div className="mt-5 flex flex-wrap gap-3 text-sm">
             {minutes > 0 ? (
               <span className="rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-ink-700">
-                Tutoring balance: <span className="font-semibold text-ink-900">{formatDuration(minutes)}</span>
+                Study Hall balance: <span className="font-semibold text-ink-900">{formatDuration(minutes)}</span>
               </span>
             ) : null}
             {creditCents > 0 ? (
@@ -66,7 +66,7 @@ export default async function PackagesPage() {
 
         <div className="mt-10">
           <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Save with prepaid hours</h2>
-          <p className="mt-1 text-sm text-ink-500">Prepaid tutoring hours — not a subscription. Hours never expire.</p>
+          <p className="mt-1 text-sm text-ink-500">Prepaid hours — not a subscription. Hours never expire.</p>
           <div className="mt-4">
             <PackageStore packages={(packages ?? []) as PackageRow[]} creditCents={creditCents} />
           </div>

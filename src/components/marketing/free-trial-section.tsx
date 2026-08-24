@@ -16,13 +16,13 @@ export function FreeTrialSection({
             <div className="max-w-xl">
               <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Free trial</p>
               <h2 className="mt-3 font-display text-3xl font-semibold text-white sm:text-4xl">
-                Try African Tutors before you pay a dollar.
+                Try Study Hall before you pay a dollar.
               </h2>
               <ul className="mt-5 space-y-2 text-base leading-7 text-ink-200">
                 {[
-                  "A real 30-minute one-on-one session",
+                  "A real Study Hall session with a Guide",
                   "No credit card, no payment information",
-                  "One free trial per customer account",
+                  "One free session per household",
                 ].map((line) => (
                   <li key={line} className="flex items-start gap-2.5">
                     <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="mt-1 h-4 w-4 flex-none text-gold-300">
