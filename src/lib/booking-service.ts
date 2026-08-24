@@ -111,7 +111,7 @@ export async function requestBooking(params: {
     p_other_subject: params.subjectId ? null : (params.otherSubject ?? null),
     p_request_note: params.note ?? null,
     p_duration: params.duration,
-    p_start: params.subjectId ? params.startISO : null,
+    p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
   });
   if (error) throw new Error(error.message);
