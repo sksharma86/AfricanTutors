@@ -21,7 +21,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How much does it cost?",
-    a: "Sessions are $12 for 30 minutes or $20 for 60 minutes. You can also save with prepaid hours: 10 hours for $190 ($19/hr), 20 hours for $360 ($18/hr), or 40 hours for $680 ($17/hr).",
+    a: "Pay as you go is $12 for a 60-minute Study Hall session ($12/hour). You can also save with prepaid routines: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour).",
   },
   {
     q: "Is the first session really free?",

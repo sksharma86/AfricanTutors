@@ -43,9 +43,8 @@ const FALLBACK_SUBJECTS: PublicSubjectCategory[] = [
 ];
 
 const FALLBACK_PACKAGES: { id: string; name: string; minutes: number; price_cents: number }[] = [
-  { id: "pkg-10", name: "10 Hours", minutes: 600, price_cents: 19000 },
-  { id: "pkg-20", name: "20 Hours", minutes: 1200, price_cents: 36000 },
-  { id: "pkg-40", name: "40 Hours", minutes: 2400, price_cents: 68000 },
+  { id: "pkg-14", name: "14 Hour Routine", minutes: 840, price_cents: 14000 },
+  { id: "pkg-28", name: "28 Hour Routine", minutes: 1680, price_cents: 25200 },
 ];
 
 /** Active subjects grouped by their real category (anon-readable catalog). */
@@ -99,12 +98,12 @@ export async function getPublicPackages(): Promise<PublicPackage[]> {
 }
 
 /**
- * The pricing anchor shown in hero copy ("$17–$20 per hour"): the low end is the
- * best prepaid package rate; the high end is the standard 60-minute session rate.
+ * The pricing anchor shown in hero copy: the low end is the best prepaid package
+ * rate; the high end is the standard 60-minute pay-as-you-go rate ($12/hour).
  */
 export function hourlyPriceRange(packages: PublicPackage[]): { lowCents: number; highCents: number } {
   const sixty = SESSION_OPTIONS.find((o) => o.minutes === 60);
-  const highCents = (sixty?.priceUsd ?? 20) * 100;
+  const highCents = (sixty?.priceUsd ?? 12) * 100;
   const lowCents = packages.length
     ? Math.min(...packages.map((p) => p.effectiveHourlyCents))
     : highCents;

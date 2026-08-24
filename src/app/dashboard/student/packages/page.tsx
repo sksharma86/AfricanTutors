@@ -66,7 +66,9 @@ export default async function PackagesPage() {
 
         <div className="mt-10">
           <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Save with prepaid hours</h2>
-          <p className="mt-1 text-sm text-ink-500">Prepaid hours — not a subscription. Hours never expire.</p>
+          <p className="mt-1 text-sm text-ink-500">
+            Built for a consistent Study Hall routine. Hours never expire.
+          </p>
           <div className="mt-4">
             <PackageStore packages={(packages ?? []) as PackageRow[]} creditCents={creditCents} />
           </div>

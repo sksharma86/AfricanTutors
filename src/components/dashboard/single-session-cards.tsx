@@ -4,7 +4,7 @@ import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
 
 /**
  * "Book a single session" — the pay-per-session option shown ABOVE prepaid
- * packages so customers don't think a $190 package is the minimum commitment.
+ * packages so customers don't think a prepaid routine is the minimum commitment.
  *
  * Prices come from the authoritative SESSION_OPTIONS constant (never a hardcoded
  * literal here). CTAs enter the existing booking wizard with the duration
@@ -13,7 +13,7 @@ import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
  */
 const COPY: Record<number, string> = {
   30: "A quick, focused block of supervised study time.",
-  60: "A full Study Hall session to settle in and get homework done.",
+  60: "Pay as you go — a full Study Hall session to settle in and get homework done.",
 };
 
 export function SingleSessionCards() {
