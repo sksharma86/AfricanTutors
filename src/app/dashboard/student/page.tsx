@@ -5,6 +5,10 @@ import { CustomerBookingActions } from "@/components/dashboard/customer-booking-
 import { CustomerShell } from "@/components/dashboard/customer-shell";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { SessionCard } from "@/components/dashboard/session-card";
+import {
+  SessionReportsList,
+  type ParentSessionReport,
+} from "@/components/dashboard/session-reports-list";
 import { LinkButton } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,6 +20,7 @@ import { partitionBookings } from "@/lib/bookings";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { formatDuration } from "@/lib/format.mjs";
 import { customerBookingStatus, issueStatus } from "@/lib/status-labels.mjs";
+import type { FocusRating, RedirectionLevel } from "@/lib/session-report.mjs";
 import { customerJoinState } from "@/lib/session-window.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
@@ -70,7 +75,7 @@ export default async function StudentDashboardPage() {
   const { data: userData } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   const uid = userData?.user?.id ?? null;
 
-  const [{ data: bookingsRaw }, { data: myStudents }, balancesRes, disputeRes] = await Promise.all([
+  const [{ data: bookingsRaw }, { data: myStudents }, balancesRes, disputeRes, reportsRes] = await Promise.all([
     supabase
       ? supabase
           .from("bookings")
@@ -84,6 +89,18 @@ export default async function StudentDashboardPage() {
       : Promise.resolve({ data: null }),
     uid && supabase ? supabase.rpc("get_customer_balances", { p_account: uid }) : Promise.resolve({ data: null }),
     supabase ? supabase.rpc("list_my_dispute_statuses") : Promise.resolve({ data: null }),
+    supabase
+      ? supabase
+          .from("session_reports")
+          .select(
+            "id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id, bookings(scheduled_start, duration_minutes, student_first_name, students(full_name, timezone))",
+          )
+          .order("submitted_at", { ascending: false })
+          .then(
+            (r) => r,
+            () => ({ data: null, error: null }),
+          )
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const bookings = (bookingsRaw ?? []) as unknown as BookingRow[];
@@ -96,6 +113,42 @@ export default async function StudentDashboardPage() {
   for (const d of (disputeRes?.data ?? []) as { booking_id: string; status: string }[]) {
     issueByBooking.set(d.booking_id, d.status);
   }
+
+  type ReportJoin = {
+    id: string;
+    submitted_at: string;
+    focus_rating: FocusRating;
+    work_summary: string;
+    redirection_level: RedirectionLevel;
+    guide_note: string | null;
+    bookings: {
+      scheduled_start: string | null;
+      duration_minutes: number | null;
+      student_first_name: string | null;
+      students: { full_name: string; timezone: string } | null;
+    } | null;
+  };
+
+  const parentReports: ParentSessionReport[] = (
+    reportsRes && "error" in reportsRes && reportsRes.error
+      ? []
+      : ((reportsRes?.data ?? []) as unknown as ReportJoin[])
+  ).map((r) => {
+    const full = r.bookings?.students?.full_name?.trim() || "";
+    const first = full ? full.split(/\s+/)[0]! : r.bookings?.student_first_name || "Your child";
+    return {
+      id: r.id,
+      submitted_at: r.submitted_at,
+      focus_rating: r.focus_rating,
+      work_summary: r.work_summary,
+      redirection_level: r.redirection_level,
+      guide_note: r.guide_note,
+      child_first_name: first,
+      scheduled_start: r.bookings?.scheduled_start ?? null,
+      duration_minutes: r.bookings?.duration_minutes ?? null,
+      timezone: r.bookings?.students?.timezone || DEFAULT_TZ,
+    };
+  });
 
   // Free trial is ONE PER ACCOUNT: eligible only if no non-cancelled free-trial
   // booking exists across the account (adding a student never restores it).
@@ -270,6 +323,16 @@ export default async function StudentDashboardPage() {
               }
             />
           )}
+        </div>
+
+        {/* Session reports (PR6) — accountability summaries, not grades */}
+        <div id="reports" className="mt-8 scroll-mt-20">
+          <SectionHeader title="Session reports" />
+          <p className="mb-3 text-sm text-ink-500">
+            Short notes from your Guide about how Study Hall went — focus, what they worked on, and calm redirection.
+            These are not grades or academic assessments.
+          </p>
+          <SessionReportsList reports={parentReports} />
         </div>
 
         {/* Account / students */}
