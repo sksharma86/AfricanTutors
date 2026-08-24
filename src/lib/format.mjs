@@ -10,7 +10,7 @@ export function formatMoneyCents(cents) {
 }
 
 /**
- * Human tutoring-time from minutes: 510 -> "8 hr 30 min", 60 -> "1 hr",
+ * Human Study Hall time from minutes: 510 -> "8 hr 30 min", 60 -> "1 hr",
  * 30 -> "30 min", 0 -> "0 min". Never exposes raw "minutes" ledger language.
  */
 export function formatDuration(minutes) {

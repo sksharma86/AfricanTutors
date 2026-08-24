@@ -400,8 +400,8 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       .single();
     assert.equal(b.subject_id, null);
     assert.ok(b.tutor_id, "Guide must be auto-assigned");
-    assert.ok([guideA.id, guideB.id].includes(b.tutor_id));
     assert.equal(b.status, "confirmed");
+    assert.equal(b.is_free_trial, true);
     assert.equal(b.duration_minutes, 60);
     assert.equal(b.price_cents, 0);
   });
@@ -448,122 +448,193 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     }
   });
 
-  it("2h/3h requires one Guide continuously available for the full interval", async (t) => {
+  it("2h/3h: assigned Guide must be continuously available for the full interval", async (t) => {
     if (!pr4Applied) {
       t.skip("migration 0022 not applied to this environment yet");
       return;
     }
-    // Only guideA available, and only for a 90-minute window — too short for 2h/3h.
-    await clearAvail(guideB.id);
+
+    // Deterministic continuous-availability rule on a Guide we control (does not
+    // assume other Guides are absent from the shared database).
     await clearAvail(guideA.id);
-    const start = futureUtc(15, 14); // 14:00 UTC
-    const dow = start.getUTCDay();
+    const probeStart = futureUtc(15, 14); // 14:00 UTC
+    const dow = probeStart.getUTCDay();
     await avail(guideA.id, dow, "14:00", "15:30"); // 90 minutes only
-
-    const a = await createUser({ requestedRole: "student", displayName: "PR4 Contig" });
-    accounts.push(a.id);
-    const stu = await newStudent(a.id, "LongKid");
-    const client = await signIn(a.email, a.password);
-
-    const fail2h = await book(client, {
-      studentId: stu,
-      subjectId: null,
-      duration: 120,
-      start: start.toISOString(),
+    const end2h = new Date(probeStart.getTime() + 120 * 60000).toISOString();
+    const short = await svc.rpc("tutor_is_available", {
+      p_tutor: guideA.id,
+      p_tz: "UTC",
+      p_start: probeStart.toISOString(),
+      p_end: end2h,
     });
-    assert.ok(fail2h.error, "2h must fail when Guide only free 90 min");
-    assert.match(fail2h.error.message, /No Guide is available/i);
+    assert.equal(short.error, null, short.error?.message);
+    assert.equal(short.data, false, "a 90-minute availability block must not cover a 2h Study Hall");
 
-    // Extend guideA to full 3 hours — one Guide owns the whole booking.
     await clearAvail(guideA.id);
-    await avail(guideA.id, dow, "14:00", "18:00");
-    await svc.from("package_minute_ledger").insert({
-      account_id: a.id,
-      minutes_delta: 180,
-      entry_type: "purchase",
-      reason: "pr4 contig",
-      reference: `pr4-contig-${SFX}`,
+    await avail(guideA.id, dow, "14:00", "18:00"); // continuous 4h block
+    const end3h = new Date(probeStart.getTime() + 180 * 60000).toISOString();
+    const full = await svc.rpc("tutor_is_available", {
+      p_tutor: guideA.id,
+      p_tz: "UTC",
+      p_start: probeStart.toISOString(),
+      p_end: end3h,
     });
-    const ok3h = await book(client, {
-      studentId: stu,
-      subjectId: null,
-      duration: 180,
-      start: start.toISOString(),
-    });
-    assert.equal(ok3h.error, null, ok3h.error?.message);
-    const { data: b } = await svc
-      .from("bookings")
-      .select("tutor_id, duration_minutes, scheduled_start, scheduled_end")
-      .eq("id", ok3h.data.booking_id)
-      .single();
-    assert.equal(b.tutor_id, guideA.id, "one Guide owns the full 3h booking");
-    assert.equal(b.duration_minutes, 180);
-    const spanMin = (new Date(b.scheduled_end) - new Date(b.scheduled_start)) / 60000;
-    assert.equal(spanMin, 180);
+    assert.equal(full.error, null, full.error?.message);
+    assert.equal(full.data, true, "one continuous block must cover a 3h Study Hall");
 
-    // Restore full-week availability for later tests.
+    // Real bookings: whoever is assigned must own the full continuous span.
+    for (const dur of [120, 180]) {
+      const a = await createUser({ requestedRole: "student", displayName: `PR4 Contig${dur}` });
+      accounts.push(a.id);
+      const stu = await newStudent(a.id, `LongKid${dur}`);
+      await svc.from("package_minute_ledger").insert({
+        account_id: a.id,
+        minutes_delta: dur,
+        entry_type: "purchase",
+        reason: "pr4 contig",
+        reference: `pr4-contig-${dur}-${SFX}`,
+      });
+      const client = await signIn(a.email, a.password);
+      const slots = await client.rpc("get_available_slots", {
+        p_subject_id: null,
+        p_duration: dur,
+        p_from: futureUtc(16 + dur / 60, 0).toISOString(),
+        p_to: futureUtc(20 + dur / 60, 0).toISOString(),
+      });
+      assert.ok((slots.data ?? []).length > 0, `need slots for ${dur}-min Study Hall`);
+      const r = await book(client, {
+        studentId: stu,
+        subjectId: null,
+        duration: dur,
+        start: slots.data[0].slot_start,
+      });
+      assert.equal(r.error, null, r.error?.message);
+      const { data: b } = await svc
+        .from("bookings")
+        .select("tutor_id, duration_minutes, scheduled_start, scheduled_end")
+        .eq("id", r.data.booking_id)
+        .single();
+      assert.ok(b.tutor_id, "exactly one Guide must own the booking");
+      assert.equal(b.duration_minutes, dur);
+      const spanMin = (new Date(b.scheduled_end) - new Date(b.scheduled_start)) / 60000;
+      assert.equal(spanMin, dur, "scheduled window must equal the full continuous duration");
+
+      // Calendar coverage: assigned Guide has a weekly block spanning the whole local window.
+      const { data: tp } = await svc
+        .from("tutor_profiles")
+        .select("timezone")
+        .eq("profile_id", b.tutor_id)
+        .single();
+      const tz = tp?.timezone && String(tp.timezone).trim() ? tp.timezone : "UTC";
+      const localStart = new Date(b.scheduled_start);
+      // Compare via tutor_is_available ignoring THIS booking: temporarily mark it cancelled.
+      await svc.from("bookings").update({ status: "cancelled" }).eq("id", r.data.booking_id);
+      const cov = await svc.rpc("tutor_is_available", {
+        p_tutor: b.tutor_id,
+        p_tz: tz,
+        p_start: b.scheduled_start,
+        p_end: b.scheduled_end,
+      });
+      assert.equal(cov.error, null, cov.error?.message);
+      assert.equal(
+        cov.data,
+        true,
+        `assigned Guide must be continuously available for the full ${dur}-min Study Hall`,
+      );
+      // Restore confirmed for cleanup consistency (ledger already consumed).
+      await svc.from("bookings").update({ status: "confirmed" }).eq("id", r.data.booking_id);
+      void localStart;
+    }
+
     for (let d = 0; d < 7; d++) {
       await avail(guideA.id, d);
       await avail(guideB.id, d);
     }
   });
 
-  it("Guide earnings scale with duration (2h = 2× hourly rate)", async (t) => {
+  it("Guide earnings scale with duration using the assigned Guide's rate", async (t) => {
     if (!pr4Applied) {
       t.skip("migration 0022 not applied to this environment yet");
       return;
     }
-    const a = await createUser({ requestedRole: "student", displayName: "PR4 Earn" });
-    accounts.push(a.id);
-    const stu = await newStudent(a.id, "EarnKid");
-    await svc.from("package_minute_ledger").insert({
-      account_id: a.id,
-      minutes_delta: 120,
-      entry_type: "purchase",
-      reason: "pr4 earn",
-      reference: `pr4-earn-${SFX}`,
-    });
-    const client = await signIn(a.email, a.password);
-    const slots = await client.rpc("get_available_slots", {
-      p_subject_id: null,
-      p_duration: 120,
-      p_from: futureUtc(18, 0).toISOString(),
-      p_to: futureUtc(20, 0).toISOString(),
-    });
-    assert.ok((slots.data ?? []).length > 0);
-    const r = await book(client, {
-      studentId: stu,
-      subjectId: null,
-      duration: 120,
-      start: slots.data[0].slot_start,
-    });
-    assert.equal(r.error, null, r.error?.message);
 
-    // Mark completed far in the past so completion earning path is valid, then record earning.
-    await svc
-      .from("bookings")
-      .update({
-        status: "completed",
-        scheduled_start: new Date(Date.now() - 3 * 3600_000).toISOString(),
-        scheduled_end: new Date(Date.now() - 1 * 3600_000).toISOString(),
-      })
-      .eq("id", r.data.booking_id);
+    for (const dur of [60, 120, 180]) {
+      const a = await createUser({ requestedRole: "student", displayName: `PR4 Earn${dur}` });
+      accounts.push(a.id);
+      const stu = await newStudent(a.id, `EarnKid${dur}`);
+      await svc.from("package_minute_ledger").insert({
+        account_id: a.id,
+        minutes_delta: dur,
+        entry_type: "purchase",
+        reason: "pr4 earn",
+        reference: `pr4-earn-${dur}-${SFX}`,
+      });
+      const client = await signIn(a.email, a.password);
+      const slots = await client.rpc("get_available_slots", {
+        p_subject_id: null,
+        p_duration: dur,
+        p_from: futureUtc(18 + dur / 30, 0).toISOString(),
+        p_to: futureUtc(22 + dur / 30, 0).toISOString(),
+      });
+      assert.ok((slots.data ?? []).length > 0, `slots for ${dur}`);
+      const r = await book(client, {
+        studentId: stu,
+        subjectId: null,
+        duration: dur,
+        start: slots.data[0].slot_start,
+      });
+      assert.equal(r.error, null, r.error?.message);
 
-    const { data: earnId, error: ee } = await svc.rpc("record_tutor_earning", {
-      p_booking: r.data.booking_id,
-      p_reason: "pr4 duration scale check",
-    });
-    assert.equal(ee, null, ee?.message);
-    assert.ok(earnId);
-    const { data: earn } = await svc
-      .from("tutor_earnings")
-      .select("duration_minutes, rate_cents_per_hour, amount_cents, tutor_id")
-      .eq("booking_id", r.data.booking_id)
-      .single();
-    assert.equal(earn.duration_minutes, 120);
-    assert.equal(earn.rate_cents_per_hour, 1000);
-    assert.equal(earn.amount_cents, 2000, "2h at $10/hr Guide rate → $20");
-    assert.ok([guideA.id, guideB.id].includes(earn.tutor_id));
+      const { data: booking } = await svc
+        .from("bookings")
+        .select("tutor_id, duration_minutes")
+        .eq("id", r.data.booking_id)
+        .single();
+      assert.ok(booking.tutor_id);
+      assert.equal(booking.duration_minutes, dur);
+
+      const { data: profile } = await svc
+        .from("tutor_profiles")
+        .select("comp_rate_cents_per_hour")
+        .eq("profile_id", booking.tutor_id)
+        .single();
+      assert.ok(
+        typeof profile?.comp_rate_cents_per_hour === "number",
+        "assigned Guide must have a compensation rate set",
+      );
+
+      await svc
+        .from("bookings")
+        .update({
+          status: "completed",
+          scheduled_start: new Date(Date.now() - (dur + 60) * 60000).toISOString(),
+          scheduled_end: new Date(Date.now() - 60 * 60000).toISOString(),
+        })
+        .eq("id", r.data.booking_id);
+
+      const { data: earnId, error: ee } = await svc.rpc("record_tutor_earning", {
+        p_booking: r.data.booking_id,
+        p_reason: `pr4 duration scale ${dur}`,
+      });
+      assert.equal(ee, null, ee?.message);
+      assert.ok(earnId);
+
+      const { data: earn } = await svc
+        .from("tutor_earnings")
+        .select("duration_minutes, rate_cents_per_hour, amount_cents, tutor_id")
+        .eq("booking_id", r.data.booking_id)
+        .single();
+      assert.equal(earn.tutor_id, booking.tutor_id);
+      assert.equal(earn.duration_minutes, dur);
+      // Snapshot may equal current profile rate; authority is the earning row itself.
+      assert.equal(earn.rate_cents_per_hour, profile.comp_rate_cents_per_hour);
+      const expected = Math.round((earn.rate_cents_per_hour * dur) / 60);
+      assert.equal(
+        earn.amount_cents,
+        expected,
+        `${dur} min must earn ${dur / 60}× the assigned Guide's hourly rate`,
+      );
+    }
   });
 
   it("one free session per account remains intact (second child cannot re-claim)", async (t) => {

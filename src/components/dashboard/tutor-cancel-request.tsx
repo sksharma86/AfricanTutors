@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /**
- * Lets a tutor request to be released from an upcoming session. This records
+ * Lets a Guide request to be released from an upcoming Study Hall. This records
  * intent + a reason and alerts admin; it performs no financial action or
  * reassignment (admin resolves). If a request is already open, shows that state.
  */

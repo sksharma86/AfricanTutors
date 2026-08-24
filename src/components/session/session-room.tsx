@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { SessionInfo } from "@/lib/session-service";
+import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { customerBookingStatus } from "@/lib/status-labels.mjs";
 
 type Frame = { join: (o: { url: string; token?: string }) => Promise<unknown>; leave: () => Promise<unknown>; destroy: () => void; on: (e: string, cb: () => void) => void };
@@ -23,6 +24,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
   const [inCall, setInCall] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<Frame | null>(null);
+  const isGuide = info.role === "tutor";
 
   const leaveBeacon = useCallback(() => {
     try {
@@ -69,7 +71,6 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
       const mod = await import("@daily-co/daily-js");
       const DailyIframe = mod.default;
       if (!containerRef.current) throw new Error("no container");
-      // Reuse any existing global frame to avoid duplicate-instance errors.
       const existing = (DailyIframe as unknown as { getCallInstance?: () => Frame | null }).getCallInstance?.();
       if (existing) existing.destroy();
       const frame = DailyIframe.createFrame(containerRef.current, {
@@ -96,23 +97,41 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     }
   }
 
-  const subject = info.subject ?? "Study Hall session";
+  const title = info.subject?.trim() ? info.subject : "Study Hall session";
+  const scheduleLine = [
+    formatWhen(info.scheduled_start),
+    info.scheduled_end ? `– ${formatWhen(info.scheduled_end)}` : null,
+    info.duration_minutes ? formatStudyHallDuration(info.duration_minutes) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall at Home · Live session</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-white">{subject}</h1>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
           <p className="mt-1 text-sm text-ink-300">
-            {info.role === "tutor" ? "Student" : "Guide"}: {info.counterpart ?? "—"} · {formatWhen(info.scheduled_start)}
-            {info.duration_minutes ? ` · ${info.duration_minutes} min` : ""}
+            {isGuide ? "Supervising" : "Guide"}: {info.counterpart ?? "—"}
           </p>
+          <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
         </div>
         <span className="rounded-full border border-ink-600 bg-ink-900 px-3 py-1 text-xs font-medium text-ink-200">
           {customerBookingStatus(info.status ?? "", undefined).label}
         </span>
       </div>
+
+      {isGuide ? (
+        <div className="mt-4 rounded-lg border border-forest-700/50 bg-forest-950/40 p-3 text-xs leading-5 text-ink-200">
+          <p className="font-medium text-forest-200">Guide expectations</p>
+          <p className="mt-1">
+            Stay present, encourage focus, redirect gently, and keep a calm study environment. Do not tutor, teach
+            lessons, or give homework answers. Parent call/escalation support is coming soon — for urgent issues today,
+            leave the room safely and contact Study Hall support through your usual admin channel.
+          </p>
+        </div>
+      ) : null}
 
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-xs text-ink-200">
         <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-gold-300">
@@ -127,7 +146,6 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <div ref={containerRef} className="h-[70vh] w-full overflow-hidden rounded-2xl bg-black" />
         ) : (
           <div className="rounded-2xl border border-ink-700 bg-ink-900 p-8 text-center">
-            {/* Keep a container present so createFrame can mount into it. */}
             <div ref={containerRef} className="hidden" />
             {state === "open" ? (
               <>
@@ -143,12 +161,12 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
                   disabled={busy}
                   className="mt-6 rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
                 >
-                  {busy ? "Connecting…" : "Join session"}
+                  {busy ? "Connecting…" : isGuide ? "Join Study Hall" : "Join session"}
                 </button>
               </>
             ) : state === "too_early" ? (
               <>
-                <h2 className="font-display text-xl font-semibold text-white">Your session isn&apos;t open yet</h2>
+                <h2 className="font-display text-xl font-semibold text-white">Study Hall isn&apos;t open yet</h2>
                 <p className="mt-1 text-sm text-ink-300">
                   You can join at <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> — 5 minutes before it starts.
                 </p>

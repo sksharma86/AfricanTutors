@@ -74,7 +74,7 @@ export async function joinSession(bookingId: string): Promise<JoinResult> {
   }
 
   const roomName = info.room_name as string;
-  // Normal students/tutors use the 10-min-before .. 15-min-after window; admins
+  // Normal Guides/students use the 5-min-before .. 15-min-after window; admins
   // get an immediate, short-lived support window (server time).
   const win = computeSessionAccessWindow(
     { role: info.role, joinOpenAt: info.join_open_at, joinCloseAt: info.join_close_at },

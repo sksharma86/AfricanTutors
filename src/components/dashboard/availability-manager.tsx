@@ -150,7 +150,7 @@ export function AvailabilityManager({
 
       <section className="rounded-2xl border border-ink-100 bg-white p-6">
         <h3 className="font-display text-lg font-semibold text-ink-900">Weekly availability</h3>
-        <p className="mt-1 text-sm text-ink-500">Recurring blocks students can book (your local time).</p>
+        <p className="mt-1 text-sm text-ink-500">Recurring blocks parents can book for Study Hall (your local time).</p>
 
         {sortedBlocks.length === 0 ? (
           <p className="mt-4 text-sm text-ink-400">No availability yet — add a block below.</p>
