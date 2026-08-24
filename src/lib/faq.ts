@@ -25,7 +25,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Is the first session really free?",
-    a: "Yes. Your first 30-minute session is completely free — a real Study Hall session with a Guide, not a sales call.",
+    a: "Yes. Your first 1-hour Study Hall session is completely free — a real session with a Guide, not a sales call. No credit card required.",
   },
   {
     q: "Do I need a credit card for the free session?",

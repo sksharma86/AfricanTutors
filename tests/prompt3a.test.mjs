@@ -170,18 +170,19 @@ describe("Prompt 3A — booking foundation: matching, free trial, RLS, timezones
     assert.equal(new Date(b.scheduled_end) - new Date(b.scheduled_start), 60 * 60000);
   });
 
-  it("free-trial eligible student can book ONE free 30-min session ($0)", async () => {
+  it("free-trial eligible student can book ONE free 60-min session ($0)", async () => {
     const c = await signIn(parent.email, parent.password);
     const start = futureUtc(4, 19).toISOString();
     const { data: id, error } = await c.rpc("create_booking", {
       p_student_id: studentId, p_subject_id: subjAlg.id, p_other_subject: null,
-      p_request_note: null, p_duration: 30, p_start: start, p_is_free_trial: true,
+      p_request_note: null, p_duration: 60, p_start: start, p_is_free_trial: true,
     });
     assert.equal(error, null, error && error.message);
-    const { data: b } = await svc.from("bookings").select("is_free_trial, price_cents, payment_status").eq("id", id).single();
+    const { data: b } = await svc.from("bookings").select("is_free_trial, price_cents, payment_status, duration_minutes").eq("id", id).single();
     assert.equal(b.is_free_trial, true);
     assert.equal(b.price_cents, 0);
     assert.equal(b.payment_status, "not_required");
+    assert.equal(b.duration_minutes, 60);
   });
 
   it("same student cannot claim a second free trial", async () => {
@@ -189,19 +190,19 @@ describe("Prompt 3A — booking foundation: matching, free trial, RLS, timezones
     const start = futureUtc(4, 20).toISOString();
     const { error } = await c.rpc("create_booking", {
       p_student_id: studentId, p_subject_id: subjAlg.id, p_other_subject: null,
-      p_request_note: null, p_duration: 30, p_start: start, p_is_free_trial: true,
+      p_request_note: null, p_duration: 60, p_start: start, p_is_free_trial: true,
     });
     assert.ok(error, "second free trial must be rejected");
   });
 
-  it("a 60-minute session cannot be claimed as the free trial", async () => {
+  it("a 30-minute session cannot be claimed as the free trial", async () => {
     const c = await signIn(parent2.email, parent2.password);
     const start = futureUtc(3, 18).toISOString();
     const { error } = await c.rpc("create_booking", {
       p_student_id: student2Id, p_subject_id: subjBio.id, p_other_subject: null,
-      p_request_note: null, p_duration: 60, p_start: start, p_is_free_trial: true,
+      p_request_note: null, p_duration: 30, p_start: start, p_is_free_trial: true,
     });
-    assert.ok(error, "60-min free trial must be rejected");
+    assert.ok(error, "30-min free trial must be rejected");
   });
 
   it("a tutor cannot be double-booked (only eligible tutor already busy)", async () => {

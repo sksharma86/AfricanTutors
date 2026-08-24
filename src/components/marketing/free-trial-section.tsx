@@ -20,7 +20,7 @@ export function FreeTrialSection({
               </h2>
               <ul className="mt-5 space-y-2 text-base leading-7 text-ink-200">
                 {[
-                  "A real Study Hall session with a Guide",
+                  "A complete 1-hour Study Hall session with a Guide",
                   "No credit card, no payment information",
                   "One free session per household",
                 ].map((line) => (

@@ -5,14 +5,14 @@
  * compensation or internal unit economics here (or anywhere shipped to the
  * browser). Those live in the internal `BUSINESS_MODEL.md` document.
  *
- * Study Hall PR2 model:
+ * Study Hall pricing model:
  *   - Pay as you go: 60-minute session = $12 ($12/hour)
  *   - 30-minute paid duration retained at $12 for internal/booking support
- *     (free trial remains a separate $0 / 30-minute path)
- *   - A new account's first 30-minute session is FREE (no card required)
+ *   - A new account's first 60-minute Study Hall session is FREE (no card)
  *
  * Server SQL (`session_list_price_cents` / booking_quote / book_session /
  * create_booking) is the financial authority — keep these numbers in sync.
+ * Free-trial bookings must NEVER inherit the paid list price.
  */
 
 export interface SessionOption {
@@ -30,8 +30,8 @@ export const SESSION_OPTIONS: SessionOption[] = [
 export const PAYG_MINUTES = 60;
 export const PAYG_PRICE_USD = 12;
 
-/** Length of the free introductory session a new student can claim. */
-export const FREE_TRIAL_MINUTES = 30;
+/** Length of the free introductory Study Hall session (one per account). */
+export const FREE_TRIAL_MINUTES = 60;
 
 /** Primary acquisition call-to-action label (kept consistent site-wide). */
 export const FREE_TRIAL_CTA = "Start free session";

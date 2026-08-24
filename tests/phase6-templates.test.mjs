@@ -24,8 +24,8 @@ describe("Phase 6 — email templates (pure)", () => {
   });
 
   it("free-trial confirmation emphasizes free + no card and has no leaks", () => {
-    const r = T.bookingConfirmed({ isFreeTrial: true, subject: "Algebra", whenISO: ISO, tz: "UTC", durationMinutes: 30, tutorName: "Tomiwa", appUrl: APP, bookingId: BID });
-    assert.match(r.text, /free 30-minute/i);
+    const r = T.bookingConfirmed({ isFreeTrial: true, subject: "Algebra", whenISO: ISO, tz: "UTC", durationMinutes: 60, tutorName: "Tomiwa", appUrl: APP, bookingId: BID });
+    assert.match(r.text, /free 1-hour/i);
     assert.match(r.text, /no payment method/i);
     assertNoLeaks(r);
   });

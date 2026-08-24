@@ -69,8 +69,8 @@ const textJoin = (lines) => lines.filter(Boolean).join("\n");
 export function welcome(ctx) {
   return {
     subject: `Welcome to ${BRAND}`,
-    html: layout(`Welcome to ${BRAND}`, p(`Hi ${ctx.name || "there"},`) + p("Your account is ready. You can book a session and claim your free 30-minute trial — no credit card required."), ctx.appUrl ? { href: ctx.appUrl, label: "Go to your dashboard" } : null),
-    text: textJoin([`Welcome to ${BRAND}`, "", `Hi ${ctx.name || "there"},`, "Your account is ready. Book a session and claim your free 30-minute trial — no credit card required.", ctx.appUrl || ""]),
+    html: layout(`Welcome to ${BRAND}`, p(`Hi ${ctx.name || "there"},`) + p("Your account is ready. You can book a session and claim your free 1-hour Study Hall session — no credit card required."), ctx.appUrl ? { href: ctx.appUrl, label: "Go to your dashboard" } : null),
+    text: textJoin([`Welcome to ${BRAND}`, "", `Hi ${ctx.name || "there"},`, "Your account is ready. Book a session and claim your free 1-hour Study Hall session — no credit card required.", ctx.appUrl || ""]),
   };
 }
 
@@ -79,10 +79,10 @@ export function bookingConfirmed(ctx) {
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const free = ctx.isFreeTrial;
   const lines = [
-    free ? "Your free 30-minute Study Hall session is confirmed. No payment method was required." : "Your Study Hall session is confirmed.",
+    free ? "Your free 1-hour Study Hall session is confirmed. No payment method was required." : "Your Study Hall session is confirmed.",
     `Subject: ${ctx.subject || "Study Hall"}`,
     `When: ${when}`,
-    `Duration: ${ctx.durationMinutes || 30} minutes`,
+    `Duration: ${ctx.durationMinutes || 60} minutes`,
     ctx.tutorName ? `Guide: ${ctx.tutorName}` : null,
     "Join from your dashboard when it's time — the session opens 10 minutes before the start.",
   ];

@@ -40,13 +40,13 @@ describe("Phase 8 — free trial is ONE PER ACCOUNT (live)", { skip: !hasSupabas
   async function firstSlot(client) {
     const { data } = await client.rpc("get_available_slots", {
       p_subject_id: subjectId,
-      p_duration: 30,
+      p_duration: 60,
       p_from: new Date(Date.now() + 3 * 3600000).toISOString(),
       p_to: new Date(Date.now() + 10 * 86400000).toISOString(),
     });
     return (data ?? [])[0]?.slot_start ?? null;
   }
-  function trialScheduled(client, studentId, startISO, duration = 30) {
+  function trialScheduled(client, studentId, startISO, duration = 60) {
     return client.rpc("book_session", {
       p_student_id: studentId,
       p_subject_id: subjectId,
@@ -57,7 +57,7 @@ describe("Phase 8 — free trial is ONE PER ACCOUNT (live)", { skip: !hasSupabas
       p_is_free_trial: true,
     });
   }
-  function trialOther(client, studentId, duration = 30) {
+  function trialOther(client, studentId, duration = 60) {
     return client.rpc("book_session", {
       p_student_id: studentId,
       p_subject_id: null,
@@ -86,7 +86,7 @@ describe("Phase 8 — free trial is ONE PER ACCOUNT (live)", { skip: !hasSupabas
     await cleanupAll();
   });
 
-  it("account with one student can use the free trial once (30 min, no payment, tutor assigned)", async () => {
+  it("account with one student can use the free trial once (60 min, no payment, tutor assigned)", async () => {
     const a = await mkAccount("Parent A");
     const s1 = await mkStudent(a.id, "Child A1");
     const slot = await firstSlot(a.client);
@@ -101,7 +101,7 @@ describe("Phase 8 — free trial is ONE PER ACCOUNT (live)", { skip: !hasSupabas
 
     const { data: bk } = await svc.from("bookings").select("*").eq("id", data.booking_id).single();
     assert.equal(bk.is_free_trial, true);
-    assert.equal(bk.duration_minutes, 30, "free trial is 30 minutes only");
+    assert.equal(bk.duration_minutes, 60, "free trial is 60 minutes only");
     assert.equal(bk.price_cents, 0, "customer charged $0");
     assert.equal(bk.status, "confirmed");
     assert.ok(bk.tutor_id, "a tutor is assigned (normal compensation path is unchanged)");
@@ -165,11 +165,11 @@ describe("Phase 8 — free trial is ONE PER ACCOUNT (live)", { skip: !hasSupabas
     for (const r of successes) if (r.data?.booking_id) bookingIds.push(r.data.booking_id);
   });
 
-  it("the free trial must be 30 minutes only", async () => {
+  it("the free trial must be 60 minutes only", async () => {
     const d = await mkAccount("Parent D");
     const s = await mkStudent(d.id, "Child D1");
-    const { error } = await trialOther(d.client, s, 60);
-    assert.ok(error, "60-minute free trial rejected");
-    assert.match(error.message, /30 minutes/i);
+    const { error } = await trialOther(d.client, s, 30);
+    assert.ok(error, "30-minute free trial rejected");
+    assert.match(error.message, /60 minutes/i);
   });
 });

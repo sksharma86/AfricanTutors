@@ -168,18 +168,19 @@ describe("Prompt 3B — booking engine hardening (live)", { skip: !hasSupabaseEn
     assert.equal(b.tutor_id, tutorB.id, "less-loaded tutor B should be chosen");
   });
 
-  it("free trial: created at $0 / not_required; second rejected; 60-min rejected", async () => {
+  it("free trial: created at $0 / not_required; second rejected; 30-min rejected", async () => {
     const c = await signIn(parent2.email, parent2.password);
-    const { data: id, error } = await book(c, { studentId: stu2, subjectId: subjMain, duration: 30, start: futureUtc(10, 12).toISOString(), free: true });
+    const { data: id, error } = await book(c, { studentId: stu2, subjectId: subjMain, duration: 60, start: futureUtc(10, 12).toISOString(), free: true });
     assert.equal(error, null, error && error.message);
-    const { data: b } = await svc.from("bookings").select("price_cents, payment_status, is_free_trial").eq("id", id).single();
+    const { data: b } = await svc.from("bookings").select("price_cents, payment_status, is_free_trial, duration_minutes").eq("id", id).single();
     assert.equal(b.price_cents, 0);
     assert.equal(b.payment_status, "not_required");
     assert.equal(b.is_free_trial, true);
-    const second = await book(c, { studentId: stu2, subjectId: subjMain, duration: 30, start: futureUtc(10, 13).toISOString(), free: true });
+    assert.equal(b.duration_minutes, 60);
+    const second = await book(c, { studentId: stu2, subjectId: subjMain, duration: 60, start: futureUtc(10, 13).toISOString(), free: true });
     assert.ok(second.error, "second free trial rejected");
-    const sixty = await book(c, { studentId: stuA, subjectId: subjMain, duration: 60, start: futureUtc(10, 14).toISOString(), free: true });
-    assert.ok(sixty.error, "60-min free trial rejected");
+    const thirty = await book(c, { studentId: stuA, subjectId: subjMain, duration: 30, start: futureUtc(10, 14).toISOString(), free: true });
+    assert.ok(thirty.error, "30-min free trial rejected");
   });
 
   it("paid price integrity: 30-min = $12, 60-min = $12 (server-derived)", async () => {

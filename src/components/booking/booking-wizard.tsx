@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
@@ -315,7 +315,7 @@ export function BookingWizard({
         <p className="mt-2 text-sm leading-6 text-ink-600">
           {confirmation.scheduled
             ? confirmation.isFree
-              ? "Your free 30-minute session is confirmed. We've matched an approved Guide."
+              ? "Your free 1-hour Study Hall session is confirmed. We've matched an approved Guide."
               : confirmation.funding === "package"
                 ? "Your session is confirmed using your prepaid balance. An approved Guide is matched."
                 : confirmation.funding === "credit"
@@ -526,7 +526,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={() => {
-                  setDuration(30);
+                  setDuration(FREE_TRIAL_MINUTES as 30 | 60);
                   setIsFreeTrial(true);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl border-2 px-5 py-4 text-left ${
@@ -534,8 +534,8 @@ export function BookingWizard({
                 }`}
               >
                 <span>
-                  <span className="block font-semibold text-ink-900">First 30 minutes — FREE</span>
-                  <span className="text-sm text-ink-500">A real one-on-one session. No credit card required.</span>
+                  <span className="block font-semibold text-ink-900">First 1-hour Study Hall — FREE</span>
+                  <span className="text-sm text-ink-500">60 minutes · $0 · No credit card required.</span>
                 </span>
                 <span className="font-display text-2xl font-semibold text-gold-600">$0</span>
               </button>
