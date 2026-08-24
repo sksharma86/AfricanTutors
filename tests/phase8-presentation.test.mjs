@@ -15,7 +15,7 @@ describe("Phase 8 — money & duration formatting", () => {
     assert.equal(formatMoneyCents(700), "$7.00");
   });
 
-  it("renders tutoring balance as human hours/minutes", () => {
+  it("renders Study Hall balance as human hours/minutes", () => {
     assert.equal(formatDuration(510), "8 hr 30 min");
     assert.equal(formatDuration(60), "1 hr");
     assert.equal(formatDuration(120), "2 hr");
@@ -65,17 +65,22 @@ describe("Phase 8 — customer join-state presentation", () => {
   it("a confirmed booking with no time is 'not_scheduled'", () => {
     assert.equal(customerJoinState("confirmed", null, null, base).state, "not_scheduled");
   });
-  it("confirmed but well before start explains when it opens", () => {
+  it("confirmed but well before start explains when it opens (5 min lead)", () => {
     const start = new Date(base + 30 * 60000).toISOString();
     const end = new Date(base + 90 * 60000).toISOString();
     const r = customerJoinState("confirmed", start, end, base);
     assert.equal(r.state, "opens_at");
-    assert.ok(r.openAtISO);
+    assert.equal(r.openAtISO, new Date(base + 25 * 60000).toISOString());
   });
-  it("confirmed within the window is joinable", () => {
-    const start = new Date(base - 2 * 60000).toISOString();
-    const end = new Date(base + 58 * 60000).toISOString();
+  it("confirmed within the 5-minute pre-start window is joinable", () => {
+    const start = new Date(base + 3 * 60000).toISOString(); // opens in 2 min (start-5)
+    const end = new Date(base + 63 * 60000).toISOString();
     assert.equal(customerJoinState("confirmed", start, end, base).state, "join");
+  });
+  it("confirmed more than 5 minutes before start is not yet joinable", () => {
+    const start = new Date(base + 6 * 60000).toISOString();
+    const end = new Date(base + 66 * 60000).toISOString();
+    assert.equal(customerJoinState("confirmed", start, end, base).state, "opens_at");
   });
   it("confirmed long after end has ended", () => {
     const start = new Date(base - 2 * 86400000).toISOString();

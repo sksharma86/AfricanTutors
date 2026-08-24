@@ -150,7 +150,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
               <>
                 <h2 className="font-display text-xl font-semibold text-white">Your session isn&apos;t open yet</h2>
                 <p className="mt-1 text-sm text-ink-300">
-                  You can join at <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> — 10 minutes before it starts.
+                  You can join at <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span> — 5 minutes before it starts.
                 </p>
                 <button onClick={() => location.reload()} className="mt-6 rounded-xl border border-ink-600 px-5 py-2.5 text-sm font-medium text-ink-100 hover:border-ink-400">
                   Check again

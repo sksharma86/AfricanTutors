@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 
 /**
- * Human-readable account balances. Customers see tutoring TIME and dollar
+ * Human-readable account balances. Customers see Study Hall TIME and dollar
  * CREDIT — never ledger terminology or raw minutes-as-a-number.
  */
 export function BalanceCards({

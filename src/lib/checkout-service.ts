@@ -135,7 +135,7 @@ export async function createBookingCheckout(
             price_data: {
               currency: "usd",
               unit_amount: q.stripe_cents_due,
-              product_data: { name: `Tutoring session (${params.duration} min)` },
+              product_data: { name: `Study Hall session (${params.duration} min)` },
             },
           },
         ],

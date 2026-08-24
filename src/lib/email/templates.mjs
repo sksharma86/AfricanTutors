@@ -84,7 +84,7 @@ export function bookingConfirmed(ctx) {
     `When: ${when}`,
     `Duration: ${ctx.durationMinutes || 60} minutes`,
     ctx.tutorName ? `Guide: ${ctx.tutorName}` : null,
-    "Join from your dashboard when it's time — the session opens 10 minutes before the start.",
+    "Join from your dashboard when it's time — the session opens 5 minutes before the start.",
   ];
   return {
     subject: free ? "Your free session is confirmed" : "Your Study Hall session is confirmed",
@@ -122,7 +122,7 @@ export function reminder(ctx) {
     `Reminder: your ${ctx.subject || "Study Hall"} session ${soon}.`,
     `When: ${when}`,
     who,
-    "Join from your dashboard — the room opens 10 minutes before start.",
+    "Join from your dashboard — the room opens 5 minutes before start.",
     ctx.role === "customer" ? "Need to cancel? Cancellations 24+ hours ahead return your value to your account." : null,
   ];
   return {
@@ -211,7 +211,7 @@ export function tutorNewSession(ctx) {
     `When: ${when}`,
     `Duration: ${ctx.durationMinutes || 30} minutes`,
     ctx.studentName ? `Student: ${ctx.studentName}` : null,
-    "Join from your dashboard — the room opens 10 minutes before start.",
+    "Join from your dashboard — the room opens 5 minutes before start.",
   ];
   return { subject: "New session assigned", html: layout("New session assigned", lines.filter(Boolean).map(p).join(""), { href: url, label: "View session" }), text: textJoin([...lines.filter(Boolean), "", `Join: ${url}`]) };
 }

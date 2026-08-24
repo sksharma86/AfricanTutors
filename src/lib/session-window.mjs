@@ -1,11 +1,11 @@
 /**
  * Display-only customer join state for the dashboard/session-card. This mirrors
- * the Phase 5 access window (open 10 min before start, close 15 min after end)
+ * the Phase 5 access window (open 5 min before start, close 15 min after end)
  * purely for UI hints. The server (authorize_session_join) remains the sole
  * authority for actually joining — a pending/unpaid booking never offers Join.
  */
 
-export const JOIN_OPEN_LEAD_MIN = 10;
+export const JOIN_OPEN_LEAD_MIN = 5;
 export const JOIN_CLOSE_GRACE_MIN = 15;
 
 /**
