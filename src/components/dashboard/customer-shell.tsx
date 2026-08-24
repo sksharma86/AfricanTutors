@@ -14,6 +14,7 @@ const NAV: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/dashboard/student" },
   { label: "Pricing", href: "/dashboard/student/packages" },
   { label: "Sessions", href: "/dashboard/student#sessions" },
+  { label: "Reports", href: "/dashboard/student#reports" },
   { label: "Account", href: "/dashboard/student#account" },
 ];
 

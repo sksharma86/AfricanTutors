@@ -186,6 +186,22 @@ export function disputeReceived(ctx) {
   return { subject: "We received your session concern", html: layout("Concern received", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
+/** Parent notification when a Guide submits the short post-session report. */
+export function sessionReportReady(ctx) {
+  const when = formatWhen(ctx.whenISO, ctx.tz);
+  const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/student#reports";
+  const lines = [
+    ctx.studentName ? `${ctx.studentName}'s Study Hall report is ready.` : "Your Study Hall report is ready.",
+    `When: ${when}`,
+    "It's a short note from the Guide about focus, what they worked on, and how the session went — not a grade or academic assessment.",
+  ];
+  return {
+    subject: "Your Study Hall report is ready",
+    html: layout("Study Hall report ready", lines.map(p).join(""), { href: dash, label: "View session reports" }),
+    text: textJoin([...lines, "", `View: ${dash}`]),
+  };
+}
+
 export function disputeResolved(ctx) {
   const lines = [
     `We've completed our review. Outcome: ${ctx.resolution}.`,

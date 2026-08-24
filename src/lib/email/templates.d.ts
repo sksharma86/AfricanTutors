@@ -21,6 +21,12 @@ export function cancellation(ctx: { early: boolean; restoredMinutes?: number | n
 export function tutorReassignment(ctx: { reassigned: boolean; compCreditCents?: number | null; subject?: string | null; bookingId: string; appUrl?: string | null }): RenderedEmail;
 export function refundIssued(ctx: { amountCents: number; reason?: string | null }): RenderedEmail;
 export function disputeReceived(ctx: { subject?: string | null }): RenderedEmail;
+export function sessionReportReady(ctx: {
+  studentName?: string | null;
+  whenISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
 export function disputeResolved(ctx: { resolution: string; creditCents?: number | null; restoredMinutes?: number | null; refundCents?: number | null }): RenderedEmail;
 export function tutorApproved(ctx: { name?: string | null; appUrl?: string | null }): RenderedEmail;
 export function tutorNewSession(ctx: {

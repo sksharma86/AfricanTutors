@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/availability-manager";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
+import { GuideSessionReport } from "@/components/dashboard/guide-session-report";
 import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request";
 import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
@@ -105,7 +106,20 @@ function AssignmentCard({ b, tz, openRequest }: { b: GuideBooking; tz: string; o
   );
 }
 
-function HistoryRow({ b, tz, earning }: { b: GuideBooking; tz: string; earning?: Earning }) {
+function HistoryRow({
+  b,
+  tz,
+  earning,
+  reportSubmitted,
+  reportsReady,
+}: {
+  b: GuideBooking;
+  tz: string;
+  earning?: Earning;
+  reportSubmitted: boolean;
+  reportsReady: boolean;
+}) {
+  const needsReport = reportsReady && b.status === "completed" && !reportSubmitted;
   return (
     <tr>
       <td className="py-2 pr-3 text-ink-700">{b.scheduled_start ? formatDayHeading(b.scheduled_start, tz) : "—"}</td>
@@ -113,7 +127,19 @@ function HistoryRow({ b, tz, earning }: { b: GuideBooking; tz: string; earning?:
       <td className="py-2 pr-3 text-ink-600">{b.student_first_name ?? "Child"}</td>
       <td className="py-2 pr-3 text-ink-600">{formatStudyHallDuration(b.duration_minutes)}</td>
       <td className="py-2 pr-3 text-ink-600">{BOOKING_STATUS_LABEL[b.status]}</td>
-      <td className="py-2 pr-3 text-ink-500">—</td>
+      <td className="py-2 pr-3 align-top">
+        {needsReport ? (
+          <GuideSessionReport
+            bookingId={b.id}
+            childName={b.student_first_name}
+            alreadySubmitted={false}
+          />
+        ) : reportSubmitted ? (
+          <span className="text-xs font-medium text-forest-700">Report submitted</span>
+        ) : (
+          <span className="text-ink-400">—</span>
+        )}
+      </td>
       <td className="py-2 pr-3 font-medium text-ink-900">{earning ? formatCents(earning.amount_cents) : "—"}</td>
       <td className="py-2 text-ink-500">{earning ? earning.status : "—"}</td>
     </tr>
@@ -128,7 +154,7 @@ export default async function GuideDashboardPage() {
   } = await supabase!.auth.getUser();
   const tutorId = user!.id;
 
-  const [{ data: profile }, { data: bookingsRaw }, { data: avail }, { data: exc }, { data: earningsRaw }, { data: reqs }] =
+  const [{ data: profile }, { data: bookingsRaw }, { data: avail }, { data: exc }, { data: earningsRaw }, { data: reqs }, reportsRes] =
     await Promise.all([
       supabase!.from("tutor_profiles").select("timezone, comp_rate_cents_per_hour, status").eq("profile_id", tutorId).maybeSingle(),
       supabase!
@@ -144,17 +170,30 @@ export default async function GuideDashboardPage() {
         .select("booking_id, amount_cents, status, earned_at, paid_at")
         .order("earned_at", { ascending: false, nullsFirst: false }),
       supabase!.from("tutor_cancellation_requests").select("booking_id").eq("status", "open"),
+      // Table lands with migration 0023; tolerate missing relation until applied.
+      supabase!.from("session_reports").select("booking_id").then(
+        (r) => r,
+        () => ({ data: null, error: null }),
+      ),
     ]);
 
   const tz = tutorTimezone(profile?.timezone);
   const bookings = (bookingsRaw ?? []) as unknown as GuideBooking[];
   const earnings = (earningsRaw ?? []) as Earning[];
   const openReqBookings = new Set(((reqs ?? []) as { booking_id: string }[]).map((r) => r.booking_id));
+  // Migration 0023: hide report CTAs until session_reports exists in this environment.
+  const reportsReady = !reportsRes.error;
+  const reportedBookings = new Set(
+    reportsReady ? ((reportsRes.data ?? []) as { booking_id: string }[]).map((r) => r.booking_id) : [],
+  );
   const earningByBooking = new Map<string, Earning>();
   for (const e of earnings) if (e.booking_id) earningByBooking.set(e.booking_id, e);
 
   const { upcoming, past } = partitionBookings(bookings);
   const { today, later: laterUpcoming } = splitToday(upcoming);
+  const needsReport = reportsReady
+    ? past.filter((b) => b.status === "completed" && !reportedBookings.has(b.id))
+    : [];
 
   let totalEarned = 0,
     totalPaid = 0,
@@ -253,6 +292,39 @@ export default async function GuideDashboardPage() {
         </p>
       </section>
 
+      {needsReport.length > 0 ? (
+        <section className="mb-8">
+          <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Reports to complete</h3>
+          <div className="space-y-3">
+            {needsReport.map((b) => (
+              <div
+                key={b.id}
+                className="flex flex-col gap-3 rounded-xl border border-gold-200 bg-gold-50/50 p-4 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-ink-900">
+                    {b.student_first_name ?? "Child"}
+                    {b.student_grade ? <span className="font-normal text-ink-500"> · Grade {b.student_grade}</span> : null}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-600">
+                    {b.scheduled_start ? formatDayHeading(b.scheduled_start, tz) : "Completed Study Hall"}
+                    {b.duration_minutes ? (
+                      <span className="text-ink-400"> · {formatStudyHallDuration(b.duration_minutes)}</span>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-500">~30–60 seconds · shared with the parent</p>
+                </div>
+                <GuideSessionReport
+                  bookingId={b.id}
+                  childName={b.student_first_name}
+                  alreadySubmitted={false}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {past.length > 0 ? (
         <section className="mb-8">
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Completed Study Halls</h3>
@@ -272,14 +344,21 @@ export default async function GuideDashboardPage() {
               </thead>
               <tbody className="divide-y divide-ink-100">
                 {past.map((b) => (
-                  <HistoryRow key={b.id} b={b} tz={tz} earning={earningByBooking.get(b.id)} />
+                  <HistoryRow
+                    key={b.id}
+                    b={b}
+                    tz={tz}
+                    earning={earningByBooking.get(b.id)}
+                    reportSubmitted={reportedBookings.has(b.id)}
+                    reportsReady={reportsReady}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
           <p className="mt-2 text-xs text-ink-400">
-            Short parent-facing post-session reports will appear here in a later update. Earnings already scale with
-            session length (1h / 2h / 3h).
+            After each completed Study Hall, submit a short parent-facing report (focus, what they worked on,
+            redirection). Reports are final once submitted. Earnings already scale with session length (1h / 2h / 3h).
           </p>
         </section>
       ) : null}

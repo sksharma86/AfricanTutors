@@ -245,6 +245,25 @@ export async function notifyDisputeReceived(disputeId: string, bookingId: string
   });
 }
 
+/** Fired after a Guide successfully submits a post-session report (PR6). */
+export async function notifySessionReportReady(bookingId: string, reportId: string) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.account_id) return { status: "skipped" };
+  return deliver({
+    key: `session-report-ready:${reportId}`,
+    type: "session_report_ready",
+    accountId: b.account_id,
+    bookingId,
+    rendered: T.sessionReportReady({
+      studentName: b.studentFirst,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
+      appUrl: APP_URL,
+    }),
+  });
+}
+
 export async function notifyDisputeResolved(disputeId: string, accountId: string, info: { resolution: string; creditCents?: number | null; restoredMinutes?: number | null; refundCents?: number | null }) {
   await deliver({
     key: `dispute-resolved:${disputeId}`,
