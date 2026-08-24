@@ -65,12 +65,13 @@ export async function accountFreeTrialUsed(accountId: string): Promise<boolean> 
 }
 
 /**
- * Bookable UTC start instants for a subject + duration. Authoritative times are
- * UTC; the UI converts to the student's IANA timezone for display.
+ * Bookable UTC start instants for Study Hall (null subject) or a legacy subject
+ * + duration. Authoritative times are UTC; the UI converts to the student's
+ * IANA timezone for display.
  */
 export async function getAvailableSlots(params: {
-  subjectId: string;
-  duration: 30 | 60;
+  subjectId: string | null;
+  duration: 60 | 120 | 180;
   fromISO?: string;
   toISO?: string;
   slotMinutes?: number;
@@ -100,7 +101,7 @@ export async function requestBooking(params: {
   subjectId: string | null;
   otherSubject?: string | null;
   note?: string | null;
-  duration: 30 | 60;
+  duration: 60 | 120 | 180;
   startISO: string | null;
   isFreeTrial: boolean;
 }): Promise<string> {
@@ -111,7 +112,7 @@ export async function requestBooking(params: {
     p_other_subject: params.subjectId ? null : (params.otherSubject ?? null),
     p_request_note: params.note ?? null,
     p_duration: params.duration,
-    p_start: params.subjectId ? params.startISO : null,
+    p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
   });
   if (error) throw new Error(error.message);

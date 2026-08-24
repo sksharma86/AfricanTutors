@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { BookingWizard, type StudentRow, type SubjectRow } from "@/components/booking/booking-wizard";
+import { BookingWizard, type StudentRow } from "@/components/booking/booking-wizard";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Book a Session",
+  title: "Book a Study Hall Session",
 };
 
 export default async function BookSessionPage({
@@ -18,14 +18,16 @@ export default async function BookSessionPage({
   await requireRole("student", "/dashboard/student/book");
   const supabase = await createSupabaseServerClient();
 
-  // Only 30 or 60 are valid; anything else falls back to the default (30).
+  // Whole-hour Study Hall only (60 / 120 / 180); anything else defaults to 1 hour.
   const { duration } = await searchParams;
-  const initialDuration: 30 | 60 = duration === "60" ? 60 : 30;
+  const parsed = Number(duration);
+  const initialDuration: 60 | 120 | 180 =
+    parsed === 120 || parsed === 180 || parsed === 60 ? parsed : 60;
 
-  const [{ data: students }, { data: subjects }] = await Promise.all([
-    supabase!.from("students").select("id, full_name, grade_level, timezone").order("created_at"),
-    supabase!.from("subjects").select("id, name, category").eq("is_active", true).order("category").order("name"),
-  ]);
+  const { data: students } = await supabase!
+    .from("students")
+    .select("id, full_name, grade_level, timezone")
+    .order("created_at");
 
   return (
     <CustomerShell>
@@ -33,16 +35,14 @@ export default async function BookSessionPage({
         <Link href="/dashboard/student" className="text-sm font-medium text-gold-700 hover:underline">
           ← Back to dashboard
         </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Book a session</h1>
+        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
+          Book a Study Hall session
+        </h1>
         <p className="mt-2 text-base text-ink-500">
-          Tell us who it&apos;s for and when — Study Hall at Home matches an approved Guide for you.
+          Choose your child, session length, and time — we match an approved Guide for live homework supervision.
         </p>
         <div className="mt-8">
-          <BookingWizard
-            students={(students ?? []) as StudentRow[]}
-            subjects={(subjects ?? []) as SubjectRow[]}
-            initialDuration={initialDuration}
-          />
+          <BookingWizard students={(students ?? []) as StudentRow[]} initialDuration={initialDuration} />
         </div>
       </div>
     </CustomerShell>

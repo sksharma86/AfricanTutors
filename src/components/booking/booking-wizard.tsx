@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd, type StudyHallDuration } from "@/lib/pricing";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
@@ -17,20 +17,13 @@ export interface StudentRow {
   grade_level: string | null;
   timezone: string;
 }
+
+/** Kept for book-page / admin compat; Study Hall booking does not use subjects. */
 export interface SubjectRow {
   id: string;
   name: string;
   category: string;
 }
-
-const CATEGORY_LABEL: Record<string, string> = {
-  math: "Math",
-  science: "Science",
-  english_writing: "English / Writing",
-  test_prep: "Test Prep",
-  college: "College Subjects",
-  other: "Other",
-};
 
 const GRADE_OPTIONS = ["6", "7", "8", "9", "10", "11", "12", "College"];
 
@@ -43,7 +36,7 @@ function friendlyError(message?: string | null): string {
   return message;
 }
 
-type Step = "student" | "subject" | "duration" | "time" | "confirm" | "done";
+type Step = "student" | "duration" | "time" | "confirm" | "done";
 
 interface Quote {
   session_price_cents: number;
@@ -56,32 +49,32 @@ interface Quote {
 
 export function BookingWizard({
   students: initialStudents,
-  subjects,
-  initialDuration = 30,
+  subjects: _subjects = [],
+  initialDuration = 60,
 }: {
   students: StudentRow[];
-  subjects: SubjectRow[];
-  initialDuration?: 30 | 60;
+  /** Unused — Study Hall books without a subject. Kept optional for page compat. */
+  subjects?: SubjectRow[];
+  initialDuration?: StudyHallDuration;
 }) {
+  void _subjects;
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [students, setStudents] = useState<StudentRow[]>(initialStudents);
-  const [step, setStep] = useState<Step>(initialStudents.length ? "student" : "student");
+  const [step, setStep] = useState<Step>("student");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const [studentId, setStudentId] = useState<string>(initialStudents[0]?.id ?? "");
   const [freeTrialUsed, setFreeTrialUsed] = useState<boolean | null>(null);
 
-  const [subjectId, setSubjectId] = useState<string | null>(null);
-  const [otherText, setOtherText] = useState("");
   const [note, setNote] = useState("");
 
-  // Duration may be preselected from the Pricing page ("Book 30/60 minutes").
+  // Duration may be preselected from the Pricing page ("Book 1/2/3 hours").
   // This is display state only — it never sets price or bypasses the free-trial
   // option, which the duration step still presents when the account is eligible.
-  const [duration, setDuration] = useState<30 | 60>(initialDuration);
+  const [duration, setDuration] = useState<StudyHallDuration>(initialDuration);
   const [isFreeTrial, setIsFreeTrial] = useState(false);
 
   const [slots, setSlots] = useState<string[]>([]);
@@ -144,7 +137,7 @@ export function BookingWizard({
   // Recompute the authoritative funding breakdown whenever the paid session
   // changes. This is display-only; book_session recomputes under locks.
   useEffect(() => {
-    if (!supabase || !accountId || isFreeTrial || subjectId === null) return;
+    if (!supabase || !accountId || isFreeTrial) return;
     let active = true;
     supabase
       .rpc("booking_quote", { p_account: accountId, p_duration: duration, p_is_free_trial: false })
@@ -154,13 +147,7 @@ export function BookingWizard({
     return () => {
       active = false;
     };
-  }, [supabase, accountId, duration, isFreeTrial, subjectId]);
-
-  const grouped = useMemo(() => {
-    const groups: Record<string, SubjectRow[]> = {};
-    for (const s of subjects) (groups[s.category] ??= []).push(s);
-    return groups;
-  }, [subjects]);
+  }, [supabase, accountId, duration, isFreeTrial]);
 
   async function addStudent() {
     if (!supabase) return;
@@ -185,7 +172,7 @@ export function BookingWizard({
     setNewName("");
   }
 
-  async function loadSlots(dur: 30 | 60, subj: string) {
+  async function loadSlots(dur: StudyHallDuration) {
     if (!supabase) return;
     setSlotsLoading(true);
     setSlots([]);
@@ -193,7 +180,7 @@ export function BookingWizard({
     const from = new Date(Date.now() + MIN_BOOKING_NOTICE_MINUTES * 60000).toISOString();
     const to = new Date(Date.now() + BOOKING_HORIZON_DAYS * 86400000).toISOString();
     const { data, error: e } = await supabase.rpc("get_available_slots", {
-      p_subject_id: subj,
+      p_subject_id: null,
       p_duration: dur,
       p_from: from,
       p_to: to,
@@ -207,7 +194,7 @@ export function BookingWizard({
   }
 
   async function submitBooking() {
-    if (!supabase) return;
+    if (!supabase || !selectedSlot) return;
     setBusy(true);
     setError(null);
     track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBookingStarted : ANALYTICS_EVENTS.paidBookingStarted, {
@@ -220,11 +207,11 @@ export function BookingWizard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId,
-          subjectId,
-          otherSubject: subjectId ? null : otherText.trim(),
+          subjectId: null,
+          otherSubject: null,
           note: note.trim() || null,
           duration,
-          startISO: subjectId ? selectedSlot : null,
+          startISO: selectedSlot,
           isFreeTrial,
         }),
       });
@@ -262,7 +249,7 @@ export function BookingWizard({
     setConfirmation({
       ref,
       isFree: isFreeTrial,
-      scheduled: Boolean(subjectId),
+      scheduled: true,
       funding: payload?.funding ?? "",
     });
     setStep("done");
@@ -306,22 +293,18 @@ export function BookingWizard({
           </svg>
         </div>
         <h2 className="mt-5 font-display text-2xl font-semibold text-ink-900">
-          {confirmation.scheduled
-            ? confirmation.isFree || confirmation.funding === "package" || confirmation.funding === "credit"
-              ? "Session confirmed!"
-              : "Booking held"
-            : "Request received!"}
+          {confirmation.isFree || confirmation.funding === "package" || confirmation.funding === "credit"
+            ? "Session confirmed!"
+            : "Booking held"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-600">
-          {confirmation.scheduled
-            ? confirmation.isFree
-              ? "Your free 1-hour Study Hall session is confirmed. We've matched an approved Guide."
-              : confirmation.funding === "package"
-                ? "Your session is confirmed using your prepaid balance. An approved Guide is matched."
-                : confirmation.funding === "credit"
-                  ? "Your session is confirmed using your account credit. An approved Guide is matched."
-                  : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."
-            : "Thanks — our team will review your request and follow up to arrange an approved Guide."}
+          {confirmation.isFree
+            ? "Your free 1-hour Study Hall session is confirmed. We've matched an approved Guide."
+            : confirmation.funding === "package"
+              ? "Your session is confirmed using your prepaid balance. An approved Guide is matched."
+              : confirmation.funding === "credit"
+                ? "Your session is confirmed using your account credit. An approved Guide is matched."
+                : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."}
         </p>
         <p className="mt-3 text-sm text-ink-500">
           Reference: <span className="font-mono font-medium text-ink-800">{confirmation.ref}</span>
@@ -336,18 +319,17 @@ export function BookingWizard({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-        {stepPill(1, "Student", step === "student", ["subject", "duration", "time", "confirm"].includes(step))}
-        {stepPill(2, "Subject", step === "subject", ["duration", "time", "confirm"].includes(step))}
-        {stepPill(3, "Session", step === "duration", ["time", "confirm"].includes(step))}
-        {stepPill(4, "Time", step === "time", ["confirm"].includes(step))}
-        {stepPill(5, "Confirm", step === "confirm", false)}
+        {stepPill(1, "Child", step === "student", ["duration", "time", "confirm"].includes(step))}
+        {stepPill(2, "Session", step === "duration", ["time", "confirm"].includes(step))}
+        {stepPill(3, "Time", step === "time", ["confirm"].includes(step))}
+        {stepPill(4, "Confirm", step === "confirm", false)}
       </div>
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       ) : null}
 
-      {/* STEP 1: student */}
+      {/* STEP 1: child */}
       {step === "student" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Who is this Study Hall for?</h2>
@@ -377,7 +359,7 @@ export function BookingWizard({
               ))}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-ink-500">Add the student you&apos;re booking for to get started.</p>
+            <p className="mt-2 text-sm text-ink-500">Add the child you&apos;re booking for to get started.</p>
           )}
 
           <details className="mt-5 rounded-xl border border-dashed border-ink-200 p-4" open={students.length === 0}>
@@ -418,96 +400,14 @@ export function BookingWizard({
           </details>
 
           <div className="mt-6">
-            <Button onClick={() => setStep("subject")} disabled={!studentId}>
+            <Button onClick={() => setStep("duration")} disabled={!studentId}>
               Continue
             </Button>
           </div>
         </div>
       ) : null}
 
-      {/* STEP 2: subject */}
-      {step === "subject" ? (
-        <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">What subject?</h2>
-          <div className="mt-4 space-y-5">
-            {Object.entries(grouped).map(([cat, list]) => (
-              <div key={cat}>
-                <p className="text-xs font-semibold tracking-wide text-gold-700 uppercase">
-                  {CATEGORY_LABEL[cat] ?? cat}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {list.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => {
-                        setSubjectId(s.id);
-                        setOtherText("");
-                      }}
-                      className={`rounded-full border px-4 py-1.5 text-sm ${
-                        subjectId === s.id
-                          ? "border-ink-900 bg-ink-900 text-white"
-                          : "border-ink-200 text-ink-700 hover:border-ink-300"
-                      }`}
-                    >
-                      {s.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div>
-              <p className="text-xs font-semibold tracking-wide text-gold-700 uppercase">Something else</p>
-              <button
-                type="button"
-                onClick={() => setSubjectId(null)}
-                className={`mt-2 rounded-full border px-4 py-1.5 text-sm ${
-                  subjectId === null
-                    ? "border-ink-900 bg-ink-900 text-white"
-                    : "border-ink-200 text-ink-700 hover:border-ink-300"
-                }`}
-              >
-                Other (describe your need)
-              </button>
-              {subjectId === null ? (
-                <input
-                  value={otherText}
-                  onChange={(e) => setOtherText(e.target.value)}
-                  placeholder="e.g. AP Statistics review"
-                  className="mt-3 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm"
-                />
-              ) : null}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-ink-800">
-                What do you need help with? <span className="text-ink-400">(optional)</span>
-              </label>
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. Quadratic equations, chemistry test Friday, SAT math"
-                className="mt-1.5 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm"
-              />
-              <p className="mt-1 text-xs text-ink-400">Only shared with your matched Guide. Never shown publicly.</p>
-            </div>
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={() => setStep("student")}>
-              Back
-            </Button>
-            <Button
-              onClick={() => setStep(subjectId === null ? "duration" : "duration")}
-              disabled={subjectId === null && !otherText.trim()}
-            >
-              Continue
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      {/* STEP 3: duration + free trial */}
+      {/* STEP 2: duration + free trial */}
       {step === "duration" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a session</h2>
@@ -526,7 +426,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={() => {
-                  setDuration(FREE_TRIAL_MINUTES as 30 | 60);
+                  setDuration(FREE_TRIAL_MINUTES);
                   setIsFreeTrial(true);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl border-2 px-5 py-4 text-left ${
@@ -546,7 +446,7 @@ export function BookingWizard({
                 key={o.minutes}
                 type="button"
                 onClick={() => {
-                  setDuration(o.minutes as 30 | 60);
+                  setDuration(o.minutes as StudyHallDuration);
                   setIsFreeTrial(false);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left ${
@@ -562,17 +462,13 @@ export function BookingWizard({
           </div>
 
           <div className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={() => setStep("subject")}>
+            <Button variant="outline" onClick={() => setStep("student")}>
               Back
             </Button>
             <Button
               onClick={() => {
-                if (subjectId === null) {
-                  setStep("confirm");
-                } else {
-                  loadSlots(duration, subjectId);
-                  setStep("time");
-                }
+                loadSlots(duration);
+                setStep("time");
               }}
             >
               Continue
@@ -581,7 +477,7 @@ export function BookingWizard({
         </div>
       ) : null}
 
-      {/* STEP 4: time */}
+      {/* STEP 3: time */}
       {step === "time" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a time</h2>
@@ -589,11 +485,10 @@ export function BookingWizard({
             Times shown in {student?.full_name}&apos;s timezone ({tzAbbreviation(new Date().toISOString(), studentTz)}).
           </p>
           {slotsLoading ? (
-            <p className="mt-6 text-sm text-ink-400">Finding available Guides…</p>
+            <p className="mt-6 text-sm text-ink-400">Finding available Study Hall times…</p>
           ) : slotsByDay.length === 0 ? (
             <p className="mt-6 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
-              No open times in the next {BOOKING_HORIZON_DAYS} days for this subject. Try a different subject or check
-              back soon.
+              No available Study Hall times in the next few days. Please try another duration or check back soon.
             </p>
           ) : (
             <div className="mt-5 max-h-96 space-y-5 overflow-y-auto pr-1">
@@ -631,25 +526,28 @@ export function BookingWizard({
         </div>
       ) : null}
 
-      {/* STEP 5: confirm */}
+      {/* STEP 4: confirm */}
       {step === "confirm" ? (
         <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">Confirm your booking</h2>
+          <h2 className="font-display text-xl font-semibold text-ink-900">Confirm your Study Hall</h2>
+          <p className="mt-2 text-sm leading-6 text-ink-600">
+            Your Guide provides live supervision, accountability, and focus — plus gentle redirection when attention
+            drifts. Guides do not tutor, teach lessons, or give homework answers.
+          </p>
           <dl className="mt-4 divide-y divide-ink-100 text-sm">
-            <Row label="Student" value={`${student?.full_name}${student?.grade_level ? ` · Grade ${student.grade_level}` : ""}`} />
-            <Row label="Subject" value={subjectId ? subjects.find((s) => s.id === subjectId)?.name ?? "" : `Other — ${otherText}`} />
-            {note ? <Row label="Focus" value={note} /> : null}
-            <Row label="Duration" value={`${duration} minutes`} />
-            {subjectId && selectedSlot ? (
+            <Row
+              label="Child"
+              value={`${student?.full_name}${student?.grade_level ? ` · Grade ${student.grade_level}` : ""}`}
+            />
+            {selectedSlot ? (
               <Row
-                label="Time"
+                label="When"
                 value={`${formatDayHeading(selectedSlot, studentTz)}, ${formatTime(selectedSlot, studentTz)} (${tzAbbreviation(selectedSlot, studentTz)})`}
               />
-            ) : (
-              <Row label="Time" value="Our team will arrange a time with you" />
-            )}
-            <Row label="Session price" value={priceLabel} highlight={isFreeTrial} />
-            {!isFreeTrial && subjectId && quote ? (
+            ) : null}
+            <Row label="Duration" value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`} />
+            <Row label="Price" value={priceLabel} highlight={isFreeTrial} />
+            {!isFreeTrial && quote ? (
               <>
                 {quote.package_minutes_used > 0 ? (
                   <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
@@ -665,7 +563,19 @@ export function BookingWizard({
               </>
             ) : null}
           </dl>
-          {!isFreeTrial && subjectId ? (
+          <div className="mt-4">
+            <label className="text-sm font-medium text-ink-800">
+              Anything we should know? <span className="text-ink-400">(optional)</span>
+            </label>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. Prefers a quiet start, has a test tomorrow"
+              className="mt-1.5 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-ink-400">Only shared with your matched Guide. Never shown publicly.</p>
+          </div>
+          {!isFreeTrial ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
               {quote && quote.package_minutes_used > 0 && quote.stripe_cents_due === 0
                 ? "This session is covered by your prepaid balance — no payment required."
@@ -675,11 +585,11 @@ export function BookingWizard({
             </p>
           ) : null}
           <div className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={() => setStep(subjectId ? "time" : "duration")}>
+            <Button variant="outline" onClick={() => setStep("time")}>
               Back
             </Button>
-            <Button onClick={submitBooking} disabled={busy}>
-              {busy ? "Booking…" : subjectId ? "Confirm booking" : "Send request"}
+            <Button onClick={submitBooking} disabled={busy || !selectedSlot}>
+              {busy ? "Booking…" : "Confirm booking"}
             </Button>
           </div>
         </div>

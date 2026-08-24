@@ -65,7 +65,7 @@ export async function createBookingCheckout(
     subjectId: string | null;
     otherSubject?: string | null;
     note?: string | null;
-    duration: 30 | 60;
+    duration: 60 | 120 | 180;
     startISO: string | null;
     isFreeTrial: boolean;
   },
@@ -73,13 +73,15 @@ export async function createBookingCheckout(
 ): Promise<StartResult> {
   const { supabase, user } = await authed();
 
+  // Study Hall (null subject) always schedules with p_start. Legacy unscheduled
+  // "Other" requests only occur when both subject and start are null.
   const { data, error } = await supabase.rpc("book_session", {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
     p_other_subject: params.subjectId ? null : (params.otherSubject ?? null),
     p_request_note: params.note ?? null,
     p_duration: params.duration,
-    p_start: params.subjectId ? params.startISO : null,
+    p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
   });
   if (error) throw new Error(error.message);
@@ -133,7 +135,7 @@ export async function createBookingCheckout(
             price_data: {
               currency: "usd",
               unit_amount: q.stripe_cents_due,
-              product_data: { name: `Tutoring session (${params.duration} min)` },
+              product_data: { name: `Study Hall session (${params.duration} min)` },
             },
           },
         ],
