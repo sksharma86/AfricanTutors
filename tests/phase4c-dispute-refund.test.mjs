@@ -37,12 +37,12 @@ async function stripeBooking(acct, stu, subject, afterMs) {
   const c = await clientFor(acct);
   const r = await c.rpc("book_session", { p_student_id: stu, p_subject_id: subject, p_other_subject: null, p_request_note: null, p_duration: 60, p_start: await nextSlot(subject, 60, afterMs), p_is_free_trial: false });
   if (r.error) throw new Error("book: " + r.error.message);
-  const f = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 2000, p_charge_id: "pi_" + ref("x") });
+  const f = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1200, p_charge_id: "pi_" + ref("x") });
   if (f.data.status !== "confirmed") throw new Error("fulfill failed: " + JSON.stringify(f.data));
   return { bookingId: r.data.booking_id, paymentId: r.data.payment_id };
 }
 async function packagePurchase(acct) {
-  const { data: pkg } = await svc.from("package_products").select("id, price_cents").eq("code", "pkg_10h").single();
+  const { data: pkg } = await svc.from("package_products").select("id, price_cents").eq("code", "pkg_14h").single();
   const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: acct.id });
   await svc.rpc("fulfill_package_payment", { p_payment_id: r.data.payment_id, p_amount_cents: pkg.price_cents, p_charge_id: "pi_pkg" });
   return r.data.payment_id;
@@ -136,14 +136,14 @@ describe("Phase 4C — dispute refund must belong to the dispute (live)", { skip
 
   it("ALLOW: dispute refunds its OWN booking payment; idempotent thereafter", async () => {
     const rid = ref("re");
-    const ok = await resolveWithRefund(paymentA, 1300, rid);
+    const ok = await resolveWithRefund(paymentA, 800, rid);
     assert.equal(ok.error, null, ok.error && ok.error.message);
     assert.equal(ok.data.resolution, "upheld");
-    assert.equal((await getPayment(paymentA)).refunded_cents, 1300, "own payment refunded");
+    assert.equal((await getPayment(paymentA)).refunded_cents, 800, "own payment refunded");
     assert.equal(await disputeStatus(disputeA), "resolved");
     // Already-resolved dispute is a safe no-op (no double refund).
-    const again = await resolveWithRefund(paymentA, 1300, ref("re2"));
+    const again = await resolveWithRefund(paymentA, 800, ref("re2"));
     assert.equal(again.data.status, "noop");
-    assert.equal((await getPayment(paymentA)).refunded_cents, 1300, "no double refund");
+    assert.equal((await getPayment(paymentA)).refunded_cents, 800, "no double refund");
   });
 });

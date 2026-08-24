@@ -101,16 +101,16 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
     await svc.from("bookings").update({ payment_hold_expires_at: PAST() }).eq("id", r.data.booking_id);
     await svc.rpc("release_expired_checkouts");
     assert.equal(await credit(a.id), 700);
-    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 1300, p_charge_id: "pi_late_book" });
+    const ok = await svc.rpc("fulfill_booking_payment", { p_payment_id: r.data.payment_id, p_amount_cents: 500, p_charge_id: "pi_late_book" });
     assert.equal(ok.data.status, "credited");
     assert.equal((await getBooking(r.data.booking_id)).status, "expired", "expired slot not reactivated");
-    assert.equal(await credit(a.id), 2000, "restored 700 + credited 1300");
+    assert.equal(await credit(a.id), 1200, "restored 700 + credited 500");
   });
 
   // 3
   it("partial-credit package abandoned: sweeper restores credit, cancels payment, no minutes", async () => {
     const a = await acct("PkgAbandonPartial");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.data.funding, "stripe");
@@ -126,7 +126,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 4
   it("full-Stripe package abandoned: payment expires cleanly, no minutes", async () => {
     const a = await acct("PkgAbandonStripe");
-    const pkg = await pkgId("pkg_20h");
+    const pkg = await pkgId("pkg_28h");
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.data.stripe_cents_due, pkg.price_cents);
     await svc.from("payments").update({ expires_at: PAST() }).eq("id", r.data.payment_id);
@@ -139,7 +139,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 5
   it("package Stripe success after internal expiry: value credited, package NOT resurrected", async () => {
     const a = await acct("PkgLate");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const due = pkg.price_cents - 5000;
@@ -155,7 +155,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 6
   it("Stripe Checkout creation failure after reservation → cancel_pending_payment restores credit (idempotent)", async () => {
     const a = await acct("PkgStripeFail");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(await credit(a.id), 0);
@@ -190,7 +190,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 8
   it("duplicate cleanup cannot restore credit twice", async () => {
     const a = await acct("DupCleanup");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     await svc.from("payments").update({ expires_at: PAST() }).eq("id", r.data.payment_id);
@@ -203,7 +203,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 9
   it("late webhook after cleanup cannot duplicate credited value", async () => {
     const a = await acct("LateDup");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const due = pkg.price_cents - 5000;
@@ -220,7 +220,7 @@ describe("Phase 4B — payment lifecycle & late-payment safety (live)", { skip: 
   // 10
   it("valid package Stripe success before expiry issues minutes exactly once", async () => {
     const a = await acct("PkgHappy");
-    const pkg = await pkgId("pkg_10h");
+    const pkg = await pkgId("pkg_14h");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const due = pkg.price_cents - 5000;

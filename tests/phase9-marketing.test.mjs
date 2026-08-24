@@ -30,13 +30,11 @@ const MARKETING_FILES = [
 const marketingText = MARKETING_FILES.map(read).join("\n");
 
 describe("Phase 9 — package pricing claims (items 6-10)", () => {
-  it("10/20/40-hour packages: price, effective rate, savings", () => {
-    const p10 = packageEconomics(600, 19000);
-    assert.deepEqual([p10.priceCents ?? 19000, p10.effectiveHourlyCents, p10.savingsCents], [19000, 1900, 1000]);
-    const p20 = packageEconomics(1200, 36000);
-    assert.deepEqual([p20.effectiveHourlyCents, p20.savingsCents], [1800, 4000]);
-    const p40 = packageEconomics(2400, 68000);
-    assert.deepEqual([p40.effectiveHourlyCents, p40.savingsCents], [1700, 12000]);
+  it("14h / 28h packages: price, effective rate, savings vs $12/hr", () => {
+    const p14 = packageEconomics(840, 14000);
+    assert.deepEqual([p14.effectiveHourlyCents, p14.savingsCents], [1000, 2800]); // 14*1200 - 14000
+    const p28 = packageEconomics(1680, 25200);
+    assert.deepEqual([p28.effectiveHourlyCents, p28.savingsCents], [900, 8400]); // 28*1200 - 25200
   });
 });
 
@@ -56,8 +54,8 @@ describe("Phase 9 — marketing copy matches real business rules", () => {
     assert.match(faq, /non-refundable/i);
   });
 
-  it("packages are prepaid (not subscriptions) and never expire (items 11,12)", () => {
-    assert.match(pricing, /not a subscription/i);
+  it("packages never expire; marketing does not push a subscription plan (items 11,12)", () => {
+    // PR2 removed the "not a subscription" marketing line; keep never-expire checks.
     assert.match(pricing, /never expire/i);
     assert.match(faq, /never expire/i);
     assert.doesNotMatch(marketingText, /subscription plan|monthly plan|recurring billing subscription/i);
@@ -124,11 +122,11 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
   const svc = adminClient();
   const ANY = "00000000-0000-0000-0000-000000000001";
 
-  it("standard session prices are $12 / $20 (items 4,5)", async () => {
+  it("standard session prices are $12 / $12 (items 4,5)", async () => {
     const q30 = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 30, p_is_free_trial: false });
     assert.equal(q30.data.session_price_cents, 1200);
     const q60 = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 60, p_is_free_trial: false });
-    assert.equal(q60.data.session_price_cents, 2000);
+    assert.equal(q60.data.session_price_cents, 1200);
   });
 
   it("free trial quote is $0 with no payment due (items 1,2)", async () => {
@@ -138,14 +136,25 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
     assert.equal(qf.data.funding, "free_trial");
   });
 
-  it("prepaid packages are $190 / $360 / $680 (items 6,7,8)", async () => {
+  it("active prepaid packages are $140 / $252 (14h / 28h)", async () => {
     const { data } = await svc
       .from("package_products")
       .select("minutes, price_cents")
       .eq("is_active", true)
       .order("sort_order");
     const rows = (data ?? []).map((r) => [r.minutes, r.price_cents]);
-    assert.deepEqual(rows, [[600, 19000], [1200, 36000], [2400, 68000]]);
+    assert.deepEqual(rows, [[840, 14000], [1680, 25200]]);
+  });
+
+  it("historical 10/20/40h package rows remain inactive with original prices", async () => {
+    const { data } = await svc
+      .from("package_products")
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10h", "pkg_20h", "pkg_40h"]);
+    const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    assert.deepEqual([by.pkg_10h.minutes, by.pkg_10h.price_cents, by.pkg_10h.is_active], [600, 19000, false]);
+    assert.deepEqual([by.pkg_20h.minutes, by.pkg_20h.price_cents, by.pkg_20h.is_active], [1200, 36000, false]);
+    assert.deepEqual([by.pkg_40h.minutes, by.pkg_40h.price_cents, by.pkg_40h.is_active], [2400, 68000, false]);
   });
 
   it("free trial is enforced one-per-account (item 3: account helper exists)", async () => {

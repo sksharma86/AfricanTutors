@@ -156,7 +156,7 @@ describe("Prompt 3A — booking foundation: matching, free trial, RLS, timezones
     assert.equal(new Date(b.scheduled_end) - new Date(b.scheduled_start), 30 * 60000);
   });
 
-  it("60-minute paid booking works and is priced $20", async () => {
+  it("60-minute paid booking works and is priced $12", async () => {
     const c = await signIn(parent.email, parent.password);
     const start = futureUtc(4, 17).toISOString();
     const { data: id, error } = await c.rpc("create_booking", {
@@ -166,7 +166,7 @@ describe("Prompt 3A — booking foundation: matching, free trial, RLS, timezones
     assert.equal(error, null, error && error.message);
     const { data: b } = await svc.from("bookings").select("*").eq("id", id).single();
     assert.equal(b.duration_minutes, 60);
-    assert.equal(b.price_cents, 2000);
+    assert.equal(b.price_cents, 1200);
     assert.equal(new Date(b.scheduled_end) - new Date(b.scheduled_start), 60 * 60000);
   });
 

@@ -84,22 +84,17 @@ describe("Phase 8 — customer join-state presentation", () => {
   });
 });
 
-describe("Phase 8 — package economics (rate & savings vs $20/hr)", () => {
-  it("computes hours, effective hourly rate, and savings", () => {
-    const p10 = packageEconomics(600, 19000);
-    assert.equal(p10.hours, 10);
-    assert.equal(p10.effectiveHourlyCents, 1900);
-    assert.equal(p10.savingsCents, 1000);
+describe("Phase 8 — package economics (rate & savings vs $12/hr)", () => {
+  it("computes hours, effective hourly rate, and savings for 14h / 28h", () => {
+    const p14 = packageEconomics(840, 14000);
+    assert.equal(p14.hours, 14);
+    assert.equal(p14.effectiveHourlyCents, 1000);
+    assert.equal(p14.savingsCents, 2800); // 14*$12 - $140
 
-    const p20 = packageEconomics(1200, 36000);
-    assert.equal(p20.hours, 20);
-    assert.equal(p20.effectiveHourlyCents, 1800);
-    assert.equal(p20.savingsCents, 4000);
-
-    const p40 = packageEconomics(2400, 68000);
-    assert.equal(p40.hours, 40);
-    assert.equal(p40.effectiveHourlyCents, 1700);
-    assert.equal(p40.savingsCents, 12000);
+    const p28 = packageEconomics(1680, 25200);
+    assert.equal(p28.hours, 28);
+    assert.equal(p28.effectiveHourlyCents, 900);
+    assert.equal(p28.savingsCents, 8400); // 28*$12 - $252
   });
 
   it("never shows negative savings", () => {

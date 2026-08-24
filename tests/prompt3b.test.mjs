@@ -182,7 +182,7 @@ describe("Prompt 3B — booking engine hardening (live)", { skip: !hasSupabaseEn
     assert.ok(sixty.error, "60-min free trial rejected");
   });
 
-  it("paid price integrity: 30-min = $12, 60-min = $20 (server-derived)", async () => {
+  it("paid price integrity: 30-min = $12, 60-min = $12 (server-derived)", async () => {
     const c = await signIn(parent.email, parent.password);
     const { data: id30 } = await book(c, { studentId: stuA, subjectId: subjMain, duration: 30, start: futureUtc(11, 8).toISOString() });
     const { data: id60 } = await book(c, { studentId: stuA, subjectId: subjMain, duration: 60, start: futureUtc(11, 10).toISOString() });
@@ -190,7 +190,7 @@ describe("Prompt 3B — booking engine hardening (live)", { skip: !hasSupabaseEn
     const { data: b60 } = await svc.from("bookings").select("price_cents, payment_status").eq("id", id60).single();
     assert.equal(b30.price_cents, 1200);
     assert.equal(b30.payment_status, "awaiting_payment");
-    assert.equal(b60.price_cents, 2000);
+    assert.equal(b60.price_cents, 1200);
   });
 
   it("price tampering: client cannot insert a booking directly (RLS)", async () => {

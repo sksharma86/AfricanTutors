@@ -21,9 +21,9 @@ describe("Pricing page — single sessions before packages", () => {
     assert.match(shell, /label:\s*"Sessions"/);
   });
 
-  it("single-session prices derive from the authoritative constant ($12 / $20) (items 2,3,9)", () => {
+  it("single-session prices derive from the authoritative constant ($12 / $12) (items 2,3,9)", () => {
     assert.match(pricing, /minutes:\s*30,\s*priceUsd:\s*12/);
-    assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*20/);
+    assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
     // Cards derive from SESSION_OPTIONS, not hardcoded amounts.
     assert.match(cards, /SESSION_OPTIONS/);
     assert.doesNotMatch(cards, /\$\s?12\b|\$\s?20\b/); // no hardcoded dollar literal
@@ -55,15 +55,15 @@ describe("Pricing page — single sessions before packages", () => {
   });
 });
 
-describe("Pricing page — prepaid packages unchanged (live)", { skip: !hasSupabaseEnv }, () => {
+describe("Pricing page — prepaid packages (live)", { skip: !hasSupabaseEnv }, () => {
   const svc = adminClient();
-  it("10/20/40-hour package prices remain $190 / $360 / $680 (item 5)", async () => {
+  it("active packages are 14h/$140 and 28h/$252 (Study Hall PR2)", async () => {
     const { data } = await svc
       .from("package_products")
       .select("minutes, price_cents")
       .eq("is_active", true)
       .order("sort_order");
     const rows = (data ?? []).map((r) => [r.minutes, r.price_cents]);
-    assert.deepEqual(rows, [[600, 19000], [1200, 36000], [2400, 68000]]);
+    assert.deepEqual(rows, [[840, 14000], [1680, 25200]]);
   });
 });
