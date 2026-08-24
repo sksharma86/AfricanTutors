@@ -93,13 +93,14 @@ describe("Prompt 3D — booking lifecycle hardening (live)", { skip: !hasSupabas
 
   it("free trial remains confirmed + not_required with no hold", async () => {
     const c = await signIn(parent.email, parent.password);
-    const { data: id, error } = await book(c, { studentId: stuA, subjectId: subjMain, duration: 30, start: futureUtc(3, 10).toISOString(), free: true });
+    const { data: id, error } = await book(c, { studentId: stuA, subjectId: subjMain, duration: 60, start: futureUtc(3, 10).toISOString(), free: true });
     assert.equal(error, null, error && error.message);
-    const { data: b } = await svc.from("bookings").select("status, payment_status, payment_hold_expires_at, price_cents").eq("id", id).single();
+    const { data: b } = await svc.from("bookings").select("status, payment_status, payment_hold_expires_at, price_cents, duration_minutes").eq("id", id).single();
     assert.equal(b.status, "confirmed");
     assert.equal(b.payment_status, "not_required");
     assert.equal(b.payment_hold_expires_at, null);
     assert.equal(b.price_cents, 0);
+    assert.equal(b.duration_minutes, 60);
   });
 
   it("an ACTIVE (non-expired) hold blocks the slot", async () => {
@@ -164,7 +165,7 @@ describe("Prompt 3D — booking lifecycle hardening (live)", { skip: !hasSupabas
     // so no other student under the same account is eligible for a new one.
     const acctUsed = await c.rpc("account_has_used_free_trial", { p_account: parent.id });
     assert.equal(acctUsed.data, true, "account already used its free trial");
-    const { data: id, error } = await book(c, { studentId: stuB, subjectId: subjMain, duration: 30, start: futureUtc(5, 9).toISOString(), free: true });
+    const { data: id, error } = await book(c, { studentId: stuB, subjectId: subjMain, duration: 60, start: futureUtc(5, 9).toISOString(), free: true });
     assert.ok(error, "second student's free trial must be rejected (account-scoped)");
     assert.match(error.message, /already used/i);
     assert.equal(id, null);

@@ -145,7 +145,7 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     assert.deepEqual([q30.session_price_cents, q30.stripe_cents_due, q30.funding], [1200, 1200, "stripe"]);
     const q60 = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 60, p_is_free_trial: false })).data;
     assert.deepEqual([q60.session_price_cents, q60.stripe_cents_due, q60.funding], [1200, 1200, "stripe"]);
-    const qf = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 30, p_is_free_trial: true })).data;
+    const qf = (await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 60, p_is_free_trial: true })).data;
     assert.deepEqual([qf.session_price_cents, qf.stripe_cents_due, qf.funding], [0, 0, "free_trial"]);
   });
 
@@ -238,25 +238,28 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
     assert.equal(dup.data.status, "already_fulfilled");
   });
   // ---- Free trial ----------------------------------------------------------
-  it("free trial: $0 confirmed, no Stripe, one-per-student enforced", async () => {
+  it("free trial: $0 confirmed, no Stripe, one-per-account enforced", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "FreeTrial" });
     accounts.push(a.id);
     const stu = await newStudent(a.id, "FreeKid");
-    const start = await nextSlot(subject, 30);
-    const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 30, start, free: true });
+    const start = await nextSlot(subject, 60);
+    const r = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start, free: true });
     assert.equal(r.error, null, r.error && r.error.message);
     assert.equal(r.data.funding, "free_trial");
+    assert.equal(r.data.session_price_cents, 0);
+    assert.equal(r.data.package_minutes_used, 0);
+    assert.equal(r.data.credit_cents_used, 0);
     const b = await getBooking(r.data.booking_id);
-    assert.deepEqual([b.status, b.payment_status, b.price_cents, b.is_free_trial], ["confirmed", "not_required", 0, true]);
+    assert.deepEqual([b.status, b.payment_status, b.price_cents, b.is_free_trial, b.duration_minutes], ["confirmed", "not_required", 0, true, 60]);
     const p = await getPayment(r.data.payment_id);
     assert.deepEqual([p.status, p.gross_cents], ["succeeded", 0]);
     // second free trial for the same student rejected
-    const start2 = await nextSlot(subject, 30);
-    const r2 = await bookSession(a, { studentId: stu, subjectId: subject, duration: 30, start: start2, free: true });
-    assert.ok(r2.error, "one free trial per student");
-    // 60-min cannot be a free trial
-    const r3 = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start: await nextSlot(subject, 60), free: true });
-    assert.ok(r3.error, "free trial is 30 minutes only");
+    const start2 = await nextSlot(subject, 60);
+    const r2 = await bookSession(a, { studentId: stu, subjectId: subject, duration: 60, start: start2, free: true });
+    assert.ok(r2.error, "one free trial per account");
+    // 30-min cannot be a free trial under PR3
+    const r3 = await bookSession(a, { studentId: stu, subjectId: subject, duration: 30, start: await nextSlot(subject, 30), free: true });
+    assert.ok(r3.error, "free trial is 60 minutes only");
   });
 
   // ---- Package purchase: full credit --------------------------------------

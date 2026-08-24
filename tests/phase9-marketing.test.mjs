@@ -43,9 +43,9 @@ describe("Phase 9 — marketing copy matches real business rules", () => {
   const pricing = read("src/components/marketing/pricing-section.tsx");
   const trust = read("src/components/marketing/trust-safety.tsx");
 
-  it("FAQ free-trial answer is account-scoped, 30 min, no card (items 1,2,19)", () => {
+  it("FAQ free-trial answer is account-scoped, 1 hour, no card (items 1,2,19)", () => {
     assert.match(faq, /one per account/i);
-    assert.match(faq, /first 30-minute session/i);
+    assert.match(faq, /first 1-hour Study Hall session/i);
     assert.match(faq, /no credit card/i);
   });
 
@@ -130,7 +130,7 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
   });
 
   it("free trial quote is $0 with no payment due (items 1,2)", async () => {
-    const qf = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 30, p_is_free_trial: true });
+    const qf = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 60, p_is_free_trial: true });
     assert.equal(qf.data.session_price_cents, 0);
     assert.equal(qf.data.stripe_cents_due, 0);
     assert.equal(qf.data.funding, "free_trial");

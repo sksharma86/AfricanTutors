@@ -23,9 +23,8 @@ describe("Study Hall PR2 — authoritative client pricing constants", () => {
     assert.match(pricingSrc, /minutes:\s*60,\s*priceUsd:\s*12/);
   });
 
-  it("30-minute paid support remains at $12 (free-trial duration unchanged)", () => {
+  it("30-minute paid support remains at $12", () => {
     assert.match(pricingSrc, /minutes:\s*30,\s*priceUsd:\s*12/);
-    assert.match(pricingSrc, /FREE_TRIAL_MINUTES = 30/);
   });
 
   it("14h package is $140 / 840 minutes ($10/hr); 28h is $252 / 1680 ($9/hr)", () => {
@@ -62,13 +61,10 @@ describe("Study Hall PR2 — authoritative client pricing constants", () => {
     assert.doesNotMatch(surfaces, /No subscriptions|no recurring billing|not a subscription/i);
   });
 
-  it("free-trial constants and SQL trial duration were not converted to 60 minutes", () => {
-    assert.match(pricingSrc, /FREE_TRIAL_MINUTES = 30/);
+  it("PR2 migration kept free-trial at 30 minutes (superseded later by PR3)", () => {
     const migration = read("supabase/migrations/0020_studyhall_pr2_pricing.sql");
     assert.match(migration, /free trial is 30 minutes only/i);
     assert.doesNotMatch(migration, /free trial is 60 minutes/i);
-    // Guide compensation / Auto Refill / Stripe Connect stay out of PR2.
-    // Allow the header disclaimer that names those topics as unchanged; reject real DDL/code.
     const sqlBody = migration
       .split("\n")
       .filter((line) => !/^\s*--/.test(line))
@@ -110,7 +106,7 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
     assert.equal(q.data.stripe_cents_due, 1200);
   });
 
-  it("10–11. Historical package rows remain; free-trial quote stays $0 / 30 min", async () => {
+  it("10–11. Historical package rows remain; free-trial quote stays $0", async () => {
     const { data: old } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
@@ -125,7 +121,8 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
       { pkg_10h: [600, 19000], pkg_20h: [1200, 36000], pkg_40h: [2400, 68000] },
     );
 
-    const qf = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 30, p_is_free_trial: true });
+    const qf = await svc.rpc("booking_quote", { p_account: ANY, p_duration: 60, p_is_free_trial: true });
+    assert.equal(qf.error, null, qf.error?.message);
     assert.equal(qf.data.session_price_cents, 0);
     assert.equal(qf.data.stripe_cents_due, 0);
     assert.equal(qf.data.funding, "free_trial");

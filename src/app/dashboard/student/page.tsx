@@ -176,7 +176,7 @@ export default async function StudentDashboardPage() {
               New family offer
             </p>
             <h1 className="mt-2 max-w-xl font-display text-3xl font-semibold text-white sm:text-4xl">
-              Your first 30-minute session is free.
+              Your first 1-hour Study Hall session is free.
             </h1>
             <p className="mt-2 max-w-lg text-base leading-7 text-ink-200">
               A real Study Hall session with an approved Guide. No credit card required.

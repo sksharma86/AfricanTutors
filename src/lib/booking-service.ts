@@ -92,7 +92,7 @@ export async function getAvailableSlots(params: {
 /**
  * Request a booking. Price, free-trial eligibility, tutor matching, and
  * double-booking are all enforced server-side by `create_booking`. The client
- * cannot set price, choose a tutor, or force free-trial on a 60-min session.
+ * cannot set price, choose a tutor, or force free-trial on a non-60-min session.
  * Returns the new booking id.
  */
 export async function requestBooking(params: {

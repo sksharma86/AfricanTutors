@@ -189,12 +189,13 @@ describe("Phase 4C — admin ops, earnings, cancellations, refunds, disputes (li
     await adminC.rpc("admin_complete_booking", { p_booking: b.bookingId });
     assert.equal((await earningFor(b.bookingId)).amount_cents, 1000);
 
-    // free trial (30 min) → 50% of hourly rate
+    // free trial (60 min) → full hourly rate (duration-prorated; rate itself unchanged)
     const a2 = await acct("Trial");
     const stu2 = await newStudent(a2.id, "Kid");
-    const rt = await book(a2, { studentId: stu2, subjectId: subject, duration: 30, start: await nextSlot(subject, 30), free: true });
+    const rt = await book(a2, { studentId: stu2, subjectId: subject, duration: 60, start: await nextSlot(subject, 60), free: true });
+    assert.equal(rt.error, null, rt.error?.message);
     await adminC.rpc("admin_complete_booking", { p_booking: rt.data.booking_id });
-    assert.equal((await earningFor(rt.data.booking_id)).amount_cents, 500, "30min free trial still pays tutor 50%");
+    assert.equal((await earningFor(rt.data.booking_id)).amount_cents, 1000, "60min free trial pays tutor full hourly amount");
   });
 
   it("historical rate snapshot is preserved when the tutor rate later changes", async () => {
