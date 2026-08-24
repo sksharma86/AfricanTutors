@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   ESCALATION_NOTE_MAX,
@@ -9,11 +9,18 @@ import {
   type EscalationReason,
 } from "@/lib/call-parent.mjs";
 
-type GuideStatus = "parent_contacted" | "parent_alerted_sms" | "unable_to_contact" | "not_configured" | null;
+type GuideStatus =
+  | "contacting"
+  | "parent_contacted"
+  | "parent_alerted_sms"
+  | "unable_to_contact"
+  | "not_configured"
+  | null;
 
 /**
  * Guide-only Call Parent control. Confirmation + reason required before the
- * server places an automated call. Never displays a phone number.
+ * server places an automated call. Queued ≠ answered — polls until Twilio
+ * status callback finalizes. Never displays a phone number.
  */
 export function CallParentControl({
   bookingId,
@@ -28,7 +35,26 @@ export function CallParentControl({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [escalationId, setEscalationId] = useState<string | null>(null);
   const [result, setResult] = useState<{ status: GuideStatus; message: string } | null>(null);
+
+  const pendingContact = result?.status === "contacting";
+  useEffect(() => {
+    if (!escalationId || !pendingContact) return;
+    let cancelled = false;
+    const tick = async () => {
+      const res = await fetch(`/api/tutor/call-parent/${escalationId}`);
+      const data = await res.json().catch(() => null);
+      if (cancelled || !res.ok || !data) return;
+      setResult({ status: data.status, message: data.message });
+    };
+    const id = window.setInterval(tick, 2500);
+    void tick();
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [escalationId, pendingContact]);
 
   if (!enabled && !result) {
     return (
@@ -42,8 +68,14 @@ export function CallParentControl({
     const tone =
       result.status === "parent_contacted" || result.status === "parent_alerted_sms"
         ? "text-forest-200"
-        : "text-amber-200";
-    return <p className={`text-xs font-medium ${tone}`}>{result.message}</p>;
+        : result.status === "contacting"
+          ? "text-ink-200"
+          : "text-amber-200";
+    const copy =
+      result.status === "contacting"
+        ? result.message || "Contacting parent…"
+        : result.message;
+    return <p className={`text-xs font-medium ${tone}`}>{copy}</p>;
   }
 
   async function submit() {
@@ -68,6 +100,7 @@ export function CallParentControl({
       setError(data?.error ?? "Unable to contact parent.");
       return;
     }
+    setEscalationId(data.id ?? null);
     setResult({ status: data.status, message: data.message });
     setOpen(false);
   }
@@ -87,8 +120,7 @@ export function CallParentControl({
         <div className="rounded-xl border border-ink-600 bg-ink-900 p-3 text-left">
           <p className="text-xs font-semibold text-ink-100">Request parent attention?</p>
           <p className="mt-1 text-[11px] leading-4 text-ink-400">
-            This will contact the parent immediately by phone (text if the call cannot be placed). You will not see
-            their number.
+            This will call the parent immediately. If they do not answer, we text them. You will not see their number.
           </p>
 
           <fieldset className="mt-3">
@@ -134,7 +166,7 @@ export function CallParentControl({
               disabled={busy}
               className="flex-1 rounded-lg bg-gold-400 px-3 py-1.5 text-xs font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
             >
-              {busy ? "Contacting…" : "Call Parent"}
+              {busy ? "Starting…" : "Call Parent"}
             </button>
             <button
               type="button"

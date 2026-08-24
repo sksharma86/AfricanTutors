@@ -4,10 +4,10 @@ import { getTwilioConfig, isTwilioConfigured } from "@/lib/telephony/config";
 
 /**
  * Telephony provider abstraction (Twilio Voice + SMS).
- * Secrets stay server-side. Never throws — returns structured results so Call
- * Parent can fall back to SMS or report failure without claiming success.
+ * Secrets stay server-side. Never throws — returns structured results.
  *
- * Designed so a later centralized notification system can reuse this module.
+ * Outbound calls include StatusCallback so async answer/no-answer outcomes
+ * drive SMS fallback — queued ≠ answered.
  */
 
 export interface CallResult {
@@ -27,9 +27,15 @@ function basicAuthHeader(accountSid: string, authToken: string): string {
   return `Basic ${Buffer.from(raw).toString("base64")}`;
 }
 
+function statusCallbackUrl(): string | null {
+  const base = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/+$/, "");
+  if (!base) return null;
+  return `${base}/api/twilio/voice-status`;
+}
+
 /**
- * Place an outbound TTS call. Uses Twilio's Twiml request body (no public TwiML
- * URL required for the spoken message). Destination must already be E.164.
+ * Place an outbound TTS call with a status callback for async completion.
+ * Destination must already be E.164.
  */
 export async function placeParentAttentionCall(opts: {
   toE164: string;
@@ -47,6 +53,14 @@ export async function placeParentAttentionCall(opts: {
     From: phoneNumber,
     Twiml: twiml,
   });
+
+  const callback = statusCallbackUrl();
+  if (callback) {
+    body.set("StatusCallback", callback);
+    body.set("StatusCallbackMethod", "POST");
+    // Final CallStatus arrives on "completed" event: completed|busy|failed|no-answer|canceled
+    body.append("StatusCallbackEvent", "completed");
+  }
 
   try {
     const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
@@ -70,7 +84,7 @@ export async function placeParentAttentionCall(opts: {
   }
 }
 
-/** SMS fallback when the voice call cannot be placed. */
+/** SMS fallback when the voice call cannot be placed or is not answered. */
 export async function sendParentAttentionSms(opts: {
   toE164: string;
   body: string;

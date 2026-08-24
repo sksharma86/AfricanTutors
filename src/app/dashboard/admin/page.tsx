@@ -198,7 +198,8 @@ export default async function AdminDashboardPage() {
                     : ""}
                 </p>
                 <p className="mt-1 text-sm text-ink-600">
-                  Reason: {e.reason.replace(/_/g, " ")} · Outcome: {e.outcome ?? e.status}
+                  Reason: {e.reason.replace(/_/g, " ")} · Status: {e.status}
+                  {e.outcome ? ` · Outcome: ${e.outcome}` : ""}
                   {e.call_status ? ` · Call: ${e.call_status}` : ""}
                   {e.sms_status ? ` · SMS: ${e.sms_status}` : ""}
                 </p>

@@ -31,12 +31,17 @@ import {
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 describe("Study Hall PR7 — Call Parent (source)", () => {
-  it("migration 0024 defines escalations, phone, cooldown, and RLS", () => {
+  it("migration 0024 defines escalations, async statuses, SMS claim, and RLS", () => {
     const m = read("supabase/migrations/0024_studyhall_pr7_call_parent.sql");
     assert.match(m, /create table if not exists public\.parent_escalation_requests/);
     assert.match(m, /phone_e164/);
     assert.match(m, /request_parent_escalation/);
-    assert.match(m, /complete_parent_escalation/);
+    assert.match(m, /mark_parent_escalation_contacting/);
+    assert.match(m, /finalize_parent_escalation_call_answered/);
+    assert.match(m, /claim_parent_escalation_sms_fallback/);
+    assert.match(m, /'contacting'/);
+    assert.match(m, /'call_answered'/);
+    assert.match(m, /sms_status = 'claiming'/);
     assert.match(m, /set_my_phone/);
     assert.match(m, /interval '5 minutes'/);
     assert.match(m, /wait before requesting parent attention again/);
@@ -63,19 +68,42 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     assert.equal(ESCALATION_REASONS.length, 5);
   });
 
-  it("Guide UI requires confirmation + reason; never exposes phone", () => {
+  it("Guide UI confirms, shows Contacting parent…, polls; never exposes phone", () => {
     const ctrl = read("src/components/session/call-parent-control.tsx");
     const room = read("src/components/session/session-room.tsx");
     const api = read("src/app/api/tutor/call-parent/route.ts");
+    const poll = read("src/app/api/tutor/call-parent/[id]/route.ts");
     assert.match(room, /CallParentControl/);
     assert.match(ctrl, /Call Parent/);
     assert.match(ctrl, /Request parent attention/);
-    assert.match(ctrl, /will not see[\s\S]*their number/i);
+    assert.match(ctrl, /will not see[\s\S]*their number|You will not see their number/i);
+    assert.match(ctrl, /Contacting parent/);
+    assert.match(ctrl, /setInterval|\/api\/tutor\/call-parent\//);
     assert.match(ctrl, /Parent contacted|Parent alerted by text|Unable to contact parent/);
     assert.doesNotMatch(ctrl, /phone_e164|TWILIO|toE164/);
     assert.match(api, /request_parent_escalation/);
     assert.match(api, /fulfillParentEscalation/);
     assert.match(api, /Never include phone/i);
+    assert.match(poll, /guideStatusFromDb|final/);
+  });
+
+  it("queued call is contacting not success; StatusCallback + signature webhook", () => {
+    const client = read("src/lib/telephony/client.ts");
+    const svc = read("src/lib/call-parent-service.ts");
+    const hook = read("src/app/api/twilio/voice-status/route.ts");
+    assert.match(client, /StatusCallback/);
+    assert.match(client, /StatusCallbackEvent/);
+    assert.match(client, /voice-status/);
+    assert.match(svc, /contacting/);
+    assert.match(svc, /mark_parent_escalation_contacting/);
+    assert.match(svc, /handleTwilioVoiceStatus/);
+    assert.match(svc, /claim_parent_escalation_sms_fallback/);
+    assert.match(svc, /finalize_parent_escalation_call_answered/);
+    // Queued must not map to Parent contacted
+    assert.match(svc, /guideStatus: "contacting"|return resultOf\(escalationId, "contacting"\)/);
+    assert.match(hook, /validateTwilioSignature/);
+    assert.match(hook, /Invalid signature/);
+    assert.match(hook, /x-twilio-signature/i);
   });
 
   it("Twilio is behind a server-only abstraction with safe failure", () => {
@@ -90,7 +118,7 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     assert.match(client, /placeParentAttentionCall/);
     assert.match(client, /sendParentAttentionSms/);
     assert.match(client, /server-only/);
-    assert.match(svc, /Parent contacted|Parent alerted by text|Unable to contact parent/);
+    assert.match(svc, /Parent contacted|Parent alerted by text|Unable to contact parent|Contacting parent/);
     assert.match(svc, /not_configured|no_phone/);
   });
 
@@ -130,6 +158,46 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
   });
 });
 
+describe("Study Hall PR7 — Twilio signature + status classification", () => {
+  it("validateTwilioSignature accepts valid HMAC and rejects forged", async () => {
+    const {
+      validateTwilioSignature,
+      classifyTwilioCallStatus,
+      TWILIO_CALL_FAILURE_STATUSES,
+    } = await import("../src/lib/telephony/twilio-signature.mjs");
+    const { createHmac } = await import("node:crypto");
+
+    const token = "test_auth_token";
+    const url = "https://app.example.test/api/twilio/voice-status";
+    const params = { CallSid: "CAabc", CallStatus: "completed" };
+    const keys = Object.keys(params).sort();
+    let data = url;
+    for (const k of keys) data += k + params[k];
+    const good = createHmac("sha1", token).update(Buffer.from(data, "utf8")).digest("base64");
+
+    assert.equal(validateTwilioSignature(token, url, params, good), true);
+    assert.equal(validateTwilioSignature(token, url, params, "forged"), false);
+    assert.equal(validateTwilioSignature(token, url, params, null), false);
+    assert.equal(validateTwilioSignature("", url, params, good), false);
+
+    assert.equal(classifyTwilioCallStatus("completed"), "answered");
+    assert.equal(classifyTwilioCallStatus("queued"), "intermediate");
+    assert.equal(classifyTwilioCallStatus("ringing"), "intermediate");
+    assert.equal(classifyTwilioCallStatus("in-progress"), "intermediate");
+    for (const s of TWILIO_CALL_FAILURE_STATUSES) {
+      assert.equal(classifyTwilioCallStatus(s), "failed", s);
+    }
+  });
+
+  it("webhook route rejects invalid signatures and does not expose secrets", () => {
+    const hook = read("src/app/api/twilio/voice-status/route.ts");
+    assert.match(hook, /status: 401/);
+    assert.match(hook, /Invalid signature/);
+    assert.doesNotMatch(hook, /phone_e164|TWILIO_AUTH_TOKEN!/);
+    assert.match(hook, /handleTwilioVoiceStatus/);
+  });
+});
+
 describe("Study Hall PR7 — telephony client (mocked fetch, no real calls)", () => {
   it("Twilio client posts Calls/Messages with TTS/SMS copy (mocked via .mjs helper)", async () => {
     const clientSrc = read("src/lib/telephony/client.ts");
@@ -137,6 +205,8 @@ describe("Study Hall PR7 — telephony client (mocked fetch, no real calls)", ()
     assert.match(clientSrc, /Accounts\/\$\{accountSid\}\/Messages\.json/);
     assert.match(clientSrc, /Twiml/);
     assert.match(clientSrc, /To: opts\.toE164/);
+    assert.match(clientSrc, /StatusCallback/);
+    assert.match(clientSrc, /StatusCallbackEvent/);
 
     // Runtime mock without importing .ts (node --test has no TS loader).
     const prev = {
@@ -219,7 +289,32 @@ describe("Study Hall PR7 — telephony client (mocked fetch, no real calls)", ()
     const svc = read("src/lib/call-parent-service.ts");
     assert.match(svc, /not_configured/);
     assert.match(svc, /Unable to contact parent — notify manager/);
-    assert.doesNotMatch(svc, /Parent contacted[\s\S]*not_configured/);
+    const notConfiguredBlock = svc.slice(
+      svc.indexOf("if (!isTwilioConfigured())"),
+      svc.indexOf("const { data: profile }"),
+    );
+    assert.match(notConfiguredBlock, /status:\s*"not_configured"|p_status:\s*"not_configured"/);
+    assert.match(notConfiguredBlock, /"not_configured"/);
+    assert.doesNotMatch(notConfiguredBlock, /parent_contacted|"Parent contacted"/);
+  });
+
+  it("SMS fallback claim is idempotent; answered skips SMS; failure statuses listed", () => {
+    const svc = read("src/lib/call-parent-service.ts");
+    const mig = read("supabase/migrations/0024_studyhall_pr7_call_parent.sql");
+    const sig = read("src/lib/telephony/twilio-signature.mjs");
+    assert.match(mig, /sms_status = 'claiming'/);
+    assert.match(mig, /and sms_status is null/);
+    assert.match(svc, /sms_already_claimed_or_final/);
+    assert.match(svc, /finalize_parent_escalation_call_answered/);
+    assert.doesNotMatch(
+      svc.slice(svc.indexOf("if (kind === \"answered\")"), svc.indexOf("claim_parent_escalation_sms_fallback")),
+      /sendParentAttentionSms/,
+    );
+    for (const s of ["busy", "failed", "no-answer", "canceled", "rejected"]) {
+      assert.match(sig, new RegExp(`"${s}"`));
+    }
+    assert.match(sig, /"completed"/);
+    assert.match(sig, /"queued"/);
   });
 });
 

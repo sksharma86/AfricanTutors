@@ -7,6 +7,8 @@
 --   * Durable audit trail (parent_escalation_requests)
 --   * Parent phone (E.164) on profiles — NEVER exposed to Guides via RLS
 --   * 5-minute cooldown per booking
+--   * Async Twilio voice outcome via status callback; SMS fallback only when
+--     the call is not successfully answered (idempotent, once)
 --   * Writes via SECURITY DEFINER RPC; telephony happens in the app layer
 --
 -- Does NOT change PR2–PR6 pricing, booking, T−5, compensation, or reports.
@@ -60,6 +62,12 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- Escalation audit log
+-- Status lifecycle:
+--   pending → contacting (call queued; awaiting Twilio status callback)
+--           → call_answered (parent answered; final)
+--           → sms_sent (fallback after unanswered/busy/failed/canceled; final)
+--           → failed / not_configured (final)
+-- Queued/ringing/in-progress are NOT success — only call_answered / sms_sent.
 -- ---------------------------------------------------------------------------
 create table if not exists public.parent_escalation_requests (
   id                  uuid primary key default gen_random_uuid(),
@@ -76,11 +84,11 @@ create table if not exists public.parent_escalation_requests (
                         )),
   note                text
                         check (note is null or char_length(btrim(note)) between 1 and 200),
-  -- pending → app places call/SMS → terminal outcome
   status              text not null default 'pending'
                         check (status in (
                           'pending',
-                          'call_placed',
+                          'contacting',
+                          'call_answered',
                           'sms_sent',
                           'failed',
                           'not_configured'
@@ -89,6 +97,7 @@ create table if not exists public.parent_escalation_requests (
   call_sid            text,
   call_status         text,
   sms_sid             text,
+  -- null = not claimed; 'claiming' = SMS in flight; 'sent'/'failed' = terminal SMS attempt
   sms_status          text,
   outcome             text
                         check (outcome is null or outcome in (
@@ -107,13 +116,15 @@ create index if not exists per_account_created_idx
   on public.parent_escalation_requests (account_id, created_at desc);
 create index if not exists per_status_idx
   on public.parent_escalation_requests (status, created_at desc);
+create unique index if not exists per_call_sid_uidx
+  on public.parent_escalation_requests (call_sid)
+  where call_sid is not null;
 
 comment on table public.parent_escalation_requests is
-  'Study Hall PR7: Guide Call Parent escalations. Never store parent phone on this row.';
+  'Study Hall PR7: Guide Call Parent escalations. Never store parent phone on this row. Async call outcome via Twilio status callback.';
 
 -- ---------------------------------------------------------------------------
 -- request_parent_escalation — authorize + insert pending row + 5-min cooldown.
--- Does NOT place the call (app layer uses service role for phone + Twilio).
 -- Returns escalation id only (never phone).
 -- ---------------------------------------------------------------------------
 create or replace function public.request_parent_escalation(
@@ -150,7 +161,6 @@ begin
     raise exception 'This booking has no assigned Guide';
   end if;
 
-  -- Assigned Guide only (admins may assist operationally).
   if v_uid is distinct from v_bk.tutor_id and not public.is_admin(v_uid) then
     raise exception 'Not authorized';
   end if;
@@ -203,8 +213,44 @@ begin
 end;
 $$;
 
--- Complete/update after telephony attempt (Guide who owns the row, or admin, or
--- service_role). Never accepts or returns a phone number.
+-- Mark call as placed/queued — intermediate "contacting" (NOT success).
+create or replace function public.mark_parent_escalation_contacting(
+  p_id uuid,
+  p_call_sid text,
+  p_call_status text default 'queued'
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_row record;
+begin
+  select * into v_row from public.parent_escalation_requests where id = p_id;
+  if v_row.id is null then raise exception 'Escalation not found'; end if;
+  if v_uid is not null
+     and v_uid is distinct from v_row.tutor_id
+     and not public.is_admin(v_uid) then
+    raise exception 'Not authorized';
+  end if;
+  if coalesce(btrim(p_call_sid), '') = '' then
+    raise exception 'call_sid is required';
+  end if;
+
+  update public.parent_escalation_requests
+     set status = 'contacting',
+         call_provider = 'twilio',
+         call_sid = p_call_sid,
+         call_status = coalesce(p_call_status, 'queued'),
+         call_attempted_at = coalesce(call_attempted_at, now())
+   where id = p_id
+     and status = 'pending';
+end;
+$$;
+
+-- Finalize terminal outcomes from the app layer (sync place-failure / SMS result /
+-- not_configured / no_phone). Does not treat queued as success.
 create or replace function public.complete_parent_escalation(
   p_id uuid,
   p_status text,
@@ -227,11 +273,7 @@ declare
   v_row record;
 begin
   select * into v_row from public.parent_escalation_requests where id = p_id;
-  if v_row.id is null then
-    raise exception 'Escalation not found';
-  end if;
-
-  -- service_role has auth.uid() null; allow. Else assigned Guide or admin.
+  if v_row.id is null then raise exception 'Escalation not found'; end if;
   if v_uid is not null
      and v_uid is distinct from v_row.tutor_id
      and not public.is_admin(v_uid) then
@@ -239,7 +281,7 @@ begin
   end if;
 
   if p_status is null or p_status not in (
-    'call_placed', 'sms_sent', 'failed', 'not_configured'
+    'call_answered', 'sms_sent', 'failed', 'not_configured'
   ) then
     raise exception 'Invalid status';
   end if;
@@ -257,7 +299,75 @@ begin
          sms_attempted_at = case when p_sms_attempted then coalesce(sms_attempted_at, now()) else sms_attempted_at end,
          completed_at = now()
    where id = p_id
-     and status = 'pending';
+     and status in ('pending', 'contacting');
+end;
+$$;
+
+-- Twilio status callback: parent answered (CallStatus=completed).
+-- Idempotent: only transitions contacting → call_answered.
+create or replace function public.finalize_parent_escalation_call_answered(
+  p_call_sid text,
+  p_call_status text default 'completed'
+) returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_updated int;
+begin
+  update public.parent_escalation_requests
+     set status = 'call_answered',
+         outcome = 'call',
+         call_status = coalesce(p_call_status, 'completed'),
+         completed_at = now()
+   where call_sid = p_call_sid
+     and status = 'contacting';
+  get diagnostics v_updated = row_count;
+  return v_updated > 0;
+end;
+$$;
+
+-- Persist intermediate provider call_status while still contacting.
+create or replace function public.touch_parent_escalation_call_status(
+  p_call_sid text,
+  p_call_status text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.parent_escalation_requests
+     set call_status = p_call_status
+   where call_sid = p_call_sid
+     and status = 'contacting';
+end;
+$$;
+
+-- Atomically claim SMS fallback for an unanswered/failed call.
+-- Returns the escalation id when this caller wins the claim; null otherwise
+-- (already claimed, already finalized, or wrong sid). Prevents duplicate SMS.
+create or replace function public.claim_parent_escalation_sms_fallback(
+  p_call_sid text,
+  p_call_status text
+) returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+begin
+  update public.parent_escalation_requests
+     set call_status = p_call_status,
+         sms_status = 'claiming',
+         sms_attempted_at = now()
+   where call_sid = p_call_sid
+     and status = 'contacting'
+     and sms_status is null
+  returning id into v_id;
+  return v_id;
 end;
 $$;
 
@@ -275,7 +385,6 @@ create policy per_select on public.parent_escalation_requests
     or public.is_admin(auth.uid())
   );
 
--- No client INSERT/UPDATE/DELETE — DEFINER RPCs only.
 revoke all on public.parent_escalation_requests from public;
 grant select on public.parent_escalation_requests to authenticated;
 grant all on public.parent_escalation_requests to service_role;
@@ -287,11 +396,25 @@ revoke all on function public.request_parent_escalation(uuid, text, text) from p
 grant execute on function public.request_parent_escalation(uuid, text, text)
   to authenticated, service_role;
 
+revoke all on function public.mark_parent_escalation_contacting(uuid, text, text) from public;
+grant execute on function public.mark_parent_escalation_contacting(uuid, text, text)
+  to authenticated, service_role;
+
 revoke all on function public.complete_parent_escalation(
   uuid, text, text, text, text, text, text, text, text, boolean, boolean
 ) from public;
 grant execute on function public.complete_parent_escalation(
   uuid, text, text, text, text, text, text, text, text, boolean, boolean
 ) to authenticated, service_role;
+
+-- Webhook helpers: service_role only (Twilio callbacks use service client).
+revoke all on function public.finalize_parent_escalation_call_answered(text, text) from public;
+grant execute on function public.finalize_parent_escalation_call_answered(text, text) to service_role;
+
+revoke all on function public.touch_parent_escalation_call_status(text, text) from public;
+grant execute on function public.touch_parent_escalation_call_status(text, text) to service_role;
+
+revoke all on function public.claim_parent_escalation_sms_fallback(text, text) from public;
+grant execute on function public.claim_parent_escalation_sms_fallback(text, text) to service_role;
 
 notify pgrst, 'reload schema';
