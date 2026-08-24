@@ -7,7 +7,11 @@ import {
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { isTwilioConfigured } from "@/lib/telephony/config";
 import { placeParentAttentionCall, sendParentAttentionSms } from "@/lib/telephony/client";
-import { classifyTwilioCallStatus } from "@/lib/telephony/twilio-signature.mjs";
+import {
+  classifyTwilioAnsweredBy,
+  classifyTwilioCallStatus,
+  isConfirmedHumanParentContact,
+} from "@/lib/telephony/twilio-signature.mjs";
 
 export type CallParentGuideStatus =
   | "contacting"
@@ -53,8 +57,8 @@ export function guideMessage(status: CallParentGuideStatus): string {
 
 /**
  * After `request_parent_escalation` inserted a pending row, place the outbound
- * call. Queued ≠ answered — Guide sees "Contacting parent…" until the Twilio
- * status callback finalizes (or immediate place-failure triggers SMS).
+ * call with Twilio AMD (DetectMessageEnd). Queued ≠ human contact — Guide sees
+ * "Contacting parent…" until the signed status callback finalizes.
  */
 export async function fulfillParentEscalation(escalationId: string): Promise<CallParentResult> {
   const service = getServiceSupabase();
@@ -109,7 +113,7 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
       p_call_sid: call.sid,
       p_call_status: "queued",
     });
-    // Async: webhook will finalize answered vs SMS fallback.
+    // Async: webhook + AMD AnsweredBy will finalize human vs SMS fallback.
     return resultOf(escalationId, "contacting");
   }
 
@@ -118,44 +122,65 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
 }
 
 /**
- * Handle a validated Twilio voice status callback (CallSid + CallStatus).
+ * Handle a validated Twilio voice status callback (CallSid + CallStatus + AnsweredBy).
  * Never trusts client input for phone numbers.
+ *
+ * - CallStatus failure (busy/no-answer/…) → SMS once
+ * - CallStatus=completed + AnsweredBy=human → Parent contacted (no SMS)
+ * - CallStatus=completed + machine/voicemail/fax → SMS once (voice may still have played)
+ * - CallStatus=completed + unknown/missing AMD → SMS once (safer)
  */
 export async function handleTwilioVoiceStatus(opts: {
   callSid: string;
   callStatus: string;
+  answeredBy?: string | null;
 }): Promise<{ ok: boolean; action: string }> {
   const service = getServiceSupabase();
-  const kind = classifyTwilioCallStatus(opts.callStatus);
+  const statusKind = classifyTwilioCallStatus(opts.callStatus);
+  const answeredBy = opts.answeredBy?.trim() || null;
 
-  // Intermediate (queued/ringing/in-progress): persist status only — not success.
-  if (kind === "intermediate") {
+  // Intermediate (queued/ringing/in-progress): persist status/AMD only — not success.
+  if (statusKind === "intermediate") {
     await service.rpc("touch_parent_escalation_call_status", {
       p_call_sid: opts.callSid,
       p_call_status: opts.callStatus,
+      p_answered_by: answeredBy,
     });
     return { ok: true, action: "touched" };
   }
 
-  if (kind === "answered") {
+  // Confirmed human parent contact only.
+  if (isConfirmedHumanParentContact(opts.callStatus, answeredBy)) {
     const { data: won } = await service.rpc("finalize_parent_escalation_call_answered", {
       p_call_sid: opts.callSid,
       p_call_status: opts.callStatus,
+      p_answered_by: "human",
     });
-    return { ok: true, action: won ? "call_answered" : "noop" };
+    return { ok: true, action: won ? "call_answered_human" : "noop" };
   }
 
-  // Unsuccessful terminal (busy|failed|no-answer|canceled|rejected) or unexpected
-  // non-answered status on the completed StatusCallbackEvent → claim SMS once.
+  // Unsuccessful call, voicemail/machine, unknown AMD, or completed without human → SMS once.
+  const amdKind = classifyTwilioAnsweredBy(answeredBy);
   const { data: escalationId } = await service.rpc("claim_parent_escalation_sms_fallback", {
     p_call_sid: opts.callSid,
     p_call_status: opts.callStatus,
+    p_answered_by: answeredBy,
   });
 
   if (!escalationId) {
     return { ok: true, action: "sms_already_claimed_or_final" };
   }
 
+  return deliverClaimedSmsFallback(service, escalationId as string, opts.callStatus, answeredBy, amdKind);
+}
+
+async function deliverClaimedSmsFallback(
+  service: ReturnType<typeof getServiceSupabase>,
+  escalationId: string,
+  callStatus: string,
+  answeredBy: string | null,
+  amdKind: "human" | "machine" | "unknown",
+): Promise<{ ok: boolean; action: string }> {
   const { data: row } = await service
     .from("parent_escalation_requests")
     .select("id, account_id")
@@ -175,7 +200,8 @@ export async function handleTwilioVoiceStatus(opts: {
     await complete(service, row.id, {
       p_status: "failed",
       p_outcome: "no_phone",
-      p_call_status: opts.callStatus,
+      p_call_status: callStatus,
+      p_answered_by: answeredBy,
       p_sms_status: "failed",
       p_error_detail: "parent has no phone_e164 on file at SMS fallback",
       p_sms_attempted: true,
@@ -188,13 +214,18 @@ export async function handleTwilioVoiceStatus(opts: {
     body: CALL_PARENT_SMS_MESSAGE,
   });
 
+  const reasonTag =
+    amdKind === "machine" ? "amd_machine" : amdKind === "unknown" ? "amd_unknown_or_missing" : "call_unsuccessful";
+
   if (sms.status === "sent") {
     await complete(service, row.id, {
       p_status: "sms_sent",
       p_outcome: "sms",
-      p_call_status: opts.callStatus,
+      p_call_status: callStatus,
+      p_answered_by: answeredBy,
       p_sms_sid: sms.sid ?? null,
       p_sms_status: "sent",
+      p_error_detail: reasonTag,
       p_sms_attempted: true,
     });
     return { ok: true, action: "sms_sent" };
@@ -203,9 +234,10 @@ export async function handleTwilioVoiceStatus(opts: {
   await complete(service, row.id, {
     p_status: "failed",
     p_outcome: "failed",
-    p_call_status: opts.callStatus,
+    p_call_status: callStatus,
+    p_answered_by: answeredBy,
     p_sms_status: sms.status,
-    p_error_detail: sms.error ?? "sms fallback failed",
+    p_error_detail: sms.error ?? `sms fallback failed (${reasonTag})`,
     p_sms_attempted: true,
   });
   return { ok: true, action: "sms_failed" };
@@ -268,6 +300,7 @@ async function complete(
     p_error_detail: args.p_error_detail ?? null,
     p_call_attempted: Boolean(args.p_call_attempted),
     p_sms_attempted: Boolean(args.p_sms_attempted),
+    p_answered_by: args.p_answered_by ?? null,
   });
 }
 

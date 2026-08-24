@@ -8,16 +8,19 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Twilio Voice StatusCallback for Call Parent.
+ * Twilio Voice StatusCallback for Call Parent (with AMD AnsweredBy).
  *
  * Programmatically registered on each outbound call as:
  *   POST {NEXT_PUBLIC_APP_URL}/api/twilio/voice-status
- * with StatusCallbackEvent=completed.
+ * with StatusCallbackEvent=completed and MachineDetection=DetectMessageEnd.
  *
  * Authenticity: X-Twilio-Signature HMAC-SHA1 (auth token). Forged callbacks are
- * rejected. Never exposes phone numbers. SMS fallback is claimed idempotently
- * when CallStatus is busy|failed|no-answer|canceled; CallStatus=completed means
- * answered (no SMS).
+ * rejected. Never exposes phone numbers.
+ *
+ * Outcomes:
+ * - CallStatus=completed + AnsweredBy=human → Parent contacted (no SMS)
+ * - CallStatus=completed + machine/voicemail/fax/unknown/missing → SMS once
+ * - busy|failed|no-answer|canceled|rejected → SMS once
  */
 export async function POST(request: NextRequest) {
   if (!isTwilioConfigured()) {
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing CallSid/CallStatus." }, { status: 400 });
   }
 
-  const result = await handleTwilioVoiceStatus({ callSid, callStatus });
+  const answeredBy = params.AnsweredBy || null;
+  const result = await handleTwilioVoiceStatus({ callSid, callStatus, answeredBy });
   return NextResponse.json({ ok: result.ok, action: result.action });
 }

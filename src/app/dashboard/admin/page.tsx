@@ -54,7 +54,7 @@ export default async function AdminDashboardPage() {
       supabase!
         .from("parent_escalation_requests")
         .select(
-          "id, reason, status, outcome, created_at, call_status, sms_status, bookings(public_reference, student_first_name, tutor_display_name, scheduled_start)",
+          "id, reason, status, outcome, created_at, call_status, answered_by, sms_status, bookings(public_reference, student_first_name, tutor_display_name, scheduled_start)",
         )
         .order("created_at", { ascending: false })
         .limit(25)
@@ -77,6 +77,7 @@ export default async function AdminDashboardPage() {
     outcome: string | null;
     created_at: string;
     call_status: string | null;
+    answered_by: string | null;
     sms_status: string | null;
     bookings: {
       public_reference: string | null;
@@ -201,6 +202,7 @@ export default async function AdminDashboardPage() {
                   Reason: {e.reason.replace(/_/g, " ")} · Status: {e.status}
                   {e.outcome ? ` · Outcome: ${e.outcome}` : ""}
                   {e.call_status ? ` · Call: ${e.call_status}` : ""}
+                  {e.answered_by ? ` · AMD: ${e.answered_by}` : ""}
                   {e.sms_status ? ` · SMS: ${e.sms_status}` : ""}
                 </p>
               </li>

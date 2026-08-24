@@ -35,10 +35,12 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     const m = read("supabase/migrations/0024_studyhall_pr7_call_parent.sql");
     assert.match(m, /create table if not exists public\.parent_escalation_requests/);
     assert.match(m, /phone_e164/);
+    assert.match(m, /answered_by/);
     assert.match(m, /request_parent_escalation/);
     assert.match(m, /mark_parent_escalation_contacting/);
     assert.match(m, /finalize_parent_escalation_call_answered/);
     assert.match(m, /claim_parent_escalation_sms_fallback/);
+    assert.match(m, /p_answered_by/);
     assert.match(m, /'contacting'/);
     assert.match(m, /'call_answered'/);
     assert.match(m, /sms_status = 'claiming'/);
@@ -87,23 +89,27 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     assert.match(poll, /guideStatusFromDb|final/);
   });
 
-  it("queued call is contacting not success; StatusCallback + signature webhook", () => {
+  it("queued call is contacting not success; StatusCallback + AMD + signature webhook", () => {
     const client = read("src/lib/telephony/client.ts");
     const svc = read("src/lib/call-parent-service.ts");
     const hook = read("src/app/api/twilio/voice-status/route.ts");
     assert.match(client, /StatusCallback/);
     assert.match(client, /StatusCallbackEvent/);
     assert.match(client, /voice-status/);
+    assert.match(client, /MachineDetection/);
+    assert.match(client, /DetectMessageEnd/);
     assert.match(svc, /contacting/);
     assert.match(svc, /mark_parent_escalation_contacting/);
     assert.match(svc, /handleTwilioVoiceStatus/);
     assert.match(svc, /claim_parent_escalation_sms_fallback/);
     assert.match(svc, /finalize_parent_escalation_call_answered/);
+    assert.match(svc, /isConfirmedHumanParentContact/);
     // Queued must not map to Parent contacted
     assert.match(svc, /guideStatus: "contacting"|return resultOf\(escalationId, "contacting"\)/);
     assert.match(hook, /validateTwilioSignature/);
     assert.match(hook, /Invalid signature/);
     assert.match(hook, /x-twilio-signature/i);
+    assert.match(hook, /AnsweredBy/);
   });
 
   it("Twilio is behind a server-only abstraction with safe failure", () => {
@@ -180,7 +186,7 @@ describe("Study Hall PR7 — Twilio signature + status classification", () => {
     assert.equal(validateTwilioSignature(token, url, params, null), false);
     assert.equal(validateTwilioSignature("", url, params, good), false);
 
-    assert.equal(classifyTwilioCallStatus("completed"), "answered");
+    assert.equal(classifyTwilioCallStatus("completed"), "completed");
     assert.equal(classifyTwilioCallStatus("queued"), "intermediate");
     assert.equal(classifyTwilioCallStatus("ringing"), "intermediate");
     assert.equal(classifyTwilioCallStatus("in-progress"), "intermediate");
@@ -189,12 +195,56 @@ describe("Study Hall PR7 — Twilio signature + status classification", () => {
     }
   });
 
+  it("AMD AnsweredBy: human → no SMS path; machine/unknown → SMS; completed alone insufficient", async () => {
+    const {
+      classifyTwilioAnsweredBy,
+      isConfirmedHumanParentContact,
+      TWILIO_AMD_MACHINE_VALUES,
+    } = await import("../src/lib/telephony/twilio-signature.mjs");
+
+    assert.equal(classifyTwilioAnsweredBy("human"), "human");
+    assert.equal(classifyTwilioAnsweredBy("unknown"), "unknown");
+    assert.equal(classifyTwilioAnsweredBy(""), "unknown");
+    assert.equal(classifyTwilioAnsweredBy(null), "unknown");
+    for (const m of TWILIO_AMD_MACHINE_VALUES) {
+      assert.equal(classifyTwilioAnsweredBy(m), "machine", m);
+    }
+
+    // Human answer: confirmed contact
+    assert.equal(isConfirmedHumanParentContact("completed", "human"), true);
+    // Voicemail / machine: not confirmed human contact → SMS
+    assert.equal(isConfirmedHumanParentContact("completed", "machine_end_beep"), false);
+    assert.equal(isConfirmedHumanParentContact("completed", "machine_end_silence"), false);
+    assert.equal(isConfirmedHumanParentContact("completed", "machine_end_other"), false);
+    assert.equal(isConfirmedHumanParentContact("completed", "machine_start"), false);
+    assert.equal(isConfirmedHumanParentContact("completed", "fax"), false);
+    // Unknown / missing AMD: safer SMS
+    assert.equal(isConfirmedHumanParentContact("completed", "unknown"), false);
+    assert.equal(isConfirmedHumanParentContact("completed", null), false);
+    assert.equal(isConfirmedHumanParentContact("completed", ""), false);
+    // Failures never confirmed human
+    for (const s of ["busy", "failed", "no-answer", "canceled"]) {
+      assert.equal(isConfirmedHumanParentContact(s, "human"), false, s);
+    }
+
+    const svc = read("src/lib/call-parent-service.ts");
+    // Human path finalizes without claiming SMS first
+    const humanIdx = svc.indexOf("if (isConfirmedHumanParentContact");
+    assert.ok(humanIdx > 0);
+    const humanBlock = svc.slice(humanIdx, svc.indexOf("claim_parent_escalation_sms_fallback", humanIdx));
+    assert.match(humanBlock, /finalize_parent_escalation_call_answered/);
+    assert.doesNotMatch(humanBlock, /sendParentAttentionSms/);
+    assert.match(svc, /claim_parent_escalation_sms_fallback/);
+    assert.match(svc, /amd_machine|amd_unknown_or_missing|call_unsuccessful/);
+  });
+
   it("webhook route rejects invalid signatures and does not expose secrets", () => {
     const hook = read("src/app/api/twilio/voice-status/route.ts");
     assert.match(hook, /status: 401/);
     assert.match(hook, /Invalid signature/);
     assert.doesNotMatch(hook, /phone_e164|TWILIO_AUTH_TOKEN!/);
     assert.match(hook, /handleTwilioVoiceStatus/);
+    assert.match(hook, /AnsweredBy/);
   });
 });
 
@@ -298,23 +348,34 @@ describe("Study Hall PR7 — telephony client (mocked fetch, no real calls)", ()
     assert.doesNotMatch(notConfiguredBlock, /parent_contacted|"Parent contacted"/);
   });
 
-  it("SMS fallback claim is idempotent; answered skips SMS; failure statuses listed", () => {
+  it("SMS fallback claim is idempotent; human skips SMS; machine/unknown/failures SMS once", () => {
     const svc = read("src/lib/call-parent-service.ts");
     const mig = read("supabase/migrations/0024_studyhall_pr7_call_parent.sql");
     const sig = read("src/lib/telephony/twilio-signature.mjs");
+    const client = read("src/lib/telephony/client.ts");
     assert.match(mig, /sms_status = 'claiming'/);
     assert.match(mig, /and sms_status is null/);
+    assert.match(mig, /answered_by/);
+    assert.match(mig, /lower\(coalesce\(p_answered_by, ''\)\) is distinct from 'human'/);
     assert.match(svc, /sms_already_claimed_or_final/);
     assert.match(svc, /finalize_parent_escalation_call_answered/);
+    assert.match(svc, /isConfirmedHumanParentContact/);
+    assert.match(client, /DetectMessageEnd/);
+    const humanIdx = svc.indexOf("if (isConfirmedHumanParentContact");
+    assert.ok(humanIdx > 0);
     assert.doesNotMatch(
-      svc.slice(svc.indexOf("if (kind === \"answered\")"), svc.indexOf("claim_parent_escalation_sms_fallback")),
+      svc.slice(humanIdx, svc.indexOf("claim_parent_escalation_sms_fallback", humanIdx)),
       /sendParentAttentionSms/,
     );
     for (const s of ["busy", "failed", "no-answer", "canceled", "rejected"]) {
       assert.match(sig, new RegExp(`"${s}"`));
     }
+    for (const m of ["machine_end_beep", "machine_end_silence", "machine_end_other", "machine_start", "fax"]) {
+      assert.match(sig, new RegExp(`"${m}"`));
+    }
     assert.match(sig, /"completed"/);
     assert.match(sig, /"queued"/);
+    assert.match(sig, /classifyTwilioAnsweredBy/);
   });
 });
 

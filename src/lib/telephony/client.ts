@@ -34,8 +34,13 @@ function statusCallbackUrl(): string | null {
 }
 
 /**
- * Place an outbound TTS call with a status callback for async completion.
+ * Place an outbound TTS call with AMD + status callback for async completion.
  * Destination must already be E.164.
+ *
+ * AMD mode: MachineDetection=DetectMessageEnd (sync). Twilio waits for a human
+ * verdict or the end of a machine greeting (beep/silence) before running TwiML,
+ * so the Say message can land in voicemail. AnsweredBy is included on the
+ * StatusCallback — completed alone is not treated as human contact.
  */
 export async function placeParentAttentionCall(opts: {
   toE164: string;
@@ -52,6 +57,8 @@ export async function placeParentAttentionCall(opts: {
     To: opts.toE164,
     From: phoneNumber,
     Twiml: twiml,
+    // Leave message after voicemail greeting ends; AnsweredBy distinguishes human vs machine.
+    MachineDetection: "DetectMessageEnd",
   });
 
   const callback = statusCallbackUrl();

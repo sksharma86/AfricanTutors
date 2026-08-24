@@ -1,6 +1,6 @@
 /**
- * Twilio request signature validation (X-Twilio-Signature).
- * Pure crypto — no secrets logged. Used by the voice-status webhook.
+ * Twilio request signature validation (X-Twilio-Signature) + Call Parent
+ * status / AMD classification helpers.
  *
  * Spec: HMAC-SHA1(authToken, fullUrl + sorted(key+value for each POST param))
  * then Base64, compared with timing-safe equality.
@@ -41,7 +41,11 @@ export const TWILIO_CALL_FAILURE_STATUSES = Object.freeze([
   "rejected",
 ]);
 
-/** Terminal Twilio CallStatus that means the call was answered then ended. */
+/**
+ * Terminal Twilio CallStatus when the call was connected then ended.
+ * NOT sufficient for "Parent contacted" — may be human, voicemail, or IVR.
+ * Requires AMD AnsweredBy=human for confirmed human contact.
+ */
 export const TWILIO_CALL_ANSWERED_STATUS = "completed";
 
 /** Intermediate statuses — not success (queued ≠ answered). */
@@ -52,13 +56,55 @@ export const TWILIO_CALL_INTERMEDIATE_STATUSES = Object.freeze([
 ]);
 
 /**
+ * DetectMessageEnd machine / fax AnsweredBy values (plus Enable's machine_start).
+ * Voice message may still be delivered; SMS fallback is still required.
+ */
+export const TWILIO_AMD_MACHINE_VALUES = Object.freeze([
+  "machine_start",
+  "machine_end_beep",
+  "machine_end_silence",
+  "machine_end_other",
+  "fax",
+]);
+
+/**
  * @param {string | null | undefined} callStatus
- * @returns {'answered'|'failed'|'intermediate'|'unknown'}
+ * @returns {'completed'|'failed'|'intermediate'|'unknown'}
  */
 export function classifyTwilioCallStatus(callStatus) {
   const s = String(callStatus || "").toLowerCase();
-  if (s === TWILIO_CALL_ANSWERED_STATUS) return "answered";
+  if (s === TWILIO_CALL_ANSWERED_STATUS) return "completed";
   if (TWILIO_CALL_FAILURE_STATUSES.includes(s)) return "failed";
   if (TWILIO_CALL_INTERMEDIATE_STATUSES.includes(s)) return "intermediate";
   return "unknown";
+}
+
+/**
+ * Classify Twilio AMD AnsweredBy.
+ * Missing / unknown → safer SMS path (not confirmed human contact).
+ *
+ * @param {string | null | undefined} answeredBy
+ * @returns {'human'|'machine'|'unknown'}
+ */
+export function classifyTwilioAnsweredBy(answeredBy) {
+  const s = String(answeredBy || "")
+    .trim()
+    .toLowerCase();
+  if (s === "human") return "human";
+  if (TWILIO_AMD_MACHINE_VALUES.includes(s)) return "machine";
+  return "unknown";
+}
+
+/**
+ * Whether this CallStatus + AnsweredBy pair is confirmed human parent contact.
+ * completed alone is never enough.
+ *
+ * @param {string | null | undefined} callStatus
+ * @param {string | null | undefined} answeredBy
+ */
+export function isConfirmedHumanParentContact(callStatus, answeredBy) {
+  return (
+    classifyTwilioCallStatus(callStatus) === "completed" &&
+    classifyTwilioAnsweredBy(answeredBy) === "human"
+  );
 }

@@ -63,11 +63,14 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Escalation audit log
 -- Status lifecycle:
---   pending → contacting (call queued; awaiting Twilio status callback)
---           → call_answered (parent answered; final)
---           → sms_sent (fallback after unanswered/busy/failed/canceled; final)
+--   pending → contacting (call queued; awaiting Twilio status callback + AMD)
+--           → call_answered (AnsweredBy=human only; final; no SMS)
+--           → sms_sent (voicemail/machine/unknown AMD, or no-answer/busy/failed/
+--                       canceled; SMS once; final)
 --           → failed / not_configured (final)
--- Queued/ringing/in-progress are NOT success — only call_answered / sms_sent.
+-- Queued/ringing/in-progress are NOT success.
+-- CallStatus=completed alone is NOT human contact — requires AnsweredBy=human
+-- (Twilio AMD MachineDetection=DetectMessageEnd).
 -- ---------------------------------------------------------------------------
 create table if not exists public.parent_escalation_requests (
   id                  uuid primary key default gen_random_uuid(),
@@ -96,6 +99,8 @@ create table if not exists public.parent_escalation_requests (
   call_provider       text,
   call_sid            text,
   call_status         text,
+  -- Twilio AMD AnsweredBy (human | machine_* | fax | unknown). Never shown to Guides.
+  answered_by         text,
   sms_sid             text,
   -- null = not claimed; 'claiming' = SMS in flight; 'sent'/'failed' = terminal SMS attempt
   sms_status          text,
@@ -120,8 +125,15 @@ create unique index if not exists per_call_sid_uidx
   on public.parent_escalation_requests (call_sid)
   where call_sid is not null;
 
+-- In-place amendment: column may be missing if an earlier 0024 draft was applied.
+alter table public.parent_escalation_requests
+  add column if not exists answered_by text;
+
 comment on table public.parent_escalation_requests is
-  'Study Hall PR7: Guide Call Parent escalations. Never store parent phone on this row. Async call outcome via Twilio status callback.';
+  'Study Hall PR7: Guide Call Parent escalations. Never store parent phone on this row. Async call outcome via Twilio status callback + AMD AnsweredBy.';
+
+comment on column public.parent_escalation_requests.answered_by is
+  'Twilio AMD AnsweredBy. call_answered only when human; machine/unknown → SMS fallback.';
 
 -- ---------------------------------------------------------------------------
 -- request_parent_escalation — authorize + insert pending row + 5-min cooldown.
@@ -251,6 +263,14 @@ $$;
 
 -- Finalize terminal outcomes from the app layer (sync place-failure / SMS result /
 -- not_configured / no_phone). Does not treat queued as success.
+-- Drop prior 0024 draft signatures if present (unapplied amendment is in-place).
+drop function if exists public.complete_parent_escalation(
+  uuid, text, text, text, text, text, text, text, text, boolean, boolean
+);
+drop function if exists public.finalize_parent_escalation_call_answered(text, text);
+drop function if exists public.touch_parent_escalation_call_status(text, text);
+drop function if exists public.claim_parent_escalation_sms_fallback(text, text);
+
 create or replace function public.complete_parent_escalation(
   p_id uuid,
   p_status text,
@@ -262,7 +282,8 @@ create or replace function public.complete_parent_escalation(
   p_sms_status text default null,
   p_error_detail text default null,
   p_call_attempted boolean default false,
-  p_sms_attempted boolean default false
+  p_sms_attempted boolean default false,
+  p_answered_by text default null
 ) returns void
 language plpgsql
 security definer
@@ -292,6 +313,7 @@ begin
          call_provider = coalesce(p_call_provider, call_provider),
          call_sid = coalesce(p_call_sid, call_sid),
          call_status = coalesce(p_call_status, call_status),
+         answered_by = coalesce(p_answered_by, answered_by),
          sms_sid = coalesce(p_sms_sid, sms_sid),
          sms_status = coalesce(p_sms_status, sms_status),
          error_detail = coalesce(p_error_detail, error_detail),
@@ -303,11 +325,12 @@ begin
 end;
 $$;
 
--- Twilio status callback: parent answered (CallStatus=completed).
--- Idempotent: only transitions contacting → call_answered.
+-- Twilio status callback: confirmed HUMAN answer (AnsweredBy=human).
+-- CallStatus=completed alone is insufficient. Idempotent contacting → call_answered.
 create or replace function public.finalize_parent_escalation_call_answered(
   p_call_sid text,
-  p_call_status text default 'completed'
+  p_call_status text default 'completed',
+  p_answered_by text default 'human'
 ) returns boolean
 language plpgsql
 security definer
@@ -316,22 +339,29 @@ as $$
 declare
   v_updated int;
 begin
+  if lower(coalesce(p_answered_by, '')) is distinct from 'human' then
+    return false;
+  end if;
+
   update public.parent_escalation_requests
      set status = 'call_answered',
          outcome = 'call',
          call_status = coalesce(p_call_status, 'completed'),
+         answered_by = 'human',
          completed_at = now()
    where call_sid = p_call_sid
-     and status = 'contacting';
+     and status = 'contacting'
+     and sms_status is null;
   get diagnostics v_updated = row_count;
   return v_updated > 0;
 end;
 $$;
 
--- Persist intermediate provider call_status while still contacting.
+-- Persist intermediate provider call_status / AnsweredBy while still contacting.
 create or replace function public.touch_parent_escalation_call_status(
   p_call_sid text,
-  p_call_status text
+  p_call_status text,
+  p_answered_by text default null
 ) returns void
 language plpgsql
 security definer
@@ -339,18 +369,20 @@ set search_path = public
 as $$
 begin
   update public.parent_escalation_requests
-     set call_status = p_call_status
+     set call_status = coalesce(p_call_status, call_status),
+         answered_by = coalesce(p_answered_by, answered_by)
    where call_sid = p_call_sid
      and status = 'contacting';
 end;
 $$;
 
--- Atomically claim SMS fallback for an unanswered/failed call.
+-- Atomically claim SMS fallback (machine/voicemail/unknown AMD, or call failure).
 -- Returns the escalation id when this caller wins the claim; null otherwise
 -- (already claimed, already finalized, or wrong sid). Prevents duplicate SMS.
 create or replace function public.claim_parent_escalation_sms_fallback(
   p_call_sid text,
-  p_call_status text
+  p_call_status text,
+  p_answered_by text default null
 ) returns uuid
 language plpgsql
 security definer
@@ -360,7 +392,8 @@ declare
   v_id uuid;
 begin
   update public.parent_escalation_requests
-     set call_status = p_call_status,
+     set call_status = coalesce(p_call_status, call_status),
+         answered_by = coalesce(p_answered_by, answered_by),
          sms_status = 'claiming',
          sms_attempted_at = now()
    where call_sid = p_call_sid
@@ -401,20 +434,20 @@ grant execute on function public.mark_parent_escalation_contacting(uuid, text, t
   to authenticated, service_role;
 
 revoke all on function public.complete_parent_escalation(
-  uuid, text, text, text, text, text, text, text, text, boolean, boolean
+  uuid, text, text, text, text, text, text, text, text, boolean, boolean, text
 ) from public;
 grant execute on function public.complete_parent_escalation(
-  uuid, text, text, text, text, text, text, text, text, boolean, boolean
+  uuid, text, text, text, text, text, text, text, text, boolean, boolean, text
 ) to authenticated, service_role;
 
 -- Webhook helpers: service_role only (Twilio callbacks use service client).
-revoke all on function public.finalize_parent_escalation_call_answered(text, text) from public;
-grant execute on function public.finalize_parent_escalation_call_answered(text, text) to service_role;
+revoke all on function public.finalize_parent_escalation_call_answered(text, text, text) from public;
+grant execute on function public.finalize_parent_escalation_call_answered(text, text, text) to service_role;
 
-revoke all on function public.touch_parent_escalation_call_status(text, text) from public;
-grant execute on function public.touch_parent_escalation_call_status(text, text) to service_role;
+revoke all on function public.touch_parent_escalation_call_status(text, text, text) from public;
+grant execute on function public.touch_parent_escalation_call_status(text, text, text) to service_role;
 
-revoke all on function public.claim_parent_escalation_sms_fallback(text, text) from public;
-grant execute on function public.claim_parent_escalation_sms_fallback(text, text) to service_role;
+revoke all on function public.claim_parent_escalation_sms_fallback(text, text, text) from public;
+grant execute on function public.claim_parent_escalation_sms_fallback(text, text, text) to service_role;
 
 notify pgrst, 'reload schema';
