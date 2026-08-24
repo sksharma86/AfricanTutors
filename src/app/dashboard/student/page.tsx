@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
+import { ParentPhoneForm } from "@/components/dashboard/parent-phone-form";
 import { SessionCard } from "@/components/dashboard/session-card";
 import {
   SessionReportsList,
@@ -75,7 +76,8 @@ export default async function StudentDashboardPage() {
   const { data: userData } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   const uid = userData?.user?.id ?? null;
 
-  const [{ data: bookingsRaw }, { data: myStudents }, balancesRes, disputeRes, reportsRes] = await Promise.all([
+  const [{ data: bookingsRaw }, { data: myStudents }, balancesRes, disputeRes, reportsRes, phoneRes, escalationsRes] =
+    await Promise.all([
     supabase
       ? supabase
           .from("bookings")
@@ -101,6 +103,18 @@ export default async function StudentDashboardPage() {
             () => ({ data: null, error: null }),
           )
       : Promise.resolve({ data: null, error: null }),
+    uid && supabase
+      ? supabase.from("profiles").select("phone_e164").eq("id", uid).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      ? supabase
+          .from("parent_escalation_requests")
+          .select("booking_id")
+          .then(
+            (r) => r,
+            () => ({ data: null, error: null }),
+          )
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const bookings = (bookingsRaw ?? []) as unknown as BookingRow[];
@@ -108,14 +122,25 @@ export default async function StudentDashboardPage() {
   const balances = (balancesRes?.data ?? {}) as { package_minutes?: number; dollar_credit_cents?: number };
   const minutes = balances.package_minutes ?? 0;
   const creditCents = balances.dollar_credit_cents ?? 0;
+  const parentPhone =
+    phoneRes && "data" in phoneRes && phoneRes.data && typeof (phoneRes.data as { phone_e164?: string }).phone_e164 === "string"
+      ? (phoneRes.data as { phone_e164: string }).phone_e164
+      : null;
 
   const issueByBooking = new Map<string, string>();
   for (const d of (disputeRes?.data ?? []) as { booking_id: string; status: string }[]) {
     issueByBooking.set(d.booking_id, d.status);
   }
 
+  const escalatedBookings = new Set(
+    escalationsRes && "error" in escalationsRes && escalationsRes.error
+      ? []
+      : ((escalationsRes?.data ?? []) as { booking_id: string }[]).map((e) => e.booking_id),
+  );
+
   type ReportJoin = {
     id: string;
+    booking_id: string;
     submitted_at: string;
     focus_rating: FocusRating;
     work_summary: string;
@@ -147,6 +172,7 @@ export default async function StudentDashboardPage() {
       scheduled_start: r.bookings?.scheduled_start ?? null,
       duration_minutes: r.bookings?.duration_minutes ?? null,
       timezone: r.bookings?.students?.timezone || DEFAULT_TZ,
+      had_parent_escalation: escalatedBookings.has(r.booking_id),
     };
   });
 
@@ -337,6 +363,10 @@ export default async function StudentDashboardPage() {
 
         {/* Account / students */}
         <div id="account" className="mt-8 scroll-mt-20">
+          <SectionHeader title="Contact for Study Hall alerts" />
+          <div className="mb-6">
+            <ParentPhoneForm initialPhone={parentPhone} />
+          </div>
           <SectionHeader
             title="Students"
             action={

@@ -60,7 +60,6 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     assert.match(room, /Do not tutor|not expected to teach|Do not tutor/i);
     assert.match(room, /Join Study Hall/);
     assert.match(room, /5\s*minutes before/);
-    assert.doesNotMatch(room, /Call Parent|Twilio|place a call/i);
   });
 
   it("Guide earnings scale with duration (1h/2h/3h); free session still paid to Guide", () => {
@@ -96,16 +95,5 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     const m22 = read("supabase/migrations/0022_studyhall_pr4_supervision_booking.sql");
     assert.match(m22, /interval '5 minutes'/);
     assert.match(m22, /Study Hall sessions are 1, 2, or 3 hours/);
-  });
-
-  it("no Call Parent telephony stub is exposed", () => {
-    const surfaces = [
-      "src/app/dashboard/tutor/page.tsx",
-      "src/components/session/session-room.tsx",
-      "src/components/dashboard/guide-join-control.tsx",
-    ]
-      .map(read)
-      .join("\n");
-    assert.doesNotMatch(surfaces, /Call Parent|twilio|click-to-call/i);
   });
 });

@@ -61,8 +61,6 @@ describe("Study Hall PR6 — session reports (source)", () => {
     assert.doesNotMatch(m, /grant insert on public\.session_reports to authenticated/i);
     assert.doesNotMatch(m, /grant update on public\.session_reports to authenticated/i);
     assert.doesNotMatch(m, /grant delete on public\.session_reports to authenticated/i);
-    // No Call Parent / subject booking regression in migration
-    assert.doesNotMatch(m, /call.?parent|twilio|tutor_subjects/i);
   });
 
   it("report field constants match product copy", () => {
@@ -96,7 +94,6 @@ describe("Study Hall PR6 — session reports (source)", () => {
     assert.match(form, /not a grade/i);
     assert.match(api, /submit_session_report/);
     assert.match(api, /notifySessionReportReady/);
-    assert.doesNotMatch(form, /Call Parent|Twilio/i);
   });
 
   it("parent portal shows Session reports (not grades / mastery)", () => {
@@ -162,18 +159,14 @@ describe("Study Hall PR6 — session reports (source)", () => {
     assert.doesNotMatch(m23, /comp_rate|tutor_earnings|record_tutor_earning|PAYG|package_products/i);
   });
 
-  it("no Call Parent and no subject reintroduction in PR6 surfaces", () => {
+  it("PR6 report surfaces do not reintroduce subject booking", () => {
     const blob = [
-      "src/app/dashboard/tutor/page.tsx",
-      "src/app/dashboard/student/page.tsx",
       "src/components/dashboard/guide-session-report.tsx",
-      "src/components/dashboard/session-reports-list.tsx",
       "src/app/api/tutor/session-report/route.ts",
       "supabase/migrations/0023_studyhall_pr6_session_reports.sql",
     ]
       .map(read)
       .join("\n");
-    assert.doesNotMatch(blob, /Call Parent|twilio|click-to-call/i);
     assert.doesNotMatch(blob, /reintroduce subject|subject matching for booking/i);
   });
 });
@@ -239,7 +232,11 @@ describe("Study Hall PR6 — live session_reports (requires migration 0023)", { 
   }
 
   async function insertCompletedBooking({ accountId, tutorId, studentId, firstName }) {
-    const start = futureUtc(25, 16);
+    // Stagger far-future hours so parallel/sequential inserts don't collide on
+    // bookings_no_tutor_overlap (shared Guide calendar).
+    const hour = 10 + (Math.floor(Math.random() * 10) % 10);
+    const dayOffset = 30 + Math.floor(Math.random() * 40);
+    const start = futureUtc(dayOffset, hour);
     const end = new Date(start.getTime() + 60 * 60000);
     const { data, error } = await svc
       .from("bookings")

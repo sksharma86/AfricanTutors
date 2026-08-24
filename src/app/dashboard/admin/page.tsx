@@ -28,7 +28,7 @@ export default async function AdminDashboardPage() {
   await requireRole("admin", "/dashboard/admin");
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: pending }, { data: subjects }, { data: tutorRows }, { data: tutorSubjects }, { data: bookings }, { data: cancelReqs }] =
+  const [{ data: pending }, { data: subjects }, { data: tutorRows }, { data: tutorSubjects }, { data: bookings }, { data: cancelReqs }, { data: escalationsRaw }] =
     await Promise.all([
       supabase!
         .from("tutor_profiles")
@@ -51,6 +51,17 @@ export default async function AdminDashboardPage() {
         .select("id, reason, created_at, bookings(subject_name, scheduled_start, student_first_name, tutor_display_name)")
         .eq("status", "open")
         .order("created_at", { ascending: true }),
+      supabase!
+        .from("parent_escalation_requests")
+        .select(
+          "id, reason, status, outcome, created_at, call_status, sms_status, bookings(public_reference, student_first_name, tutor_display_name, scheduled_start)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(25)
+        .then(
+          (r) => r,
+          () => ({ data: null, error: null }),
+        ),
     ]);
 
   const cancellationRequests = (cancelReqs ?? []) as unknown as {
@@ -58,6 +69,21 @@ export default async function AdminDashboardPage() {
     reason: string | null;
     created_at: string;
     bookings: { subject_name: string | null; scheduled_start: string | null; student_first_name: string | null; tutor_display_name: string | null } | null;
+  }[];
+  const escalations = (escalationsRaw ?? []) as unknown as {
+    id: string;
+    reason: string;
+    status: string;
+    outcome: string | null;
+    created_at: string;
+    call_status: string | null;
+    sms_status: string | null;
+    bookings: {
+      public_reference: string | null;
+      student_first_name: string | null;
+      tutor_display_name: string | null;
+      scheduled_start: string | null;
+    } | null;
   }[];
   const pendingTutors = (pending ?? []) as unknown as PendingTutor[];
   const tutors = ((tutorRows ?? []) as unknown as PendingTutor[]).map((t) => ({
@@ -140,6 +166,42 @@ export default async function AdminDashboardPage() {
                 </p>
                 {r.reason ? <p className="mt-1 text-sm text-ink-600">Reason: {r.reason}</p> : null}
                 <p className="mt-1 text-xs text-ink-400">Use the Bookings table below to Reassign or Release (financial rules apply); that resolves this request.</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-ink-900">Call Parent escalations</h2>
+          <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">
+            {escalations.length} recent
+          </span>
+        </div>
+        {escalations.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
+            No Call Parent events yet.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-ink-100">
+            {escalations.map((e) => (
+              <li key={e.id} className="py-3">
+                <p className="text-sm font-medium text-ink-900">
+                  {e.bookings?.student_first_name ?? "Child"} · Guide {e.bookings?.tutor_display_name ?? "—"}
+                </p>
+                <p className="text-xs text-ink-500">
+                  {new Date(e.created_at).toLocaleString()}
+                  {e.bookings?.public_reference ? ` · Ref ${e.bookings.public_reference}` : ""}
+                  {e.bookings?.scheduled_start
+                    ? ` · Session ${new Date(e.bookings.scheduled_start).toLocaleString()}`
+                    : ""}
+                </p>
+                <p className="mt-1 text-sm text-ink-600">
+                  Reason: {e.reason.replace(/_/g, " ")} · Outcome: {e.outcome ?? e.status}
+                  {e.call_status ? ` · Call: ${e.call_status}` : ""}
+                  {e.sms_status ? ` · SMS: ${e.sms_status}` : ""}
+                </p>
               </li>
             ))}
           </ul>
