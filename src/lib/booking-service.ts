@@ -65,11 +65,12 @@ export async function accountFreeTrialUsed(accountId: string): Promise<boolean> 
 }
 
 /**
- * Bookable UTC start instants for a subject + duration. Authoritative times are
- * UTC; the UI converts to the student's IANA timezone for display.
+ * Bookable UTC start instants for Study Hall (null subject) or a legacy subject
+ * + duration. Authoritative times are UTC; the UI converts to the student's
+ * IANA timezone for display.
  */
 export async function getAvailableSlots(params: {
-  subjectId: string;
+  subjectId: string | null;
   duration: 30 | 60;
   fromISO?: string;
   toISO?: string;
