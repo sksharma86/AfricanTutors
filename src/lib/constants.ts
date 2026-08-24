@@ -1,16 +1,15 @@
-export const SITE_NAME = "African Tutors";
+export const SITE_NAME = "Study Hall at Home";
 
 export const SITE_DESCRIPTION =
-  "High-quality online tutoring without the high price. Work one-on-one with carefully approved tutors from Africa. Your first 30-minute session is free — no credit card required.";
+  "Affordable live homework supervision for families. A trained Guide keeps your children on task by video while they do their schoolwork — accountability, routine, and evening relief for parents. Your first session is free, no credit card required.";
 
 /** Absolute base URL for SEO/canonical/OG. Override with NEXT_PUBLIC_SITE_URL. */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://africantutors.com";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://studyhallathome.com";
 
 export const PUBLIC_NAV_LINKS = [
   { label: "How It Works", href: "/how-it-works" },
-  { label: "Why African Tutors", href: "/#why" },
+  { label: "Why Study Hall", href: "/#why" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Subjects", href: "/subjects" },
   { label: "FAQ", href: "/faq" },
 ] as const;
 
@@ -20,7 +19,6 @@ export const FOOTER_SECTIONS = [
     links: [
       { label: "How It Works", href: "/how-it-works" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Subjects", href: "/subjects" },
       { label: "FAQ", href: "/faq" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
@@ -34,8 +32,8 @@ export const FOOTER_SECTIONS = [
     ],
   },
   {
-    heading: "Educators",
-    links: [{ label: "Apply to tutor", href: "/apply-to-tutor" }],
+    heading: "Guides",
+    links: [{ label: "Become a Guide", href: "/apply-to-tutor" }],
   },
   {
     heading: "Legal",

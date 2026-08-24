@@ -21,8 +21,8 @@ export function PricingSection({
               Simple pricing. No surprises.
             </h2>
             <p className="mt-4 text-base leading-7 text-ink-500">
-              Pay per session, or save with prepaid tutoring hours. No subscriptions, no recurring
-              billing — and prepaid hours never expire.
+              Pay per session, or save with prepaid hours. No subscriptions, no recurring billing —
+              and prepaid hours never expire.
             </p>
           </div>
         ) : null}
@@ -33,7 +33,7 @@ export function PricingSection({
             <Card key={option.minutes} className="flex items-center justify-between p-7">
               <div>
                 <p className="text-sm font-medium text-ink-500">{option.label} session</p>
-                <p className="mt-1 text-sm text-ink-400">One-on-one, live with your tutor</p>
+                <p className="mt-1 text-sm text-ink-400">Live, supervised Study Hall with a Guide</p>
               </div>
               <p className="font-display text-4xl font-semibold text-ink-900">{formatUsd(option.priceUsd)}</p>
             </Card>
@@ -43,7 +43,7 @@ export function PricingSection({
         {/* Prepaid packages */}
         <div className="mt-12">
           <h3 className="font-display text-xl font-semibold text-ink-900">Save with prepaid hours</h3>
-          <p className="mt-1 text-sm text-ink-500">Prepaid tutoring hours — not a subscription. Hours never expire.</p>
+          <p className="mt-1 text-sm text-ink-500">Prepaid hours — not a subscription. Hours never expire.</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {packages.map((pkg, i) => {
               const featured = i === 1;

@@ -9,7 +9,7 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "How It Works",
-  description: "See how live one-on-one tutoring works on African Tutors, from sign up to session.",
+  description: "See how live homework supervision works on Study Hall at Home, from sign up to session.",
 };
 
 export default function HowItWorksPage() {
@@ -17,28 +17,28 @@ export default function HowItWorksPage() {
     <>
       <PageHeader
         eyebrow="How It Works"
-        title="A simple, managed path from sign up to your first session."
-        description="African Tutors handles matching, scheduling, and sessions in one place, so you can spend less time coordinating and more time learning."
+        title="A simple, managed path from sign up to your first Study Hall."
+        description="Study Hall at Home handles matching, scheduling, and sessions in one place, so your family can build a calm homework routine with less effort."
       />
 
       <Steps
-        title="From sign up to your first session."
+        title="From sign up to your first Study Hall."
         steps={[
           {
-            title: "Tell Us What You Need",
-            description: "Create a free account and share the subject and grade level your student needs help with. No credit card required.",
+            title: "Create your account",
+            description: "Create a free parent account and add your child. No credit card required — and there's nothing to prepare.",
           },
           {
-            title: "Choose a Convenient Time",
-            description: "Pick an available tutoring session time that works for your family's schedule.",
+            title: "Choose a convenient time",
+            description: "Pick an available Study Hall time that works for your family's schedule.",
           },
           {
-            title: "Meet Online",
-            description: "Join a private, live one-on-one session with your tutor through African Tutors. Your first 30 minutes are free.",
+            title: "Meet your Guide online",
+            description: "Your child joins a private, live Study Hall with a Guide who keeps them on task. Your first session is free.",
           },
           {
-            title: "Keep Building Progress",
-            description: "Book additional sessions whenever your student needs more support.",
+            title: "Build a routine",
+            description: "Book more sessions whenever your family needs them, or save with prepaid hours.",
           },
         ]}
       />
@@ -46,21 +46,21 @@ export default function HowItWorksPage() {
       <Container className="py-4">
         <div className="rounded-2xl border border-gold-200 bg-gold-50 p-6 sm:p-8">
           <h2 className="font-display text-xl font-semibold text-ink-900">
-            Fully managed by African Tutors
+            Fully managed by Study Hall at Home
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-600">
-            Messaging, scheduling, sessions, and payments all happen through African Tutors.
-            Every tutor is recruited, reviewed, and approved by our team &mdash; you&apos;re
-            never on your own to find and vet a tutor independently.
+            Scheduling, sessions, and payments all happen through Study Hall at Home. Every Guide is
+            recruited, reviewed, and approved by our team &mdash; you&apos;re never on your own to
+            find and vet someone independently.
           </p>
         </div>
       </Container>
 
       <Container className="py-8">
         <p className="text-sm text-ink-400">
-          Interested in teaching with African Tutors instead?{" "}
+          Interested in becoming a Guide instead?{" "}
           <Link href="/apply-to-tutor" className="font-medium text-gold-700 hover:underline">
-            Apply to tutor
+            Become a Guide
           </Link>
           .
         </p>
@@ -68,7 +68,7 @@ export default function HowItWorksPage() {
 
       <CtaSection
         title="See it for yourself"
-        description="Don't take our word for it — let your student experience a real tutor with a free 30-minute session."
+        description="Let your child experience a real Study Hall with a Guide — your first session is free."
         primaryLabel={FREE_TRIAL_CTA}
         secondaryHref="/pricing"
         secondaryLabel="View Pricing"

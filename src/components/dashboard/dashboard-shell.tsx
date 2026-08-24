@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import type { Role } from "@/lib/roles";
 
 const ROLE_LABEL: Record<Role, string> = {
-  student: "Student",
-  tutor: "Tutor",
-  admin: "Administrator",
+  student: "Parent",
+  tutor: "Guide",
+  admin: "Manager",
 };
 
 export interface DashboardNavItem {

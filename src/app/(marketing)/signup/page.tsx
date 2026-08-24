@@ -6,14 +6,14 @@ import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
   title: "Sign Up",
-  description: "Create your African Tutors account.",
+  description: "Create your Study Hall at Home account.",
 };
 
 export default function SignupPage() {
   return (
     <AuthCard
       title="Create your account"
-      description="Get started as a student, or apply to teach."
+      description="Set up your parent account, or apply to become a Guide."
       footer={
         <>
           Already have an account?{" "}

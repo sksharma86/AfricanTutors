@@ -82,8 +82,8 @@ export function SignupForm({
         <div className="mt-2 grid grid-cols-2 gap-3">
           {(
             [
-              { value: "student", label: "Learn" },
-              { value: "tutor", label: "Teach" },
+              { value: "student", label: "I'm a parent" },
+              { value: "tutor", label: "Become a Guide" },
             ] as const
           ).map((option) => (
             <label
@@ -108,7 +108,7 @@ export function SignupForm({
         </div>
         {role === "tutor" ? (
           <p className="mt-2 text-xs text-ink-400">
-            Tutor applications are reviewed by our team before you get full tutor access.
+            Guide applications are reviewed by our team before you get full Guide access.
           </p>
         ) : null}
       </fieldset>

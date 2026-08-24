@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/auth";
 import { formatCents } from "@/lib/pricing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Admin — Tutor detail" };
+export const metadata: Metadata = { title: "Admin — Guide detail" };
 export const dynamic = "force-dynamic";
 
 // Module-scope so `Date` isn't called in the Server Component render body.

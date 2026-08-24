@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 import { requireUser } from "@/lib/auth";
 import { getSessionInfo, type SessionInfo } from "@/lib/session-service";
 
-export const metadata: Metadata = { title: "Tutoring Session" };
+export const metadata: Metadata = { title: "Study Hall Session" };
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({ params }: { params: Promise<{ bookingId: string }> }) {
@@ -37,7 +37,7 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
               <p className="mt-2 text-sm text-ink-300">
                 {info.reason === "not_found"
                   ? "We couldn't find that session."
-                  : "You don't have access to this tutoring session."}
+                  : "You don't have access to this Study Hall session."}
               </p>
             </div>
           )}

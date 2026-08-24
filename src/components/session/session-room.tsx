@@ -96,16 +96,16 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     }
   }
 
-  const subject = info.subject ?? "Tutoring session";
+  const subject = info.subject ?? "Study Hall session";
 
   return (
     <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">African Tutors · Live session</p>
+          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall at Home · Live session</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-white">{subject}</h1>
           <p className="mt-1 text-sm text-ink-300">
-            {info.role === "tutor" ? "Student" : "Tutor"}: {info.counterpart ?? "—"} · {formatWhen(info.scheduled_start)}
+            {info.role === "tutor" ? "Student" : "Guide"}: {info.counterpart ?? "—"} · {formatWhen(info.scheduled_start)}
             {info.duration_minutes ? ` · ${info.duration_minutes} min` : ""}
           </p>
         </div>
@@ -119,7 +119,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <circle cx="12" cy="12" r="9" />
           <path strokeLinecap="round" d="M12 8h.01M11 12h1v4h1" />
         </svg>
-        <span>This tutoring session is recorded for quality assurance, safety, and dispute resolution.</span>
+        <span>This Study Hall session is recorded for quality assurance, safety, and dispute resolution.</span>
       </div>
 
       <div className="mt-6">

@@ -35,7 +35,7 @@ export default async function BookSessionPage({
         </Link>
         <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">Book a session</h1>
         <p className="mt-2 text-base text-ink-500">
-          Tell us who needs help and when — African Tutors matches an approved tutor for you.
+          Tell us who it&apos;s for and when — Study Hall at Home matches an approved Guide for you.
         </p>
         <div className="mt-8">
           <BookingWizard

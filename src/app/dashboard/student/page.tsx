@@ -44,7 +44,7 @@ interface BookingRow {
 const DEFAULT_TZ = "America/Chicago";
 
 function subjectOf(b: BookingRow): string {
-  return b.subject_name ?? (b.other_subject_text ? `Other — ${b.other_subject_text}` : "Tutoring session");
+  return b.subject_name ?? (b.other_subject_text ? `Other — ${b.other_subject_text}` : "Study Hall session");
 }
 
 function whenLabelOf(b: BookingRow): string | undefined {
@@ -139,7 +139,7 @@ export default async function StudentDashboardPage() {
         whenLabel={whenLabelOf(b)}
         durationLabel={b.duration_minutes ? formatDuration(b.duration_minutes) : undefined}
         personLabel={b.students?.full_name}
-        tutorLabel={b.tutor_display_name ? `Tutor: ${b.tutor_display_name}` : undefined}
+        tutorLabel={b.tutor_display_name ? `Guide: ${b.tutor_display_name}` : undefined}
         focus={!opts.history && b.request_note ? b.request_note : undefined}
         statusLabel={status.label}
         statusTone={status.tone as StatusTone}
@@ -173,13 +173,13 @@ export default async function StudentDashboardPage() {
         {freeTrialAvailable ? (
           <section className="at-fade-in overflow-hidden rounded-3xl bg-ink-900 p-7 sm:p-9">
             <p className="text-xs font-semibold tracking-[0.14em] text-gold-300 uppercase">
-              New student offer
+              New family offer
             </p>
             <h1 className="mt-2 max-w-xl font-display text-3xl font-semibold text-white sm:text-4xl">
               Your first 30-minute session is free.
             </h1>
             <p className="mt-2 max-w-lg text-base leading-7 text-ink-200">
-              A real one-on-one session with an approved African Tutors tutor. No credit card required.
+              A real Study Hall session with an approved Guide. No credit card required.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
@@ -189,7 +189,7 @@ export default async function StudentDashboardPage() {
                 href="/dashboard/student/packages"
                 className="text-sm font-medium text-gold-200 hover:text-gold-100"
               >
-                See tutoring packages →
+                See pricing &amp; packages →
               </Link>
             </div>
           </section>
@@ -200,7 +200,7 @@ export default async function StudentDashboardPage() {
               <h1 className="mt-1.5 font-display text-3xl font-semibold text-ink-900">
                 {firstName ? `Hi ${firstName}` : "Ready for the next session?"}
               </h1>
-              <p className="mt-1.5 text-sm text-ink-500">Book a session or manage your upcoming tutoring below.</p>
+              <p className="mt-1.5 text-sm text-ink-500">Book a session or manage your upcoming Study Halls below.</p>
             </div>
             <LinkButton href="/dashboard/student/book" variant="primary" size="lg">
               Book a session
@@ -224,7 +224,7 @@ export default async function StudentDashboardPage() {
           ) : (
             <EmptyState
               title="You're all caught up"
-              description="Book your next tutoring session whenever you're ready."
+              description="Book your next Study Hall session whenever you're ready."
               actionHref="/dashboard/student/book"
               actionLabel="Book a session"
               icon={
@@ -262,7 +262,7 @@ export default async function StudentDashboardPage() {
           ) : (
             <EmptyState
               title="No sessions yet"
-              description="Your completed tutoring sessions will appear here."
+              description="Your completed Study Hall sessions will appear here."
               icon={
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

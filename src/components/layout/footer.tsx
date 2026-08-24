@@ -11,8 +11,8 @@ export function Footer() {
         <div className="max-w-sm">
           <BrandLockup />
           <p className="mt-3 text-sm leading-6 text-ink-500">
-            High-quality online tutoring without the high price. Live, one-on-one sessions with
-            carefully approved tutors — your first 30 minutes are free.
+            Affordable live homework supervision for families. A trained Guide keeps your children on
+            task while they do their schoolwork — your first session is free.
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export function Footer() {
         <p>
           &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
         </p>
-        <p>Tutoring, scheduling, and payments are managed through {SITE_NAME}.</p>
+        <p>Sessions, scheduling, and payments are managed through {SITE_NAME}.</p>
       </Container>
     </footer>
   );

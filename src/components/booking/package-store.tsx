@@ -75,7 +75,7 @@ export function PackageStore({
         </div>
         <h2 className="mt-5 font-display text-2xl font-semibold text-ink-900">Hours added to your account</h2>
         <p className="mt-2 text-sm text-ink-600">
-          {done.minutes / 60} hours of tutoring were added using your credit. They never expire.
+          {done.minutes / 60} hours of Study Hall time were added using your credit. They never expire.
         </p>
         <div className="mt-6">
           <a href="/dashboard/student/book" className="font-medium text-gold-700 hover:underline">

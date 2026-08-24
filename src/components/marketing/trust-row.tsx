@@ -1,7 +1,7 @@
 import { Container } from "@/components/ui/container";
 
 const SIGNALS = [
-  "Approved tutors",
+  "Approved Guides",
   "Sessions recorded for quality & safety",
   "Secure payments",
   "Flexible online booking",

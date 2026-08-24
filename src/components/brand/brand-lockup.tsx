@@ -26,7 +26,7 @@ export function BrandLockup({
     <Link href={href} className={cn("flex items-center gap-2.5", className)}>
       <BrandMark size={size} priority={priority} />
       <span className={cn("font-display text-lg font-semibold text-ink-900", textClassName)}>
-        African Tutors
+        Study Hall at Home
       </span>
     </Link>
   );

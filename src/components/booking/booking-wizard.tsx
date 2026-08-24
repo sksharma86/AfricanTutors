@@ -315,13 +315,13 @@ export function BookingWizard({
         <p className="mt-2 text-sm leading-6 text-ink-600">
           {confirmation.scheduled
             ? confirmation.isFree
-              ? "Your free 30-minute introductory session is confirmed. We've matched an approved African Tutors tutor."
+              ? "Your free 30-minute session is confirmed. We've matched an approved Guide."
               : confirmation.funding === "package"
-                ? "Your session is confirmed using your package minutes. An approved African Tutors tutor is matched."
+                ? "Your session is confirmed using your prepaid balance. An approved Guide is matched."
                 : confirmation.funding === "credit"
-                  ? "Your session is confirmed using your account credit. An approved African Tutors tutor is matched."
-                  : "Your time is reserved and an approved African Tutors tutor is matched. Complete payment to confirm this session."
-            : "Thanks — our team will review your request and follow up to arrange an approved tutor."}
+                  ? "Your session is confirmed using your account credit. An approved Guide is matched."
+                  : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."
+            : "Thanks — our team will review your request and follow up to arrange an approved Guide."}
         </p>
         <p className="mt-3 text-sm text-ink-500">
           Reference: <span className="font-mono font-medium text-ink-800">{confirmation.ref}</span>
@@ -350,7 +350,7 @@ export function BookingWizard({
       {/* STEP 1: student */}
       {step === "student" ? (
         <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">Who needs tutoring?</h2>
+          <h2 className="font-display text-xl font-semibold text-ink-900">Who is this Study Hall for?</h2>
           {students.length > 0 ? (
             <div className="mt-4 space-y-3">
               {students.map((s) => (
@@ -489,7 +489,7 @@ export function BookingWizard({
                 placeholder="e.g. Quadratic equations, chemistry test Friday, SAT math"
                 className="mt-1.5 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm"
               />
-              <p className="mt-1 text-xs text-ink-400">Only shared with your matched tutor. Never shown publicly.</p>
+              <p className="mt-1 text-xs text-ink-400">Only shared with your matched Guide. Never shown publicly.</p>
             </div>
           </div>
 
@@ -514,7 +514,7 @@ export function BookingWizard({
           {balances && (balances.minutes > 0 || balances.creditCents > 0) ? (
             <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
               Your balance:{" "}
-              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of tutoring</span> : null}
+              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall time</span> : null}
               {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
               {balances.creditCents > 0 ? (
                 <span className="font-medium text-ink-800">{formatMoneyCents(balances.creditCents)} account credit</span>
@@ -589,7 +589,7 @@ export function BookingWizard({
             Times shown in {student?.full_name}&apos;s timezone ({tzAbbreviation(new Date().toISOString(), studentTz)}).
           </p>
           {slotsLoading ? (
-            <p className="mt-6 text-sm text-ink-400">Finding available tutors…</p>
+            <p className="mt-6 text-sm text-ink-400">Finding available Guides…</p>
           ) : slotsByDay.length === 0 ? (
             <p className="mt-6 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
               No open times in the next {BOOKING_HORIZON_DAYS} days for this subject. Try a different subject or check
@@ -652,7 +652,7 @@ export function BookingWizard({
             {!isFreeTrial && subjectId && quote ? (
               <>
                 {quote.package_minutes_used > 0 ? (
-                  <Row label="Tutoring balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                  <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 ) : null}
                 {quote.credit_cents_used > 0 ? (
                   <Row label="Account credit" value={`−${formatMoneyCents(quote.credit_cents_used)}`} />
@@ -668,7 +668,7 @@ export function BookingWizard({
           {!isFreeTrial && subjectId ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
               {quote && quote.package_minutes_used > 0 && quote.stripe_cents_due === 0
-                ? "This session is covered by your tutoring balance — no payment required."
+                ? "This session is covered by your prepaid balance — no payment required."
                 : quote && quote.stripe_cents_due === 0
                   ? "This session is fully covered by your account credit — no payment required."
                   : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}

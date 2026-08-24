@@ -1,16 +1,16 @@
 /**
- * Pure email templates for African Tutors transactional email. No provider, no
+ * Pure email templates for Study Hall at Home transactional email. No provider, no
  * DB, no secrets — each builder returns { subject, html, text } from already-
  * resolved SAFE data (first-name display identity only; never email/phone).
  *
- * Session links always point at the authenticated African Tutors route
+ * Session links always point at the authenticated Study Hall at Home route
  * (APP_URL/dashboard/session/<booking_id>), never a Daily room/token — the app
  * performs authorization and mints Daily access at click time.
  *
  * Plain ESM (+ .d.ts) so subjects/URLs/timezone rendering are unit-testable.
  */
 
-const BRAND = "African Tutors";
+const BRAND = "Study Hall at Home";
 
 export function formatMoney(cents) {
   const d = (cents ?? 0) / 100;
@@ -79,15 +79,15 @@ export function bookingConfirmed(ctx) {
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const free = ctx.isFreeTrial;
   const lines = [
-    free ? "Your free 30-minute tutoring session is confirmed. No payment method was required." : "Your tutoring session is confirmed.",
-    `Subject: ${ctx.subject || "Tutoring"}`,
+    free ? "Your free 30-minute Study Hall session is confirmed. No payment method was required." : "Your Study Hall session is confirmed.",
+    `Subject: ${ctx.subject || "Study Hall"}`,
     `When: ${when}`,
     `Duration: ${ctx.durationMinutes || 30} minutes`,
-    ctx.tutorName ? `Tutor: ${ctx.tutorName}` : null,
+    ctx.tutorName ? `Guide: ${ctx.tutorName}` : null,
     "Join from your dashboard when it's time — the session opens 10 minutes before the start.",
   ];
   return {
-    subject: free ? "Your free session is confirmed" : "Your tutoring session is confirmed",
+    subject: free ? "Your free session is confirmed" : "Your Study Hall session is confirmed",
     html: layout(
       free ? "Free session confirmed" : "Session confirmed",
       lines.filter(Boolean).map(p).join(""),
@@ -100,14 +100,14 @@ export function bookingConfirmed(ctx) {
 export function packagePurchased(ctx) {
   const hrs = (ctx.minutes ?? 0) / 60;
   const lines = [
-    `Thank you — your ${Number.isInteger(hrs) ? hrs : hrs.toFixed(1)}-hour tutoring package is active.`,
+    `Thank you — your ${Number.isInteger(hrs) ? hrs : hrs.toFixed(1)}-hour package is active.`,
     `Minutes added: ${ctx.minutes}`,
     `Amount paid: ${formatMoney(ctx.amountCents)}`,
     typeof ctx.balanceMinutes === "number" ? `New balance: ${ctx.balanceMinutes} minutes` : null,
     "These minutes never expire and apply automatically to your next booking.",
   ];
   return {
-    subject: "Your tutoring package is ready",
+    subject: "Your prepaid hours are ready",
     html: layout("Package activated", lines.filter(Boolean).map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Book a session" } : null),
     text: textJoin(lines.filter(Boolean)),
   };
@@ -117,16 +117,16 @@ export function reminder(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const soon = ctx.kind === "1h" ? "starts in about an hour" : "is coming up";
-  const who = ctx.role === "tutor" ? `Student: ${ctx.studentName || "your student"}` : `Tutor: ${ctx.tutorName || "your tutor"}`;
+  const who = ctx.role === "tutor" ? `Student: ${ctx.studentName || "your student"}` : `Guide: ${ctx.tutorName || "your Guide"}`;
   const lines = [
-    `Reminder: your ${ctx.subject || "tutoring"} session ${soon}.`,
+    `Reminder: your ${ctx.subject || "Study Hall"} session ${soon}.`,
     `When: ${when}`,
     who,
     "Join from your dashboard — the room opens 10 minutes before start.",
     ctx.role === "customer" ? "Need to cancel? Cancellations 24+ hours ahead return your value to your account." : null,
   ];
   return {
-    subject: ctx.kind === "1h" ? "Your session starts soon" : "Reminder: upcoming tutoring session",
+    subject: ctx.kind === "1h" ? "Your session starts soon" : "Reminder: upcoming Study Hall session",
     html: layout("Upcoming session", lines.filter(Boolean).map(p).join(""), { href: url, label: "Join session" }),
     text: textJoin([...lines.filter(Boolean), "", `Join: ${url}`]),
   };
@@ -154,14 +154,14 @@ export function cancellation(ctx) {
 export function tutorReassignment(ctx) {
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const lines = ctx.reassigned
-    ? ["Your assigned tutor changed, and we've matched you with another approved tutor. Your session time is unchanged.", ctx.subject ? `Subject: ${ctx.subject}` : null]
+    ? ["Your assigned Guide changed, and we've matched you with another approved Guide. Your session time is unchanged.", ctx.subject ? `Subject: ${ctx.subject}` : null]
     : [
-        "Your tutor became unavailable and we couldn't arrange a replacement in time, so the session was released and all value returned to your account.",
+        "Your Guide became unavailable and we couldn't arrange a replacement in time, so the session was released and all value returned to your account.",
         ctx.compCreditCents ? `We've added ${formatMoney(ctx.compCreditCents)} account credit for the inconvenience.` : null,
         "Please rebook a time that works for you.",
       ];
   return {
-    subject: ctx.reassigned ? "Update: your tutor changed" : "Update about your session",
+    subject: ctx.reassigned ? "Update: your Guide changed" : "Update about your session",
     html: layout("Session update", lines.filter(Boolean).map(p).join(""), ctx.reassigned ? { href: url, label: "View session" } : ctx.appUrl ? { href: ctx.appUrl, label: "Rebook a session" } : null),
     text: textJoin(lines.filter(Boolean)),
   };
@@ -192,22 +192,22 @@ export function disputeResolved(ctx) {
     ctx.restoredMinutes ? `Package minutes added: ${ctx.restoredMinutes}` : null,
     ctx.creditCents ? `Account credit added: ${formatMoney(ctx.creditCents)} (usable on future sessions).` : null,
     ctx.refundCents ? `Refund to your original payment method: ${formatMoney(ctx.refundCents)} (card/Stripe refund, not account credit).` : null,
-    "Thank you for helping us keep African Tutors high quality.",
+    "Thank you for helping us keep Study Hall at Home high quality.",
   ];
   return { subject: "Update on your session concern", html: layout("Concern resolved", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
 export function tutorApproved(ctx) {
-  const lines = [`Hi ${ctx.name || "there"},`, "Congratulations — your African Tutors tutor application has been approved. You can set your availability and you'll be matched to sessions in your approved subjects."];
-  return { subject: "You're approved to tutor with African Tutors", html: layout("You're approved!", lines.map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Set your availability" } : null), text: textJoin(lines) };
+  const lines = [`Hi ${ctx.name || "there"},`, "Congratulations — your Study Hall at Home Guide application has been approved. You can set your availability and you'll be matched to sessions."];
+  return { subject: "You're approved to Guide with Study Hall at Home", html: layout("You're approved!", lines.map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Set your availability" } : null), text: textJoin(lines) };
 }
 
 export function tutorNewSession(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const lines = [
-    "You've been assigned a new tutoring session.",
-    `Subject: ${ctx.subject || "Tutoring"}`,
+    "You've been assigned a new Study Hall session.",
+    `Subject: ${ctx.subject || "Study Hall"}`,
     `When: ${when}`,
     `Duration: ${ctx.durationMinutes || 30} minutes`,
     ctx.studentName ? `Student: ${ctx.studentName}` : null,
@@ -235,5 +235,5 @@ export function tutorRemoved(ctx) {
 
 export function adminAlert(ctx) {
   const lines = [ctx.summary || "An operational event needs attention.", ...(ctx.lines || [])];
-  return { subject: `[Ops] ${ctx.title || "African Tutors alert"}`, html: layout(ctx.title || "Operational alert", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
+  return { subject: `[Ops] ${ctx.title || "Study Hall at Home alert"}`, html: layout(ctx.title || "Operational alert", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }

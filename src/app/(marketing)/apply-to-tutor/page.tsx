@@ -5,20 +5,20 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Apply to Tutor",
-  description: "Apply to join the African Tutors network of qualified academic tutors.",
+  title: "Become a Guide",
+  description: "Apply to become a Study Hall at Home Guide and help families build dependable homework routines.",
 };
 
 export default function ApplyToTutorPage() {
   return (
     <AuthCard
-      title="Apply to tutor with African Tutors"
-      description="Create an account to start your tutor application. Our team reviews every application before granting tutor access."
+      title="Become a Guide with Study Hall at Home"
+      description="Create an account to start your Guide application. Our team reviews every application before granting Guide access."
       footer={
         <>
-          Looking to book tutoring for a student instead?{" "}
+          Looking to book Study Hall for your child instead?{" "}
           <Link href="/signup" className="font-medium text-gold-700 hover:underline">
-            Create a student account
+            Create a parent account
           </Link>
           .
         </>

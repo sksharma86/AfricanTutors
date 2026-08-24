@@ -218,7 +218,7 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
   return (
     <section className="rounded-2xl border border-ink-100 bg-white p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="font-display text-lg font-semibold text-ink-900">Tutor earnings</h3>
+        <h3 className="font-display text-lg font-semibold text-ink-900">Guide earnings</h3>
         <div className="flex items-center gap-3 text-sm">
           <span className="rounded-full border border-ink-200 px-3 py-1">Earned {formatCents(totals.earned)}</span>
           <span className="rounded-full border border-ink-200 px-3 py-1">Paid {formatCents(totals.paid)}</span>
@@ -234,7 +234,7 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-ink-400">
-            <tr><th className="py-2 pr-3"></th><th className="py-2 pr-3">Tutor</th><th className="py-2 pr-3">Session</th><th className="py-2 pr-3">Min</th><th className="py-2 pr-3">Rate</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Status</th><th className="py-2">Actions</th></tr>
+            <tr><th className="py-2 pr-3"></th><th className="py-2 pr-3">Guide</th><th className="py-2 pr-3">Session</th><th className="py-2 pr-3">Min</th><th className="py-2 pr-3">Rate</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Status</th><th className="py-2">Actions</th></tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
             {filtered.length === 0 ? (
@@ -280,7 +280,7 @@ function DisputesTab({ rows, payments, onOk, onErr }: { rows: DisputeRow[]; paym
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-medium text-ink-900">{d.subject ?? "Session"} · {d.category}</p>
-                <p className="text-xs text-ink-500">{d.ref ? `Ref ${d.ref} · ` : ""}{d.when ? new Date(d.when).toLocaleString() : ""}{d.tutor_name ? ` · Tutor ${d.tutor_name}` : ""}</p>
+                <p className="text-xs text-ink-500">{d.ref ? `Ref ${d.ref} · ` : ""}{d.when ? new Date(d.when).toLocaleString() : ""}{d.tutor_name ? ` · Guide ${d.tutor_name}` : ""}</p>
                 {d.complaint ? <p className="mt-1 text-sm text-ink-600">“{d.complaint}”</p> : null}
                 <RecordingStatus recordings={d.recordings ?? []} onErr={onErr} />
               </div>
@@ -352,7 +352,7 @@ function ResolveForm({ dispute, payments, onDone, onErr }: { dispute: DisputeRow
           </select>
         </label>
       ) : null}
-      <label className="text-sm">Tutor earning
+      <label className="text-sm">Guide earning
         <select value={earningAction} onChange={(e) => setEarningAction(e.target.value)} className="mt-1 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm">
           <option value="none">Leave intact</option><option value="void">Void</option>
         </select>
