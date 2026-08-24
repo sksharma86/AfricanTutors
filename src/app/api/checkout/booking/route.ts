@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createBookingCheckout } from "@/lib/checkout-service";
+import { isStudyHallDuration, type StudyHallDuration } from "@/lib/pricing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,13 +15,15 @@ function safeError(message: string): string {
  * Start checkout for a booking. Server-authoritative: `book_session` prices the
  * session and decides funding; the client cannot set an amount. Returns either a
  * Stripe Checkout URL (payment due) or a confirmed/request result (no payment).
+ *
+ * Study Hall customer bookings are whole-hour blocks only (60 / 120 / 180).
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body.studentId !== "string") {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  const duration = body.duration === 60 ? 60 : 30;
+  const duration: StudyHallDuration = isStudyHallDuration(body.duration) ? body.duration : 60;
   const isFreeTrial = Boolean(body.isFreeTrial);
   const subjectId = typeof body.subjectId === "string" ? body.subjectId : null;
 

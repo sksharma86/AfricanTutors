@@ -21,13 +21,15 @@ describe("Pricing page — single sessions before packages", () => {
     assert.match(shell, /label:\s*"Sessions"/);
   });
 
-  it("single-session prices derive from the authoritative constant ($12 / $12) (items 2,3,9)", () => {
-    assert.match(pricing, /minutes:\s*30,\s*priceUsd:\s*12/);
+  it("single-session prices derive from whole-hour SESSION_OPTIONS ($12 / $24 / $36)", () => {
     assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
+    assert.match(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
+    assert.match(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.doesNotMatch(pricing, /minutes:\s*30,/);
     // Cards derive from SESSION_OPTIONS, not hardcoded amounts.
     assert.match(cards, /SESSION_OPTIONS/);
-    assert.doesNotMatch(cards, /\$\s?12\b|\$\s?20\b/); // no hardcoded dollar literal
-    assert.doesNotMatch(cards, /\b1200\b|\b2000\b/); // no hardcoded cents literal
+    assert.doesNotMatch(cards, /\$\s?12\b|\$\s?24\b|\$\s?36\b/); // no hardcoded dollar literal
+    assert.doesNotMatch(cards, /\b1200\b|\b2400\b|\b3600\b/); // no hardcoded cents literal
   });
 
   it("single-session section renders before prepaid packages (item 4)", () => {
@@ -40,8 +42,8 @@ describe("Pricing page — single sessions before packages", () => {
 
   it("CTAs enter the existing booking flow with duration preselected (items 6,7)", () => {
     assert.match(cards, /book\?duration=\$\{option\.minutes\}/);
-    // Book page reads duration SAFELY (only 30 or 60) and passes it through.
-    assert.match(bookPage, /duration === "60" \? 60 : 30/);
+    // Book page accepts only whole-hour Study Hall durations (60 / 120 / 180).
+    assert.match(bookPage, /parsed === 120 \|\| parsed === 180 \|\| parsed === 60/);
     assert.match(bookPage, /initialDuration=\{initialDuration\}/);
     assert.match(wizard, /initialDuration/);
   });

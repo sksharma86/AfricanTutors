@@ -5,9 +5,10 @@
  * compensation or internal unit economics here (or anywhere shipped to the
  * browser). Those live in the internal `BUSINESS_MODEL.md` document.
  *
- * Study Hall pricing model:
- *   - Pay as you go: 60-minute session = $12 ($12/hour)
- *   - 30-minute paid duration retained at $12 for internal/booking support
+ * Study Hall pricing model ($12/hour, whole-hour blocks only):
+ *   - 1 hour  (60 min)  = $12
+ *   - 2 hours (120 min) = $24
+ *   - 3 hours (180 min) = $36
  *   - A new account's first 60-minute Study Hall session is FREE (no card)
  *
  * Server SQL (`session_list_price_cents` / booking_quote / book_session /
@@ -21,12 +22,22 @@ export interface SessionOption {
   label: string;
 }
 
+/** Customer-facing Study Hall session lengths (whole hours only). */
 export const SESSION_OPTIONS: SessionOption[] = [
-  { minutes: 30, priceUsd: 12, label: "30 minutes" },
-  { minutes: 60, priceUsd: 12, label: "60 minutes" },
+  { minutes: 60, priceUsd: 12, label: "1 hour" },
+  { minutes: 120, priceUsd: 24, label: "2 hours" },
+  { minutes: 180, priceUsd: 36, label: "3 hours" },
 ];
 
-/** Primary retail pay-as-you-go rate (60 minutes). */
+export type StudyHallDuration = 60 | 120 | 180;
+
+export const STUDY_HALL_DURATIONS: StudyHallDuration[] = [60, 120, 180];
+
+export function isStudyHallDuration(n: unknown): n is StudyHallDuration {
+  return n === 60 || n === 120 || n === 180;
+}
+
+/** Primary retail pay-as-you-go rate (per hour). */
 export const PAYG_MINUTES = 60;
 export const PAYG_PRICE_USD = 12;
 

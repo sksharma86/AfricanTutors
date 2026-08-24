@@ -18,9 +18,11 @@ export default async function BookSessionPage({
   await requireRole("student", "/dashboard/student/book");
   const supabase = await createSupabaseServerClient();
 
-  // Only 30 or 60 are valid; anything else falls back to the default (30).
+  // Whole-hour Study Hall only (60 / 120 / 180); anything else defaults to 1 hour.
   const { duration } = await searchParams;
-  const initialDuration: 30 | 60 = duration === "60" ? 60 : 30;
+  const parsed = Number(duration);
+  const initialDuration: 60 | 120 | 180 =
+    parsed === 120 || parsed === 180 || parsed === 60 ? parsed : 60;
 
   const { data: students } = await supabase!
     .from("students")

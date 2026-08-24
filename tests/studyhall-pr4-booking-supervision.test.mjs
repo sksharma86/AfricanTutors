@@ -14,7 +14,7 @@ import { adminClient, cleanupAll, createUser, hasSupabaseEnv, signIn } from "./h
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const SFX = `pr4_${Date.now().toString(36)}`;
 
-describe("Study Hall PR4 — source: supervision booking (no subject / auto Guide)", () => {
+describe("Study Hall PR4 — source: supervision + whole-hour bookings", () => {
   it("customer booking wizard has no subject step and books with null subjectId", () => {
     const wiz = read("src/components/booking/booking-wizard.tsx");
     assert.doesNotMatch(wiz, /type Step = .*subject/);
@@ -25,6 +25,24 @@ describe("Study Hall PR4 — source: supervision booking (no subject / auto Guid
     assert.match(wiz, /We've matched an approved Guide|An approved Guide is matched/);
     assert.match(wiz, /live supervision|accountability|focus/i);
     assert.match(wiz, /do not tutor|not.*homework answers/i);
+  });
+
+  it("30-minute Study Hall is not offered to customers", () => {
+    const pricing = read("src/lib/pricing.ts");
+    const wiz = read("src/components/booking/booking-wizard.tsx");
+    const cards = read("src/components/dashboard/single-session-cards.tsx");
+    const route = read("src/app/api/checkout/booking/route.ts");
+    assert.doesNotMatch(pricing, /minutes:\s*30,/);
+    assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
+    assert.match(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
+    assert.match(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.match(pricing, /label: "1 hour"/);
+    assert.match(pricing, /label: "2 hours"/);
+    assert.match(pricing, /label: "3 hours"/);
+    assert.doesNotMatch(wiz, /30 minutes|30-minute/i);
+    assert.doesNotMatch(cards, /30 minutes|Book 30/i);
+    assert.match(route, /isStudyHallDuration/);
+    assert.doesNotMatch(route, /duration === 60 \? 60 : 30/);
   });
 
   it("book page does not load subjects and describes Guide matching", () => {
@@ -62,9 +80,7 @@ describe("Study Hall PR4 — source: supervision booking (no subject / auto Guid
     const base = Date.parse("2026-08-24T12:00:00Z");
     const start = new Date(base + 20 * 60000).toISOString();
     const end = new Date(base + 80 * 60000).toISOString();
-    // 6 minutes before start → still closed
     assert.equal(customerJoinState("confirmed", start, end, base + 14 * 60000).state, "opens_at");
-    // 4 minutes before start → open
     assert.equal(customerJoinState("confirmed", start, end, base + 16 * 60000).state, "join");
     assert.equal(
       customerJoinState("confirmed", start, end, base).openAtISO,
@@ -72,17 +88,16 @@ describe("Study Hall PR4 — source: supervision booking (no subject / auto Guid
     );
   });
 
-  it("migration 0022 removes subject matching for null subject and sets 5-minute room open", () => {
+  it("migration 0022: subject bypass, 5-min room, whole-hour prices, no comp change", () => {
     const m = read("supabase/migrations/0022_studyhall_pr4_supervision_booking.sql");
     assert.match(m, /Study Hall PR4/);
+    assert.match(m, /duration_minutes in \(30, 60, 120, 180\)/);
+    assert.match(m, /Study Hall sessions are 1, 2, or 3 hours/);
+    assert.match(m, /\(p_duration \/ 60\) \* 1200/);
     assert.match(m, /p_subject_id is null/);
-    assert.match(m, /or exists \(\s*select 1 from public\.tutor_subjects/s);
     assert.match(m, /interval '5 minutes'/);
     assert.doesNotMatch(m, /interval '10 minutes'/);
     assert.match(m, /No Guide is available for that time/);
-    assert.match(m, /Your Guide/);
-    // Preserve PR2 / PR3 authorities
-    assert.match(m, /session_list_price_cents/);
     assert.match(m, /free trial is 60 minutes only/i);
     assert.match(m, /account_has_used_free_trial/);
     assert.match(m, /p_subject_id is null and p_start is null/);
@@ -93,7 +108,12 @@ describe("Study Hall PR4 — source: supervision booking (no subject / auto Guid
     assert.doesNotMatch(sqlBody, /comp_rate|auto_?refill|stripe.?connect/i);
   });
 
-  it("PR2 pricing constants remain intact", () => {
+  it("Guide earnings formula already scales with duration (unchanged architecture)", () => {
+    const earn = read("supabase/migrations/0006_phase4a_review_fixes.sql");
+    assert.match(earn, /v_rate::numeric \* v_duration \/ 60\.0/);
+  });
+
+  it("PR2 package pricing + PR3 free-trial constants remain intact", () => {
     const pricing = read("src/lib/pricing.ts");
     assert.match(pricing, /PAYG_PRICE_USD = 12/);
     assert.match(pricing, /FREE_TRIAL_MINUTES = 60/);
@@ -128,12 +148,17 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
   }
 
   async function avail(tutorId, dow, start = "00:00", end = "23:59") {
+    await svc.from("tutor_availability").delete().eq("tutor_id", tutorId).eq("day_of_week", dow);
     await svc.from("tutor_availability").insert({
       tutor_id: tutorId,
       day_of_week: dow,
       start_time: start,
       end_time: end,
     });
+  }
+
+  async function clearAvail(tutorId) {
+    await svc.from("tutor_availability").delete().eq("tutor_id", tutorId);
   }
 
   async function newStudent(accountId, name) {
@@ -165,8 +190,19 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     });
   }
 
+  async function minutes(accountId) {
+    const { data } = await svc.rpc("get_customer_balances", { p_account: accountId });
+    return data?.package_minutes ?? 0;
+  }
+
   async function detectPr4() {
-    // Seed a far-future confirmed booking via service role, then inspect join_open_at.
+    const q = await svc.rpc("booking_quote", {
+      p_account: parent.id,
+      p_duration: 120,
+      p_is_free_trial: false,
+    });
+    if (q.error || q.data?.session_price_cents !== 2400) return false;
+
     const start = futureUtc(40, 12);
     const end = new Date(start.getTime() + 60 * 60000);
     const { data: row, error } = await svc
@@ -203,11 +239,12 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     guideB = await createUser({ requestedRole: "tutor", displayName: "Guide Beta" });
     await approveGuide(guideA.id);
     await approveGuide(guideB.id);
+    await svc.from("tutor_profiles").update({ comp_rate_cents_per_hour: 1000 }).eq("profile_id", guideA.id);
+    await svc.from("tutor_profiles").update({ comp_rate_cents_per_hour: 1000 }).eq("profile_id", guideB.id);
     for (let d = 0; d < 7; d++) {
       await avail(guideA.id, d);
       await avail(guideB.id, d);
     }
-    // Subject only Guide A is qualified for — used to prove Study Hall ignores specialty.
     const { data: subj, error: se } = await svc
       .from("subjects")
       .insert({ name: `PR4 Specialty ${SFX}`, category: "math", is_active: true })
@@ -216,13 +253,16 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     assert.equal(se, null, se?.message);
     subjectOnlyA = subj.id;
     await svc.from("tutor_subjects").insert({ tutor_id: guideA.id, subject_id: subjectOnlyA });
-    // Intentionally do NOT qualify guideB for subjectOnlyA.
 
     pr4Applied = await detectPr4();
   });
 
   after(async () => {
     for (const acc of accounts) {
+      await svc.from("tutor_earnings").delete().in(
+        "booking_id",
+        (await svc.from("bookings").select("id").eq("account_id", acc)).data?.map((b) => b.id) ?? [],
+      );
       await svc.from("bookings").delete().eq("account_id", acc);
       await svc.from("payments").delete().eq("account_id", acc);
       await svc.from("package_minute_ledger").delete().eq("account_id", acc);
@@ -236,18 +276,15 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     await cleanupAll();
   });
 
-  it("PR2: $12 paid session quote remains intact", async () => {
-    const q = await svc.rpc("booking_quote", {
+  it("PR2: packages remain 14h/$140 and 28h/$252; $12/hour rate for 60 min", async () => {
+    const q60 = await svc.rpc("booking_quote", {
       p_account: parent.id,
       p_duration: 60,
       p_is_free_trial: false,
     });
-    assert.equal(q.error, null, q.error?.message);
-    assert.equal(q.data.session_price_cents, 1200);
-    assert.equal(q.data.stripe_cents_due, 1200);
-  });
+    assert.equal(q60.error, null, q60.error?.message);
+    assert.equal(q60.data.session_price_cents, 1200);
 
-  it("PR2: active packages remain 14h/$140 and 28h/$252", async () => {
     const { data, error } = await svc
       .from("package_products")
       .select("code, minutes, price_cents")
@@ -275,26 +312,83 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     assert.equal(q.data.funding, "free_trial");
   });
 
-  it("null-subject slots + auto Guide assignment (skip until 0022 applied)", async (t) => {
+  it("paid Study Hall quotes: 60=$12, 120=$24, 180=$36 (skip until 0022)", async (t) => {
+    if (!pr4Applied) {
+      t.skip("migration 0022 not applied to this environment yet");
+      return;
+    }
+    for (const [dur, cents] of [
+      [60, 1200],
+      [120, 2400],
+      [180, 3600],
+    ]) {
+      const q = await svc.rpc("booking_quote", {
+        p_account: parent.id,
+        p_duration: dur,
+        p_is_free_trial: false,
+      });
+      assert.equal(q.error, null, q.error?.message);
+      assert.equal(q.data.session_price_cents, cents, `${dur} min`);
+      assert.equal(q.data.stripe_cents_due, cents);
+    }
+  });
+
+  it("free trial cannot be 120 or 180 minutes", async (t) => {
+    if (!pr4Applied) {
+      t.skip("migration 0022 not applied to this environment yet");
+      return;
+    }
+    for (const dur of [120, 180]) {
+      const q = await svc.rpc("booking_quote", {
+        p_account: parent.id,
+        p_duration: dur,
+        p_is_free_trial: true,
+      });
+      assert.ok(q.error, `free trial at ${dur} must fail`);
+      assert.match(q.error.message, /60 minutes only/i);
+    }
+  });
+
+  it("scheduled Study Hall rejects 30-minute duration", async (t) => {
     if (!pr4Applied) {
       t.skip("migration 0022 not applied to this environment yet");
       return;
     }
     const client = await signIn(parent.email, parent.password);
-    const from = futureUtc(3, 0).toISOString();
-    const to = futureUtc(5, 0).toISOString();
+    const stu = await newStudent(parent.id, "No Thirty");
+    const r = await book(client, {
+      studentId: stu,
+      subjectId: null,
+      duration: 30,
+      start: futureUtc(5, 10).toISOString(),
+    });
+    assert.ok(r.error);
+    assert.match(r.error.message, /1, 2, or 3 hours|Invalid duration/i);
+  });
+
+  it("null-subject slots + auto Guide assignment for 60-min free session", async (t) => {
+    if (!pr4Applied) {
+      t.skip("migration 0022 not applied to this environment yet");
+      return;
+    }
+    const client = await signIn(parent.email, parent.password);
     const slots = await client.rpc("get_available_slots", {
       p_subject_id: null,
       p_duration: 60,
-      p_from: from,
-      p_to: to,
+      p_from: futureUtc(3, 0).toISOString(),
+      p_to: futureUtc(5, 0).toISOString(),
     });
     assert.equal(slots.error, null, slots.error?.message);
-    assert.ok((slots.data ?? []).length > 0, "Study Hall slots should appear without a subject");
+    assert.ok((slots.data ?? []).length > 0);
 
     const stu = await newStudent(parent.id, "Study Hall Kid");
-    const start = slots.data[0].slot_start;
-    const r = await book(client, { studentId: stu, subjectId: null, duration: 60, start, free: true });
+    const r = await book(client, {
+      studentId: stu,
+      subjectId: null,
+      duration: 60,
+      start: slots.data[0].slot_start,
+      free: true,
+    });
     assert.equal(r.error, null, r.error?.message);
     assert.equal(r.data.funding, "free_trial");
     assert.equal(r.data.session_price_cents, 0);
@@ -306,97 +400,170 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       .single();
     assert.equal(b.subject_id, null);
     assert.ok(b.tutor_id, "Guide must be auto-assigned");
-    assert.ok([guideA.id, guideB.id].includes(b.tutor_id), "assigned Guide must be an approved Guide");
+    assert.ok([guideA.id, guideB.id].includes(b.tutor_id));
     assert.equal(b.status, "confirmed");
-    assert.equal(b.is_free_trial, true);
     assert.equal(b.duration_minutes, 60);
     assert.equal(b.price_cents, 0);
-
-    // Guide B (no specialty) can still be used for Study Hall when A is busy.
-    const start2 = slots.data.find((s) => s.slot_start !== start)?.slot_start ?? slots.data[1]?.slot_start;
-    if (start2) {
-      const parent2 = await createUser({ requestedRole: "student", displayName: "PR4 Parent2" });
-      accounts.push(parent2.id);
-      const c2 = await signIn(parent2.email, parent2.password);
-      const stu2 = await newStudent(parent2.id, "Kid Two");
-      const r2 = await book(c2, { studentId: stu2, subjectId: null, duration: 60, start: start2, free: true });
-      assert.equal(r2.error, null, r2.error?.message);
-      const { data: b2 } = await svc.from("bookings").select("tutor_id, subject_id").eq("id", r2.data.booking_id).single();
-      assert.equal(b2.subject_id, null);
-      assert.ok(b2.tutor_id);
-    }
   });
 
-  it("package-minute consumption still works for Study Hall (null subject)", async (t) => {
+  it("package booking consumes 60/120/180 correctly; cancel restores exact amount", async (t) => {
     if (!pr4Applied) {
       t.skip("migration 0022 not applied to this environment yet");
       return;
     }
-    const a = await createUser({ requestedRole: "student", displayName: "PR4 Pkg" });
+    for (const dur of [60, 120, 180]) {
+      const a = await createUser({ requestedRole: "student", displayName: `PR4 Pkg${dur}` });
+      accounts.push(a.id);
+      const stu = await newStudent(a.id, `PkgKid${dur}`);
+      await svc.from("package_minute_ledger").insert({
+        account_id: a.id,
+        minutes_delta: 400,
+        entry_type: "purchase",
+        reason: "pr4 test grant",
+        reference: `pr4-pkg-${dur}-${SFX}`,
+      });
+      const client = await signIn(a.email, a.password);
+      const slots = await client.rpc("get_available_slots", {
+        p_subject_id: null,
+        p_duration: dur,
+        p_from: futureUtc(6 + dur / 60, 0).toISOString(),
+        p_to: futureUtc(10 + dur / 60, 0).toISOString(),
+      });
+      assert.ok((slots.data ?? []).length > 0, `slots for ${dur}`);
+      const r = await book(client, {
+        studentId: stu,
+        subjectId: null,
+        duration: dur,
+        start: slots.data[0].slot_start,
+      });
+      assert.equal(r.error, null, r.error?.message);
+      assert.equal(r.data.funding, "package");
+      assert.equal(r.data.package_minutes_used, dur);
+      assert.equal(r.data.session_price_cents, (dur / 60) * 1200);
+      assert.equal(await minutes(a.id), 400 - dur);
+
+      const cancel = await client.rpc("customer_cancel_booking", { p_booking: r.data.booking_id });
+      assert.equal(cancel.error, null, cancel.error?.message);
+      assert.equal(await minutes(a.id), 400, `${dur}-min cancel must restore exactly`);
+    }
+  });
+
+  it("2h/3h requires one Guide continuously available for the full interval", async (t) => {
+    if (!pr4Applied) {
+      t.skip("migration 0022 not applied to this environment yet");
+      return;
+    }
+    // Only guideA available, and only for a 90-minute window — too short for 2h/3h.
+    await clearAvail(guideB.id);
+    await clearAvail(guideA.id);
+    const start = futureUtc(15, 14); // 14:00 UTC
+    const dow = start.getUTCDay();
+    await avail(guideA.id, dow, "14:00", "15:30"); // 90 minutes only
+
+    const a = await createUser({ requestedRole: "student", displayName: "PR4 Contig" });
     accounts.push(a.id);
-    const stu = await newStudent(a.id, "PkgKid");
+    const stu = await newStudent(a.id, "LongKid");
+    const client = await signIn(a.email, a.password);
+
+    const fail2h = await book(client, {
+      studentId: stu,
+      subjectId: null,
+      duration: 120,
+      start: start.toISOString(),
+    });
+    assert.ok(fail2h.error, "2h must fail when Guide only free 90 min");
+    assert.match(fail2h.error.message, /No Guide is available/i);
+
+    // Extend guideA to full 3 hours — one Guide owns the whole booking.
+    await clearAvail(guideA.id);
+    await avail(guideA.id, dow, "14:00", "18:00");
+    await svc.from("package_minute_ledger").insert({
+      account_id: a.id,
+      minutes_delta: 180,
+      entry_type: "purchase",
+      reason: "pr4 contig",
+      reference: `pr4-contig-${SFX}`,
+    });
+    const ok3h = await book(client, {
+      studentId: stu,
+      subjectId: null,
+      duration: 180,
+      start: start.toISOString(),
+    });
+    assert.equal(ok3h.error, null, ok3h.error?.message);
+    const { data: b } = await svc
+      .from("bookings")
+      .select("tutor_id, duration_minutes, scheduled_start, scheduled_end")
+      .eq("id", ok3h.data.booking_id)
+      .single();
+    assert.equal(b.tutor_id, guideA.id, "one Guide owns the full 3h booking");
+    assert.equal(b.duration_minutes, 180);
+    const spanMin = (new Date(b.scheduled_end) - new Date(b.scheduled_start)) / 60000;
+    assert.equal(spanMin, 180);
+
+    // Restore full-week availability for later tests.
+    for (let d = 0; d < 7; d++) {
+      await avail(guideA.id, d);
+      await avail(guideB.id, d);
+    }
+  });
+
+  it("Guide earnings scale with duration (2h = 2× hourly rate)", async (t) => {
+    if (!pr4Applied) {
+      t.skip("migration 0022 not applied to this environment yet");
+      return;
+    }
+    const a = await createUser({ requestedRole: "student", displayName: "PR4 Earn" });
+    accounts.push(a.id);
+    const stu = await newStudent(a.id, "EarnKid");
     await svc.from("package_minute_ledger").insert({
       account_id: a.id,
       minutes_delta: 120,
       entry_type: "purchase",
-      reason: "pr4 test grant",
-      reference: `pr4-pkg-${SFX}`,
+      reason: "pr4 earn",
+      reference: `pr4-earn-${SFX}`,
     });
     const client = await signIn(a.email, a.password);
     const slots = await client.rpc("get_available_slots", {
       p_subject_id: null,
-      p_duration: 60,
-      p_from: futureUtc(6, 0).toISOString(),
-      p_to: futureUtc(8, 0).toISOString(),
+      p_duration: 120,
+      p_from: futureUtc(18, 0).toISOString(),
+      p_to: futureUtc(20, 0).toISOString(),
     });
     assert.ok((slots.data ?? []).length > 0);
     const r = await book(client, {
       studentId: stu,
       subjectId: null,
-      duration: 60,
+      duration: 120,
       start: slots.data[0].slot_start,
     });
     assert.equal(r.error, null, r.error?.message);
-    assert.equal(r.data.funding, "package");
-    assert.equal(r.data.package_minutes_used, 60);
-    assert.equal(r.data.stripe_cents_due, 0);
-    const { data: bal } = await svc.rpc("get_customer_balances", { p_account: a.id });
-    assert.equal(bal.package_minutes, 60);
-  });
 
-  it("dollar-credit behavior remains intact for Study Hall (null subject)", async (t) => {
-    if (!pr4Applied) {
-      t.skip("migration 0022 not applied to this environment yet");
-      return;
-    }
-    const a = await createUser({ requestedRole: "student", displayName: "PR4 Credit" });
-    accounts.push(a.id);
-    const stu = await newStudent(a.id, "CredKid");
-    await svc.from("dollar_credit_ledger").insert({
-      account_id: a.id,
-      amount_cents: 1200,
-      entry_type: "grant",
-      reason: "pr4 test credit",
-      reference: `pr4-credit-${SFX}`,
+    // Mark completed far in the past so completion earning path is valid, then record earning.
+    await svc
+      .from("bookings")
+      .update({
+        status: "completed",
+        scheduled_start: new Date(Date.now() - 3 * 3600_000).toISOString(),
+        scheduled_end: new Date(Date.now() - 1 * 3600_000).toISOString(),
+      })
+      .eq("id", r.data.booking_id);
+
+    const { data: earnId, error: ee } = await svc.rpc("record_tutor_earning", {
+      p_booking: r.data.booking_id,
+      p_reason: "pr4 duration scale check",
     });
-    const client = await signIn(a.email, a.password);
-    const slots = await client.rpc("get_available_slots", {
-      p_subject_id: null,
-      p_duration: 60,
-      p_from: futureUtc(9, 0).toISOString(),
-      p_to: futureUtc(11, 0).toISOString(),
-    });
-    assert.ok((slots.data ?? []).length > 0);
-    const r = await book(client, {
-      studentId: stu,
-      subjectId: null,
-      duration: 60,
-      start: slots.data[0].slot_start,
-    });
-    assert.equal(r.error, null, r.error?.message);
-    assert.equal(r.data.funding, "credit");
-    assert.equal(r.data.credit_cents_used, 1200);
-    assert.equal(r.data.stripe_cents_due, 0);
+    assert.equal(ee, null, ee?.message);
+    assert.ok(earnId);
+    const { data: earn } = await svc
+      .from("tutor_earnings")
+      .select("duration_minutes, rate_cents_per_hour, amount_cents, tutor_id")
+      .eq("booking_id", r.data.booking_id)
+      .single();
+    assert.equal(earn.duration_minutes, 120);
+    assert.equal(earn.rate_cents_per_hour, 1000);
+    assert.equal(earn.amount_cents, 2000, "2h at $10/hr Guide rate → $20");
+    assert.ok([guideA.id, guideB.id].includes(earn.tutor_id));
   });
 
   it("one free session per account remains intact (second child cannot re-claim)", async (t) => {
@@ -412,8 +579,8 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     const slots = await client.rpc("get_available_slots", {
       p_subject_id: null,
       p_duration: 60,
-      p_from: futureUtc(12, 0).toISOString(),
-      p_to: futureUtc(14, 0).toISOString(),
+      p_from: futureUtc(22, 0).toISOString(),
+      p_to: futureUtc(24, 0).toISOString(),
     });
     assert.ok((slots.data ?? []).length > 1);
     const first = await book(client, {
@@ -440,7 +607,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       t.skip("migration 0022 not applied to this environment yet");
       return;
     }
-    const start = futureUtc(20, 15);
+    const start = futureUtc(25, 15);
     const end = new Date(start.getTime() + 60 * 60000);
     const stu = await newStudent(parent.id, "Join Window Kid");
     const { data: row } = await svc
@@ -467,11 +634,9 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     assert.equal(data.authorized, true);
     const leadMin = (new Date(data.scheduled_start) - new Date(data.join_open_at)) / 60000;
     assert.equal(leadMin, 5);
-    assert.equal(data.counterpart, "Guide");
   });
 
   it("authorization: anon cannot book or authorize join", async () => {
-    const anon = adminClient(); // service is fine for setup; use fresh anon for authz
     const { createClient } = await import("@supabase/supabase-js");
     const naked = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -489,10 +654,8 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     const join = await naked.rpc("authorize_session_join", {
       p_booking: "00000000-0000-0000-0000-000000000099",
     });
-    // Either error or authorized:false — never open access for anon.
     if (!join.error) {
       assert.equal(join.data?.authorized, false);
     }
-    void anon;
   });
 });

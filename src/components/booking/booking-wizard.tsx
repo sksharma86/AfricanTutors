@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
+import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd, type StudyHallDuration } from "@/lib/pricing";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
@@ -50,12 +50,12 @@ interface Quote {
 export function BookingWizard({
   students: initialStudents,
   subjects: _subjects = [],
-  initialDuration = 30,
+  initialDuration = 60,
 }: {
   students: StudentRow[];
   /** Unused — Study Hall books without a subject. Kept optional for page compat. */
   subjects?: SubjectRow[];
-  initialDuration?: 30 | 60;
+  initialDuration?: StudyHallDuration;
 }) {
   void _subjects;
   const router = useRouter();
@@ -71,10 +71,10 @@ export function BookingWizard({
 
   const [note, setNote] = useState("");
 
-  // Duration may be preselected from the Pricing page ("Book 30/60 minutes").
+  // Duration may be preselected from the Pricing page ("Book 1/2/3 hours").
   // This is display state only — it never sets price or bypasses the free-trial
   // option, which the duration step still presents when the account is eligible.
-  const [duration, setDuration] = useState<30 | 60>(initialDuration);
+  const [duration, setDuration] = useState<StudyHallDuration>(initialDuration);
   const [isFreeTrial, setIsFreeTrial] = useState(false);
 
   const [slots, setSlots] = useState<string[]>([]);
@@ -172,7 +172,7 @@ export function BookingWizard({
     setNewName("");
   }
 
-  async function loadSlots(dur: 30 | 60) {
+  async function loadSlots(dur: StudyHallDuration) {
     if (!supabase) return;
     setSlotsLoading(true);
     setSlots([]);
@@ -426,7 +426,7 @@ export function BookingWizard({
               <button
                 type="button"
                 onClick={() => {
-                  setDuration(FREE_TRIAL_MINUTES as 30 | 60);
+                  setDuration(FREE_TRIAL_MINUTES);
                   setIsFreeTrial(true);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl border-2 px-5 py-4 text-left ${
@@ -446,7 +446,7 @@ export function BookingWizard({
                 key={o.minutes}
                 type="button"
                 onClick={() => {
-                  setDuration(o.minutes as 30 | 60);
+                  setDuration(o.minutes as StudyHallDuration);
                   setIsFreeTrial(false);
                 }}
                 className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left ${
@@ -545,7 +545,7 @@ export function BookingWizard({
                 value={`${formatDayHeading(selectedSlot, studentTz)}, ${formatTime(selectedSlot, studentTz)} (${tzAbbreviation(selectedSlot, studentTz)})`}
               />
             ) : null}
-            <Row label="Duration" value={`${duration} minutes`} />
+            <Row label="Duration" value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`} />
             <Row label="Price" value={priceLabel} highlight={isFreeTrial} />
             {!isFreeTrial && quote ? (
               <>

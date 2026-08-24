@@ -71,7 +71,7 @@ export async function accountFreeTrialUsed(accountId: string): Promise<boolean> 
  */
 export async function getAvailableSlots(params: {
   subjectId: string | null;
-  duration: 30 | 60;
+  duration: 60 | 120 | 180;
   fromISO?: string;
   toISO?: string;
   slotMinutes?: number;
@@ -101,7 +101,7 @@ export async function requestBooking(params: {
   subjectId: string | null;
   otherSubject?: string | null;
   note?: string | null;
-  duration: 30 | 60;
+  duration: 60 | 120 | 180;
   startISO: string | null;
   isFreeTrial: boolean;
 }): Promise<string> {

@@ -65,7 +65,7 @@ export async function createBookingCheckout(
     subjectId: string | null;
     otherSubject?: string | null;
     note?: string | null;
-    duration: 30 | 60;
+    duration: 60 | 120 | 180;
     startISO: string | null;
     isFreeTrial: boolean;
   },

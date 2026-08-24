@@ -12,15 +12,16 @@ import { SESSION_OPTIONS, formatUsd } from "@/lib/pricing";
  * server-authoritative and unchanged.
  */
 const COPY: Record<number, string> = {
-  30: "A quick, focused block of supervised study time.",
-  60: "Pay as you go — a full Study Hall session to settle in and get homework done.",
+  60: "Pay as you go — a full hour of supervised Study Hall for nightly homework.",
+  120: "A heavier homework night — two continuous hours with one Guide.",
+  180: "Exam prep, catch-up, or projects — three continuous hours of focus.",
 };
 
 export function SingleSessionCards() {
   return (
     <section>
       <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Book a single session</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         {SESSION_OPTIONS.map((option) => (
           <Card key={option.minutes} className="flex flex-col p-6">
             <div className="flex items-start justify-between gap-3">
@@ -34,7 +35,7 @@ export function SingleSessionCards() {
                 variant="outline"
                 className="w-full"
               >
-                Book {option.minutes} minutes
+                Book {option.label}
               </LinkButton>
             </div>
           </Card>

@@ -23,8 +23,11 @@ describe("Study Hall PR2 — authoritative client pricing constants", () => {
     assert.match(pricingSrc, /minutes:\s*60,\s*priceUsd:\s*12/);
   });
 
-  it("30-minute paid support remains at $12", () => {
-    assert.match(pricingSrc, /minutes:\s*30,\s*priceUsd:\s*12/);
+  it("customer SESSION_OPTIONS are whole-hour Study Hall blocks at $12/hour", () => {
+    assert.match(pricingSrc, /minutes:\s*60,\s*priceUsd:\s*12/);
+    assert.match(pricingSrc, /minutes:\s*120,\s*priceUsd:\s*24/);
+    assert.match(pricingSrc, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.doesNotMatch(pricingSrc, /minutes:\s*30,/);
   });
 
   it("14h package is $140 / 840 minutes ($10/hr); 28h is $252 / 1680 ($9/hr)", () => {

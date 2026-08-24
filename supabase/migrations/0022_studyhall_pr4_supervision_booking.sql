@@ -1,17 +1,95 @@
--- Study Hall PR4: supervision booking model (forward-only).
+-- Study Hall PR4: supervision booking model + whole-hour sessions (forward-only).
 --
 -- Goals:
 --   * Normal Study Hall bookings do NOT require an academic subject.
 --   * Guides are assigned from all approved available Guides (no specialty filter).
 --   * Session rooms open 5 minutes before scheduled start (was 10).
---   * Preserve PR2 pricing, PR3 free-trial rules, ledgers, and one-per-account protection.
+--   * Study Hall customer sessions are WHOLE HOURS only: 60 / 120 / 180 minutes
+--     at $12/hour ($12 / $24 / $36). No new paid 30-minute Study Hall bookings.
+--   * Preserve PR2 package catalog, PR3 free-trial (60 min / $0 / one per account),
+--     ledgers, and Guide compensation architecture.
 --
 -- Historical safety:
+--   * duration_minutes 30 remains allowed on the table for historical rows and
+--     legacy subject-matched / "Other" request paths.
 --   * Legacy subject-matched booking path remains when p_subject_id is provided.
 --   * Unscheduled "Other" requests (null subject + null start) remain for admin review.
 --   * tutor_id / tutor_subjects tables and historical rows are untouched.
+--   * Guide hourly rates / earnings formula unchanged (amount ∝ duration_minutes).
 --
 -- Do NOT apply this migration to production from the agent — apply after merge.
+
+-- ---------------------------------------------------------------------------
+-- Duration constraint: allow 120 / 180 while keeping historical 30.
+-- ---------------------------------------------------------------------------
+alter table public.bookings drop constraint if exists bookings_duration_minutes_check;
+alter table public.bookings
+  add constraint bookings_duration_minutes_check
+  check (duration_minutes in (30, 60, 120, 180));
+
+-- ---------------------------------------------------------------------------
+-- Session list price: $12/hour for whole-hour Study Hall; keep legacy 30 @ $12.
+-- ---------------------------------------------------------------------------
+create or replace function public.session_list_price_cents(p_duration integer)
+returns integer
+language plpgsql
+immutable
+as $$
+begin
+  if p_duration = 30 then
+    return 1200; -- legacy / historical tutoring support only
+  end if;
+  if p_duration in (60, 120, 180) then
+    return (p_duration / 60) * 1200; -- $12/hour
+  end if;
+  raise exception 'Invalid duration';
+end;
+$$;
+
+revoke all on function public.session_list_price_cents(integer) from public;
+grant execute on function public.session_list_price_cents(integer) to anon, authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
+-- booking_quote — same durations + $12/hour authority.
+-- ---------------------------------------------------------------------------
+create or replace function public.booking_quote(
+  p_account uuid, p_duration integer, p_is_free_trial boolean default false
+) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_price int; v_pkg int; v_credit int; v_pkg_used int := 0; v_credit_used int := 0; v_due int;
+begin
+  if auth.uid() is not null and auth.uid() <> p_account and not public.is_admin(auth.uid()) then
+    raise exception 'Not authorized';
+  end if;
+  if p_duration not in (30, 60, 120, 180) then raise exception 'Invalid duration'; end if;
+  if p_is_free_trial then
+    if p_duration <> 60 then raise exception 'The free trial is 60 minutes only'; end if;
+    return jsonb_build_object(
+      'session_price_cents', 0, 'is_free_trial', true, 'package_minutes_used', 0,
+      'credit_cents_used', 0, 'stripe_cents_due', 0, 'funding', 'free_trial');
+  end if;
+  v_price := public.session_list_price_cents(p_duration);
+  v_pkg := coalesce((select sum(minutes_delta) from public.package_minute_ledger where account_id = p_account), 0);
+  v_credit := coalesce((select sum(amount_cents) from public.dollar_credit_ledger where account_id = p_account), 0);
+  if v_pkg >= p_duration then
+    v_pkg_used := p_duration; v_credit_used := 0; v_due := 0;
+  else
+    v_pkg_used := 0;
+    v_credit_used := least(greatest(v_credit, 0), v_price);
+    v_due := v_price - v_credit_used;
+  end if;
+  return jsonb_build_object(
+    'session_price_cents', v_price, 'is_free_trial', false,
+    'package_minutes_used', v_pkg_used, 'credit_cents_used', v_credit_used,
+    'stripe_cents_due', v_due,
+    'funding', case when v_pkg_used > 0 then 'package' when v_due = 0 then 'credit' else 'stripe' end,
+    'available_package_minutes', v_pkg, 'available_credit_cents', greatest(v_credit, 0));
+end;
+$$;
+
+revoke all on function public.booking_quote(uuid, integer, boolean) from public;
+grant execute on function public.booking_quote(uuid, integer, boolean) to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Availability: null subject ⇒ any approved Guide; subject id retains filter.
@@ -116,7 +194,11 @@ begin
 
   perform public.release_expired_holds();
 
-  if p_duration not in (30, 60) then raise exception 'Invalid duration'; end if;
+  if p_duration not in (30, 60, 120, 180) then raise exception 'Invalid duration'; end if;
+  -- Scheduled Study Hall (null subject + start): whole-hour blocks only.
+  if p_subject_id is null and p_start is not null and p_duration not in (60, 120, 180) then
+    raise exception 'Study Hall sessions are 1, 2, or 3 hours';
+  end if;
 
   if p_is_free_trial then
     if p_duration <> 60 then raise exception 'The free trial is 60 minutes only'; end if;
@@ -234,8 +316,13 @@ begin
     raise exception 'Not authorized to book for this student';
   end if;
 
-  if p_duration not in (30, 60) then
+  if p_duration not in (30, 60, 120, 180) then
     raise exception 'Invalid duration';
+  end if;
+  -- Scheduled Study Hall (null subject + start): whole-hour blocks only.
+  -- Legacy subject-matched and unscheduled "Other" paths may still use 30.
+  if p_subject_id is null and p_start is not null and p_duration not in (60, 120, 180) then
+    raise exception 'Study Hall sessions are 1, 2, or 3 hours';
   end if;
 
   if p_is_free_trial then
