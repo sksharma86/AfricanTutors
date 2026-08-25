@@ -38,13 +38,38 @@ export default async function AdminFinancePage() {
   const { data: recordings } = disputeBookingIds.length
     ? await supabase!
         .from("session_recordings")
-        .select("id, booking_id, status, duration_seconds, completed_at")
+        .select("id, booking_id, status, duration_seconds, completed_at, retention_until, deleted_at")
         .in("booking_id", disputeBookingIds)
     : { data: [] };
-  const recordingsByBooking = new Map<string, { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[]>();
-  for (const r of (recordings ?? []) as { id: string; booking_id: string; status: string; duration_seconds: number | null; completed_at: string | null }[]) {
+  const recordingsByBooking = new Map<
+    string,
+    {
+      id: string;
+      status: string;
+      duration_seconds: number | null;
+      completed_at: string | null;
+      retention_until: string | null;
+      deleted_at: string | null;
+    }[]
+  >();
+  for (const r of (recordings ?? []) as {
+    id: string;
+    booking_id: string;
+    status: string;
+    duration_seconds: number | null;
+    completed_at: string | null;
+    retention_until: string | null;
+    deleted_at: string | null;
+  }[]) {
     const arr = recordingsByBooking.get(r.booking_id) ?? [];
-    arr.push({ id: r.id, status: r.status, duration_seconds: r.duration_seconds, completed_at: r.completed_at });
+    arr.push({
+      id: r.id,
+      status: r.status,
+      duration_seconds: r.duration_seconds,
+      completed_at: r.completed_at,
+      retention_until: r.retention_until,
+      deleted_at: r.deleted_at,
+    });
     recordingsByBooking.set(r.booking_id, arr);
   }
 

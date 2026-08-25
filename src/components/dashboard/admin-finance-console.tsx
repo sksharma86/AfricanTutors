@@ -37,7 +37,14 @@ export interface DisputeRow {
   subject?: string | null;
   when?: string | null;
   tutor_name?: string | null;
-  recordings?: { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[];
+  recordings?: {
+    id: string;
+    status: string;
+    duration_seconds: number | null;
+    completed_at: string | null;
+    retention_until?: string | null;
+    deleted_at?: string | null;
+  }[];
 }
 export interface PaymentRow {
   id: string;
@@ -501,7 +508,14 @@ function RecordingStatus({
   recordings,
   onErr,
 }: {
-  recordings: { id: string; status: string; duration_seconds: number | null; completed_at: string | null }[];
+  recordings: {
+    id: string;
+    status: string;
+    duration_seconds: number | null;
+    completed_at: string | null;
+    retention_until?: string | null;
+    deleted_at?: string | null;
+  }[];
   onErr: (m: string) => void;
 }) {
   const [busy, setBusy] = useState<string | null>(null);
@@ -528,7 +542,24 @@ function RecordingStatus({
       <span className="font-medium text-ink-600">Recording:</span>
       {recordings.map((r) => {
         const mins = r.duration_seconds ? ` · ${Math.round(r.duration_seconds / 60)} min` : "";
+        if (r.deleted_at) {
+          return (
+            <span key={r.id} className="rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-ink-500">
+              Deleted (retention)
+            </span>
+          );
+        }
+        if (r.status === "failed") {
+          return (
+            <span key={r.id} className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-red-600">
+              Recording failed
+            </span>
+          );
+        }
         if (r.status === "completed") {
+          const until = r.retention_until
+            ? ` · until ${new Date(r.retention_until).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+            : "";
           return (
             <button
               key={r.id}
@@ -536,13 +567,13 @@ function RecordingStatus({
               disabled={busy === r.id}
               className="rounded-full border border-gold-300 bg-gold-50 px-2.5 py-0.5 font-medium text-gold-700 hover:bg-gold-100 disabled:opacity-50"
             >
-              {busy === r.id ? "Opening…" : `Review recording${mins}`}
+              {busy === r.id ? "Opening…" : `Review recording${mins}${until}`}
             </button>
           );
         }
         return (
-          <span key={r.id} className={`rounded-full border px-2 py-0.5 ${r.status === "failed" ? "border-red-200 bg-red-50 text-red-600" : "border-ink-200 bg-ink-50 text-ink-500"}`}>
-            {r.status === "failed" ? "Recording failed" : "Recording processing"}
+          <span key={r.id} className="rounded-full border border-ink-200 bg-ink-50 px-2 py-0.5 text-ink-500">
+            Recording processing{mins}
           </span>
         );
       })}
