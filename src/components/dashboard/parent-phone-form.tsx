@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /**
  * Parent phone for Call Parent telephony (E.164). Guides never see this value
@@ -9,28 +9,35 @@ import { useState } from "react";
  */
 export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null }) {
   const router = useRouter();
+  const submittingRef = useRef(false);
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [saved, setSaved] = useState(initialPhone);
 
   async function save() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setNote(null);
-    const res = await fetch("/api/account/phone", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: phone.trim() || null }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    if (!res.ok) {
-      setNote(data?.error ?? "Unable to save phone.");
-      return;
+    try {
+      const res = await fetch("/api/account/phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() || null }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setNote(data?.error ?? "Unable to save phone.");
+        return;
+      }
+      setSaved(data.phone ?? null);
+      setNote("Saved. We’ll only use this if your child needs you during Study Hall.");
+      router.refresh();
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setSaved(data.phone ?? null);
-    setNote("Saved. We’ll only use this if your child needs you during Study Hall.");
-    router.refresh();
   }
 
   return (

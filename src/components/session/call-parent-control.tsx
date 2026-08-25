@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ESCALATION_NOTE_MAX,
@@ -34,6 +34,7 @@ export function CallParentControl({
   const [reason, setReason] = useState<EscalationReason | "">("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [escalationId, setEscalationId] = useState<string | null>(null);
   const [result, setResult] = useState<{ status: GuideStatus; message: string } | null>(null);
@@ -83,26 +84,32 @@ export function CallParentControl({
       setError("Please choose a reason.");
       return;
     }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/tutor/call-parent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bookingId,
-        reason,
-        note: note.trim() || null,
-      }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    if (!res.ok) {
-      setError(data?.error ?? "Unable to contact parent.");
-      return;
+    try {
+      const res = await fetch("/api/tutor/call-parent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          reason,
+          note: note.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? "Unable to contact parent.");
+        return;
+      }
+      setEscalationId(data.id ?? null);
+      setResult({ status: data.status, message: data.message });
+      setOpen(false);
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setEscalationId(data.id ?? null);
-    setResult({ status: data.status, message: data.message });
-    setOpen(false);
   }
 
   return (

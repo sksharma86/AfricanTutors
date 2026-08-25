@@ -98,7 +98,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     }
   }
 
-  const title = info.subject?.trim() ? info.subject : "Study Hall session";
+  // Study Hall sessions are not subject-labeled for customers/Guides.
+  const title = "Study Hall";
+  void info.subject;
   const scheduleLine = [
     formatWhen(info.scheduled_start),
     info.scheduled_end ? `– ${formatWhen(info.scheduled_end)}` : null,

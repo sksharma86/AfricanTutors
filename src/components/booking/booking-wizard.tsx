@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
@@ -12,6 +12,7 @@ import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 import {
   durationOptionPriceLabel,
   isFullyPrepaidQuote,
+  prepaidCoversDuration,
   remainingBalanceMinutes,
 } from "@/lib/booking-prepaid-display.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
@@ -70,6 +71,7 @@ export function BookingWizard({
   const [step, setStep] = useState<Step>("student");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const submittingRef = useRef(false);
 
   const [studentId, setStudentId] = useState<string>(initialStudents[0]?.id ?? "");
   const [freeTrialUsed, setFreeTrialUsed] = useState<boolean | null>(null);
@@ -147,8 +149,14 @@ export function BookingWizard({
     let active = true;
     supabase
       .rpc("booking_quote", { p_account: accountId, p_duration: duration, p_is_free_trial: false })
-      .then(({ data }) => {
-        if (active && data) setQuote(data as Quote);
+      .then(({ data, error: qErr }) => {
+        if (!active) return;
+        if (qErr) {
+          setQuote(null);
+          setError(friendlyError(qErr.message));
+          return;
+        }
+        if (data) setQuote(data as Quote);
       });
     return () => {
       active = false;
@@ -156,26 +164,31 @@ export function BookingWizard({
   }, [supabase, accountId, duration, isFreeTrial]);
 
   async function addStudent() {
-    if (!supabase) return;
+    if (!supabase || submittingRef.current) return;
     setError(null);
     if (!newName.trim()) {
       setError("Enter the child's name.");
       return;
     }
+    submittingRef.current = true;
     setBusy(true);
-    const { data, error: e } = await supabase
-      .from("students")
-      .insert({ full_name: newName.trim(), grade_level: newGrade, timezone: newTz })
-      .select("id, full_name, grade_level, timezone")
-      .single();
-    setBusy(false);
-    if (e) {
-      setError(friendlyError(e.message));
-      return;
+    try {
+      const { data, error: e } = await supabase
+        .from("students")
+        .insert({ full_name: newName.trim(), grade_level: newGrade, timezone: newTz })
+        .select("id, full_name, grade_level, timezone")
+        .single();
+      if (e) {
+        setError(friendlyError(e.message));
+        return;
+      }
+      setStudents((prev) => [...prev, data as StudentRow]);
+      setStudentId(data.id);
+      setNewName("");
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setStudents((prev) => [...prev, data as StudentRow]);
-    setStudentId(data.id);
-    setNewName("");
   }
 
   async function loadSlots(dur: StudyHallDuration) {
@@ -201,7 +214,8 @@ export function BookingWizard({
   }
 
   async function submitBooking() {
-    if (!supabase || !selectedSlot) return;
+    if (!supabase || !selectedSlot || submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
     track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBookingStarted : ANALYTICS_EVENTS.paidBookingStarted, {
@@ -224,12 +238,14 @@ export function BookingWizard({
       });
     } catch {
       setBusy(false);
+      submittingRef.current = false;
       setError("Something went wrong. Please try again.");
       return;
     }
     const payload = await res.json().catch(() => null);
     if (!res.ok) {
       setBusy(false);
+      submittingRef.current = false;
       setError(friendlyError(payload?.error));
       return;
     }
@@ -241,6 +257,7 @@ export function BookingWizard({
     }
 
     setBusy(false);
+    submittingRef.current = false;
     let ref = "";
     if (payload?.bookingId) {
       const { data: b } = await supabase
@@ -698,7 +715,9 @@ export function BookingWizard({
                 ? "No payment required. Your card will not be charged."
                 : quote && quote.stripe_cents_due === 0
                   ? "This session is fully covered by your account credit — no payment required."
-                  : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
+                  : balances && balances.minutes > 0 && !prepaidCoversDuration(balances.minutes, duration)
+                    ? `Your prepaid balance (${formatDuration(balances.minutes)}) doesn’t cover this full ${formatDuration(duration)} session, so the cash price applies. Prepaid hours are used only when they fully cover the session. You’ll be taken to secure checkout for the amount due.`
+                    : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
             </p>
           ) : null}
           <div className="mt-6 flex gap-3">

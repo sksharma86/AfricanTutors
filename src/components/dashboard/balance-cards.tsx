@@ -10,9 +10,12 @@ import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 export function BalanceCards({
   minutes,
   creditCents,
+  preferFreeSession = false,
 }: {
   minutes: number;
   creditCents: number;
+  /** Soften package CTA for brand-new parents who still have a free session. */
+  preferFreeSession?: boolean;
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -22,14 +25,20 @@ export function BalanceCards({
           {minutes > 0 ? formatDuration(minutes) : "0 hours"}
           <span className="mt-1 block text-base font-medium text-ink-500">remaining</span>
         </p>
-        <p className="mt-4">
-          <Link
-            href="/dashboard/student/packages#prepaid"
-            className="inline-flex min-h-10 items-center rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-800"
-          >
-            Buy hours &amp; save
-          </Link>
-        </p>
+        {preferFreeSession && minutes === 0 ? (
+          <p className="mt-4 text-sm text-ink-600">
+            Start with your free 60-minute Study Hall — no card needed. Prepaid packages are optional later.
+          </p>
+        ) : (
+          <p className="mt-4">
+            <Link
+              href="/dashboard/student/packages#prepaid"
+              className="inline-flex min-h-10 items-center rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-ink-800"
+            >
+              Buy hours &amp; save
+            </Link>
+          </p>
+        )}
         <p className="mt-2 text-xs text-ink-400">Prepaid hours never expire.</p>
       </Card>
 

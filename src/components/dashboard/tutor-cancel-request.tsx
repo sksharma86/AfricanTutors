@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /**
  * Guide marks themselves unavailable for an upcoming Study Hall.
@@ -11,6 +11,7 @@ import { useState } from "react";
  */
 export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId: string; alreadyRequested: boolean }) {
   const router = useRouter();
+  const submittingRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,26 +28,31 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
   }
 
   async function submit() {
-    if (!reason.trim()) {
-      setNote("Please add a brief reason.");
+    if (!reason.trim() || submittingRef.current) {
+      if (!reason.trim()) setNote("Please add a brief reason.");
       return;
     }
+    submittingRef.current = true;
     setBusy(true);
     setNote(null);
-    const res = await fetch("/api/tutor/cancellation-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, reason: reason.trim() }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    if (!res.ok) {
-      setNote(data?.error ?? "Unable to submit.");
-      return;
+    try {
+      const res = await fetch("/api/tutor/cancellation-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, reason: reason.trim() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setNote(data?.error ?? "Unable to submit.");
+        return;
+      }
+      setOutcome(data?.status === "reassigned" ? "reassigned" : "open");
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setOutcome(data?.status === "reassigned" ? "reassigned" : "open");
-    setOpen(false);
-    router.refresh();
   }
 
   return (

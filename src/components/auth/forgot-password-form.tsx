@@ -22,12 +22,12 @@ export function ForgotPasswordForm() {
 
     const email = String(new FormData(event.currentTarget).get("email") ?? "");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
     });
 
     if (error) {
       setStatus("error");
-      setErrorMessage(error.message);
+      setErrorMessage("We couldn’t send a reset email right now. Please try again in a minute.");
       return;
     }
 

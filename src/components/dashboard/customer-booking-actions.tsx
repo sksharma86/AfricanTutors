@@ -1,18 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const CATEGORIES: { value: string; label: string }[] = [
-  { value: "quality", label: "The instruction wasn't helpful" },
+  { value: "quality", label: "The session wasn’t properly supervised" },
   { value: "unprepared", label: "The Guide seemed unprepared" },
-  { value: "no_value", label: "The session wasn't properly supervised" },
+  { value: "no_value", label: "The session didn’t feel valuable" },
   { value: "behavior", label: "Something felt inappropriate" },
   { value: "other", label: "Something else" },
 ];
 
+const TECHNICAL = /permission denied|violates|constraint|supabase|stripe|sql|stack|relation|column/i;
 function friendly(message?: string | null): string {
-  if (!message) return "Something went wrong. Please try again.";
+  if (!message || TECHNICAL.test(message)) return "Something went wrong. Please try again.";
   return message;
 }
 
@@ -28,6 +29,7 @@ export function CustomerBookingActions({
   scheduledStartISO?: string | null;
 }) {
   const router = useRouter();
+  const submittingRef = useRef(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
@@ -46,51 +48,63 @@ export function CustomerBookingActions({
   }
 
   async function cancel() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setNote(null);
-    const res = await fetch("/api/bookings/cancel", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    setConfirmingCancel(false);
-    if (!res.ok) {
-      setNote(friendly(data?.error));
-      return;
+    try {
+      const res = await fetch("/api/bookings/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      const data = await res.json().catch(() => null);
+      setConfirmingCancel(false);
+      if (!res.ok) {
+        setNote(friendly(data?.error));
+        return;
+      }
+      if (data.early) {
+        setNote(
+          data.restored_minutes
+            ? `Cancelled — ${data.restored_minutes} minutes returned to your Prepaid Hours.`
+            : data.restored_credit_cents
+              ? `Cancelled — $${(data.restored_credit_cents / 100).toFixed(2)} returned as account credit.`
+              : "Cancelled — the session value was returned to your account.",
+        );
+      } else {
+        setNote("Cancelled. As this was within 24 hours, the session value was not returned.");
+      }
+      router.refresh();
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    if (data.early) {
-      setNote(
-        data.restored_minutes
-          ? `Cancelled — ${data.restored_minutes} minutes returned to your Prepaid Hours.`
-          : data.restored_credit_cents
-            ? `Cancelled — $${(data.restored_credit_cents / 100).toFixed(2)} returned as account credit.`
-            : "Cancelled — the session value was returned to your account.",
-      );
-    } else {
-      setNote("Cancelled. As this was within 24 hours, the session value was not returned.");
-    }
-    router.refresh();
   }
 
   async function submitDispute() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setNote(null);
-    const res = await fetch("/api/disputes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, category, complaint: complaint.trim() || null }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    if (!res.ok) {
-      setNote(friendly(data?.error));
-      return;
+    try {
+      const res = await fetch("/api/disputes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, category, complaint: complaint.trim() || null }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setNote(friendly(data?.error));
+        return;
+      }
+      setShowDispute(false);
+      setNote("Thanks — we've received your report and our team will review it.");
+      router.refresh();
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setShowDispute(false);
-    setNote("Thanks — we've received your report and our team will review it.");
-    router.refresh();
   }
 
   const linkBtn = "text-xs font-medium hover:underline disabled:opacity-50";
