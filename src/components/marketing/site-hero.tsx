@@ -3,7 +3,7 @@ import Link from "next/link";
 import { HeroProductVisual } from "@/components/marketing/product-visuals";
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
+import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export function SiteHero({
   primaryHref,
@@ -43,7 +43,7 @@ export function SiteHero({
             </Link>
           </div>
           <p className="at-fade-in at-delay-3 mt-5 text-[13px] leading-5 text-ink-400">
-            First 60 minutes free · {NO_CARD_REQUIRED} · {AS_LOW_AS_LABEL}
+            First 60 minutes free · No credit card required · {AS_LOW_AS_LABEL}
           </p>
         </div>
 
