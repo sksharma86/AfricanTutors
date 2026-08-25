@@ -10,7 +10,7 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "How live Study Hall works — from signup to your first session with a highly vetted Guide.",
+    "How live Study Hall works — from booking to report, including Call Parent and 60-day recordings.",
 };
 
 export default function HowItWorksPage() {
@@ -18,31 +18,11 @@ export default function HowItWorksPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="How it works"
-        title="From signup to Study Hall in minutes."
-        description="We handle matching, scheduling, and the live session — so your family can build a calmer homework routine."
+        title="From signup to Study Hall — and everything after."
+        description="We handle matching, scheduling, and the live session. You get reports, recordings, and a calm way to stay reachable if your child needs you."
       />
 
-      <Steps
-        title="Three steps to your first session."
-        steps={[
-          {
-            n: "1",
-            title: "Create your account",
-            description: "Add your child in a minute. No credit card for the free session.",
-          },
-          {
-            n: "2",
-            title: "Choose a time",
-            description: "Pick a Study Hall that fits your evening. We match a highly vetted Guide.",
-          },
-          {
-            n: "3",
-            title: "Your child joins",
-            description:
-              "They open a private live session from home. The Guide keeps them on task. First hour free.",
-          },
-        ]}
-      />
+      <Steps />
 
       <Container size="wide" className="pb-10">
         <div className="max-w-2xl border-t border-ink-100 pt-10">

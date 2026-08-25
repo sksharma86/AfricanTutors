@@ -37,11 +37,15 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How does Study Hall work?",
-    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. The Guide keeps them on task while they do their homework.",
+    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. The Guide keeps them on task while they do their homework. Afterward, you get a short report — and a recording available for 60 days.",
   },
   {
     q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for quality and safety. Parents can review recordings for a limited time after each session.",
+    a: "Yes. Sessions are recorded for quality and safety. Parents can review recordings in their account for 60 days after the session.",
+  },
+  {
+    q: "What if my child needs me during Study Hall?",
+    a: "Guides can reach you through Call Parent inside Study Hall at Home. The system connects the call — your personal phone number stays private and is never shown to the Guide.",
   },
   {
     q: "Can I book for more than one child?",
