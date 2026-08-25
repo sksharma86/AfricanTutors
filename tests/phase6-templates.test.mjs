@@ -37,16 +37,17 @@ describe("Phase 6 — email templates (pure)", () => {
     assert.match(chi, /CDT|CST/);
   });
 
-  it("reminders: 24h vs 1h subjects differ and include a safe join link", () => {
+  it("reminders: 1h parent + Guide Study Hall copy; 24h disabled in template", () => {
     const r24 = T.reminder({ role: "customer", kind: "24h", subject: "Algebra", whenISO: ISO, tz: "UTC", tutorName: "Tomiwa", appUrl: APP, bookingId: BID });
-    const r1 = T.reminder({ role: "customer", kind: "1h", subject: "Algebra", whenISO: ISO, tz: "UTC", tutorName: "Tomiwa", appUrl: APP, bookingId: BID });
+    const r1 = T.reminder({ role: "customer", kind: "1h", subject: "Algebra", whenISO: ISO, tz: "UTC", tutorName: "Tomiwa", studentName: "Amara", durationMinutes: 60, appUrl: APP, bookingId: BID });
     assert.notEqual(r24.subject, r1.subject);
+    assert.match(r24.text, /disabled/i);
     assert.ok(r1.text.includes(`/dashboard/session/${BID}`));
+    assert.match(r1.text, /Amara/);
     assertNoLeaks(r24);
     assertNoLeaks(r1);
-    // tutor reminder shows student, not tutor-to-tutor contact
-    const rt = T.reminder({ role: "tutor", kind: "1h", subject: "Algebra", whenISO: ISO, tz: "UTC", studentName: "Amara", appUrl: APP, bookingId: BID });
-    assert.match(rt.text, /Student: Amara/);
+    const rt = T.reminder({ role: "tutor", kind: "1h", subject: "Algebra", whenISO: ISO, tz: "UTC", studentName: "Amara", durationMinutes: 60, appUrl: APP, bookingId: BID });
+    assert.match(rt.text, /Child: Amara/);
   });
 
   it("refund vs account credit wording is distinct and correct", () => {
@@ -67,9 +68,9 @@ describe("Phase 6 — email templates (pure)", () => {
     assert.match(late.text, /non-refundable/i);
   });
 
-  it("package purchase shows minutes, amount, and never-expire", () => {
+  it("package purchase shows hours, amount, and never-expire", () => {
     const r = T.packagePurchased({ minutes: 840, amountCents: 14000, balanceMinutes: 840, appUrl: APP });
-    assert.match(r.text, /840/);
+    assert.match(r.text, /14/);
     assert.match(r.text, /\$140/);
     assert.match(r.text, /never expire/i);
   });

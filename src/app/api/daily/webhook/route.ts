@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { DAILY_WEBHOOK_SECRET } from "@/lib/daily/config";
 import { roomToBooking } from "@/lib/daily/room-mapping.mjs";
+import { notifyRecordingFailure } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
@@ -104,6 +105,9 @@ export async function POST(request: NextRequest) {
           };
     try {
       await supabase.rpc("record_recording_event", args);
+      if (type === "recording.error") {
+        void notifyRecordingFailure(bookingId, (payload.error_msg as string) ?? "recording error");
+      }
     } catch {
       /* best-effort; recording is evidence only and never blocks anything */
     }

@@ -4,6 +4,7 @@ import {
   CALL_PARENT_SMS_MESSAGE,
   CALL_PARENT_VOICE_MESSAGE,
 } from "@/lib/call-parent.mjs";
+import { notifyCallParentFailure } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { isTwilioConfigured } from "@/lib/telephony/config";
 import { placeParentAttentionCall, sendParentAttentionSms } from "@/lib/telephony/client";
@@ -83,6 +84,7 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
       p_outcome: "not_configured",
       p_error_detail: "TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER missing",
     });
+    void notifyCallParentFailure(escalationId, "telephony not configured");
     return resultOf(escalationId, "not_configured");
   }
 
@@ -99,6 +101,7 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
       p_outcome: "no_phone",
       p_error_detail: "parent has no phone_e164 on file",
     });
+    void notifyCallParentFailure(escalationId, "parent has no phone_e164 on file");
     return resultOf(escalationId, "unable_to_contact");
   }
 
@@ -206,6 +209,7 @@ async function deliverClaimedSmsFallback(
       p_error_detail: "parent has no phone_e164 on file at SMS fallback",
       p_sms_attempted: true,
     });
+    void notifyCallParentFailure(row.id, "parent has no phone_e164 on file at SMS fallback");
     return { ok: true, action: "sms_no_phone" };
   }
 
@@ -240,6 +244,7 @@ async function deliverClaimedSmsFallback(
     p_error_detail: sms.error ?? `sms fallback failed (${reasonTag})`,
     p_sms_attempted: true,
   });
+  void notifyCallParentFailure(row.id, sms.error ?? `sms fallback failed (${reasonTag})`);
   return { ok: true, action: "sms_failed" };
 }
 
@@ -280,6 +285,10 @@ async function sendSmsFallbackForEscalation(
     p_call_attempted: true,
     p_sms_attempted: true,
   });
+  void notifyCallParentFailure(
+    escalationId,
+    [callError, sms.error].filter(Boolean).join("; ") || "call and sms failed",
+  );
   return resultOf(escalationId, "unable_to_contact");
 }
 
