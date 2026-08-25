@@ -17,26 +17,22 @@ export default function AboutPage() {
       <PageHeader
         eyebrow="About"
         title="Homework shouldn’t own the night."
-        description="We built Study Hall at Home for families who want accountability — without paying for tutoring they don’t need."
+        description="Study Hall at Home is for families who want accountability — without paying for tutoring they don’t need."
       />
 
-      <Container size="wide" className="pb-20">
-        <div className="grid gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
-          <div className="max-w-xl space-y-5 text-[17px] leading-8 text-ink-600">
+      <Container size="wide" className="pb-16 sm:pb-20">
+        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <div className="max-w-xl space-y-5 text-[16px] leading-7 text-ink-600">
             <p>
-              Getting kids to finish homework can take over the evening. Many families want dependable
-              support — but private tutoring is expensive, and more than most kids need for ordinary
-              schoolwork.
+              Getting kids to finish homework can take over the evening. Private tutoring is
+              expensive — and more than most kids need for ordinary schoolwork.
             </p>
             <p>
               Study Hall at Home is simpler: live supervised study time. A highly vetted Guide keeps
-              your child on task by video while they do their own work. Affordable. Online. Easy to
-              make a routine. Every new household’s{" "}
+              your child on task by video while they do their own work. Every new household’s{" "}
               <span className="font-semibold text-ink-900">first session is free</span>.
             </p>
-            <p>
-              Parents get relief. Kids get focus and accountability. We manage everything in between.
-            </p>
+            <p>Parents get their evening back. Kids get focus and accountability.</p>
           </div>
 
           <div className="border-t border-ink-100 pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
@@ -46,12 +42,11 @@ export default function AboutPage() {
             </h2>
             <div className="mt-4 space-y-4 text-[15px] leading-7 text-ink-500">
               <p>
-                We recruit and approve every Guide, and we handle scheduling and payments. Families
-                always know who they’re working with.
+                We recruit and approve every Guide, and we handle scheduling and payments.
               </p>
               <p>
-                This is homework supervision and accountability — not subject tutoring. Children bring
-                their own assignments.
+                This is homework supervision — not subject tutoring. Children bring their own
+                assignments.
               </p>
               <p>
                 Guides work remotely from Kenya and are carefully vetted and trained for Study Hall at

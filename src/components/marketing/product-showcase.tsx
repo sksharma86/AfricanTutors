@@ -7,40 +7,43 @@ import {
 import { Container } from "@/components/ui/container";
 
 /**
- * Parent portal showcase — explicitly framed so first-time visitors understand
- * this is what they get after signing up.
+ * Parent account showcase — booking, reports, hours, Call Parent.
+ * Call Parent reaches the parent’s phone; the account is for booking & history.
  */
 export function ProductShowcase() {
   return (
-    <section id="parent-portal" className="scroll-mt-24 border-b border-ink-100/80 bg-surface-muted/40 py-20 sm:py-28">
+    <section
+      id="parent-account"
+      className="scroll-mt-24 border-b border-ink-100 bg-surface-muted/35 py-16 sm:py-20"
+    >
       <Container size="wide">
-        <div className="max-w-2xl">
+        <div className="max-w-xl">
           <p className="mkt-eyebrow">Your Study Hall account</p>
-          <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">
             Everything in one place.
           </h2>
-          <p className="mt-4 max-w-xl text-[17px] leading-7 text-ink-500">
-            After every Study Hall, open your parent portal to see upcoming sessions, session
-            reports, recordings, available hours, and how your child’s routine is building — and to
-            stay reachable if they need you during a session.
+          <p className="mt-4 text-[16px] leading-7 text-ink-500">
+            Book sessions, review reports and recordings, track prepaid hours, and see how a
+            homework routine builds — all from your parent account.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 lg:grid-cols-2">
-          <div className="space-y-5">
-            <ProductReportCard />
-            <ProductCallParentCard />
-          </div>
-          <div className="space-y-5">
-            <ProductStreakCard />
-            <ProductHoursCard />
+        <div className="mt-10 overflow-hidden rounded-2xl border border-ink-100 bg-white mkt-depth-sm">
+          <div className="grid sm:grid-cols-2">
+            <div className="border-b border-ink-100 sm:border-r">
+              <ProductReportCard className="rounded-none border-0" />
+            </div>
+            <div className="border-b border-ink-100">
+              <ProductStreakCard className="rounded-none border-0" />
+            </div>
+            <div className="border-b border-ink-100 sm:border-r sm:border-b-0">
+              <ProductHoursCard className="rounded-none border-0" />
+            </div>
+            <div>
+              <ProductCallParentCard className="rounded-none border-0" />
+            </div>
           </div>
         </div>
-
-        <p className="mt-8 max-w-2xl text-sm leading-6 text-ink-400">
-          Illustrations of the parent experience — reports, recordings (available for 60 days),
-          prepaid hours, Study Hall streaks, and Call Parent when your child needs you.
-        </p>
       </Container>
     </section>
   );

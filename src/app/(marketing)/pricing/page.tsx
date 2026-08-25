@@ -30,8 +30,8 @@ export default async function PricingPage() {
 
       <Container size="wide" className="pb-6">
         <p className="max-w-2xl text-[15px] leading-7 text-ink-500">
-          The 14 Hour Routine is built for a consistent habit. The 28 Hour Routine unlocks the lowest
-          effective rate at $9/hour. Hours stay on your account until you use them.
+          The 14 Hour Routine is ${formatUsd(140)} ({formatUsd(10)}/hour). The 28 Hour Routine is{" "}
+          {formatUsd(252)} ({formatUsd(9)}/hour). Prepaid hours never expire.
         </p>
       </Container>
 

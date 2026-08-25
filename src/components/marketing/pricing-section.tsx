@@ -34,16 +34,16 @@ export function PricingSection({
   const sorted = [...packages].sort((a, b) => a.minutes - b.minutes);
 
   return (
-    <section id="pricing" className="scroll-mt-24 py-20 sm:py-28">
+    <section id="pricing" className="scroll-mt-24 py-16 sm:py-20">
       <Container size="wide">
         {withHeader ? (
           <div className="max-w-2xl">
             <p className="mkt-eyebrow">Pricing</p>
-            <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-4xl lg:text-[2.75rem]">
+            <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">
               {AS_LOW_AS_LABEL}.
-              <span className="mt-1 block text-ink-500">First hour free.</span>
+              <span className="mt-1 block text-ink-400">First hour free.</span>
             </h2>
-            <p className="mt-4 max-w-xl text-[17px] leading-7 text-ink-500">
+            <p className="mt-4 max-w-xl text-[16px] leading-7 text-ink-500">
               Pay as you go at {formatUsd(PAYG_PRICE_USD)}/hour, or save with prepaid hours that never
               expire.
             </p>

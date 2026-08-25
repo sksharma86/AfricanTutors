@@ -45,7 +45,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "What if my child needs me during Study Hall?",
-    a: "Guides can reach you through Call Parent inside Study Hall at Home. The system connects the call — your personal phone number stays private and is never shown to the Guide.",
+    a: "Their Guide can use Call Parent. Study Hall at Home contacts your phone. You don’t need to keep an app or portal open — and Guides never see your private number.",
   },
   {
     q: "Can I book for more than one child?",

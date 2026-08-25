@@ -18,11 +18,11 @@ export function CtaSection({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="bg-ink-900 py-20 text-white sm:py-24">
+    <section className="bg-ink-900 py-16 text-white sm:py-20">
       <Container size="wide">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mkt-display text-3xl sm:text-4xl">{title}</h2>
-          <p className="mx-auto mt-4 max-w-lg text-[17px] leading-7 text-white/65">{description}</p>
+          <h2 className="mkt-display text-3xl sm:text-[2.5rem]">{title}</h2>
+          <p className="mx-auto mt-4 max-w-lg text-[16px] leading-7 text-white/65">{description}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <TrackCta
               href={primaryHref}

@@ -15,15 +15,15 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Contact"
         title="We’re here to help."
-        description="Questions about Study Hall, pricing, or getting your child started? Send a message and our team will follow up."
+        description="Questions about Study Hall, pricing, or getting started? Send a message — we’ll follow up."
       />
 
-      <Container size="wide" className="pb-24">
-        <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <Container size="wide" className="pb-16 sm:pb-20">
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div className="max-w-sm">
             <p className="text-[15px] leading-7 text-ink-500">
               We typically respond within one business day. For account or session issues, signing in
-              to your parent dashboard is often the fastest path.
+              to your parent account is often fastest.
             </p>
           </div>
           <div className="max-w-lg">

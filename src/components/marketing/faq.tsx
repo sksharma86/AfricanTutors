@@ -13,10 +13,10 @@ export function Faq({
   id?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 py-20 sm:py-24">
+    <section id={id} className="scroll-mt-24 py-16 sm:py-20">
       <Container size="narrow">
         <p className="mkt-eyebrow">{eyebrow}</p>
-        <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-4xl">{title}</h2>
+        <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">{title}</h2>
         <dl className="mt-10 divide-y divide-ink-100 border-t border-ink-100">
           {items.map((item) => (
             <div key={item.q}>

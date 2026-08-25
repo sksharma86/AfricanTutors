@@ -27,8 +27,9 @@ const HOME_FAQ = FAQ_ITEMS.filter((f) =>
     "Who are the Guides?",
     "How much does it cost?",
     "Is the first session really free?",
-    "Do prepaid hours expire?",
+    "What if my child needs me during Study Hall?",
     "Are sessions recorded?",
+    "Do prepaid hours expire?",
   ].includes(f.q),
 );
 

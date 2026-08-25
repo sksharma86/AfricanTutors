@@ -8,7 +8,7 @@ import { FAQ_ITEMS } from "@/lib/faq";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about Study Hall at Home: how it works, who the Guides are, pricing, the free session, recorded sessions, booking for multiple children, cancellations, and more.",
+    "Answers about Study Hall at Home: how it works, Guides, pricing, the free session, Call Parent, recordings, and more.",
   alternates: { canonical: "/faq" },
 };
 
@@ -29,7 +29,7 @@ export default function FaqPage() {
       <PageHeader
         eyebrow="FAQ"
         title="Questions, answered."
-        description="Everything you need to know before your first Study Hall. Still have a question? Contact us anytime."
+        description="Clear answers before your first Study Hall. Still unsure? Contact us anytime."
       />
       <Faq eyebrow="Common questions" title="Frequently asked questions" />
       <CtaSection
