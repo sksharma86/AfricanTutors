@@ -9,6 +9,11 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
 import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd, type StudyHallDuration } from "@/lib/pricing";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
+import {
+  durationOptionPriceLabel,
+  isFullyPrepaidQuote,
+  remainingBalanceMinutes,
+} from "@/lib/booking-prepaid-display.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -256,6 +261,19 @@ export function BookingWizard({
   }
 
   const priceLabel = isFreeTrial ? "FREE" : formatUsd(SESSION_OPTIONS.find((o) => o.minutes === duration)!.priceUsd);
+  const fullyPrepaid = !isFreeTrial && isFullyPrepaidQuote(quote);
+  const prepaidRemaining =
+    fullyPrepaid && balances
+      ? remainingBalanceMinutes(balances.minutes, quote!.package_minutes_used)
+      : null;
+
+  const confirmCta = busy
+    ? "Booking…"
+    : isFreeTrial
+      ? "Confirm booking"
+      : fullyPrepaid
+        ? "Confirm with prepaid hours"
+        : "Confirm booking";
 
   const slotsByDay = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -414,7 +432,9 @@ export function BookingWizard({
           {balances && (balances.minutes > 0 || balances.creditCents > 0) ? (
             <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
               Your balance:{" "}
-              {balances.minutes > 0 ? <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall time</span> : null}
+              {balances.minutes > 0 ? (
+                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall time</span>
+              ) : null}
               {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
               {balances.creditCents > 0 ? (
                 <span className="font-medium text-ink-800">{formatMoneyCents(balances.creditCents)} account credit</span>
@@ -441,24 +461,38 @@ export function BookingWizard({
               </button>
             ) : null}
 
-            {SESSION_OPTIONS.map((o) => (
-              <button
-                key={o.minutes}
-                type="button"
-                onClick={() => {
-                  setDuration(o.minutes as StudyHallDuration);
-                  setIsFreeTrial(false);
-                }}
-                className={`flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left ${
-                  !isFreeTrial && duration === o.minutes
-                    ? "border-ink-900 bg-ink-50"
-                    : "border-ink-200 hover:border-ink-300"
-                }`}
-              >
-                <span className="font-medium text-ink-900">{o.label}</span>
-                <span className="font-display text-xl font-semibold text-ink-900">{formatUsd(o.priceUsd)}</span>
-              </button>
-            ))}
+            {SESSION_OPTIONS.map((o) => {
+              const covered = balances != null && balances.minutes >= o.minutes;
+              const rightLabel = durationOptionPriceLabel(
+                balances?.minutes ?? 0,
+                o.minutes,
+                formatUsd(o.priceUsd),
+              );
+              return (
+                <button
+                  key={o.minutes}
+                  type="button"
+                  onClick={() => {
+                    setDuration(o.minutes as StudyHallDuration);
+                    setIsFreeTrial(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl border px-5 py-4 text-left ${
+                    !isFreeTrial && duration === o.minutes
+                      ? "border-ink-900 bg-ink-50"
+                      : "border-ink-200 hover:border-ink-300"
+                  }`}
+                >
+                  <span className="font-medium text-ink-900">{o.label}</span>
+                  <span
+                    className={`text-right font-display font-semibold text-ink-900 ${
+                      covered ? "text-sm sm:text-base" : "text-xl"
+                    }`}
+                  >
+                    {rightLabel}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-6 flex gap-3">
@@ -546,9 +580,21 @@ export function BookingWizard({
               />
             ) : null}
             <Row label="Duration" value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`} />
-            <Row label="Price" value={priceLabel} highlight={isFreeTrial} />
-            {!isFreeTrial && quote ? (
+            {isFreeTrial ? <Row label="Price" value={priceLabel} highlight /> : null}
+            {!isFreeTrial && !quote ? <Row label="Price" value={priceLabel} /> : null}
+            {!isFreeTrial && fullyPrepaid && quote ? (
               <>
+                <Row label="Payment" value="Covered by prepaid balance" highlight />
+                <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                {prepaidRemaining != null ? (
+                  <Row label="Balance after booking" value={formatDuration(prepaidRemaining)} />
+                ) : null}
+                <Row label="Due today" value={formatMoneyCents(0)} highlight />
+              </>
+            ) : null}
+            {!isFreeTrial && !fullyPrepaid && quote ? (
+              <>
+                <Row label="Price" value={priceLabel} />
                 {quote.package_minutes_used > 0 ? (
                   <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 ) : null}
@@ -577,8 +623,8 @@ export function BookingWizard({
           </div>
           {!isFreeTrial ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
-              {quote && quote.package_minutes_used > 0 && quote.stripe_cents_due === 0
-                ? "This session is covered by your prepaid balance — no payment required."
+              {fullyPrepaid
+                ? "No payment required. Your card will not be charged."
                 : quote && quote.stripe_cents_due === 0
                   ? "This session is fully covered by your account credit — no payment required."
                   : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
@@ -589,7 +635,7 @@ export function BookingWizard({
               Back
             </Button>
             <Button onClick={submitBooking} disabled={busy || !selectedSlot}>
-              {busy ? "Booking…" : "Confirm booking"}
+              {confirmCta}
             </Button>
           </div>
         </div>
