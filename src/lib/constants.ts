@@ -1,7 +1,7 @@
 export const SITE_NAME = "Study Hall at Home";
 
 export const SITE_DESCRIPTION =
-  "Live online Study Hall for families. A highly vetted Guide keeps your child focused and accountable while they do their own homework — building a calmer routine and giving parents part of the evening back. First 60-minute session free.";
+  "Live online Study Hall for families. A highly vetted Guide keeps your child focused while they do their own homework. First 60 minutes free. As low as $9/hour.";
 
 /** Absolute base URL for SEO/canonical/OG. Override with NEXT_PUBLIC_SITE_URL. */
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://studyhallathome.com";

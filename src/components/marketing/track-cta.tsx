@@ -18,16 +18,13 @@ const variantClasses: Record<Variant, string> = {
   text: "text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline focus-visible:outline-ink-300",
 };
 const sizeClasses: Record<Size, string> = {
-  sm: "min-h-9 px-4 text-sm",
-  md: "min-h-11 px-5 text-sm",
-  lg: "min-h-12 px-7 text-[15px]",
+  sm: "min-h-9 px-3.5 text-[13px]",
+  md: "min-h-10 px-5 text-sm",
+  lg: "min-h-12 px-6 text-[15px]",
 };
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-[14px] font-medium tracking-[-0.01em] transition-[background-color,border-color,color,transform] duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98]";
+  "inline-flex items-center justify-center gap-2 rounded-[12px] font-semibold tracking-[-0.015em] transition-[background-color,border-color,color,transform] duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.98]";
 
-/**
- * Link that emits a `cta_click` analytics event before navigating.
- */
 export function TrackCta({
   href,
   cta,

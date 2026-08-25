@@ -10,7 +10,7 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "See how live Study Hall works on Study Hall at Home — from signup to your first session with a highly vetted Guide.",
+    "How live Study Hall works — from signup to your first session with a highly vetted Guide.",
 };
 
 export default function HowItWorksPage() {
@@ -18,47 +18,44 @@ export default function HowItWorksPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="How it works"
-        title="A simple path from signup to Study Hall."
-        description="Study Hall at Home handles matching, scheduling, and the live session — so your family can build a calm homework routine with less effort."
+        title="From signup to Study Hall in minutes."
+        description="We handle matching, scheduling, and the live session — so your family can build a calmer homework routine."
       />
 
       <Steps
         title="Three steps to your first session."
         steps={[
           {
-            n: "01",
+            n: "1",
             title: "Create your account",
-            description:
-              "Create a free parent account and add your child. No credit card required — and there’s nothing to prepare.",
+            description: "Add your child in a minute. No credit card for the free session.",
           },
           {
-            n: "02",
-            title: "Choose a convenient time",
-            description: "Pick an available Study Hall time that works for your family’s schedule.",
+            n: "2",
+            title: "Choose a time",
+            description: "Pick a Study Hall that fits your evening. We match a highly vetted Guide.",
           },
           {
-            n: "03",
-            title: "Meet your Guide online",
+            n: "3",
+            title: "Your child joins",
             description:
-              "Your child joins a private, live Study Hall. A highly vetted Guide keeps them on task. Your first session is free.",
+              "They open a private live session from home. The Guide keeps them on task. First hour free.",
           },
         ]}
       />
 
-      <Container size="wide" className="pb-8">
-        <div className="max-w-2xl border-t border-ink-100 pt-12">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
-            Fully managed by Study Hall at Home
-          </h2>
-          <p className="mt-4 text-base leading-7 text-ink-500">
-            Scheduling, sessions, and payments all happen through Study Hall at Home. Every Guide is
-            recruited, carefully vetted, and approved by our team — you’re never on your own to find
-            and vet someone independently.
+      <Container size="wide" className="pb-10">
+        <div className="max-w-2xl border-t border-ink-100 pt-10">
+          <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink-900">Fully managed</h2>
+          <p className="mt-3 text-[15px] leading-7 text-ink-500">
+            Scheduling, sessions, and payments run through Study Hall at Home. Every Guide is
+            recruited, carefully vetted, and approved — you’re never left to find someone on your
+            own.
           </p>
-          <p className="mt-8 text-sm text-ink-400">
-            Interested in becoming a Guide instead?{" "}
+          <p className="mt-6 text-sm text-ink-400">
+            Want to become a Guide?{" "}
             <Link href="/apply-to-tutor" className="font-medium text-ink-700 underline-offset-4 hover:underline">
-              Become a Guide
+              Apply here
             </Link>
             .
           </p>
@@ -66,8 +63,8 @@ export default function HowItWorksPage() {
       </Container>
 
       <CtaSection
-        title="See it for yourself"
-        description="Let your child experience a real Study Hall with a Guide — your first session is free."
+        title="See it for yourself."
+        description="Book a real Study Hall with a Guide — your first hour is free."
         primaryLabel={FREE_TRIAL_CTA}
         secondaryHref="/pricing"
         secondaryLabel="View pricing"

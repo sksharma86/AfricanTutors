@@ -1,6 +1,6 @@
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
+import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
 
 export function CtaSection({
   title,
@@ -18,13 +18,19 @@ export function CtaSection({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="py-24 sm:py-28">
+    <section className="bg-ink-900 py-20 text-white sm:py-24">
       <Container size="wide">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mkt-display text-4xl text-ink-900 sm:text-5xl">{title}</h2>
-          <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-ink-500">{description}</p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <TrackCta href={primaryHref} cta={primaryLabel} location="final_cta" variant="primary" size="lg">
+          <h2 className="mkt-display text-3xl sm:text-4xl">{title}</h2>
+          <p className="mx-auto mt-4 max-w-lg text-[17px] leading-7 text-white/65">{description}</p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <TrackCta
+              href={primaryHref}
+              cta={primaryLabel}
+              location="final_cta"
+              variant="secondary"
+              size="lg"
+            >
               {primaryLabel}
             </TrackCta>
             {secondaryHref && secondaryLabel ? (
@@ -33,12 +39,15 @@ export function CtaSection({
                 cta={secondaryLabel}
                 location="final_cta_secondary"
                 variant="text"
+                className="text-white/70 hover:text-white"
               >
                 {secondaryLabel}
               </TrackCta>
             ) : null}
           </div>
-          <p className="mt-5 text-sm text-ink-400">{NO_CARD_REQUIRED}</p>
+          <p className="mt-5 text-sm text-white/45">
+            {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
+          </p>
         </div>
       </Container>
     </section>

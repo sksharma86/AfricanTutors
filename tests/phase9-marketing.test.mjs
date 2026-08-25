@@ -25,6 +25,8 @@ const MARKETING_FILES = [
   "src/components/marketing/steps.tsx",
   "src/components/marketing/cta-section.tsx",
   "src/components/marketing/faq.tsx",
+  "src/components/marketing/product-showcase.tsx",
+  "src/components/marketing/product-visuals.tsx",
   "src/components/layout/navbar.tsx",
   "src/components/layout/mobile-menu.tsx",
   "src/components/layout/footer.tsx",

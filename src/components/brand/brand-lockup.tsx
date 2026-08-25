@@ -4,34 +4,61 @@ import { BrandMark } from "@/components/brand/brand-mark";
 import { cn } from "@/lib/utils";
 
 /**
- * The standard "icon on the left, wordmark beside it" lockup used in the
- * navbar and footer. The supplied brand reference is a tall, stacked
- * composition — this horizontal treatment is a deliberate, spec-approved
- * adaptation for a website header (see DECISIONS.md).
+ * Clean product monogram for public marketing — avoids leading with the
+ * legacy Africa + graduation-cap mark. The original BrandMark asset is
+ * preserved and still available via `variant="legacy"`.
+ */
+function ProductMark({ size = 28 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex items-center justify-center rounded-[9px] bg-ink-900 text-white"
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" className="h-[55%] w-[55%]" fill="none">
+        <path
+          d="M6 17V7.8c0-.4.2-.7.5-.9L12 4l5.5 2.9c.3.2.5.5.5.9V17"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M9.5 17v-4.2h5V17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
+/**
+ * Brand lockup. Marketing defaults to the product monogram + wordmark.
+ * Pass `variant="legacy"` to show the historic Africa mark (dashboards, etc.).
  */
 export function BrandLockup({
   href = "/",
-  size = 40,
+  size = 28,
   textClassName,
   className,
   priority,
+  variant = "product",
 }: {
   href?: string;
   size?: number;
   textClassName?: string;
   className?: string;
   priority?: boolean;
+  variant?: "product" | "legacy";
 }) {
+  void priority;
   return (
     <Link href={href} className={cn("flex items-center gap-2.5", className)}>
-      <BrandMark size={size} priority={priority} />
+      {variant === "legacy" ? <BrandMark size={size} priority={priority} /> : <ProductMark size={size} />}
       <span
         className={cn(
-          "font-display text-[1.05rem] font-semibold tracking-[-0.02em] text-ink-900 sm:text-lg",
+          "text-[15px] font-semibold tracking-[-0.03em] text-ink-900 sm:text-base",
           textClassName,
         )}
       >
-        Study Hall at Home
+        Study Hall <span className="font-medium text-ink-500">at Home</span>
       </span>
     </Link>
   );

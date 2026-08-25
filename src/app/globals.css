@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  /* Study Hall at Home — warm minimalism.
-     Ivory ground, near-black ink, restrained gold accent, forest for trust. */
-  --background: #f7f4ee;
-  --foreground: #131311;
-  --surface: #fffcf7;
-  --surface-muted: #f0ebe3;
+  /* Study Hall at Home — crisp modern product UI.
+     Bright warm white, near-black type, restrained gold accent. */
+  --background: #fafaf8;
+  --foreground: #0c0c0b;
+  --surface: #ffffff;
+  --surface-muted: #f3f2ef;
+  --hairline: rgba(12, 12, 11, 0.08);
 
-  /* Warm gold (brand mark provenance). Dual token families for compatibility. */
+  /* Warm gold — accent only, never a foggy wash. */
   --color-gold-50: #fcf3e3;
   --color-gold-100: #f8e4bc;
   --color-gold-200: #f0cc82;
@@ -31,19 +32,17 @@
   --color-brand-800: #614009;
   --color-brand-900: #3d2a08;
 
-  /* Warm neutral near-black (not navy). */
-  --color-ink-50: #f6f5f3;
-  --color-ink-100: #e9e7e2;
-  --color-ink-200: #d3cfc7;
-  --color-ink-300: #b3ada1;
-  --color-ink-400: #8b8377;
-  --color-ink-500: #6b6459;
-  --color-ink-600: #4f4a41;
-  --color-ink-700: #383430;
-  --color-ink-800: #221f1c;
-  --color-ink-900: #131311;
+  --color-ink-50: #f7f7f5;
+  --color-ink-100: #ecebe8;
+  --color-ink-200: #d8d6d0;
+  --color-ink-300: #b4b1a8;
+  --color-ink-400: #8a867c;
+  --color-ink-500: #6a665d;
+  --color-ink-600: #4d4a44;
+  --color-ink-700: #35332f;
+  --color-ink-800: #1c1b19;
+  --color-ink-900: #0c0c0b;
 
-  /* Deep forest — trust / positive status only, never loud fills. */
   --color-forest-50: #eef3ef;
   --color-forest-100: #d6e4da;
   --color-forest-200: #aecbb6;
@@ -55,11 +54,9 @@
   --color-forest-800: #163524;
   --color-forest-900: #0f241a;
 
-  /* Marketing rhythm */
-  --radius-control: 14px;
-  --radius-panel: 20px;
-  --marketing-max: 72rem;
-  --marketing-measure: 38rem;
+  --radius-control: 12px;
+  --radius-panel: 18px;
+  --marketing-measure: 36rem;
 }
 
 @theme inline {
@@ -69,7 +66,8 @@
   --color-surface-muted: var(--surface-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-fraunces);
+  /* Display = modern sans for product marketing (Fraunces optional accent only). */
+  --font-display: var(--font-geist-sans);
 
   --color-gold-50: var(--color-gold-50);
   --color-gold-100: var(--color-gold-100);
@@ -116,46 +114,49 @@
   --color-forest-900: var(--color-forest-900);
 }
 
-/* Entrance — soft rise (respects reduced motion). */
 @keyframes at-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes at-fade-soft {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+@keyframes at-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
 .at-fade-in { animation: at-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .at-fade-soft { animation: at-fade-soft 0.7s ease-out both; }
-.at-delay-1 { animation-delay: 0.08s; }
-.at-delay-2 { animation-delay: 0.16s; }
-.at-delay-3 { animation-delay: 0.24s; }
+.at-float { animation: at-float 5s ease-in-out infinite; }
+.at-delay-1 { animation-delay: 0.07s; }
+.at-delay-2 { animation-delay: 0.14s; }
+.at-delay-3 { animation-delay: 0.21s; }
 
 @media (prefers-reduced-motion: reduce) {
   .at-fade-in,
-  .at-fade-soft { animation: none; }
+  .at-fade-soft,
+  .at-float { animation: none; }
 }
 
-/* Marketing display measure helpers */
+/* Marketing type — modern sans, product-grade */
 .mkt-display {
-  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
-  font-optical-sizing: auto;
-  letter-spacing: -0.025em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  letter-spacing: -0.04em;
   line-height: 1.05;
-  font-weight: 550;
+  font-weight: 600;
 }
 .mkt-lede {
   max-width: var(--marketing-measure);
-  font-size: 1.125rem;
-  line-height: 1.65;
+  font-size: 1.0625rem;
+  line-height: 1.6;
   color: var(--color-ink-500);
 }
 .mkt-eyebrow {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-gold-700);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-ink-500);
 }
 
 body {
@@ -164,12 +165,21 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   font-feature-settings: "ss01" on, "cv11" on;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle warm atmospheric wash behind marketing pages */
 .mkt-atmosphere {
-  background:
-    radial-gradient(120% 80% at 50% -10%, rgba(252, 243, 227, 0.9), transparent 55%),
-    radial-gradient(80% 50% at 100% 20%, rgba(238, 243, 239, 0.45), transparent 50%),
-    var(--background);
+  background: var(--background);
+}
+
+/* Soft product depth — single ambient, not stacked shadows */
+.mkt-depth {
+  box-shadow:
+    0 0 0 1px rgba(12, 12, 11, 0.06),
+    0 18px 50px -24px rgba(12, 12, 11, 0.28);
+}
+.mkt-depth-sm {
+  box-shadow:
+    0 0 0 1px rgba(12, 12, 11, 0.06),
+    0 8px 24px -16px rgba(12, 12, 11, 0.2);
 }

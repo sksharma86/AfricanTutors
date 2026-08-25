@@ -13,23 +13,23 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "What is Study Hall at Home?",
-    a: "Study Hall at Home is live online Study Hall for children. A highly vetted Guide keeps your child focused, accountable, and moving through their own homework by video — supervision and routine, not subject-by-subject tutoring.",
+    a: "Live online Study Hall for kids. A highly vetted Guide stays with your child on video while they do their own homework — supervision, focus, and accountability, not tutoring.",
   },
   {
     q: "Who are the Guides?",
-    a: "Guides are highly vetted supervisors who keep children focused, accountable, and encouraged during Study Hall, and give calm redirection when a child drifts off task. Every Guide is carefully reviewed and approved before they work with families.",
+    a: "Guides are highly vetted supervisors. They keep children focused, accountable, and encouraged — and redirect calmly when attention drifts. Every Guide is reviewed and approved before working with families.",
   },
   {
     q: "Where do Guides work from?",
-    a: "Guides work remotely from Kenya and are carefully vetted and trained specifically for Study Hall at Home. Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
+    a: "Guides work remotely from Kenya. They’re carefully vetted and trained for Study Hall at Home. Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
   },
   {
     q: "How much does it cost?",
-    a: "Pay as you go is $12 for a 60-minute Study Hall session ($12/hour). You can also save with prepaid routines: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour). Prepaid hours never expire.",
+    a: "Pay as you go is $12/hour. Prepaid routines save more: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour). Prepaid hours never expire.",
   },
   {
     q: "Is the first session really free?",
-    a: "Yes. Your first 1-hour Study Hall session is completely free — a real session with a Guide, not a sales call. No credit card required. The free session is one per account.",
+    a: "Yes. Your first 1-hour Study Hall session is free — a real session with a Guide, not a sales call. No credit card required. The free session is one per account.",
   },
   {
     q: "Do I need a credit card for the free session?",
@@ -37,19 +37,19 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How does Study Hall work?",
-    a: "Create a parent account, add your child, and choose a time that works for your family. Your child joins a private, live Study Hall with a Guide from home, and the Guide keeps them on task while they do their homework.",
+    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. The Guide keeps them on task while they do their homework.",
   },
   {
     q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for quality and safety, and to help resolve any issues. Recordings are used by Study Hall at Home and are available to parents for a limited time after each session.",
+    a: "Yes. Sessions are recorded for quality and safety. Parents can review recordings for a limited time after each session.",
   },
   {
     q: "Can I book for more than one child?",
-    a: "Yes. One parent account can manage and book sessions for multiple children. Note that the free session is one per household (one per account), not one per child.",
+    a: "Yes. One parent account can book for multiple children. The free session is one per household (one per account), not one per child.",
   },
   {
     q: "Do prepaid hours expire?",
-    a: "No. Prepaid hours never expire and are used automatically when they fully cover a session.",
+    a: "No. Prepaid hours never expire and apply automatically when they fully cover a session.",
   },
   {
     q: "What happens if I cancel?",
@@ -57,18 +57,18 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Can I choose my Guide?",
-    a: "Study Hall at Home matches your child with an available, approved Guide for the time you choose, so you don't have to search. Where possible, we keep children with a Guide they've worked with before.",
+    a: "We match your child with an available, approved Guide for the time you choose. Where we can, we keep children with a Guide they’ve worked with before.",
   },
   {
     q: "What do children work on?",
-    a: "Children work on their own homework and assignments — across any subject. Guides provide supervision, focus, and accountability; they are not subject-matter tutors, so there's nothing to tell us in advance.",
+    a: "Their own homework — any subject. Guides provide supervision and accountability, not subject tutoring, so there’s nothing to prepare in advance.",
   },
   {
     q: "How are Guides approved?",
-    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall at Home, and must be approved by our team before they can work with families.",
+    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall at Home, and must be approved before working with families.",
   },
   {
     q: "What happens if I have a problem with a session?",
-    a: "You can report an issue with any completed session from your parent portal. Our team reviews every report, and you can see its status move from Received to Under review to Resolved.",
+    a: "Report any completed session from your parent portal. Our team reviews every report, and you can track status from Received to Resolved.",
   },
 ];

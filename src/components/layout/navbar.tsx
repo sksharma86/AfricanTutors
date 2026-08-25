@@ -15,16 +15,16 @@ export async function Navbar() {
   const isStudent = user?.role === "student";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ink-100/70 bg-[#f7f4ee]/80 backdrop-blur-xl">
-      <Container size="wide" className="flex h-[4.25rem] items-center justify-between gap-4">
-        <BrandLockup priority />
+    <header className="sticky top-0 z-50 border-b border-ink-100/80 bg-white/85 backdrop-blur-xl">
+      <Container size="wide" className="flex h-14 items-center justify-between gap-4 sm:h-16">
+        <BrandLockup priority variant="product" />
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-7 md:flex">
           {PUBLIC_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-[13px] font-medium tracking-[-0.01em] text-ink-600 transition-colors hover:text-ink-900"
+              className="text-[13px] font-medium tracking-[-0.01em] text-ink-500 transition-colors hover:text-ink-900"
             >
               {link.label}
             </Link>

@@ -1,51 +1,44 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/ui/container";
 
 /**
- * Habit / routine story — full-bleed visual moment with restrained copy.
- * Replaces the old icon-card “Why African Tutors” grid.
+ * Habit / relief story — typography-forward, dark product moment.
+ * Replaces lifestyle-photo-heavy “why” grid.
  */
 export function WhyStudyHall() {
   return (
-    <section id="why" className="scroll-mt-24">
-      <div className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <Image
-            src="/images/marketing/studyhall-routine-evening.webp"
-            alt="A calm evening at home while a child works through Study Hall"
-            fill
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-ink-900/55" aria-hidden />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-ink-900/35 to-ink-900/25" aria-hidden />
-        </div>
-
-        <Container size="wide" className="flex min-h-[28rem] items-end py-20 sm:min-h-[32rem] sm:py-24 md:min-h-[36rem]">
-          <div className="max-w-xl text-white">
-            <p className="text-xs font-semibold tracking-[0.16em] text-gold-300 uppercase">The routine</p>
-            <h2 className="mkt-display mt-4 text-4xl sm:text-5xl md:text-[3.25rem]">
-              A homework habit that holds — without the nightly battle.
+    <section id="why" className="scroll-mt-24 bg-ink-900 py-20 text-white sm:py-28">
+      <Container size="wide">
+        <div className="grid gap-12 lg:grid-cols-[1fr_0.85fr] lg:items-end lg:gap-20">
+          <div className="max-w-xl">
+            <p className="text-sm font-medium text-gold-300">The routine</p>
+            <h2 className="mkt-display mt-3 text-3xl sm:text-4xl lg:text-[2.75rem]">
+              Build a homework habit that sticks — without the nightly battle.
             </h2>
-            <p className="mt-5 max-w-md text-base leading-7 text-white/80">
+            <p className="mt-5 text-[17px] leading-7 text-white/65">
               Consistency is the product. Session after session, your child practices sitting down,
-              staying with the work, and finishing — while a Guide provides presence, focus, and calm
+              staying with the work, and finishing — with a Guide for presence, focus, and calm
               redirection.
             </p>
             <Link
               href="/pricing"
-              className="mt-8 inline-flex items-center text-[15px] font-medium text-gold-200 transition-colors hover:text-gold-100"
+              className="mt-8 inline-flex text-[15px] font-semibold text-gold-300 transition-colors hover:text-gold-200"
             >
-              See pricing for a steady routine
-              <span aria-hidden className="ml-1.5">
-                →
-              </span>
+              See plans for a steady routine →
             </Link>
           </div>
-        </Container>
-      </div>
+          <div className="rounded-[18px] border border-white/10 bg-white/[0.04] p-6 sm:p-7">
+            <p className="text-xs font-medium text-white/40">After five days</p>
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
+              “Maya has successfully attended Study Hall 5 days in a row.”
+            </p>
+            <p className="mt-3 text-sm leading-6 text-white/55">
+              She’s building great study habits — and you’re not negotiating homework every night.
+            </p>
+          </div>
+        </div>
+      </Container>
     </section>
   );
 }

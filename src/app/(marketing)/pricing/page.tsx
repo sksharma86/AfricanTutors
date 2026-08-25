@@ -7,12 +7,11 @@ import { PricingSection } from "@/components/marketing/pricing-section";
 import { Container } from "@/components/ui/container";
 import { FAQ_ITEMS } from "@/lib/faq";
 import { getPublicPackages } from "@/lib/marketing";
-import { FREE_TRIAL_CTA } from "@/lib/pricing";
+import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, PAYG_PRICE_USD, formatUsd } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description:
-    "Simple Study Hall pricing: your first session is free, then $12/hour pay as you go — or save with 14-hour and 28-hour prepaid routines that never expire.",
+  description: `Study Hall pricing: first session free, then ${formatUsd(PAYG_PRICE_USD)}/hour pay as you go — or save with 14-hour and 28-hour prepaid routines (${AS_LOW_AS_LABEL}). Hours never expire.`,
   alternates: { canonical: "/pricing" },
 };
 
@@ -23,17 +22,16 @@ export default async function PricingPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="Pricing"
-        title="Simple pricing. Your first hour is free."
-        description="Try a real Study Hall with a highly vetted Guide — no credit card. After that, pay $12/hour as you go, or save with prepaid hours that never expire."
+        title={`${AS_LOW_AS_LABEL}. First hour free.`}
+        description={`Try a real Study Hall with a highly vetted Guide — no credit card. Then ${formatUsd(PAYG_PRICE_USD)}/hour as you go, or save with prepaid hours that never expire.`}
       />
 
       <PricingSection packages={packages} withHeader={false} />
 
-      <Container size="wide" className="pb-8">
+      <Container size="wide" className="pb-6">
         <p className="max-w-2xl text-[15px] leading-7 text-ink-500">
-          The 14 Hour Routine is designed for a consistent Study Hall habit. The 28 Hour Routine offers
-          more hours at a lower effective rate. In both cases, hours stay on your account until you use
-          them.
+          The 14 Hour Routine is built for a consistent habit. The 28 Hour Routine unlocks the lowest
+          effective rate at $9/hour. Hours stay on your account until you use them.
         </p>
       </Container>
 
@@ -51,8 +49,8 @@ export default async function PricingPage() {
       />
 
       <CtaSection
-        title="See the difference a Study Hall routine makes."
-        description="Create a free account and book your first session, on us."
+        title="Start with a free hour."
+        description="Create an account and book your first Study Hall — on us."
         primaryLabel={FREE_TRIAL_CTA}
       />
     </div>
