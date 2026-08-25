@@ -6,7 +6,10 @@
 export const NOTIFICATION_EVENTS = Object.freeze({
   BOOKING_CONFIRMED: "booking_confirmed",
   BOOKING_CANCELLED: "booking_cancelled",
+  /** Successful internal Guide swap — Guides only; parent silent. */
   GUIDE_REASSIGNED: "guide_reassigned",
+  /** Replacement failed / booking released — parent + manager. */
+  GUIDE_REASSIGNMENT_FAILED: "guide_reassignment_failed",
   SESSION_REMINDER_1H: "session_reminder_1h",
   PACKAGE_PURCHASED: "package_purchased",
   SESSION_REPORT_READY: "session_report_ready",
@@ -26,7 +29,8 @@ export const CHANNEL_POLICY = Object.freeze({
     "package_purchased",
     "session_report_ready",
     "booking_cancelled",
-    "guide_reassigned",
+    // Parent email only for failed/impacted reassignment (release), not successful swap.
+    "guide_reassignment_failed",
     "session_reminder_1h",
     "guide_assignment",
     "guide_session_reminder",
@@ -40,7 +44,17 @@ export const CHANNEL_POLICY = Object.freeze({
     "session_reminder_1h",
     "call_parent_escalation",
     "booking_cancelled",
-    "guide_reassigned",
+    // Successful Guide reassignment must NEVER SMS the parent.
   ],
   voice: ["call_parent_escalation"],
+  /**
+   * Successful internal Guide reassignment recipients (no parent channels).
+   * Parent notification is reserved for session-impacted outcomes only.
+   */
+  guide_reassigned_success: Object.freeze({
+    parent: [],
+    newGuide: ["email"],
+    removedGuide: ["email"],
+    manager: [], // audit/log only; no routine alert
+  }),
 });

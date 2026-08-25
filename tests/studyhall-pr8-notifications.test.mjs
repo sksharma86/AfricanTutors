@@ -6,6 +6,11 @@ import * as T from "../src/lib/email/templates.mjs";
 import { CHANNEL_POLICY, NOTIFICATION_EVENTS } from "../src/lib/notifications/events.mjs";
 import { packageHoursLabel } from "../src/lib/notifications/package-labels.mjs";
 import {
+  parentSilentOnSuccessfulReassignment,
+  reassignmentOutcome,
+  reassignmentRecipients,
+} from "../src/lib/notifications/reassignment-policy.mjs";
+import {
   REMINDER_1H_WINDOW_MIN,
   REMINDER_EXCLUDED_STATUSES,
   reminder1hWindow,
@@ -63,12 +68,93 @@ describe("Study Hall PR8 — SMS copy (pure)", () => {
     assert.doesNotMatch(sms, /\+1|phone|twilio/i);
   });
 
-  it("cancel and reassign SMS are concise and phone-free", () => {
+  it("cancel SMS is concise; material-impact SMS never says Guide changed for routine swap", () => {
     const c = parentCancellationSms({ studentName: "Maya", whenISO: ISO, tz: "UTC" });
     const r = parentReassignmentSms({ studentName: "Maya", whenISO: ISO, tz: "UTC" });
     assert.match(c, /cancelled/i);
-    assert.match(r, /Guide changed/i);
+    assert.match(r, /session at .* was updated/i);
+    assert.doesNotMatch(r, /Guide changed/i);
     assert.doesNotMatch(c + r, /\+1|phone_e164/i);
+  });
+});
+
+describe("Study Hall PR8 — successful Guide reassignment is invisible to parents", () => {
+  it("policy: successful swap → no parent email/SMS; Guides notified; no manager alert", () => {
+    assert.equal(reassignmentOutcome(true), "successful_internal");
+    const r = reassignmentRecipients("successful_internal");
+    assert.equal(r.parentEmail, false);
+    assert.equal(r.parentSms, false);
+    assert.equal(r.newGuideAssignment, true);
+    assert.equal(r.removedGuide, true);
+    assert.equal(r.managerExceptionAlert, false);
+    assert.equal(parentSilentOnSuccessfulReassignment(true), true);
+  });
+
+  it("policy: session impacted (release/failure) → parent email + manager alert", () => {
+    assert.equal(reassignmentOutcome(false), "session_impacted");
+    const r = reassignmentRecipients("session_impacted");
+    assert.equal(r.parentEmail, true);
+    assert.equal(r.parentSms, false);
+    assert.equal(r.newGuideAssignment, false);
+    assert.equal(r.managerExceptionAlert, true);
+    assert.equal(parentSilentOnSuccessfulReassignment(false), false);
+  });
+
+  it("notifyReassignment source: successful path has no parent deliver / no reassignment-sms", () => {
+    const notify = read("src/lib/notify.ts");
+    // Successful branch must not email parent via tutorReassignment(reassigned:true)
+    // or SMS via reassignment-sms / parentReassignmentSms.
+    assert.match(notify, /reassignmentRecipients/);
+    assert.match(notify, /never parent email|parentNotified: false/i);
+    assert.doesNotMatch(notify, /reassignment-sms:/);
+    assert.doesNotMatch(notify, /parentReassignmentSms/);
+    // New Guide uses tutor-new-session key (not booking-confirmed parent path).
+    assert.match(notify, /tutor-new-session:\$\{bookingId\}:\$\{b\.tutor_id\}/);
+    assert.match(notify, /tutor-removed:\$\{bookingId\}:\$\{info\.removedTutorId\}/);
+    // Release / failure still notifies parent.
+    assert.match(notify, /guide_reassignment_failed/);
+    assert.match(notify, /release:\$\{bookingId\}/);
+    assert.match(notify, /tutorReassignment\(\{\s*reassigned:\s*false/);
+  });
+
+  it("channel policy: successful guide_reassigned is not a parent SMS/email event", () => {
+    assert.ok(!CHANNEL_POLICY.sms.includes("guide_reassigned"));
+    assert.ok(!CHANNEL_POLICY.email.includes("guide_reassigned"));
+    assert.ok(CHANNEL_POLICY.email.includes("guide_reassignment_failed"));
+    assert.ok(CHANNEL_POLICY.guide_reassigned_success);
+    assert.deepEqual(CHANNEL_POLICY.guide_reassigned_success.parent, []);
+    assert.ok(CHANNEL_POLICY.guide_reassigned_success.newGuide.includes("email"));
+    assert.ok(CHANNEL_POLICY.guide_reassigned_success.removedGuide.includes("email"));
+  });
+
+  it("cancellation parent notification remains intact", () => {
+    const notify = read("src/lib/notify.ts");
+    assert.match(notify, /cancellation:\$\{bookingId\}/);
+    assert.match(notify, /cancellation-sms:\$\{bookingId\}/);
+    assert.match(notify, /parentCancellationSms/);
+    const cancel = T.cancellation({ early: true, restoredMinutes: 60 });
+    assert.match(cancel.subject, /cancelled/i);
+  });
+
+  it("session-impacted parent email template still exists for release", () => {
+    const impacted = T.tutorReassignment({
+      reassigned: false,
+      compCreditCents: 500,
+      subject: "Study Hall",
+      bookingId: BID,
+      appUrl: APP,
+    });
+    assert.match(impacted.text, /returned to your account|rebook|unavailable/i);
+    assertNoLeaks(impacted);
+
+    const successCopy = T.tutorReassignment({
+      reassigned: true,
+      subject: "Study Hall",
+      bookingId: BID,
+      appUrl: APP,
+    });
+    // Template may still exist for historical/admin use, but notify must not send it to parents on success.
+    assert.match(successCopy.text, /Guide changed|matched you/i);
   });
 });
 
@@ -270,9 +356,11 @@ describe("Study Hall PR8 — architecture source contracts", () => {
   it("event catalog and channel policy cover PR8 surface", () => {
     assert.equal(NOTIFICATION_EVENTS.SESSION_REMINDER_1H, "session_reminder_1h");
     assert.equal(NOTIFICATION_EVENTS.PACKAGE_PURCHASED, "package_purchased");
+    assert.equal(NOTIFICATION_EVENTS.GUIDE_REASSIGNMENT_FAILED, "guide_reassignment_failed");
     assert.ok(CHANNEL_POLICY.sms.includes("session_reminder_1h"));
     assert.ok(CHANNEL_POLICY.voice.includes("call_parent_escalation"));
     assert.ok(!CHANNEL_POLICY.sms.includes("package_purchased"));
+    assert.ok(!CHANNEL_POLICY.sms.includes("guide_reassigned"));
   });
 
   it("pricing / free session / Call Parent / prepaid UX files unchanged in spirit", () => {
@@ -328,11 +416,26 @@ describe("Study Hall PR8 — idempotency keys (DB, when configured)", () => {
       assert.equal((await svc.rpc("claim_email_delivery", { p_key: pkg, p_type: "package_purchased", p_account: cust.id, p_to: "p@x.test" })).data, false);
 
       const cancelT = `cancellation-tutor:${bookingId}`;
-      const reassign = `reassignment:${bookingId}`;
+      const cancelParent = `cancellation:${bookingId}`;
       assert.equal((await svc.rpc("claim_email_delivery", { p_key: cancelT, p_type: "tutor_cancellation", p_account: cust.id, p_to: "g@x.test" })).data, true);
       assert.equal((await svc.rpc("claim_email_delivery", { p_key: cancelT, p_type: "tutor_cancellation", p_account: cust.id, p_to: "g@x.test" })).data, false);
-      assert.equal((await svc.rpc("claim_email_delivery", { p_key: reassign, p_type: "reassignment", p_account: cust.id, p_to: "p@x.test" })).data, true);
-      assert.equal((await svc.rpc("claim_email_delivery", { p_key: reassign, p_type: "reassignment", p_account: cust.id, p_to: "p@x.test" })).data, false);
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: cancelParent, p_type: "cancellation", p_account: cust.id, p_to: "p@x.test" })).data, true);
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: cancelParent, p_type: "cancellation", p_account: cust.id, p_to: "p@x.test" })).data, false);
+
+      // Successful reassignment: Guide keys only — no parent reassignment:/reassignment-sms: keys.
+      const guideA = "00000000-0000-4000-8000-0000000008a1";
+      const guideB = "00000000-0000-4000-8000-0000000008a2";
+      const newGuideKey = `tutor-new-session:${bookingId}:${guideB}`;
+      const removedKey = `tutor-removed:${bookingId}:${guideA}`;
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: newGuideKey, p_type: "tutor_new_session", p_account: cust.id, p_to: "g@x.test" })).data, true);
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: newGuideKey, p_type: "tutor_new_session", p_account: cust.id, p_to: "g@x.test" })).data, false, "duplicate reassignment does not duplicate Guide notify");
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: removedKey, p_type: "tutor_removed", p_account: cust.id, p_to: "g2@x.test" })).data, true);
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: removedKey, p_type: "tutor_removed", p_account: cust.id, p_to: "g2@x.test" })).data, false);
+
+      // Session-impacted release still uses parent release key.
+      const releaseKey = `release:${bookingId}`;
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: releaseKey, p_type: "guide_reassignment_failed", p_account: cust.id, p_to: "p@x.test" })).data, true);
+      assert.equal((await svc.rpc("claim_email_delivery", { p_key: releaseKey, p_type: "guide_reassignment_failed", p_account: cust.id, p_to: "p@x.test" })).data, false);
 
       const report = `session-report-ready:00000000-0000-4000-8000-000000000803`;
       assert.equal((await svc.rpc("claim_email_delivery", { p_key: report, p_type: "session_report_ready", p_account: cust.id, p_to: "p@x.test" })).data, true);

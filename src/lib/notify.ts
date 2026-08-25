@@ -5,10 +5,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import * as T from "@/lib/email/templates.mjs";
 import { sendEmail } from "@/lib/email/transport";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
+import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
 import {
   parentCancellationSms,
-  parentReassignmentSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
@@ -336,54 +336,99 @@ export async function notifyCancellation(
   }
 }
 
+/**
+ * Guide reassignment / release notifications.
+ *
+ * Successful internal reassignment (`reassigned: true`): parent is silent —
+ * customers book a time, not a Guide. New Guide gets assignment; removed Guide
+ * gets removal notice. No routine manager alert.
+ *
+ * Session impacted (`reassigned: false` / release): parent email + manager
+ * exception alert. Cancellation path remains separate for full cancels.
+ */
 export async function notifyReassignment(
   bookingId: string,
   info: { reassigned: boolean; compCreditCents?: number | null; removedTutorId?: string | null },
 ) {
   const service = getServiceSupabase();
   const b = await loadBooking(service, bookingId);
-  if (!b) return;
-  await deliver({
-    key: `${info.reassigned ? "reassignment" : "release"}:${bookingId}`,
-    type: info.reassigned ? "reassignment" : "release",
-    accountId: b.account_id,
-    bookingId,
-    rendered: T.tutorReassignment({
-      reassigned: info.reassigned,
-      compCreditCents: info.compCreditCents ?? null,
-      subject: b.subject,
-      bookingId,
-      appUrl: APP_URL,
-    }),
-  });
-  if (info.reassigned && b.account_id) {
-    void deliverParentSms({
-      key: `reassignment-sms:${bookingId}`,
-      type: "reassignment_sms",
+  if (!b) return { status: "skipped" };
+
+  const recipients = reassignmentRecipients(reassignmentOutcome(info.reassigned));
+
+  // --- Successful internal Guide swap: Guides only -------------------------
+  if (info.reassigned) {
+    // New Guide assignment (idempotent per booking+tutor — duplicate reassign
+    // to the same Guide does not resend). Never routes through booking-confirmed
+    // so the parent is never touched.
+    if (recipients.newGuideAssignment && b.tutor_id && b.scheduled_start) {
+      await deliver({
+        key: `tutor-new-session:${bookingId}:${b.tutor_id}`,
+        type: "tutor_new_session",
+        accountId: b.tutor_id,
+        bookingId,
+        rendered: T.tutorNewSession({
+          subject: b.subject,
+          whenISO: b.scheduled_start,
+          tz: b.tutorTz,
+          durationMinutes: b.duration_minutes,
+          studentName: b.studentFirst,
+          appUrl: APP_URL,
+          bookingId,
+        }),
+      });
+    }
+
+    if (recipients.removedGuide && info.removedTutorId) {
+      let tz = "UTC";
+      const { data: tp } = await service
+        .from("tutor_profiles")
+        .select("timezone")
+        .eq("profile_id", info.removedTutorId)
+        .maybeSingle();
+      tz = tp?.timezone || "UTC";
+      await deliver({
+        key: `tutor-removed:${bookingId}:${info.removedTutorId}`,
+        type: "tutor_removed",
+        accountId: info.removedTutorId,
+        bookingId,
+        rendered: T.tutorRemoved({ subject: b.subject, whenISO: b.scheduled_start, tz }),
+      });
+    }
+
+    // Explicit: never parent email / never parent SMS on successful reassignment.
+    return { status: "ok", parentNotified: false };
+  }
+
+  // --- Session impacted (release / failed replacement) ---------------------
+  if (recipients.parentEmail) {
+    await deliver({
+      key: `release:${bookingId}`,
+      type: "guide_reassignment_failed",
       accountId: b.account_id,
       bookingId,
-      body: parentReassignmentSms({
-        studentName: b.studentFirst,
-        whenISO: b.scheduled_start,
-        tz: b.studentTz,
+      rendered: T.tutorReassignment({
+        reassigned: false,
+        compCreditCents: info.compCreditCents ?? null,
+        subject: b.subject,
+        bookingId,
+        appUrl: APP_URL,
       }),
     });
   }
-  if (info.reassigned && b.tutor_id && b.scheduled_start) {
-    await notifyBookingConfirmed(bookingId); // new Guide assignment email (idempotent)
-  }
-  if (info.reassigned && info.removedTutorId) {
-    let tz = "UTC";
-    const { data: tp } = await service.from("tutor_profiles").select("timezone").eq("profile_id", info.removedTutorId).maybeSingle();
-    tz = tp?.timezone || "UTC";
-    await deliver({
-      key: `tutor-removed:${bookingId}:${info.removedTutorId}`,
-      type: "tutor_removed",
-      accountId: info.removedTutorId,
-      bookingId,
-      rendered: T.tutorRemoved({ subject: b.subject, whenISO: b.scheduled_start, tz }),
+
+  if (recipients.managerExceptionAlert) {
+    void notifyAdminAlert(`guide-reassignment-failed:${bookingId}`, {
+      title: "Guide reassignment failed — session impacted",
+      summary: `Booking ${bookingId} could not keep an assigned Guide; customer was notified.`,
+      lines: [
+        b.studentFirst ? `Child: ${b.studentFirst}` : null,
+        b.scheduled_start ? `When: ${b.scheduled_start}` : null,
+      ].filter(Boolean) as string[],
     });
   }
+
+  return { status: "ok", parentNotified: true };
 }
 
 export async function notifyRefund(paymentId: string, refundRef: string, amountCents: number, reason?: string | null) {

@@ -4,5 +4,11 @@ declare module "@/lib/notifications/events.mjs" {
     email: string[];
     sms: string[];
     voice: string[];
+    guide_reassigned_success?: Readonly<{
+      parent: string[];
+      newGuide: string[];
+      removedGuide: string[];
+      manager: string[];
+    }>;
   }>;
 }
