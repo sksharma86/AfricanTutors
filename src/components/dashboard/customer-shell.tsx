@@ -10,7 +10,7 @@ import { Container } from "@/components/ui/container";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { cn } from "@/lib/utils";
 
-/** Simple parent destinations — Study Hall product, not tutoring SaaS. */
+/** Simple parent destinations — Study Hall product, not a tutor marketplace. */
 const NAV: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/dashboard/student" },
   { label: "Book", href: "/dashboard/student/book" },

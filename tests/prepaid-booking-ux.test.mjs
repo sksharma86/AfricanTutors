@@ -60,7 +60,7 @@ describe("Prepaid booking UX — wizard wiring (source)", () => {
   });
 
   it("success path still says prepaid hours; free trial and Stripe CTAs preserved", () => {
-    assert.match(wiz, /confirmed using your prepaid Study Hall Hours/);
+    assert.match(wiz, /confirmed using your prepaid hours/);
     assert.match(wiz, /Confirm booking/);
     assert.match(wiz, /First 1-hour Study Hall — FREE/);
     assert.match(wiz, /secure checkout to pay the amount due/);

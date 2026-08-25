@@ -335,9 +335,9 @@ export default async function StudentDashboardPage() {
           )}
         </div>
 
-        {/* Study Hall Hours */}
+        {/* Prepaid Hours (unused package balance) */}
         <div className="mt-8">
-          <SectionHeader title="Study Hall Hours" />
+          <SectionHeader title="Prepaid Hours" />
           <BalanceCards minutes={minutes} creditCents={creditCents} />
         </div>
 

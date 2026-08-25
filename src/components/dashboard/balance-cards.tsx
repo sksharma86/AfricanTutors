@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
 
 /**
- * Human-readable Study Hall hours and account credit.
- * Customer-facing label is "Study Hall Hours" (internal fields unchanged).
+ * Unused prepaid/package minutes + account credit.
+ * Customer-facing label is "Prepaid Hours" (internal fields unchanged).
  */
 export function BalanceCards({
   minutes,
@@ -17,16 +17,10 @@ export function BalanceCards({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Card className="p-5">
-        <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Study Hall Hours</p>
+        <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Prepaid Hours</p>
         <p className="mt-2 font-display text-3xl font-semibold text-ink-900">
-          {minutes > 0 ? (
-            <>
-              {formatDuration(minutes)}
-              <span className="mt-1 block text-base font-medium text-ink-500">remaining</span>
-            </>
-          ) : (
-            "None yet"
-          )}
+          {minutes > 0 ? formatDuration(minutes) : "0 hours"}
+          <span className="mt-1 block text-base font-medium text-ink-500">remaining</span>
         </p>
         <p className="mt-4">
           <Link

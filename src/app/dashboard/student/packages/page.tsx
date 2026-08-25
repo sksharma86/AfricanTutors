@@ -49,7 +49,7 @@ export default async function PackagesPage() {
           <div className="mt-5 flex flex-wrap gap-3 text-sm">
             {minutes > 0 ? (
               <span className="rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-ink-700">
-                Study Hall Hours: <span className="font-semibold text-ink-900">{formatDuration(minutes)}</span>
+                Prepaid Hours: <span className="font-semibold text-ink-900">{formatDuration(minutes)}</span>
               </span>
             ) : null}
             {creditCents > 0 ? (

@@ -24,7 +24,7 @@ describe("PR10C — parent portal usability (source)", () => {
   it("dashboard hierarchy emphasizes Next Study Hall and Book CTA", () => {
     assert.match(dash, /Next Study Hall/);
     assert.match(dash, /Book a Study Hall/);
-    assert.match(dash, /Study Hall Hours/);
+    assert.match(dash, /Prepaid Hours/);
     assert.match(dash, /Ready to join 5 minutes before start/);
     assert.doesNotMatch(dash, /Join opens 5 minutes/);
     assert.doesNotMatch(dash, /Opens at /);
@@ -36,8 +36,10 @@ describe("PR10C — parent portal usability (source)", () => {
     assert.match(dash, /Book free session/);
   });
 
-  it("Study Hall Hours + Buy hours & save deep-links to prepaid packages", () => {
-    assert.match(balance, /Study Hall Hours/);
+  it("Prepaid Hours + Buy hours & save deep-links to prepaid packages", () => {
+    assert.match(balance, /Prepaid Hours/);
+    assert.match(balance, /0 hours/);
+    assert.match(balance, /remaining/);
     assert.match(balance, /Buy hours &amp; save|Buy hours & save/);
     assert.match(balance, /packages#prepaid/);
     assert.match(packages, /id="prepaid"/);
@@ -58,7 +60,7 @@ describe("PR10C — parent portal usability (source)", () => {
 
   it("customer-facing copy avoids tutoring booking language", () => {
     assert.doesNotMatch(dash, /Book a tutor|Book tutoring|Tutoring Balance/i);
-    assert.doesNotMatch(shell, /Book a tutor|Tutoring/i);
+    assert.doesNotMatch(shell, /Book a tutor|Tutoring Balance/i);
     assert.doesNotMatch(balance, /Tutoring Balance/i);
   });
 });

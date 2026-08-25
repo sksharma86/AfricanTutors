@@ -331,7 +331,7 @@ export function BookingWizard({
           {confirmation.isFree
             ? "Your free 1-hour Study Hall is confirmed. We’ve matched an approved Guide."
             : confirmation.funding === "package"
-              ? "Your session is confirmed using your prepaid Study Hall Hours. An approved Guide is matched."
+              ? "Your session is confirmed using your prepaid hours. An approved Guide is matched."
               : confirmation.funding === "credit"
                 ? "Your session is confirmed using your account credit. An approved Guide is matched."
                 : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."}
@@ -470,7 +470,7 @@ export function BookingWizard({
             <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
               Your balance:{" "}
               {balances.minutes > 0 ? (
-                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall Hours</span>
+                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Prepaid Hours</span>
               ) : null}
               {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
               {balances.creditCents > 0 ? (
@@ -656,7 +656,7 @@ export function BookingWizard({
             {!isFreeTrial && fullyPrepaid && quote ? (
               <>
                 <Row label="Payment" value="Covered by prepaid balance" highlight />
-                <Row label="Study Hall Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                <Row label="Prepaid Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 {prepaidRemaining != null ? (
                   <Row label="Hours after booking" value={formatDuration(prepaidRemaining)} />
                 ) : null}
@@ -667,7 +667,7 @@ export function BookingWizard({
               <>
                 <Row label="Price" value={priceLabel} />
                 {quote.package_minutes_used > 0 ? (
-                  <Row label="Study Hall Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                  <Row label="Prepaid Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 ) : null}
                 {quote.credit_cents_used > 0 ? (
                   <Row label="Account credit" value={`−${formatMoneyCents(quote.credit_cents_used)}`} />
