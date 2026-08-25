@@ -45,8 +45,9 @@ describe("PR10E — email confirmation + role routing (source)", () => {
   });
 
   it("post-auth home routes pending applicants separately from parents", () => {
-    assert.match(redirectLib, /\/dashboard\/applicant/);
-    assert.match(redirectLib, /status === "pending"/);
+    const home = read("src/lib/auth-home.ts");
+    assert.match(home, /\/dashboard\/applicant/);
+    assert.match(home, /status === "pending"/);
     assert.match(dashIndex, /getGuideApplicantInfo/);
     assert.match(dashIndex, /redirect\("\/dashboard\/applicant"\)/);
   });

@@ -145,10 +145,7 @@ export function BookingWizard({
   // Recompute the authoritative funding breakdown whenever the paid session
   // changes. This is display-only; book_session recomputes under locks.
   useEffect(() => {
-    if (!supabase || !accountId || isFreeTrial) {
-      setQuote(null);
-      return;
-    }
+    if (!supabase || !accountId || isFreeTrial) return;
     let active = true;
     supabase
       .rpc("booking_quote", { p_account: accountId, p_duration: duration, p_is_free_trial: false })

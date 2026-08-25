@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { resolvePostAuthHome, sanitizeNextPath } from "@/lib/auth-redirect";
+import { resolvePostAuthHome } from "@/lib/auth-home";
+import { sanitizeNextPath } from "@/lib/auth-redirect";
 import type { Role } from "@/lib/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
