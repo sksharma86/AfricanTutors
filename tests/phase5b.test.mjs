@@ -112,10 +112,19 @@ describe("Phase 5B — session recording model, association, RLS (live)", { skip
     assert.ok(rows.every((r) => r.status === "completed"));
   });
 
-  it("recording is admin-only: customer, tutor, and anonymous cannot read; admin can", async () => {
+  it("recording RLS: owning parent + admin can read; other customer, tutor, anon cannot", async () => {
     const b = await mkBooking({ account: custA.id, student: stuA, tutor: tut.id, minutesFromNow: 11 });
     await ready(b, rid("rec"));
-    assert.equal((await cA.from("session_recordings").select("id").eq("booking_id", b)).data.length, 0, "owner customer blocked");
+    // PR9: owning parent may read; until 0025 is applied this may still be 0 (admin-only).
+    const { error: colErr } = await svc.from("session_recordings").select("deleted_at").limit(1);
+    const pr9 = !colErr;
+    const ownerCount = (await cA.from("session_recordings").select("id").eq("booking_id", b)).data?.length ?? 0;
+    if (pr9) {
+      assert.ok(ownerCount >= 1, "owning parent can read own recording after PR9");
+    } else {
+      assert.equal(ownerCount, 0, "pre-PR9: owner customer blocked");
+    }
+    assert.equal((await cB.from("session_recordings").select("id").eq("booking_id", b)).data.length, 0, "other customer blocked");
     assert.equal((await cT.from("session_recordings").select("id").eq("booking_id", b)).data.length, 0, "assigned tutor blocked");
     const anon = anonClient();
     const anonRes = await anon.from("session_recordings").select("id").eq("booking_id", b);

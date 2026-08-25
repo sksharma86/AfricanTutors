@@ -639,3 +639,12 @@ export async function notifyRecordingFailure(bookingId: string, detail?: string 
     lines: detail ? [detail] : [],
   });
 }
+
+/** Manager exception: 60-day retention deletion failed (idempotent per recording). */
+export async function notifyRecordingDeletionFailure(recordingId: string, detail?: string | null) {
+  return notifyAdminAlert(`recording-deletion-failed:${recordingId}`, {
+    title: "Recording deletion failed",
+    summary: `Could not delete expired Study Hall recording ${recordingId} from Daily. Will retry on the next retention cron.`,
+    lines: detail ? [detail] : [],
+  });
+}

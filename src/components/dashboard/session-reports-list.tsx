@@ -4,11 +4,24 @@ import {
   type FocusRating,
   type RedirectionLevel,
 } from "@/lib/session-report.mjs";
+import { formatAvailableUntil } from "@/lib/recording-retention.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading } from "@/lib/timezone";
 
+import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
+
+export type ParentRecordingSummary = {
+  id: string;
+  status: string;
+  retention_until: string | null;
+  deleted_at: string | null;
+  /** When true, show Watch; when expired/deleted/failed, show neutral copy. */
+  playable: boolean;
+};
+
 export interface ParentSessionReport {
   id: string;
+  booking_id?: string;
   submitted_at: string;
   focus_rating: FocusRating;
   work_summary: string;
@@ -20,11 +33,14 @@ export interface ParentSessionReport {
   timezone: string;
   /** True when a Call Parent escalation occurred for this booking (PR7). */
   had_parent_escalation?: boolean;
+  /** Optional recording summary for this booking (PR9). */
+  recording?: ParentRecordingSummary | null;
 }
 
 /**
  * Chronological list of Study Hall accountability reports for the parent portal.
  * Tone: reassuring and practical — not grades or academic assessment.
+ * Session recordings complement the Guide report (60-day retention).
  */
 export function SessionReportsList({ reports }: { reports: ParentSessionReport[] }) {
   if (reports.length === 0) {
@@ -89,9 +105,56 @@ export function SessionReportsList({ reports }: { reports: ParentSessionReport[]
                 </div>
               ) : null}
             </dl>
+
+            <RecordingBlock recording={r.recording ?? null} timezone={tz} />
           </article>
         );
       })}
+    </div>
+  );
+}
+
+function RecordingBlock({
+  recording,
+  timezone,
+}: {
+  recording: ParentRecordingSummary | null;
+  timezone: string;
+}) {
+  if (!recording) return null;
+
+  if (recording.status === "failed") {
+    return (
+      <div className="mt-4 border-t border-ink-100 pt-3">
+        <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
+        <p className="mt-0.5 text-sm text-ink-600">Recording unavailable</p>
+      </div>
+    );
+  }
+
+  if (recording.deleted_at || !recording.playable) {
+    return (
+      <div className="mt-4 border-t border-ink-100 pt-3">
+        <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
+        <p className="mt-0.5 text-sm text-ink-600">Recording expired</p>
+      </div>
+    );
+  }
+
+  if (recording.status !== "completed") {
+    return null;
+  }
+
+  const until = formatAvailableUntil(recording.retention_until, timezone);
+
+  return (
+    <div className="mt-4 border-t border-ink-100 pt-3">
+      <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
+      <p className="mt-0.5 text-sm text-ink-700">
+        Available for 60 days
+        {until ? <span className="text-ink-500"> · Available until {until}</span> : null}
+      </p>
+      <WatchRecordingButton recordingId={recording.id} />
     </div>
   );
 }

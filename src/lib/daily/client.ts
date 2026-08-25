@@ -127,7 +127,7 @@ export interface RecordingAccess {
 
 /**
  * Generate a SHORT-LIVED access link for a cloud recording (server-side only,
- * after admin authorization). We never store or expose permanent recording URLs.
+ * after authorization). We never store or expose permanent recording URLs.
  */
 export async function getRecordingAccessLink(recordingId: string): Promise<RecordingAccess | null> {
   const res = await dailyFetch(`/recordings/${encodeURIComponent(recordingId)}/access-link`, { method: "GET" });
@@ -138,4 +138,29 @@ export async function getRecordingAccessLink(recordingId: string): Promise<Recor
     url: data.download_link,
     expiresAt: new Date((data.expires ? data.expires * 1000 : Date.now() + 15 * 60000)).toISOString(),
   };
+}
+
+export interface DeleteRecordingResult {
+  status: "deleted" | "failed" | "skipped";
+  error?: string | null;
+}
+
+/**
+ * Permanently delete a cloud recording from Daily. Used by the 60-day retention
+ * cron after authorization. Never throws — returns structured results.
+ */
+export async function deleteDailyRecording(recordingId: string): Promise<DeleteRecordingResult> {
+  if (!recordingId) return { status: "skipped", error: "no recording id" };
+  if (!DAILY_API_KEY) return { status: "skipped", error: "Daily is not configured." };
+  try {
+    const res = await dailyFetch(`/recordings/${encodeURIComponent(recordingId)}`, { method: "DELETE" });
+    if (res.ok || res.status === 404) {
+      // 404: already gone at provider — treat as deleted so we can mark DB.
+      return { status: "deleted" };
+    }
+    const detail = await res.text().catch(() => "");
+    return { status: "failed", error: `daily ${res.status} ${detail.slice(0, 200)}` };
+  } catch (e) {
+    return { status: "failed", error: e instanceof Error ? e.message : "delete error" };
+  }
 }

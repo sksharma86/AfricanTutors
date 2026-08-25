@@ -20,6 +20,7 @@ import { type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { formatDuration } from "@/lib/format.mjs";
+import { isRecordingPlayable } from "@/lib/recording-retention.mjs";
 import { customerBookingStatus, issueStatus } from "@/lib/status-labels.mjs";
 import type { FocusRating, RedirectionLevel } from "@/lib/session-report.mjs";
 import { customerJoinState } from "@/lib/session-window.mjs";
@@ -117,6 +118,24 @@ export default async function StudentDashboardPage() {
       : Promise.resolve({ data: null, error: null }),
   ]);
 
+  // PR9: parent-visible recording summaries for report bookings (RLS: own account).
+  const reportBookingIds = (
+    reportsRes && "error" in reportsRes && reportsRes.error
+      ? []
+      : ((reportsRes?.data ?? []) as { booking_id: string }[])
+  ).map((r) => r.booking_id);
+  const uniqueReportBookings = Array.from(new Set(reportBookingIds.filter(Boolean)));
+  const recordingsRes =
+    supabase && uniqueReportBookings.length
+      ? await supabase
+          .from("session_recordings")
+          .select("id, booking_id, status, retention_until, deleted_at, daily_recording_id, completed_at")
+          .in("booking_id", uniqueReportBookings)
+          .then(
+            (r) => r,
+            () => ({ data: null, error: null }),
+          )
+      : { data: null, error: null };
   const bookings = (bookingsRaw ?? []) as unknown as BookingRow[];
   const students = (myStudents ?? []) as { id: string; full_name: string; grade_level: string | null }[];
   const balances = (balancesRes?.data ?? {}) as { package_minutes?: number; dollar_credit_cents?: number };
@@ -154,6 +173,29 @@ export default async function StudentDashboardPage() {
     } | null;
   };
 
+  type RecRow = {
+    id: string;
+    booking_id: string;
+    status: string;
+    retention_until: string | null;
+    deleted_at: string | null;
+    daily_recording_id: string | null;
+    completed_at: string | null;
+  };
+
+  const recordingByBooking = new Map<string, RecRow>();
+  for (const rec of (
+    recordingsRes && "error" in recordingsRes && recordingsRes.error
+      ? []
+      : ((recordingsRes?.data ?? []) as RecRow[])
+  )) {
+    // Prefer a completed playable artifact when multiple exist.
+    const prev = recordingByBooking.get(rec.booking_id);
+    if (!prev || (rec.status === "completed" && prev.status !== "completed")) {
+      recordingByBooking.set(rec.booking_id, rec);
+    }
+  }
+
   const parentReports: ParentSessionReport[] = (
     reportsRes && "error" in reportsRes && reportsRes.error
       ? []
@@ -161,8 +203,10 @@ export default async function StudentDashboardPage() {
   ).map((r) => {
     const full = r.bookings?.students?.full_name?.trim() || "";
     const first = full ? full.split(/\s+/)[0]! : r.bookings?.student_first_name || "Your child";
+    const rec = recordingByBooking.get(r.booking_id) ?? null;
     return {
       id: r.id,
+      booking_id: r.booking_id,
       submitted_at: r.submitted_at,
       focus_rating: r.focus_rating,
       work_summary: r.work_summary,
@@ -173,6 +217,15 @@ export default async function StudentDashboardPage() {
       duration_minutes: r.bookings?.duration_minutes ?? null,
       timezone: r.bookings?.students?.timezone || DEFAULT_TZ,
       had_parent_escalation: escalatedBookings.has(r.booking_id),
+      recording: rec
+        ? {
+            id: rec.id,
+            status: rec.status,
+            retention_until: rec.retention_until,
+            deleted_at: rec.deleted_at,
+            playable: isRecordingPlayable(rec),
+          }
+        : null,
     };
   });
 

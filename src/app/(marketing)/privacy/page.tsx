@@ -19,7 +19,10 @@ export default function PrivacyPage() {
           <p>
             Our full Privacy Policy is being finalized ahead of public launch. In practice, Study Hall
             at Home keeps sessions on-platform, limits the sharing of personal contact details between
-            families and Guides, and records sessions for quality and safety.
+            families and Guides, and records Study Hall sessions for quality and safety. Session
+            recordings may be made available to the parent/account holder and are retained for 60 days,
+            after which they are deleted according to our retention policy. This wording should receive
+            attorney review before public launch.
           </p>
           <p>
             If you provide a phone number for Study Hall alerts, we may use it to call or text you when

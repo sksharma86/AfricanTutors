@@ -24,6 +24,11 @@ export default function TermsPage() {
             <Link href="/faq" className="font-medium text-gold-700 hover:underline">FAQ</Link>.
           </p>
           <p>
+            Study Hall sessions are recorded. Recordings may be shared with the parent/account holder
+            for sessions on their account and are kept for 60 days, then deleted. Attorney review of
+            this wording is recommended before public launch.
+          </p>
+          <p>
             During an active Study Hall session, we may contact you by automated phone call or SMS if
             a Guide needs you to check on your child. This is a transactional operational message, not
             marketing. Attorney review of this wording is recommended before public launch.
