@@ -2,9 +2,9 @@ import { Container } from "@/components/ui/container";
 
 const ITEMS = [
   "Highly vetted Guides",
-  "Sessions recorded",
-  "Session reports",
-  "Call Parent to your phone",
+  "60-day recording access",
+  "After-session reports",
+  "Parents always within reach",
   "First hour free",
 ] as const;
 

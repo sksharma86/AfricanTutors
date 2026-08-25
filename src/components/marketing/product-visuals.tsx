@@ -67,11 +67,55 @@ function UpcomingBody() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink-900">Guide ready</p>
-          <p className="text-xs text-ink-400">Join opens 5 minutes before start</p>
+          <p className="text-xs text-ink-400">Ready to join 5 minutes before start</p>
         </div>
         <span className="rounded-md bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white">Join</span>
       </div>
     </>
+  );
+}
+
+/** Abstract video tile — privacy-safe, finished product feel (no photos). */
+function VideoTile({
+  initial,
+  name,
+  detail,
+  accent,
+  className = "",
+}: {
+  initial: string;
+  name: string;
+  detail: string;
+  accent: "warm" | "forest";
+  className?: string;
+}) {
+  const glow =
+    accent === "warm"
+      ? "bg-[radial-gradient(ellipse_at_42%_38%,rgba(201,136,22,0.28),transparent_58%)]"
+      : "bg-[radial-gradient(ellipse_at_55%_35%,rgba(46,106,72,0.32),transparent_58%)]";
+
+  return (
+    <div className={cn("relative overflow-hidden rounded-lg bg-[#1a1a18]", className)}>
+      <div className={cn("absolute inset-0", glow)} aria-hidden />
+      <div
+        className="absolute inset-0 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.55) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.55) 1px, transparent 1px)",
+          backgroundSize: "18px 18px",
+        }}
+        aria-hidden
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-sm font-semibold tracking-tight text-white/90 ring-1 ring-white/15 backdrop-blur-[2px] sm:h-12 sm:w-12">
+          {initial}
+        </span>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-2.5 pb-2.5 pt-8">
+        <p className="text-xs font-medium text-white/95">{name}</p>
+        <p className="text-[11px] text-white/45">{detail}</p>
+      </div>
+    </div>
   );
 }
 
@@ -80,29 +124,33 @@ function LiveBody() {
     <>
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-forest-400" />
-          <p className="text-xs font-medium text-white/75">In session</p>
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-forest-400 opacity-40" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-forest-400" />
+          </span>
+          <p className="text-xs font-medium text-white/80">In session</p>
         </div>
-        <p className="font-mono text-[11px] tabular-nums text-white/40">42:18</p>
+        <p className="font-mono text-[11px] tabular-nums text-white/45">42:18</p>
       </div>
       <div className="grid grid-cols-[1.25fr_0.75fr] gap-2.5">
-        <div className="relative aspect-[5/4] overflow-hidden rounded-lg bg-ink-800">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_40%,rgba(201,136,22,0.12),transparent_55%)]" />
-          <div className="absolute inset-x-0 bottom-0 p-2.5">
-            <p className="text-xs font-medium text-white/90">Maya</p>
-            <p className="text-[11px] text-white/40">Working · homework</p>
-          </div>
-        </div>
+        <VideoTile
+          initial="M"
+          name="Maya"
+          detail="Working · homework"
+          accent="warm"
+          className="aspect-[5/4]"
+        />
         <div className="flex flex-col gap-2.5">
-          <div className="relative min-h-[4.25rem] flex-1 overflow-hidden rounded-lg bg-ink-800">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_30%,rgba(46,106,72,0.2),transparent_55%)]" />
-            <div className="absolute inset-x-0 bottom-0 p-2.5">
-              <p className="text-[11px] font-medium text-white/75">Guide</p>
-            </div>
-          </div>
-          <div className="rounded-lg bg-white/[0.06] px-3 py-2.5">
-            <p className="text-[10px] font-medium tracking-wide text-white/35 uppercase">Focus</p>
-            <p className="mt-0.5 text-xs font-medium text-white/90">On task</p>
+          <VideoTile
+            initial="G"
+            name="Guide"
+            detail="Supervising"
+            accent="forest"
+            className="min-h-[4.5rem] flex-1"
+          />
+          <div className="rounded-lg border border-white/[0.08] bg-white/[0.07] px-3 py-2.5">
+            <p className="text-[10px] font-medium tracking-[0.06em] text-white/40 uppercase">Focus</p>
+            <p className="mt-0.5 text-xs font-medium text-white/92">On task</p>
           </div>
         </div>
       </div>
@@ -235,14 +283,6 @@ export function HeroProductVisual() {
             <LiveBody />
           </div>
         </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 px-0.5 text-[12px] leading-5 text-ink-400">
-        <span>Parent account · book &amp; join</span>
-        <span aria-hidden className="text-ink-200">
-          ·
-        </span>
-        <span>Live session · Guide keeps them on task</span>
       </div>
     </div>
   );
