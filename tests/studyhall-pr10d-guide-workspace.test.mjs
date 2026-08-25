@@ -40,7 +40,8 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     // Reassign for scheduled Study Halls even when subject_id is null
     assert.match(consoleSrc, /b\.scheduled_start \?/);
     assert.doesNotMatch(consoleSrc, /b\.subject_id && b\.scheduled_start/);
-    assert.match(consoleSrc, /not subject expertise|availability\/ops-based/i);
+    assert.match(consoleSrc, /continuously available for the full session/i);
+    assert.match(consoleSrc, /reassignment-candidates/);
   });
 
   it("Study Hall booking/matching remains availability-only (null subject)", () => {
@@ -109,8 +110,18 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
 
   it("Guide cancellation / unavailability action remains clear", () => {
     const cancel = read("src/components/dashboard/tutor-cancel-request.tsx");
-    assert.match(cancel, /Unavailable for this session|Cancellation requested/);
+    assert.match(cancel, /Unavailable for this session|I'm unavailable|Finding a replacement/);
     assert.match(cancel, /\/api\/tutor\/cancellation-request/);
+    assert.match(cancel, /reassigned|Coverage pending/);
+  });
+
+  it("auto-reassignment uses availability (not all approved Guides)", () => {
+    const consoleSrc = read("src/components/dashboard/admin-console.tsx");
+    assert.match(consoleSrc, /reassignment-candidates/);
+    assert.doesNotMatch(consoleSrc, /All approved Guides passed in are eligible/);
+    const cancelApi = read("src/app/api/tutor/cancellation-request/route.ts");
+    assert.match(cancelApi, /try_auto_reassign_booking/);
+    assert.match(cancelApi, /guide-coverage-failed/);
   });
 
   it("legacy route aliases exist without renaming internal canonical paths", () => {
@@ -121,7 +132,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
 
   it("preserves PR8 successful-reassignment-invisible-to-parent policy language", () => {
     const admin = read("src/app/dashboard/admin/page.tsx");
-    assert.match(admin, /Successful reassignment stays invisible to the parent/);
+    assert.match(admin, /Successful reassignment\s+stays invisible to the parent/);
     const pr8 = read("tests/studyhall-pr8-notifications.test.mjs");
     assert.match(pr8, /reassign|invisible|parent/i);
   });

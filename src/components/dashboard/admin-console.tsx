@@ -26,6 +26,12 @@ export interface AdminBooking {
   subject_id: string | null;
 }
 
+interface ReassignCandidate {
+  profile_id: string;
+  display_name: string | null;
+  upcoming_load: number;
+}
+
 const BOOKING_FILTERS = [
   "all",
   "pending",
@@ -39,10 +45,10 @@ const BOOKING_FILTERS = [
 ] as const;
 
 export function AdminConsole({
-  tutors,
   bookings: initialBookings,
 }: {
-  tutors: AdminTutor[];
+  /** @deprecated Eligibility is fetched per booking; prop kept optional for callers. */
+  tutors?: AdminTutor[];
   bookings: AdminBooking[];
 }) {
   const [bookings, setBookings] = useState(initialBookings);
@@ -52,30 +58,46 @@ export function AdminConsole({
   async function bookingOp(id: string, action: "complete" | "no_show" | "release" | "reassign") {
     setError(null);
     const payload: Record<string, unknown> = { bookingId: id, action };
+    let pickedGuideName: string | null = null;
+
     if (action === "release") {
       const comp = window.prompt("Courtesy account credit in dollars (0 for none):", "0");
       if (comp === null) return;
       payload.compCreditCents = Math.max(0, Math.round(parseFloat(comp) * 100) || 0);
-      payload.reason = "admin/tutor cancellation";
+      payload.reason = "admin/Guide cancellation";
     }
+
     if (action === "reassign") {
-      // Study Hall: assignment is availability/ops-based, not subject expertise.
-      // All approved Guides passed in are eligible for manager override reassignment.
-      if (tutors.length === 0) {
-        setError("No approved Guides available to reassign.");
+      // Same eligibility as automatic reassignment: approved + continuous
+      // availability for the full interval + no overlap + not current Guide.
+      const candRes = await fetch(`/api/admin/reassignment-candidates?bookingId=${encodeURIComponent(id)}`);
+      const candData = await candRes.json().catch(() => null);
+      if (!candRes.ok) {
+        setError(candData?.error ?? "Unable to load eligible Guides.");
         return;
       }
-      const list = tutors.map((t, i) => `${i + 1}) ${t.display_name ?? t.profile_id.slice(0, 8)}`).join("\n");
-      const pick = window.prompt(`Reassign to which Guide?\n${list}`);
+      const candidates = (candData?.candidates ?? []) as ReassignCandidate[];
+      if (candidates.length === 0) {
+        setError("No eligible Guides are continuously available for this entire Study Hall.");
+        return;
+      }
+      const list = candidates
+        .map((t, i) => `${i + 1}) ${t.display_name ?? t.profile_id.slice(0, 8)}`)
+        .join("\n");
+      const pick = window.prompt(
+        `Reassign to which eligible Guide?\n(Only Guides continuously available for the full session)\n${list}`,
+      );
       if (pick === null) return;
       const idx = parseInt(pick, 10) - 1;
-      if (!(idx >= 0 && idx < tutors.length)) {
+      if (!(idx >= 0 && idx < candidates.length)) {
         setError("Invalid choice.");
         return;
       }
-      payload.newTutorId = tutors[idx].profile_id;
-      payload.reason = "tutor reassignment";
+      payload.newTutorId = candidates[idx].profile_id;
+      pickedGuideName = candidates[idx].display_name;
+      payload.reason = "Guide reassignment";
     }
+
     const res = await fetch("/api/admin/booking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -86,9 +108,20 @@ export function AdminConsole({
       setError(data?.error ?? "Operation failed.");
       return;
     }
+
     const newStatus: BookingStatus | null =
       action === "complete" ? "completed" : action === "no_show" ? "no_show" : action === "release" ? "cancelled" : null;
-    setBookings((p) => p.map((b) => (b.id === id ? { ...b, status: (newStatus ?? b.status) as BookingStatus } : b)));
+
+    setBookings((p) =>
+      p.map((b) => {
+        if (b.id !== id) return b;
+        return {
+          ...b,
+          status: (newStatus ?? b.status) as BookingStatus,
+          tutor_display_name: action === "reassign" && pickedGuideName ? pickedGuideName : b.tutor_display_name,
+        };
+      }),
+    );
   }
 
   const filteredBookings = useMemo(() => {
@@ -132,7 +165,8 @@ export function AdminConsole({
           </select>
         </div>
         <p className="mt-1 text-sm text-ink-500">
-          {filteredBookings.length} shown · {bookings.length} total · coverage &amp; reassignment (manager override)
+          {filteredBookings.length} shown · {bookings.length} total · manual reassignment lists only Guides continuously
+          available for the full session
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">

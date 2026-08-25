@@ -175,8 +175,9 @@ export default async function AdminDashboardPage() {
                 </p>
                 {r.reason ? <p className="mt-1 text-sm text-ink-600">Reason: {r.reason}</p> : null}
                 <p className="mt-1 text-xs text-ink-400">
-                  Use Sessions below to Reassign or Release (financial rules apply); that resolves this request.
-                  Successful reassignment stays invisible to the parent.
+                  Automatic reassignment runs when a Guide becomes unavailable. Open requests mean coverage could not be
+                  restored — use Sessions below to Reassign (eligible Guides only) or Release. Successful reassignment
+                  stays invisible to the parent.
                 </p>
               </li>
             ))}
@@ -244,7 +245,7 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <AdminConsole tutors={tutors} bookings={(bookings ?? []) as AdminBooking[]} />
+      <AdminConsole bookings={(bookings ?? []) as AdminBooking[]} />
     </DashboardShell>
   );
 }

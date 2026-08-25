@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /**
- * Lets a Guide request to be released from an upcoming Study Hall. This records
- * intent + a reason and alerts admin; it performs no financial action or
- * reassignment (admin resolves). If a request is already open, shows that state.
+ * Guide marks themselves unavailable for an upcoming Study Hall.
+ * The server records the request and attempts automatic reassignment to another
+ * eligible Guide (continuous availability for the full interval). Financial
+ * release remains admin-only when auto-reassignment fails.
  */
 export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId: string; alreadyRequested: boolean }) {
   const router = useRouter();
@@ -14,10 +15,15 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [requested, setRequested] = useState(alreadyRequested);
+  const [outcome, setOutcome] = useState<"open" | "reassigned" | null>(alreadyRequested ? "open" : null);
 
-  if (requested) {
-    return <span className="text-xs font-medium text-amber-700">Cancellation requested — awaiting admin</span>;
+  if (outcome === "reassigned") {
+    return (
+      <span className="text-xs font-medium text-forest-700">Replacement assigned — you are off this Study Hall</span>
+    );
+  }
+  if (outcome === "open") {
+    return <span className="text-xs font-medium text-amber-700">Coverage pending — awaiting admin</span>;
   }
 
   async function submit() {
@@ -38,7 +44,7 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
       setNote(data?.error ?? "Unable to submit.");
       return;
     }
-    setRequested(true);
+    setOutcome(data?.status === "reassigned" ? "reassigned" : "open");
     setOpen(false);
     router.refresh();
   }
@@ -62,9 +68,11 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
             disabled={busy}
             className="mt-2 w-full rounded-lg bg-ink-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-ink-800 disabled:opacity-50"
           >
-            {busy ? "Submitting…" : "Request cancellation"}
+            {busy ? "Finding a replacement…" : "I'm unavailable"}
           </button>
-          <p className="mt-1 text-[11px] text-ink-400">Admin will arrange a replacement or release the session.</p>
+          <p className="mt-1 text-[11px] text-ink-400">
+            We&apos;ll try to assign another Guide automatically. If none is available, admin is notified.
+          </p>
         </div>
       ) : null}
       {note ? <p className="text-xs text-red-600">{note}</p> : null}
