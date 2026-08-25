@@ -103,21 +103,21 @@ describe("Phase 6 — email delivery log: idempotency, RLS, provider status (liv
     const tutor = await freshTutor();
     accounts.push(tutor);
     const stu = await newStudent(custA.id, "Amara");
-    const confirmed = await insertBooking({ account: custA.id, student: stu, tutor, status: "confirmed", minutesFromNow: 12 * 60 }); // ~12h out
-    const cancelled = await insertBooking({ account: custA.id, student: stu, tutor, status: "cancelled", minutesFromNow: 13 * 60 });
+    const confirmed = await insertBooking({ account: custA.id, student: stu, tutor, status: "confirmed", minutesFromNow: 60 }); // ~1h out
+    const cancelled = await insertBooking({ account: custA.id, student: stu, tutor, status: "cancelled", minutesFromNow: 60 });
     bookings.push(confirmed, cancelled);
 
-    // The cron's day-before window: confirmed, scheduled_start in (now+1h, now+24h].
-    const from = new Date(Date.now() + 60 * 60000).toISOString();
-    const to = new Date(Date.now() + 24 * 60 * 60000).toISOString();
-    const { data: due } = await svc.from("bookings").select("id").eq("status", "confirmed").gt("scheduled_start", from).lte("scheduled_start", to);
+    // PR8 1h window: confirmed, scheduled_start in [now+50m, now+70m].
+    const from = new Date(Date.now() + 50 * 60000).toISOString();
+    const to = new Date(Date.now() + 70 * 60000).toISOString();
+    const { data: due } = await svc.from("bookings").select("id").eq("status", "confirmed").gte("scheduled_start", from).lte("scheduled_start", to);
     const ids = (due ?? []).map((r) => r.id);
-    assert.ok(ids.includes(confirmed), "confirmed upcoming booking is due for a reminder");
+    assert.ok(ids.includes(confirmed), "confirmed upcoming booking is due for a 1h reminder");
     assert.ok(!ids.includes(cancelled), "cancelled booking never enters the reminder window");
 
     // Reminder is idempotent per booking+role+kind (duplicate cron runs don't resend).
-    const rk = `reminder-24h:${confirmed}:customer`;
-    assert.equal((await svc.rpc("claim_email_delivery", { p_key: rk, p_type: "reminder_24h", p_account: custA.id, p_booking: confirmed })).data, true);
-    assert.equal((await svc.rpc("claim_email_delivery", { p_key: rk, p_type: "reminder_24h", p_account: custA.id, p_booking: confirmed })).data, false, "second cron run does not resend");
+    const rk = `reminder-1h:${confirmed}:customer`;
+    assert.equal((await svc.rpc("claim_email_delivery", { p_key: rk, p_type: "reminder_1h", p_account: custA.id, p_booking: confirmed })).data, true);
+    assert.equal((await svc.rpc("claim_email_delivery", { p_key: rk, p_type: "reminder_1h", p_account: custA.id, p_booking: confirmed })).data, false, "second cron run does not resend");
   });
 });

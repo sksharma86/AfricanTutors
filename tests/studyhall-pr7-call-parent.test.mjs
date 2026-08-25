@@ -415,6 +415,18 @@ describe("Study Hall PR7 — live escalations (requires migration 0024)", { skip
   }
 
   async function insertActiveBooking({ accountId, tutorId, studentId, status = "confirmed", offsetMin = -10 }) {
+    // Isolate from prior suite bookings on the same Guide (overlap exclusion).
+    const { data: prior } = await svc
+      .from("bookings")
+      .select("id")
+      .eq("tutor_id", tutorId)
+      .in("status", ["pending", "confirmed", "completed"]);
+    const priorIds = (prior ?? []).map((b) => b.id);
+    if (priorIds.length) {
+      await svc.from("parent_escalation_requests").delete().in("booking_id", priorIds);
+      await svc.from("bookings").update({ status: "cancelled" }).in("id", priorIds);
+    }
+
     const start = new Date(Date.now() + offsetMin * 60000);
     const end = new Date(start.getTime() + 60 * 60000);
     const { data, error } = await svc
