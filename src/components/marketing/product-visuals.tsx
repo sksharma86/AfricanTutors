@@ -11,17 +11,21 @@ function Frame({
   children,
   className,
   dark = false,
+  bordered = true,
 }: {
   label: string;
   children: ReactNode;
   className?: string;
   dark?: boolean;
+  bordered?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl",
-        dark ? "bg-ink-900 text-white" : "border border-ink-100 bg-white",
+        "overflow-hidden",
+        bordered ? "rounded-xl" : "rounded-none",
+        dark ? "bg-ink-900 text-white" : "bg-white",
+        bordered && !dark && "border border-ink-100",
         className,
       )}
     >
@@ -106,25 +110,27 @@ function LiveBody() {
   );
 }
 
-export function ProductSessionCard({ className = "" }: { className?: string }) {
+type CardProps = { className?: string; bordered?: boolean };
+
+export function ProductSessionCard({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Upcoming Study Hall" className={className}>
+    <Frame label="Upcoming Study Hall" className={className} bordered={bordered}>
       <UpcomingBody />
     </Frame>
   );
 }
 
-export function ProductLivePanel({ className = "" }: { className?: string }) {
+export function ProductLivePanel({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Live Study Hall" dark className={className}>
+    <Frame label="Live Study Hall" dark className={className} bordered={bordered}>
       <LiveBody />
     </Frame>
   );
 }
 
-export function ProductReportCard({ className = "" }: { className?: string }) {
+export function ProductReportCard({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Session report" className={className}>
+    <Frame label="Session report" className={className} bordered={bordered}>
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-[15px] font-semibold tracking-[-0.02em] text-ink-900">Maya’s Study Hall</p>
         <p className="shrink-0 text-xs text-ink-400">Tue · 60 min</p>
@@ -152,9 +158,9 @@ export function ProductReportCard({ className = "" }: { className?: string }) {
   );
 }
 
-export function ProductHoursCard({ className = "" }: { className?: string }) {
+export function ProductHoursCard({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Prepaid hours" className={className}>
+    <Frame label="Prepaid hours" className={className} bordered={bordered}>
       <p className="text-[1.75rem] font-semibold tracking-[-0.04em] text-ink-900">11h 30m</p>
       <p className="mt-1 text-sm text-ink-500">Hours never expire</p>
       <div className="mt-4 h-1 overflow-hidden rounded-full bg-ink-100">
@@ -165,9 +171,9 @@ export function ProductHoursCard({ className = "" }: { className?: string }) {
   );
 }
 
-export function ProductStreakCard({ className = "" }: { className?: string }) {
+export function ProductStreakCard({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Study Hall streak" className={className}>
+    <Frame label="Study Hall streak" className={className} bordered={bordered}>
       <p className="text-[1.375rem] font-semibold tracking-[-0.04em] text-ink-900">5 days in a row</p>
       <p className="mt-2 text-sm leading-6 text-ink-500">
         Maya attended Study Hall five days running. She’s building a solid homework habit.
@@ -181,9 +187,9 @@ export function ProductStreakCard({ className = "" }: { className?: string }) {
  * Call Parent — telephony to the parent’s phone. Guide never sees the number.
  * Parent does not need the portal open.
  */
-export function ProductCallParentCard({ className = "" }: { className?: string }) {
+export function ProductCallParentCard({ className = "", bordered = true }: CardProps) {
   return (
-    <Frame label="Call Parent" className={className}>
+    <Frame label="Call Parent" className={className} bordered={bordered}>
       <p className="text-[1.0625rem] font-semibold tracking-[-0.03em] text-ink-900">
         Step away without being out of reach.
       </p>

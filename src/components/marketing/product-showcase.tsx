@@ -31,16 +31,16 @@ export function ProductShowcase() {
         <div className="mt-10 overflow-hidden rounded-2xl border border-ink-100 bg-white mkt-depth-sm">
           <div className="grid sm:grid-cols-2">
             <div className="border-b border-ink-100 sm:border-r">
-              <ProductReportCard className="rounded-none border-0" />
+              <ProductReportCard bordered={false} />
             </div>
             <div className="border-b border-ink-100">
-              <ProductStreakCard className="rounded-none border-0" />
+              <ProductStreakCard bordered={false} />
             </div>
             <div className="border-b border-ink-100 sm:border-r sm:border-b-0">
-              <ProductHoursCard className="rounded-none border-0" />
+              <ProductHoursCard bordered={false} />
             </div>
             <div>
-              <ProductCallParentCard className="rounded-none border-0" />
+              <ProductCallParentCard bordered={false} />
             </div>
           </div>
         </div>
