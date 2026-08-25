@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { notifyAdminAlert } from "@/lib/notify";
+import { notifyAdminAlert, notifyReassignment } from "@/lib/notify";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,10 +10,13 @@ export const dynamic = "force-dynamic";
 const SAFE = /^[A-Za-z0-9 .,'!?()\-:]+$/;
 
 /**
- * A tutor requests to be released from an upcoming session. This records
- * tutor-side intent only (server verifies the caller is the assigned tutor); it
- * performs NO financial restoration/refund/reassignment — admin resolves via the
- * authoritative Phase 4C operations. Admin is alerted through Phase 6.
+ * Guide requests to be released from an upcoming Study Hall.
+ *
+ * Records the cancellation request, then attempts automatic reassignment to
+ * another approved Guide who is continuously available for the entire booked
+ * interval (no subject matching). Success notifies the replacement Guide and
+ * stays silent to the parent (PR8). Failure leaves the request open and alerts
+ * admin for coverage — no invented cancel/refund policy.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -20,13 +24,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A booking and a reason are required." }, { status: 400 });
   }
   const reason = body.reason.trim().slice(0, 500);
+  const bookingId = body.bookingId;
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Not available." }, { status: 503 });
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes?.user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
-  const { data, error } = await supabase.rpc("request_tutor_cancellation", { p_booking: body.bookingId, p_reason: reason });
+  const { data: requestId, error } = await supabase.rpc("request_tutor_cancellation", {
+    p_booking: bookingId,
+    p_reason: reason,
+  });
   if (error) {
     const msg = /already open/i.test(error.message)
       ? "You already have an open cancellation request for this session."
@@ -36,12 +44,49 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  // Alert admin (best-effort, idempotent per request id).
-  void notifyAdminAlert(`tutor-cancellation:${data}`, {
-    title: "Tutor cancellation request",
-    summary: "A tutor has requested to be released from an upcoming session and needs reassignment or release.",
-    lines: [`Booking: ${body.bookingId}`, SAFE.test(reason) ? `Reason: ${reason}` : "Reason: (provided)"],
+  // Auto-reassign via service role (is_financial_actor when auth.uid() is null).
+  type AutoResult = { status?: string; from_tutor?: string; to_tutor?: string; reason?: string };
+  let auto: AutoResult | null = null;
+  try {
+    const service = getServiceSupabase();
+    const { data, error: autoErr } = await service.rpc("try_auto_reassign_booking", { p_booking: bookingId });
+    if (autoErr) {
+      console.error("try_auto_reassign_booking failed", autoErr.message);
+    } else {
+      auto = (data ?? null) as AutoResult | null;
+    }
+  } catch (e) {
+    console.error("try_auto_reassign_booking exception", e);
+  }
+
+  if (auto?.status === "reassigned") {
+    void notifyReassignment(bookingId, {
+      reassigned: true,
+      removedTutorId: auto.from_tutor ?? userRes.user.id,
+    });
+    return NextResponse.json({
+      id: requestId,
+      status: "reassigned",
+      fromTutorId: auto.from_tutor ?? null,
+      toTutorId: auto.to_tutor ?? null,
+    });
+  }
+
+  // Coverage could not be restored — keep request open; alert manager.
+  void notifyAdminAlert(`guide-coverage-failed:${bookingId}`, {
+    title: "Guide coverage failed — needs reassignment",
+    summary:
+      "A Guide became unavailable and no eligible replacement was continuously available for the full Study Hall. Booking is unchanged for the parent; manager action required.",
+    lines: [
+      `Booking: ${bookingId}`,
+      SAFE.test(reason) ? `Reason: ${reason}` : "Reason: (provided)",
+      `Auto result: ${auto?.reason ?? "needs_admin"}`,
+    ],
   });
 
-  return NextResponse.json({ id: data, status: "open" });
+  return NextResponse.json({
+    id: requestId,
+    status: "needs_admin",
+    reason: auto?.reason ?? "no_eligible_guide",
+  });
 }

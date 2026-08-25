@@ -57,7 +57,9 @@ export function SignupForm({
     track(ANALYTICS_EVENTS.signupCompleted, { role });
 
     if (data.session) {
-      router.push(role === "tutor" ? "/dashboard/tutor" : "/dashboard/student");
+      // Applicants keep profiles.role=student until approval; send them to the
+      // applicant experience (not parent dashboard or approved Guide workspace).
+      router.push(role === "tutor" ? "/dashboard/applicant" : "/dashboard/student");
       router.refresh();
       return;
     }

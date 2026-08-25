@@ -61,7 +61,7 @@ export default function AboutPage() {
         title="Ready to try it?"
         description="Start with a free session, or apply to become a Guide."
         primaryLabel={FREE_TRIAL_CTA}
-        secondaryHref="/apply-to-tutor"
+        secondaryHref="/guides/apply"
         secondaryLabel="Become a Guide"
       />
     </div>

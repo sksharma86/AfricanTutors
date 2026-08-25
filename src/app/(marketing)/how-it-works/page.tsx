@@ -34,7 +34,7 @@ export default function HowItWorksPage() {
           </p>
           <p className="mt-6 text-sm text-ink-400">
             Want to become a Guide?{" "}
-            <Link href="/apply-to-tutor" className="font-medium text-ink-700 underline-offset-4 hover:underline">
+            <Link href="/guides/apply" className="font-medium text-ink-700 underline-offset-4 hover:underline">
               Apply here
             </Link>
             .

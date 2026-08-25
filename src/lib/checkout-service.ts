@@ -224,7 +224,7 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
             price_data: {
               currency: "usd",
               unit_amount: q.stripe_cents_due,
-              product_data: { name: `Tutoring package (${q.minutes} minutes)` },
+              product_data: { name: `Prepaid hours (${q.minutes} minutes)` },
             },
           },
         ],

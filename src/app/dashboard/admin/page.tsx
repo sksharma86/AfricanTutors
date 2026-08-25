@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import {
-  AdminConsole,
-  type AdminBooking,
-  type AdminSubject,
-  type AdminTutor,
-  type AdminTutorSubject,
-} from "@/components/dashboard/admin-console";
+import { AdminConsole, type AdminBooking, type AdminTutor } from "@/components/dashboard/admin-console";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Button, LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
@@ -28,18 +22,16 @@ export default async function AdminDashboardPage() {
   await requireRole("admin", "/dashboard/admin");
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: pending }, { data: subjects }, { data: tutorRows }, { data: tutorSubjects }, { data: bookings }, { data: cancelReqs }, { data: escalationsRaw }] =
+  const [{ data: pending }, { data: tutorRows }, { data: bookings }, { data: cancelReqs }, { data: escalationsRaw }] =
     await Promise.all([
       supabase!
         .from("tutor_profiles")
         .select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)")
         .eq("status", "pending"),
-      supabase!.from("subjects").select("id, name, category, is_active").order("category").order("name"),
       supabase!
         .from("tutor_profiles")
         .select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)")
         .eq("status", "approved"),
-      supabase!.from("tutor_subjects").select("tutor_id, subject_id"),
       supabase!
         .from("bookings")
         .select(
@@ -68,7 +60,12 @@ export default async function AdminDashboardPage() {
     id: string;
     reason: string | null;
     created_at: string;
-    bookings: { subject_name: string | null; scheduled_start: string | null; student_first_name: string | null; tutor_display_name: string | null } | null;
+    bookings: {
+      subject_name: string | null;
+      scheduled_start: string | null;
+      student_first_name: string | null;
+      tutor_display_name: string | null;
+    } | null;
   }[];
   const escalations = (escalationsRaw ?? []) as unknown as {
     id: string;
@@ -95,23 +92,26 @@ export default async function AdminDashboardPage() {
   return (
     <DashboardShell
       role="admin"
-      title="Platform Overview"
-      description="Manage Guides, subjects, availability, and bookings."
+      title="Operations overview"
+      description="Manage Guides, sessions, coverage, reports, and financial operations."
       navItems={[
         { label: "Overview", available: true },
         { label: "Guide Approvals", available: true },
-        { label: "Bookings", available: true },
-        { label: "Subjects", available: true },
-        { label: "Payments", available: false },
+        { label: "Sessions", available: true },
+        { label: "Finance", available: true },
         { label: "Settings", available: false },
       ]}
     >
       <section className="mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold text-white">Financial operations</h2>
-          <p className="mt-1 text-sm text-ink-200">Guide earnings &amp; payouts, customer balances &amp; adjustments, refunds, and disputes.</p>
+          <p className="mt-1 text-sm text-ink-200">
+            Guide earnings &amp; payouts, customer balances &amp; adjustments, refunds, and disputes.
+          </p>
         </div>
-        <LinkButton href="/dashboard/admin/finance" variant="secondary" size="lg">Open finance console</LinkButton>
+        <LinkButton href="/dashboard/admin/finance" variant="secondary" size="lg">
+          Open finance console
+        </LinkButton>
       </section>
 
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
@@ -121,6 +121,10 @@ export default async function AdminDashboardPage() {
             {pendingTutors.length} pending
           </span>
         </div>
+        <p className="mt-1 text-sm text-ink-500">
+          Approve applicants as Study Hall Guides. Guides supervise homework routines — they are not matched by academic
+          subject.
+        </p>
         {pendingTutors.length === 0 ? (
           <p className="mt-6 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
             No pending Guide applications.
@@ -133,12 +137,12 @@ export default async function AdminDashboardPage() {
                   <p className="text-sm font-medium text-ink-900">
                     {tutor.profiles?.display_name ?? "Unnamed applicant"}
                   </p>
-                  <p className="text-xs text-ink-400">Applied to teach · awaiting review</p>
+                  <p className="text-xs text-ink-400">Guide application · awaiting review</p>
                 </div>
                 <form action={approveTutorAction}>
                   <input type="hidden" name="profileId" value={tutor.profile_id} />
                   <Button type="submit" className="px-4 py-2 text-sm">
-                    Approve
+                    Approve as Guide
                   </Button>
                 </form>
               </li>
@@ -150,23 +154,31 @@ export default async function AdminDashboardPage() {
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-900">Guide cancellation requests</h2>
-          <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">{cancellationRequests.length} open</span>
+          <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">
+            {cancellationRequests.length} open
+          </span>
         </div>
         {cancellationRequests.length === 0 ? (
-          <p className="mt-4 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">No open Guide cancellation requests.</p>
+          <p className="mt-4 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
+            No open Guide cancellation requests.
+          </p>
         ) : (
           <ul className="mt-4 divide-y divide-ink-100">
             {cancellationRequests.map((r) => (
               <li key={r.id} className="py-3">
                 <p className="text-sm font-medium text-ink-900">
-                  {r.bookings?.subject_name ?? "Session"} · {r.bookings?.tutor_display_name ?? "Tutor"}
+                  Study Hall · Guide {r.bookings?.tutor_display_name ?? "—"}
                 </p>
                 <p className="text-xs text-ink-500">
-                  Student {r.bookings?.student_first_name ?? "—"}
+                  Child {r.bookings?.student_first_name ?? "—"}
                   {r.bookings?.scheduled_start ? ` · ${new Date(r.bookings.scheduled_start).toLocaleString()}` : ""}
                 </p>
                 {r.reason ? <p className="mt-1 text-sm text-ink-600">Reason: {r.reason}</p> : null}
-                <p className="mt-1 text-xs text-ink-400">Use the Bookings table below to Reassign or Release (financial rules apply); that resolves this request.</p>
+                <p className="mt-1 text-xs text-ink-400">
+                  Automatic reassignment runs when a Guide becomes unavailable. Open requests mean coverage could not be
+                  restored — use Sessions below to Reassign (eligible Guides only) or Release. Successful reassignment
+                  stays invisible to the parent.
+                </p>
               </li>
             ))}
           </ul>
@@ -213,13 +225,19 @@ export default async function AdminDashboardPage() {
 
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <h2 className="font-display text-lg font-semibold text-ink-900">Guide directory</h2>
-        <p className="mt-1 text-sm text-ink-500">Open a Guide to view their operations, earnings, and availability.</p>
+        <p className="mt-1 text-sm text-ink-500">
+          Open a Guide to set hourly rate, review earnings, and check availability / operations.
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {tutors.length === 0 ? (
             <span className="text-sm text-ink-400">No approved Guides yet.</span>
           ) : (
             tutors.map((t) => (
-              <Link key={t.profile_id} href={`/dashboard/admin/tutors/${t.profile_id}`} className="rounded-full border border-ink-200 px-3 py-1 text-sm text-ink-700 hover:border-ink-300">
+              <Link
+                key={t.profile_id}
+                href={`/dashboard/admin/tutors/${t.profile_id}`}
+                className="rounded-full border border-ink-200 px-3 py-1 text-sm text-ink-700 hover:border-ink-300"
+              >
                 {t.display_name ?? t.profile_id.slice(0, 8)}
               </Link>
             ))
@@ -227,12 +245,7 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <AdminConsole
-        subjects={(subjects ?? []) as AdminSubject[]}
-        tutors={tutors}
-        tutorSubjects={(tutorSubjects ?? []) as AdminTutorSubject[]}
-        bookings={(bookings ?? []) as AdminBooking[]}
-      />
+      <AdminConsole bookings={(bookings ?? []) as AdminBooking[]} />
     </DashboardShell>
   );
 }

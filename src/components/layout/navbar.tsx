@@ -6,13 +6,20 @@ import { Container } from "@/components/ui/container";
 import { LinkButton } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { FREE_TRIAL_CTA } from "@/lib/pricing";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export async function Navbar() {
   const user = await getCurrentUser();
-  const dashboardHref = user ? DASHBOARD_PATH_BY_ROLE[user.role] : "/dashboard/student";
-  const isStudent = user?.role === "student";
+  const applicant = user?.role === "student" ? await getGuideApplicantInfo(user.id) : null;
+  const dashboardHref = applicant
+    ? "/dashboard/applicant"
+    : user
+      ? DASHBOARD_PATH_BY_ROLE[user.role]
+      : "/dashboard/student";
+  // Parent booking CTA only for genuine parent accounts (not Guide applicants).
+  const showParentBookCta = user?.role === "student" && !applicant;
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100/80 bg-white/85 backdrop-blur-xl">
@@ -37,7 +44,7 @@ export async function Navbar() {
               <LinkButton href={dashboardHref} variant="ghost" size="sm">
                 Dashboard
               </LinkButton>
-              {isStudent ? (
+              {showParentBookCta ? (
                 <LinkButton href="/dashboard/student/book" variant="primary" size="sm">
                   Book a session
                 </LinkButton>
@@ -55,7 +62,11 @@ export async function Navbar() {
           )}
         </div>
 
-        <MobileMenu isAuthed={Boolean(user)} isStudent={isStudent} dashboardHref={dashboardHref} />
+        <MobileMenu
+          isAuthed={Boolean(user)}
+          showParentBookCta={showParentBookCta}
+          dashboardHref={dashboardHref}
+        />
       </Container>
     </header>
   );

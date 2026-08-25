@@ -22,19 +22,22 @@ export function DashboardShell({
   description,
   navItems,
   children,
+  badgeLabel,
 }: {
   role: Role;
   title: string;
   description: string;
   navItems: DashboardNavItem[];
   children: ReactNode;
+  /** Override the default "{Role} Dashboard" badge (e.g. Guide applicant). */
+  badgeLabel?: string;
 }) {
   return (
     <div className="min-h-full bg-ink-50/50">
       <div className="border-b border-ink-100 bg-white">
         <Container className="flex items-center justify-between py-5">
           <div>
-            <Badge>{ROLE_LABEL[role]} Dashboard</Badge>
+            <Badge>{badgeLabel ?? `${ROLE_LABEL[role]} Dashboard`}</Badge>
             <h1 className="mt-2 font-display text-2xl font-semibold text-ink-900">{title}</h1>
             <p className="mt-1 text-sm text-ink-500">{description}</p>
           </div>
