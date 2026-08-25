@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { PackageStore, type PackageRow } from "@/components/booking/package-store";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
 import { SingleSessionCards } from "@/components/dashboard/single-session-cards";
 import { requireRole } from "@/lib/auth";
 import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -13,11 +15,15 @@ export const metadata: Metadata = {
 };
 
 export default async function PackagesPage() {
-  await requireRole("student", "/dashboard/student/packages");
+  const user = await requireRole("student", "/dashboard/student/packages");
+  const applicant = await getGuideApplicantInfo(user.id);
+  if (applicant) {
+    redirect("/dashboard/applicant");
+  }
   const supabase = await createSupabaseServerClient();
 
-  const { data: user } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-  const uid = user?.user?.id ?? null;
+  const { data: authUser } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  const uid = authUser?.user?.id ?? null;
 
   const [{ data: packages }, balancesRes] = await Promise.all([
     supabase!

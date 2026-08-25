@@ -46,7 +46,7 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
   return (
     <div className="flex flex-col items-end gap-1.5">
       <button onClick={() => setOpen((o) => !o)} className="text-xs font-medium text-red-600 hover:underline">
-        {open ? "Cancel" : "Can't attend?"}
+        {open ? "Cancel" : "Unavailable for this session?"}
       </button>
       {open ? (
         <div className="w-72 rounded-lg border border-ink-200 bg-white p-3 text-left shadow-sm">

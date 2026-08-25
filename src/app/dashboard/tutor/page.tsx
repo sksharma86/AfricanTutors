@@ -220,8 +220,8 @@ export default async function GuideDashboardPage() {
     >
       {profile?.status && profile.status !== "approved" ? (
         <div className="mb-6 rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm text-gold-800">
-          Your Guide account is <span className="font-semibold">{profile.status}</span>. You&apos;ll be matched to Study
-          Hall sessions once an admin approves you.
+          Your Guide account is <span className="font-semibold">{profile.status}</span>. Assignment and earnings tools
+          stay limited until an admin restores approval.
         </div>
       ) : null}
 
@@ -229,8 +229,8 @@ export default async function GuideDashboardPage() {
         <p className="font-medium text-ink-900">Your Study Hall role</p>
         <p className="mt-1">
           Be present, supervise homework, encourage focus, redirect gently when needed, and keep a calm productive
-          routine. You are not expected to teach lessons, solve homework, or act as a subject tutor. Parent escalation
-          tools are coming in a later update.
+          routine. You are not expected to teach lessons, solve homework, or act as a subject tutor. During a live
+          session, use Call Parent when you need parent involvement — the parent&apos;s number stays private.
         </p>
       </section>
 
@@ -287,8 +287,7 @@ export default async function GuideDashboardPage() {
           </div>
         )}
         <p className="mt-2 text-xs text-ink-400">
-          Join Study Hall opens 5 minutes before start. Times shown in your timezone ({tz}). Sessions are recorded
-          on-platform.
+          Ready to join 5 minutes before start. Times shown in your timezone ({tz}). Sessions are recorded on-platform.
         </p>
       </section>
 

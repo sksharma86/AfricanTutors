@@ -9,11 +9,12 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export function MobileMenu({
   isAuthed,
-  isStudent,
+  showParentBookCta,
   dashboardHref,
 }: {
   isAuthed: boolean;
-  isStudent: boolean;
+  /** Genuine parent accounts only — not pending Guide applicants. */
+  showParentBookCta: boolean;
   dashboardHref: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -57,7 +58,7 @@ export function MobileMenu({
                 <LinkButton href={dashboardHref} variant="outline" className="w-full" onClick={close}>
                   Dashboard
                 </LinkButton>
-                {isStudent ? (
+                {showParentBookCta ? (
                   <LinkButton href="/dashboard/student/book" variant="primary" className="w-full" onClick={close}>
                     Book a session
                   </LinkButton>

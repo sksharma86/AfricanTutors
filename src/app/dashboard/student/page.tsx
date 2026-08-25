@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
@@ -19,6 +20,7 @@ import { type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { formatDuration } from "@/lib/format.mjs";
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { isRecordingPlayable } from "@/lib/recording-retention.mjs";
 import { customerBookingStatus, issueStatus } from "@/lib/status-labels.mjs";
 import type { FocusRating, RedirectionLevel } from "@/lib/session-report.mjs";
@@ -65,7 +67,11 @@ function joinInfoOf(b: BookingRow) {
 }
 
 export default async function StudentDashboardPage() {
-  await requireRole("student", "/dashboard/student");
+  const user = await requireRole("student", "/dashboard/student");
+  const applicant = await getGuideApplicantInfo(user.id);
+  if (applicant) {
+    redirect("/dashboard/applicant");
+  }
   const supabase = await createSupabaseServerClient();
 
   const { data: userData } = supabase ? await supabase.auth.getUser() : { data: { user: null } };

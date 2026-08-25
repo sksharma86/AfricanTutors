@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { BookingWizard, type StudentRow } from "@/components/booking/booking-wizard";
 import { CustomerShell } from "@/components/dashboard/customer-shell";
 import { requireRole } from "@/lib/auth";
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -15,7 +17,11 @@ export default async function BookSessionPage({
 }: {
   searchParams: Promise<{ duration?: string }>;
 }) {
-  await requireRole("student", "/dashboard/student/book");
+  const user = await requireRole("student", "/dashboard/student/book");
+  const applicant = await getGuideApplicantInfo(user.id);
+  if (applicant) {
+    redirect("/dashboard/applicant");
+  }
   const supabase = await createSupabaseServerClient();
 
   // Whole-hour Study Hall only (60 / 120 / 180); anything else defaults to 1 hour.

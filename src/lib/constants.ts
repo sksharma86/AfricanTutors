@@ -37,7 +37,7 @@ export const FOOTER_SECTIONS = [
   },
   {
     heading: "Guides",
-    links: [{ label: "Become a Guide", href: "/apply-to-tutor" }],
+    links: [{ label: "Become a Guide", href: "/guides/apply" }],
   },
   {
     heading: "Legal",
