@@ -244,8 +244,14 @@ describe("Study Hall PR9 — live recording retention + IDOR (requires migration
     return data.id;
   }
 
+  // Shared Guide calendar is protected by bookings_no_tutor_overlap. Each
+  // insert must use a unique non-overlapping window — do not reuse Date.now()-2h.
+  let bookingSeq = 0;
   async function insertBooking({ accountId, tutorId, studentId }) {
-    const start = new Date(Date.now() - 2 * 3600_000);
+    bookingSeq += 1;
+    // Deterministic past slots (one calendar day apart) so sequential tests in
+    // this suite never collide, independent of wall-clock timing.
+    const start = new Date(Date.UTC(2019, 0, bookingSeq, 14, 0, 0));
     const end = new Date(start.getTime() + 3600_000);
     const { data, error } = await svc
       .from("bookings")
