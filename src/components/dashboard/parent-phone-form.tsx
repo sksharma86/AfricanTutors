@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /**
- * Parent account phone for Call Parent (E.164). Guides never see this value
- * through their UI; it is used only server-side. Verification deferred.
+ * Parent phone for Call Parent telephony (E.164). Guides never see this value
+ * in their UI; it is used only server-side by the platform.
  */
 export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null }) {
   const router = useRouter();
@@ -29,32 +29,36 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
       return;
     }
     setSaved(data.phone ?? null);
-    setNote("Saved. We’ll use this number only if a Guide needs your attention during Study Hall.");
+    setNote("Saved. We’ll only use this if your child needs you during Study Hall.");
     router.refresh();
   }
 
   return (
-    <div className="rounded-xl border border-ink-100 bg-white p-4">
-      <p className="text-sm font-medium text-ink-900">Phone for Study Hall alerts</p>
-      <p className="mt-1 text-xs leading-5 text-ink-500">
-        If a Guide needs you during a live session, we may call or text this number. Guides never see your phone
-        number. Use international format (e.g. +15551234567). Verification will be added before broad public launch.
+    <div className="rounded-xl border border-ink-100 bg-white p-4 sm:p-5">
+      <p className="text-sm font-medium text-ink-900">Phone number</p>
+      <p className="mt-1.5 text-sm leading-6 text-ink-500">
+        We use your number so we can reach you if your child needs you during a Study Hall session.
+        Your number is never shared with Guides. You don’t need to keep this portal open.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <label className="sr-only" htmlFor="parent-phone">
+          Phone number
+        </label>
         <input
+          id="parent-phone"
           type="tel"
           inputMode="tel"
           autoComplete="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+15551234567"
-          className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm text-ink-900 sm:max-w-xs"
+          className="w-full rounded-lg border border-ink-200 px-3 py-2.5 text-sm text-ink-900 sm:max-w-xs"
         />
         <button
           type="button"
           onClick={save}
           disabled={busy}
-          className="rounded-lg bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 disabled:opacity-50"
+          className="min-h-10 rounded-lg bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 disabled:opacity-50"
         >
           {busy ? "Saving…" : "Save phone"}
         </button>
@@ -62,7 +66,9 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
       {saved ? (
         <p className="mt-2 text-xs text-forest-700">On file: {saved}</p>
       ) : (
-        <p className="mt-2 text-xs text-amber-700">No phone on file yet — Call Parent cannot reach you until you add one.</p>
+        <p className="mt-2 text-xs text-ink-500">
+          Add a number so we can reach you if your child needs you during Study Hall.
+        </p>
       )}
       {note ? <p className="mt-1 text-xs text-ink-500">{note}</p> : null}
     </div>

@@ -10,36 +10,38 @@ import { Container } from "@/components/ui/container";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { cn } from "@/lib/utils";
 
+/** Simple parent destinations — Study Hall product, not a tutor marketplace. */
 const NAV: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/dashboard/student" },
-  { label: "Pricing", href: "/dashboard/student/packages" },
+  { label: "Book", href: "/dashboard/student/book" },
   { label: "Sessions", href: "/dashboard/student#sessions" },
-  { label: "Reports", href: "/dashboard/student#reports" },
   { label: "Account", href: "/dashboard/student#account" },
 ];
 
 /**
- * Premium consumer app shell for the customer area: a clean sticky top bar with
- * simple, obvious navigation and a prominent primary action. Intentionally NOT a
- * left-rail admin dashboard.
+ * Consumer app shell for the parent area: sticky top bar, obvious navigation,
+ * primary Book action. Not a left-rail admin dashboard.
  */
 export function CustomerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => {
-    const base = href.split("#")[0];
-    if (base === "/dashboard/student") return pathname === "/dashboard/student" && !href.includes("#");
-    return pathname.startsWith(base);
+    const base = href.split("#")[0]!;
+    if (base === "/dashboard/student") {
+      if (href.includes("#")) return false;
+      return pathname === "/dashboard/student";
+    }
+    return pathname === base || pathname.startsWith(`${base}/`);
   };
 
   return (
     <div className="flex min-h-full flex-col bg-ink-50/40">
       <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur">
-        <Container className="flex h-16 items-center justify-between gap-4">
-          <BrandLockup href="/dashboard/student" />
+        <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
+          <BrandLockup href="/dashboard/student" variant="product" />
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Parent account">
             {NAV.map((item) => (
               <Link
                 key={item.label}
@@ -58,7 +60,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
 
           <div className="hidden items-center gap-3 md:flex">
             <LinkButton href="/dashboard/student/book" variant="primary" size="sm">
-              Book a session
+              Book a Study Hall
             </LinkButton>
             <LogoutButton />
           </div>
@@ -82,7 +84,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
 
         {open ? (
           <div className="border-t border-ink-100 bg-white px-6 py-5 md:hidden">
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-1" aria-label="Parent account">
               {NAV.map((item) => (
                 <Link
                   key={item.label}
@@ -104,7 +106,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
                 className="w-full"
                 onClick={() => setOpen(false)}
               >
-                Book a session
+                Book a Study Hall
               </LinkButton>
               <div className="flex justify-center">
                 <LogoutButton />

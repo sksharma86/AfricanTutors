@@ -63,7 +63,7 @@ export function CustomerBookingActions({
     if (data.early) {
       setNote(
         data.restored_minutes
-          ? `Cancelled — ${data.restored_minutes} minutes returned to your Study Hall balance.`
+          ? `Cancelled — ${data.restored_minutes} minutes returned to your Prepaid Hours.`
           : data.restored_credit_cents
             ? `Cancelled — $${(data.restored_credit_cents / 100).toFixed(2)} returned as account credit.`
             : "Cancelled — the session value was returned to your account.",
