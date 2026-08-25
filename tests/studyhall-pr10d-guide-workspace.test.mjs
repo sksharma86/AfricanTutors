@@ -60,7 +60,9 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     const panel = read("src/components/dashboard/guide-applicant-panel.tsx");
     assert.match(panel, /Application received|under review/i);
     assert.match(panel, /not guaranteed/i);
-    assert.doesNotMatch(panel, /Buy hours|Prepaid|Book a Study Hall|free session/i);
+    // May mention parent features only as unavailable — must not offer CTAs/links.
+    assert.doesNotMatch(panel, /Buy hours|Book a Study Hall|href=.*\/book|href=.*\/packages/i);
+    assert.match(panel, /unavailable while your application is under review/i);
 
     const helper = read("src/lib/guide-applicant.ts");
     assert.match(helper, /pending|suspended/);
