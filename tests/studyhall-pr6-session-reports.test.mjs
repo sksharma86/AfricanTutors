@@ -96,16 +96,14 @@ describe("Study Hall PR6 — session reports (source)", () => {
     assert.match(api, /notifySessionReportReady/);
   });
 
-  it("parent portal shows Session reports (not grades / mastery)", () => {
+  it("parent portal shows session reports (not grades / mastery)", () => {
     const page = read("src/app/dashboard/student/page.tsx");
     const list = read("src/components/dashboard/session-reports-list.tsx");
-    const shell = read("src/components/dashboard/customer-shell.tsx");
     assert.match(page, /id="reports"/);
     assert.match(page, /SessionReportsList/);
     assert.match(page, /not grades or academic assessments/i);
     assert.match(list, /What they worked on|what they worked on/i);
     assert.match(list, /Focus|Redirection|Note from Guide/);
-    assert.match(shell, /#reports/);
     assert.doesNotMatch(list, /grade point|mastery|tutoring results|academic diagnosis/i);
     assert.match(list, /max-w-|sm:|flex-col|rounded-2xl/);
   });

@@ -129,7 +129,8 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
   });
 
   it("parent phone form + Terms/Privacy disclose transactional contact", () => {
-    assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Phone for Study Hall alerts/);
+    assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Phone number/);
+    assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /never shared with Guides/i);
     assert.match(read("src/app/dashboard/student/page.tsx"), /ParentPhoneForm/);
     assert.match(read("src/app/(marketing)/privacy/page.tsx"), /call or text you/i);
     assert.match(read("src/app/(marketing)/terms/page.tsx"), /automated phone call or SMS/i);

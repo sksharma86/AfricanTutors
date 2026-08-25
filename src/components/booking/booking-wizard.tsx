@@ -85,6 +85,7 @@ export function BookingWizard({
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
   const [confirmation, setConfirmation] = useState<{
     ref: string;
@@ -158,7 +159,7 @@ export function BookingWizard({
     if (!supabase) return;
     setError(null);
     if (!newName.trim()) {
-      setError("Enter the student's name.");
+      setError("Enter the child's name.");
       return;
     }
     setBusy(true);
@@ -182,6 +183,7 @@ export function BookingWizard({
     setSlotsLoading(true);
     setSlots([]);
     setSelectedSlot(null);
+    setSelectedDayKey(null);
     const from = new Date(Date.now() + MIN_BOOKING_NOTICE_MINUTES * 60000).toISOString();
     const to = new Date(Date.now() + BOOKING_HORIZON_DAYS * 86400000).toISOString();
     const { data, error: e } = await supabase.rpc("get_available_slots", {
@@ -286,6 +288,16 @@ export function BookingWizard({
     return Array.from(map.entries());
   }, [slots, studentTz]);
 
+  const activeDayKey =
+    selectedDayKey && slotsByDay.some(([k]) => k === selectedDayKey)
+      ? selectedDayKey
+      : (slotsByDay[0]?.[0] ?? null);
+
+  const timesForSelectedDay = useMemo(() => {
+    if (!activeDayKey) return [];
+    return slotsByDay.find(([k]) => k === activeDayKey)?.[1] ?? [];
+  }, [slotsByDay, activeDayKey]);
+
   // ---- rendering helpers ----
   const card =
     "rounded-2xl border border-ink-100 bg-white p-6 shadow-[0_1px_2px_rgba(19,19,17,0.04),0_10px_28px_-18px_rgba(19,19,17,0.16)] sm:p-8";
@@ -312,18 +324,43 @@ export function BookingWizard({
         </div>
         <h2 className="mt-5 font-display text-2xl font-semibold text-ink-900">
           {confirmation.isFree || confirmation.funding === "package" || confirmation.funding === "credit"
-            ? "Session confirmed!"
+            ? "Study Hall booked"
             : "Booking held"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-600">
           {confirmation.isFree
-            ? "Your free 1-hour Study Hall session is confirmed. We've matched an approved Guide."
+            ? "Your free 1-hour Study Hall is confirmed. We’ve matched an approved Guide."
             : confirmation.funding === "package"
-              ? "Your session is confirmed using your prepaid balance. An approved Guide is matched."
+              ? "Your session is confirmed using your prepaid Study Hall Hours. An approved Guide is matched."
               : confirmation.funding === "credit"
                 ? "Your session is confirmed using your account credit. An approved Guide is matched."
                 : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."}
         </p>
+        {selectedSlot ? (
+          <dl className="mt-4 divide-y divide-ink-100 rounded-xl border border-ink-100 px-4 text-sm">
+            <Row
+              label="When"
+              value={`${formatDayHeading(selectedSlot, studentTz)}, ${formatTime(selectedSlot, studentTz)} (${tzAbbreviation(selectedSlot, studentTz)})`}
+            />
+            <Row
+              label="Duration"
+              value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`}
+            />
+            <Row
+              label={confirmation.isFree ? "Price" : fullyPrepaid ? "Payment" : "Due today"}
+              value={
+                confirmation.isFree
+                  ? "Free"
+                  : fullyPrepaid
+                    ? "Covered by prepaid hours"
+                    : quote
+                      ? formatMoneyCents(quote.stripe_cents_due)
+                      : priceLabel
+              }
+              highlight
+            />
+          </dl>
+        ) : null}
         <p className="mt-3 text-sm text-ink-500">
           Reference: <span className="font-mono font-medium text-ink-800">{confirmation.ref}</span>
         </p>
@@ -336,10 +373,10 @@ export function BookingWizard({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Booking steps">
         {stepPill(1, "Child", step === "student", ["duration", "time", "confirm"].includes(step))}
         {stepPill(2, "Session", step === "duration", ["time", "confirm"].includes(step))}
-        {stepPill(3, "Time", step === "time", ["confirm"].includes(step))}
+        {stepPill(3, "Date & time", step === "time", ["confirm"].includes(step))}
         {stepPill(4, "Confirm", step === "confirm", false)}
       </div>
 
@@ -381,12 +418,12 @@ export function BookingWizard({
           )}
 
           <details className="mt-5 rounded-xl border border-dashed border-ink-200 p-4" open={students.length === 0}>
-            <summary className="cursor-pointer text-sm font-medium text-ink-700">Add a student</summary>
+            <summary className="cursor-pointer text-sm font-medium text-ink-700">Add a child</summary>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="Student name"
+                placeholder="Child's name"
                 className="rounded-lg border border-ink-200 px-3 py-2 text-sm sm:col-span-3"
               />
               <select
@@ -413,7 +450,7 @@ export function BookingWizard({
               </select>
             </div>
             <Button onClick={addStudent} disabled={busy} variant="outline" size="sm" className="mt-3">
-              {busy ? "Adding..." : "Add student"}
+              {busy ? "Adding..." : "Add child"}
             </Button>
           </details>
 
@@ -433,7 +470,7 @@ export function BookingWizard({
             <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
               Your balance:{" "}
               {balances.minutes > 0 ? (
-                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall time</span>
+                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Study Hall Hours</span>
               ) : null}
               {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
               {balances.creditCents > 0 ? (
@@ -511,12 +548,13 @@ export function BookingWizard({
         </div>
       ) : null}
 
-      {/* STEP 3: time */}
+      {/* STEP 3: date & time — day strip + times (no nested all-days scroll) */}
       {step === "time" ? (
         <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">Choose a time</h2>
+          <h2 className="font-display text-xl font-semibold text-ink-900">Choose a date &amp; time</h2>
           <p className="mt-1 text-sm text-ink-500">
-            Times shown in {student?.full_name}&apos;s timezone ({tzAbbreviation(new Date().toISOString(), studentTz)}).
+            Times shown in {student?.full_name}&apos;s timezone ({tzAbbreviation(new Date().toISOString(), studentTz)}
+            ).
           </p>
           {slotsLoading ? (
             <p className="mt-6 text-sm text-ink-400">Finding available Study Hall times…</p>
@@ -525,31 +563,64 @@ export function BookingWizard({
               No available Study Hall times in the next few days. Please try another duration or check back soon.
             </p>
           ) : (
-            <div className="mt-5 max-h-96 space-y-5 overflow-y-auto pr-1">
-              {slotsByDay.map(([day, isos]) => (
-                <div key={day}>
-                  <p className="text-sm font-semibold text-ink-800">{day}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {isos.map((iso) => (
+            <div className="mt-5 space-y-5">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Date</p>
+                <div
+                  className="mt-2 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  role="listbox"
+                  aria-label="Available dates"
+                >
+                  {slotsByDay.map(([day, isos]) => {
+                    const active = day === activeDayKey;
+                    return (
                       <button
-                        key={iso}
+                        key={day}
                         type="button"
-                        onClick={() => setSelectedSlot(iso)}
-                        className={`rounded-lg border px-3 py-1.5 text-sm ${
-                          selectedSlot === iso
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => {
+                          setSelectedDayKey(day);
+                          setSelectedSlot(null);
+                        }}
+                        className={`min-h-11 shrink-0 rounded-xl border px-3.5 py-2 text-left text-sm transition ${
+                          active
                             ? "border-ink-900 bg-ink-900 text-white"
-                            : "border-ink-200 text-ink-700 hover:border-ink-300"
+                            : "border-ink-200 bg-white text-ink-800 hover:border-ink-300"
                         }`}
                       >
-                        {formatTime(iso, studentTz)}
+                        <span className="block font-semibold">{day}</span>
+                        <span className={`block text-xs ${active ? "text-white/70" : "text-ink-400"}`}>
+                          {isos.length} {isos.length === 1 ? "time" : "times"}
+                        </span>
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Time</p>
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {timesForSelectedDay.map((iso) => (
+                    <button
+                      key={iso}
+                      type="button"
+                      onClick={() => setSelectedSlot(iso)}
+                      className={`min-h-11 rounded-lg border px-2 py-2 text-sm font-medium ${
+                        selectedSlot === iso
+                          ? "border-ink-900 bg-ink-900 text-white"
+                          : "border-ink-200 text-ink-700 hover:border-ink-300"
+                      }`}
+                    >
+                      {formatTime(iso, studentTz)}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button variant="outline" onClick={() => setStep("duration")}>
               Back
             </Button>
@@ -585,9 +656,9 @@ export function BookingWizard({
             {!isFreeTrial && fullyPrepaid && quote ? (
               <>
                 <Row label="Payment" value="Covered by prepaid balance" highlight />
-                <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                <Row label="Study Hall Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 {prepaidRemaining != null ? (
-                  <Row label="Balance after booking" value={formatDuration(prepaidRemaining)} />
+                  <Row label="Hours after booking" value={formatDuration(prepaidRemaining)} />
                 ) : null}
                 <Row label="Due today" value={formatMoneyCents(0)} highlight />
               </>
@@ -596,7 +667,7 @@ export function BookingWizard({
               <>
                 <Row label="Price" value={priceLabel} />
                 {quote.package_minutes_used > 0 ? (
-                  <Row label="Study Hall balance" value={`−${formatDuration(quote.package_minutes_used)}`} />
+                  <Row label="Study Hall Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
                 ) : null}
                 {quote.credit_cents_used > 0 ? (
                   <Row label="Account credit" value={`−${formatMoneyCents(quote.credit_cents_used)}`} />

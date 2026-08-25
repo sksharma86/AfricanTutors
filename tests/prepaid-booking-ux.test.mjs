@@ -55,15 +55,21 @@ describe("Prepaid booking UX — wizard wiring (source)", () => {
     assert.match(wiz, /Confirm with prepaid hours/);
     assert.match(wiz, /Covered by prepaid balance/);
     assert.match(wiz, /No payment required\. Your card will not be charged\./);
-    assert.match(wiz, /Balance after booking/);
+    assert.match(wiz, /Hours after booking/);
     assert.match(helper, /Uses \$\{formatDuration/);
   });
 
-  it("success path still says prepaid balance; free trial and Stripe CTAs preserved", () => {
-    assert.match(wiz, /confirmed using your prepaid balance/);
+  it("success path still says prepaid hours; free trial and Stripe CTAs preserved", () => {
+    assert.match(wiz, /confirmed using your prepaid Study Hall Hours/);
     assert.match(wiz, /Confirm booking/);
     assert.match(wiz, /First 1-hour Study Hall — FREE/);
     assert.match(wiz, /secure checkout to pay the amount due/);
+  });
+
+  it("date/time step uses day strip without nested all-days scroll trap", () => {
+    assert.match(wiz, /Choose a date &amp; time|Choose a date & time/);
+    assert.match(wiz, /Available dates/);
+    assert.doesNotMatch(wiz, /max-h-96/);
   });
 
   it("does not alter financial RPCs or Stripe checkout in this change set", () => {

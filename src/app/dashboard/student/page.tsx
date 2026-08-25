@@ -14,7 +14,6 @@ import { LinkButton } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
-import { TrustSignals } from "@/components/ui/trust-signals";
 import { requireRole } from "@/lib/auth";
 import { type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
@@ -50,8 +49,9 @@ interface BookingRow {
 
 const DEFAULT_TZ = "America/Chicago";
 
-function subjectOf(b: BookingRow): string {
-  return b.subject_name ?? (b.other_subject_text ? `Other — ${b.other_subject_text}` : "Study Hall session");
+function sessionTitle(_b: BookingRow): string {
+  void _b;
+  return "Study Hall";
 }
 
 function whenLabelOf(b: BookingRow): string | undefined {
@@ -60,14 +60,8 @@ function whenLabelOf(b: BookingRow): string | undefined {
   return `${formatDayHeading(b.scheduled_start, tz)}, ${formatTime(b.scheduled_start, tz)} (${tzAbbreviation(b.scheduled_start, tz)})`;
 }
 
-// Date.now() kept out of the component render body (RSC purity).
 function joinInfoOf(b: BookingRow) {
   return customerJoinState(b.status, b.scheduled_start, b.scheduled_end, Date.now());
-}
-
-function openAtLabel(openAtISO: string | null, tz: string): string {
-  if (!openAtISO) return "soon";
-  return `${formatTime(openAtISO, tz)} (${tzAbbreviation(openAtISO, tz)})`;
 }
 
 export default async function StudentDashboardPage() {
@@ -79,46 +73,45 @@ export default async function StudentDashboardPage() {
 
   const [{ data: bookingsRaw }, { data: myStudents }, balancesRes, disputeRes, reportsRes, phoneRes, escalationsRes] =
     await Promise.all([
-    supabase
-      ? supabase
-          .from("bookings")
-          .select(
-            "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, students(full_name, timezone)",
-          )
-          .order("scheduled_start", { ascending: true, nullsFirst: false })
-      : Promise.resolve({ data: null }),
-    supabase
-      ? supabase.from("students").select("id, full_name, grade_level").order("created_at").limit(50)
-      : Promise.resolve({ data: null }),
-    uid && supabase ? supabase.rpc("get_customer_balances", { p_account: uid }) : Promise.resolve({ data: null }),
-    supabase ? supabase.rpc("list_my_dispute_statuses") : Promise.resolve({ data: null }),
-    supabase
-      ? supabase
-          .from("session_reports")
-          .select(
-            "id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id, bookings(scheduled_start, duration_minutes, student_first_name, students(full_name, timezone))",
-          )
-          .order("submitted_at", { ascending: false })
-          .then(
-            (r) => r,
-            () => ({ data: null, error: null }),
-          )
-      : Promise.resolve({ data: null, error: null }),
-    uid && supabase
-      ? supabase.from("profiles").select("phone_e164").eq("id", uid).maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      ? supabase
-          .from("parent_escalation_requests")
-          .select("booking_id")
-          .then(
-            (r) => r,
-            () => ({ data: null, error: null }),
-          )
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+      supabase
+        ? supabase
+            .from("bookings")
+            .select(
+              "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, students(full_name, timezone)",
+            )
+            .order("scheduled_start", { ascending: true, nullsFirst: false })
+        : Promise.resolve({ data: null }),
+      supabase
+        ? supabase.from("students").select("id, full_name, grade_level").order("created_at").limit(50)
+        : Promise.resolve({ data: null }),
+      uid && supabase ? supabase.rpc("get_customer_balances", { p_account: uid }) : Promise.resolve({ data: null }),
+      supabase ? supabase.rpc("list_my_dispute_statuses") : Promise.resolve({ data: null }),
+      supabase
+        ? supabase
+            .from("session_reports")
+            .select(
+              "id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id, bookings(scheduled_start, duration_minutes, student_first_name, students(full_name, timezone))",
+            )
+            .order("submitted_at", { ascending: false })
+            .then(
+              (r) => r,
+              () => ({ data: null, error: null }),
+            )
+        : Promise.resolve({ data: null, error: null }),
+      uid && supabase
+        ? supabase.from("profiles").select("phone_e164").eq("id", uid).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        ? supabase
+            .from("parent_escalation_requests")
+            .select("booking_id")
+            .then(
+              (r) => r,
+              () => ({ data: null, error: null }),
+            )
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
-  // PR9: parent-visible recording summaries for report bookings (RLS: own account).
   const reportBookingIds = (
     reportsRes && "error" in reportsRes && reportsRes.error
       ? []
@@ -189,7 +182,6 @@ export default async function StudentDashboardPage() {
       ? []
       : ((recordingsRes?.data ?? []) as RecRow[])
   )) {
-    // Prefer a completed playable artifact when multiple exist.
     const prev = recordingByBooking.get(rec.booking_id);
     if (!prev || (rec.status === "completed" && prev.status !== "completed")) {
       recordingByBooking.set(rec.booking_id, rec);
@@ -229,28 +221,23 @@ export default async function StudentDashboardPage() {
     };
   });
 
-  // Free trial is ONE PER ACCOUNT: eligible only if no non-cancelled free-trial
-  // booking exists across the account (adding a student never restores it).
   const freeTrialAvailable = !accountFreeTrialUsed(bookings);
-
   const { upcoming, past, next } = partitionBookings(bookings);
   const laterUpcoming = upcoming.filter((b) => b.id !== next?.id);
-
   const firstName = (userData?.user?.user_metadata?.display_name as string | undefined)?.split(" ")[0];
 
   function primaryAction(b: BookingRow) {
-    const tz = b.students?.timezone || DEFAULT_TZ;
-    const { state, openAtISO } = joinInfoOf(b);
+    const { state } = joinInfoOf(b);
     if (state === "join") {
       return (
         <LinkButton href={`/dashboard/session/${b.id}`} variant="secondary" size="sm">
-          Join session
+          Join Study Hall
         </LinkButton>
       );
     }
     if (state === "opens_at") {
       return (
-        <span className="text-xs font-medium text-ink-500">Opens at {openAtLabel(openAtISO, tz)}</span>
+        <span className="text-xs font-medium text-ink-500">Ready to join 5 minutes before start</span>
       );
     }
     if (state === "not_scheduled") {
@@ -266,7 +253,7 @@ export default async function StudentDashboardPage() {
     return (
       <SessionCard
         key={b.id}
-        subject={subjectOf(b)}
+        subject={sessionTitle(b)}
         isFreeTrial={b.is_free_trial}
         whenLabel={whenLabelOf(b)}
         durationLabel={b.duration_minutes ? formatDuration(b.duration_minutes) : undefined}
@@ -300,65 +287,44 @@ export default async function StudentDashboardPage() {
 
   return (
     <CustomerShell>
-      <div className="mx-auto w-full max-w-5xl px-6 py-8 lg:px-8">
-        {/* Welcome / free-trial hero */}
-        {freeTrialAvailable ? (
-          <section className="at-fade-in overflow-hidden rounded-3xl bg-ink-900 p-7 sm:p-9">
-            <p className="text-xs font-semibold tracking-[0.14em] text-gold-300 uppercase">
-              New family offer
-            </p>
-            <h1 className="mt-2 max-w-xl font-display text-3xl font-semibold text-white sm:text-4xl">
-              Your first 1-hour Study Hall session is free.
+      <div className="mx-auto w-full max-w-5xl px-5 py-7 sm:px-6 sm:py-8 lg:px-8">
+        {/* Welcome */}
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm text-ink-500">Your Study Hall account</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold text-ink-900 sm:text-3xl">
+              {firstName ? `Hi ${firstName}` : "Welcome"}
             </h1>
-            <p className="mt-2 max-w-lg text-base leading-7 text-ink-200">
-              A real Study Hall session with an approved Guide. No credit card required.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
-                Book my free session
+          </div>
+          <LinkButton href="/dashboard/student/book" variant="primary" size="lg" className="w-full sm:w-auto">
+            Book a Study Hall
+          </LinkButton>
+        </section>
+
+        {/* Free session — only when eligible */}
+        {freeTrialAvailable ? (
+          <section className="mt-6 rounded-2xl border border-forest-200 bg-forest-50/60 p-5 sm:p-6">
+            <p className="text-sm font-semibold text-forest-800">Your first Study Hall is on us</p>
+            <p className="mt-1 text-sm text-ink-600">60 minutes free · No credit card required</p>
+            <div className="mt-4">
+              <LinkButton href="/dashboard/student/book" variant="primary" size="sm">
+                Book free session
               </LinkButton>
-              <Link
-                href="/dashboard/student/packages"
-                className="text-sm font-medium text-gold-200 hover:text-gold-100"
-              >
-                See pricing &amp; packages →
-              </Link>
             </div>
           </section>
-        ) : (
-          <section className="at-fade-in flex flex-col gap-4 rounded-3xl border border-ink-100 bg-white p-7 shadow-[0_8px_24px_-18px_rgba(19,19,17,0.25)] sm:flex-row sm:items-center sm:justify-between sm:p-9">
-            <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-gold-700 uppercase">Welcome back</p>
-              <h1 className="mt-1.5 font-display text-3xl font-semibold text-ink-900">
-                {firstName ? `Hi ${firstName}` : "Ready for the next session?"}
-              </h1>
-              <p className="mt-1.5 text-sm text-ink-500">Book a session or manage your upcoming Study Halls below.</p>
-            </div>
-            <LinkButton href="/dashboard/student/book" variant="primary" size="lg">
-              Book a session
-            </LinkButton>
-          </section>
-        )}
+        ) : null}
 
-        <TrustSignals className="mt-5" />
-
-        {/* Balances */}
+        {/* Next Study Hall — primary focus */}
         <div className="mt-8">
-          <SectionHeader title="Your account" />
-          <BalanceCards minutes={minutes} creditCents={creditCents} />
-        </div>
-
-        {/* Next session */}
-        <div className="mt-8">
-          <SectionHeader title="Next session" />
+          <SectionHeader title="Next Study Hall" />
           {next ? (
             cardFor(next, { featured: true })
           ) : (
             <EmptyState
-              title="You're all caught up"
-              description="Book your next Study Hall session whenever you're ready."
+              title="No upcoming Study Hall"
+              description="Book a session whenever you’re ready — homework gets done, you get your evening back."
               actionHref="/dashboard/student/book"
-              actionLabel="Book a session"
+              actionLabel="Book a Study Hall"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
                   <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
@@ -369,32 +335,29 @@ export default async function StudentDashboardPage() {
           )}
         </div>
 
+        {/* Study Hall Hours */}
+        <div className="mt-8">
+          <SectionHeader title="Study Hall Hours" />
+          <BalanceCards minutes={minutes} creditCents={creditCents} />
+        </div>
+
         {/* Upcoming */}
         {laterUpcoming.length > 0 ? (
           <div className="mt-8">
-            <SectionHeader title="Upcoming sessions" />
+            <SectionHeader title="Upcoming Study Halls" />
             <div className="space-y-3">{laterUpcoming.map((b) => cardFor(b))}</div>
           </div>
         ) : null}
 
-        {/* Sessions history */}
+        {/* Past sessions */}
         <div id="sessions" className="mt-8 scroll-mt-20">
-          <SectionHeader
-            title="Session history"
-            action={
-              minutes <= 0 ? (
-                <Link href="/dashboard/student/packages" className="text-sm font-medium text-gold-700 hover:underline">
-                  View packages →
-                </Link>
-              ) : undefined
-            }
-          />
+          <SectionHeader title="Past Study Halls" />
           {past.length > 0 ? (
             <div className="space-y-3">{past.map((b) => cardFor(b, { history: true }))}</div>
           ) : (
             <EmptyState
-              title="No sessions yet"
-              description="Your completed Study Hall sessions will appear here."
+              title="No past Study Halls yet"
+              description="Completed sessions will show up here."
               icon={
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-5 w-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -404,29 +367,29 @@ export default async function StudentDashboardPage() {
           )}
         </div>
 
-        {/* Session reports (PR6) — accountability summaries, not grades */}
+        {/* Reports + recordings */}
         <div id="reports" className="mt-8 scroll-mt-20">
-          <SectionHeader title="Session reports" />
+          <SectionHeader title="What happened in Study Hall" />
           <p className="mb-3 text-sm text-ink-500">
-            Short notes from your Guide about how Study Hall went — focus, what they worked on, and calm redirection.
+            Short notes from your Guide after each session — and session recordings available for 60 days.
             These are not grades or academic assessments.
           </p>
           <SessionReportsList reports={parentReports} />
         </div>
 
-        {/* Account / students */}
-        <div id="account" className="mt-8 scroll-mt-20">
-          <SectionHeader title="Contact for Study Hall alerts" />
+        {/* Account */}
+        <div id="account" className="mt-8 scroll-mt-20 pb-4">
+          <SectionHeader title="Account" />
           <div className="mb-6">
             <ParentPhoneForm initialPhone={parentPhone} />
           </div>
           <SectionHeader
-            title="Students"
+            title="Your children"
             action={
               freeTrialAvailable ? (
-                <StatusBadge tone="info">Free trial available</StatusBadge>
+                <StatusBadge tone="info">Free session available</StatusBadge>
               ) : (
-                <span className="text-xs text-ink-400">One account can book for multiple students</span>
+                <span className="text-xs text-ink-400">One account can book for multiple children</span>
               )
             }
           />
@@ -446,12 +409,18 @@ export default async function StudentDashboardPage() {
             </div>
           ) : (
             <EmptyState
-              title="No students added yet"
-              description="Add a student when you book your first session."
+              title="No children added yet"
+              description="Add a child when you book your first Study Hall."
               actionHref="/dashboard/student/book"
-              actionLabel="Book a session"
+              actionLabel="Book a Study Hall"
             />
           )}
+          <p className="mt-6 text-sm text-ink-500">
+            Looking for prepaid hours?{" "}
+            <Link href="/dashboard/student/packages#prepaid" className="font-medium text-ink-800 underline-offset-4 hover:underline">
+              Buy hours &amp; save
+            </Link>
+          </p>
         </div>
       </div>
     </CustomerShell>

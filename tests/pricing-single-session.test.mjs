@@ -14,11 +14,11 @@ describe("Pricing page — single sessions before packages", () => {
   const wizard = read("src/components/booking/booking-wizard.tsx");
   const bookPage = read("src/app/dashboard/student/book/page.tsx");
 
-  it("authenticated customer nav says 'Pricing', not 'Packages' (item 1)", () => {
-    assert.match(shell, /label:\s*"Pricing"/);
-    assert.doesNotMatch(shell, /label:\s*"Packages"/);
-    // 'Sessions' item is unchanged.
+  it("authenticated customer nav includes Book and Sessions (not Packages)", () => {
+    assert.match(shell, /label:\s*"Book"/);
     assert.match(shell, /label:\s*"Sessions"/);
+    assert.doesNotMatch(shell, /label:\s*"Packages"/);
+    assert.match(shell, /Book a Study Hall/);
   });
 
   it("single-session prices derive from whole-hour SESSION_OPTIONS ($12 / $24 / $36)", () => {
