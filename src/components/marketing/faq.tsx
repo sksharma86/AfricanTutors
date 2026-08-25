@@ -2,9 +2,7 @@ import { Container } from "@/components/ui/container";
 import { FAQ_ITEMS, type FaqItem } from "@/lib/faq";
 
 /**
- * Accessible FAQ built on native <details>/<summary> — keyboard-operable and
- * screen-reader friendly with zero client JS. `items` defaults to the full list;
- * the homepage can pass a shorter subset.
+ * Accessible FAQ on native details/summary — typography-first, no card chrome.
  */
 export function Faq({
   eyebrow = "FAQ",
@@ -18,23 +16,26 @@ export function Faq({
   id?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-20 py-20">
-      <Container className="max-w-3xl">
-        <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">{eyebrow}</p>
-        <h2 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">{title}</h2>
-        <dl className="mt-10 divide-y divide-ink-100 border-t border-ink-100">
+    <section id={id} className="scroll-mt-24 py-24 sm:py-28">
+      <Container size="narrow">
+        <p className="mkt-eyebrow">{eyebrow}</p>
+        <h2 className="mkt-display mt-4 text-4xl text-ink-900 sm:text-5xl">{title}</h2>
+        <dl className="mt-12 divide-y divide-ink-100 border-t border-ink-100">
           {items.map((item) => (
-            <div key={item.q} className="py-1">
+            <div key={item.q}>
               <details className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500">
-                  <dt className="font-medium text-ink-900">{item.q}</dt>
-                  <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full border border-ink-200 text-ink-500 transition-transform group-open:rotate-45">
-                    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="h-3.5 w-3.5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-400">
+                  <dt className="text-[17px] font-medium tracking-[-0.015em] text-ink-900">{item.q}</dt>
+                  <span
+                    className="flex h-8 w-8 flex-none items-center justify-center text-ink-400 transition-transform duration-200 group-open:rotate-45"
+                    aria-hidden
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} stroke="currentColor" className="h-4 w-4">
                       <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                     </svg>
                   </span>
                 </summary>
-                <dd className="pr-10 pb-4 text-sm leading-6 text-ink-600">{item.a}</dd>
+                <dd className="pb-5 pr-10 text-[15px] leading-7 text-ink-500">{item.a}</dd>
               </details>
             </div>
           ))}

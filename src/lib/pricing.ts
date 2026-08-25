@@ -45,7 +45,7 @@ export const PAYG_PRICE_USD = 12;
 export const FREE_TRIAL_MINUTES = 60;
 
 /** Primary acquisition call-to-action label (kept consistent site-wide). */
-export const FREE_TRIAL_CTA = "Start free session";
+export const FREE_TRIAL_CTA = "Start your free session";
 
 /** Friction-reducing microcopy. Use sparingly — do not repeat site-wide. */
 export const NO_CARD_REQUIRED = "No credit card required.";

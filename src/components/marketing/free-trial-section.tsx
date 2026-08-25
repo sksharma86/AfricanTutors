@@ -1,43 +1,34 @@
-import { Container } from "@/components/ui/container";
 import { TrackCta } from "@/components/marketing/track-cta";
+import { Container } from "@/components/ui/container";
+import { FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
 
+/**
+ * Compact free-session emphasis used on interior marketing pages.
+ * Homepage places free-session messaging in hero + final CTA instead.
+ */
 export function FreeTrialSection({
-  ctaHref,
-  ctaLabel,
+  ctaHref = "/signup",
+  ctaLabel = FREE_TRIAL_CTA,
 }: {
-  ctaHref: string;
-  ctaLabel: string;
+  ctaHref?: string;
+  ctaLabel?: string;
 }) {
   return (
-    <section className="py-16">
-      <Container>
-        <div className="overflow-hidden rounded-3xl bg-ink-900 p-8 sm:p-12">
-          <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-xl">
-              <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Free trial</p>
-              <h2 className="mt-3 font-display text-3xl font-semibold text-white sm:text-4xl">
-                Try Study Hall before you pay a dollar.
-              </h2>
-              <ul className="mt-5 space-y-2 text-base leading-7 text-ink-200">
-                {[
-                  "A complete 1-hour Study Hall session with a Guide",
-                  "No credit card, no payment information",
-                  "One free session per household",
-                ].map((line) => (
-                  <li key={line} className="flex items-start gap-2.5">
-                    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} stroke="currentColor" className="mt-1 h-4 w-4 flex-none text-gold-300">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-                    </svg>
-                    {line}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="shrink-0">
-              <TrackCta href={ctaHref} cta={ctaLabel} location="free_trial_section" variant="secondary" size="lg">
-                {ctaLabel}
-              </TrackCta>
-            </div>
+    <section className="py-20 sm:py-24">
+      <Container size="wide">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="mkt-eyebrow">First session free</p>
+          <h2 className="mkt-display mt-4 text-4xl text-ink-900 sm:text-5xl">
+            One full hour of Study Hall — on us.
+          </h2>
+          <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-ink-500">
+            Eligible new families get a real 60-minute Study Hall with a highly vetted Guide.{" "}
+            {NO_CARD_REQUIRED}
+          </p>
+          <div className="mt-8">
+            <TrackCta href={ctaHref} cta={ctaLabel} location="free_trial" variant="primary" size="lg">
+              {ctaLabel}
+            </TrackCta>
           </div>
         </div>
       </Container>

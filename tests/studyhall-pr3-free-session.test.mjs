@@ -28,9 +28,11 @@ describe("Study Hall PR3 — free trial is one complete hour (source)", () => {
       "src/lib/faq.ts",
       "src/lib/email/templates.mjs",
       "src/components/marketing/free-trial-section.tsx",
+      "src/components/marketing/site-hero.tsx",
+      "src/components/marketing/pricing-section.tsx",
     ].map(read).join("\n");
     assert.doesNotMatch(surfaces, /free 30-minute|First 30 minutes|first 30-minute/i);
-    assert.match(surfaces, /1-hour|60 minutes/i);
+    assert.match(surfaces, /1-hour|60 minutes|60-minute/i);
     assert.match(surfaces, /No credit card required|no credit card/i);
   });
 

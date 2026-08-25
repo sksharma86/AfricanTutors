@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-// Structured data (FAQPage) — accurate, sourced from the same FAQ content.
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -25,18 +24,18 @@ const faqJsonLd = {
 
 export default function FaqPage() {
   return (
-    <>
+    <div className="mkt-atmosphere">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <PageHeader
         eyebrow="FAQ"
         title="Questions, answered."
-        description="Everything you need to know before your first session. Still have a question? Contact us anytime."
+        description="Everything you need to know before your first Study Hall. Still have a question? Contact us anytime."
       />
       <Faq eyebrow="Common questions" title="Frequently asked questions" />
       <CtaSection
         title="Ready to try it?"
         description="Your first session is free — no credit card required."
       />
-    </>
+    </div>
   );
 }

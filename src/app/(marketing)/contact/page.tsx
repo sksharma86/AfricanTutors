@@ -11,18 +11,26 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <>
+    <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="Contact"
-        title="We'd love to hear from you."
-        description="Questions about Study Hall, pricing, or getting your child started? Send us a message and our team will follow up."
+        title="We’re here to help."
+        description="Questions about Study Hall, pricing, or getting your child started? Send a message and our team will follow up."
       />
 
-      <Container className="py-16">
-        <div className="max-w-xl">
-          <ContactForm />
+      <Container size="wide" className="pb-24">
+        <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+          <div className="max-w-sm">
+            <p className="text-[15px] leading-7 text-ink-500">
+              We typically respond within one business day. For account or session issues, signing in
+              to your parent dashboard is often the fastest path.
+            </p>
+          </div>
+          <div className="max-w-lg">
+            <ContactForm />
+          </div>
         </div>
       </Container>
-    </>
+    </div>
   );
 }

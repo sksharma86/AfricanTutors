@@ -60,6 +60,7 @@ describe("Study Hall PR2 — authoritative client pricing constants", () => {
       "src/app/(marketing)/pricing/page.tsx",
       "src/app/dashboard/student/packages/page.tsx",
       "src/components/marketing/why-african-tutors.tsx",
+      "src/app/(marketing)/page.tsx",
     ].map(read).join("\n");
     assert.doesNotMatch(surfaces, /No subscriptions|no recurring billing|not a subscription/i);
   });

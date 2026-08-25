@@ -24,7 +24,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Affordable Live Homework Supervision for Families`,
+    default: `${SITE_NAME} | Live Online Study Hall for Families`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} | Affordable Live Homework Supervision for Families`,
+    title: `${SITE_NAME} | Live Online Study Hall for Families`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} | Homework Supervision for Families`,
+    title: `${SITE_NAME} | Live Online Study Hall`,
     description: SITE_DESCRIPTION,
   },
 };

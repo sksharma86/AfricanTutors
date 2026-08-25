@@ -13,19 +13,23 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "What is Study Hall at Home?",
-    a: "Study Hall at Home is a managed service that provides live, online homework supervision. A trained Guide keeps your children on task by video while they complete their own schoolwork. It's homework accountability, focus, and routine — not subject-by-subject tutoring.",
+    a: "Study Hall at Home is live online Study Hall for children. A highly vetted Guide keeps your child focused, accountable, and moving through their own homework by video — supervision and routine, not subject-by-subject tutoring.",
   },
   {
     q: "Who are the Guides?",
-    a: "Guides are trained supervisors who keep children focused, accountable, and encouraged during Study Hall, and give normal redirection when a child drifts off task. Every Guide is reviewed and approved before they work with families.",
+    a: "Guides are highly vetted supervisors who keep children focused, accountable, and encouraged during Study Hall, and give calm redirection when a child drifts off task. Every Guide is carefully reviewed and approved before they work with families.",
+  },
+  {
+    q: "Where do Guides work from?",
+    a: "Guides work remotely from Kenya and are carefully vetted and trained specifically for Study Hall at Home. Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
   },
   {
     q: "How much does it cost?",
-    a: "Pay as you go is $12 for a 60-minute Study Hall session ($12/hour). You can also save with prepaid routines: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour).",
+    a: "Pay as you go is $12 for a 60-minute Study Hall session ($12/hour). You can also save with prepaid routines: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour). Prepaid hours never expire.",
   },
   {
     q: "Is the first session really free?",
-    a: "Yes. Your first 1-hour Study Hall session is completely free — a real session with a Guide, not a sales call. No credit card required.",
+    a: "Yes. Your first 1-hour Study Hall session is completely free — a real session with a Guide, not a sales call. No credit card required. The free session is one per account.",
   },
   {
     q: "Do I need a credit card for the free session?",
@@ -33,11 +37,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How does Study Hall work?",
-    a: "Create a parent account, add your child, and choose a time that works for your family. Your child joins a private, live Study Hall with a Guide from any computer at home, and the Guide keeps them on task while they do their homework.",
+    a: "Create a parent account, add your child, and choose a time that works for your family. Your child joins a private, live Study Hall with a Guide from home, and the Guide keeps them on task while they do their homework.",
   },
   {
     q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for quality and safety, and to help resolve any issues. Recordings are used internally by Study Hall at Home and are not shared publicly.",
+    a: "Yes. Sessions are recorded for quality and safety, and to help resolve any issues. Recordings are used by Study Hall at Home and are available to parents for a limited time after each session.",
   },
   {
     q: "Can I book for more than one child?",
@@ -61,7 +65,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How are Guides approved?",
-    a: "Every Guide is recruited and reviewed by Study Hall at Home and must be approved by our team before they can work with families.",
+    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall at Home, and must be approved by our team before they can work with families.",
   },
   {
     q: "What happens if I have a problem with a session?",

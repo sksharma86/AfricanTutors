@@ -25,7 +25,12 @@ export function BrandLockup({
   return (
     <Link href={href} className={cn("flex items-center gap-2.5", className)}>
       <BrandMark size={size} priority={priority} />
-      <span className={cn("font-display text-lg font-semibold text-ink-900", textClassName)}>
+      <span
+        className={cn(
+          "font-display text-[1.05rem] font-semibold tracking-[-0.02em] text-ink-900 sm:text-lg",
+          textClassName,
+        )}
+      >
         Study Hall at Home
       </span>
     </Link>

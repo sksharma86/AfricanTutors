@@ -7,6 +7,7 @@ import { PricingSection } from "@/components/marketing/pricing-section";
 import { Container } from "@/components/ui/container";
 import { FAQ_ITEMS } from "@/lib/faq";
 import { getPublicPackages } from "@/lib/marketing";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -15,57 +16,45 @@ export const metadata: Metadata = {
   alternates: { canonical: "/pricing" },
 };
 
-const principles = [
-  {
-    title: "Pay as you go or prepay & save",
-    description: "Book a 60-minute session for $12, or buy prepaid hours for a lower effective rate.",
-  },
-  {
-    title: "Built for routine",
-    description: "The 14 Hour Routine is designed for a consistent Study Hall habit — roughly two weeks of daily sessions.",
-  },
-  {
-    title: "Hours never expire",
-    description: "Prepaid hours stay on your account until you use them, and apply automatically when they cover a session.",
-  },
-];
-
 export default async function PricingPage() {
   const packages = await getPublicPackages();
 
   return (
-    <>
+    <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="Pricing"
-        title="Simple pricing. Your first session is free."
-        description="Try Study Hall at Home with a real session at no cost and no credit card. After that, pay $12/hour as you go — or save with prepaid routines."
+        title="Simple pricing. Your first hour is free."
+        description="Try a real Study Hall with a highly vetted Guide — no credit card. After that, pay $12/hour as you go, or save with prepaid hours that never expire."
       />
 
       <PricingSection packages={packages} withHeader={false} />
 
-      <Container className="pb-16">
-        <div className="grid gap-6 sm:grid-cols-3">
-          {principles.map((principle) => (
-            <div key={principle.title} className="rounded-2xl border border-ink-100 bg-white p-6">
-              <h3 className="text-base font-semibold text-ink-900">{principle.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-ink-500">{principle.description}</p>
-            </div>
-          ))}
-        </div>
+      <Container size="wide" className="pb-8">
+        <p className="max-w-2xl text-[15px] leading-7 text-ink-500">
+          The 14 Hour Routine is designed for a consistent Study Hall habit. The 28 Hour Routine offers
+          more hours at a lower effective rate. In both cases, hours stay on your account until you use
+          them.
+        </p>
       </Container>
 
       <Faq
         eyebrow="Pricing FAQ"
         title="Pricing questions"
         items={FAQ_ITEMS.filter((f) =>
-          ["How much does it cost?", "Is the first session really free?", "Do prepaid hours expire?", "What happens if I cancel?"].includes(f.q),
+          [
+            "How much does it cost?",
+            "Is the first session really free?",
+            "Do prepaid hours expire?",
+            "What happens if I cancel?",
+          ].includes(f.q),
         )}
       />
 
       <CtaSection
         title="See the difference a Study Hall routine makes."
         description="Create a free account and book your first session, on us."
+        primaryLabel={FREE_TRIAL_CTA}
       />
-    </>
+    </div>
   );
 }

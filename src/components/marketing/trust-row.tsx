@@ -1,25 +1,29 @@
 import { Container } from "@/components/ui/container";
 
-const SIGNALS = [
-  "Approved Guides",
-  "Sessions recorded for quality & safety",
-  "Secure payments",
-  "Flexible online booking",
-];
+const ITEMS = [
+  "Highly vetted Guides",
+  "Live video Study Hall",
+  "Focus & accountability",
+  "Session reports",
+  "First hour free",
+] as const;
 
+/** Thin trust / value ribbon — typography only, no cards. */
 export function TrustRow() {
   return (
-    <div className="border-b border-ink-100 bg-white">
-      <Container className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-5">
-        {SIGNALS.map((label) => (
-          <span key={label} className="inline-flex items-center gap-2 text-sm text-ink-600">
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.9} stroke="currentColor" className="h-4 w-4 text-forest-500">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-            </svg>
-            {label}
-          </span>
-        ))}
+    <section aria-label="Why families choose Study Hall" className="border-y border-ink-100/80">
+      <Container size="wide" className="py-6 sm:py-7">
+        <ul className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 text-center sm:gap-x-2">
+          {ITEMS.map((item, i) => (
+            <li key={item} className="flex items-center gap-3 text-[13px] font-medium tracking-[-0.01em] text-ink-600 sm:gap-2 md:text-sm">
+              {i > 0 ? (
+                <span className="hidden h-1 w-1 rounded-full bg-ink-200 sm:mx-3 sm:inline-block" aria-hidden />
+              ) : null}
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
       </Container>
-    </div>
+    </section>
   );
 }

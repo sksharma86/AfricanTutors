@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Prompt 2.6 brand system: warm ivory background, near-black foreground,
-     warm gold accent (see DECISIONS.md). */
-  --background: #fbf9f4;
+  /* Study Hall at Home — warm minimalism.
+     Ivory ground, near-black ink, restrained gold accent, forest for trust. */
+  --background: #f7f4ee;
   --foreground: #131311;
+  --surface: #fffcf7;
+  --surface-muted: #f0ebe3;
 
-  /* Warm gold, sampled from the African Tutors brand mark. Exposed under two
-     token families so both the original components (brand-*) and the ported
-     2.6 components (gold-*) render the same premium gold. */
+  /* Warm gold (brand mark provenance). Dual token families for compatibility. */
   --color-gold-50: #fcf3e3;
   --color-gold-100: #f8e4bc;
   --color-gold-200: #f0cc82;
@@ -31,7 +31,7 @@
   --color-brand-800: #614009;
   --color-brand-900: #3d2a08;
 
-  /* Warm, neutral near-black scale (not navy). */
+  /* Warm neutral near-black (not navy). */
   --color-ink-50: #f6f5f3;
   --color-ink-100: #e9e7e2;
   --color-ink-200: #d3cfc7;
@@ -43,8 +43,7 @@
   --color-ink-800: #221f1c;
   --color-ink-900: #131311;
 
-  /* Rich, deep African-influenced green. Used sparingly for trust, positive
-     status, and premium depth — never as a loud fill (see DECISIONS.md). */
+  /* Deep forest — trust / positive status only, never loud fills. */
   --color-forest-50: #eef3ef;
   --color-forest-100: #d6e4da;
   --color-forest-200: #aecbb6;
@@ -55,11 +54,19 @@
   --color-forest-700: #1c442e;
   --color-forest-800: #163524;
   --color-forest-900: #0f241a;
+
+  /* Marketing rhythm */
+  --radius-control: 14px;
+  --radius-panel: 20px;
+  --marketing-max: 72rem;
+  --marketing-measure: 38rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-fraunces);
@@ -109,18 +116,60 @@
   --color-forest-900: var(--color-forest-900);
 }
 
-/* Subtle, tasteful entrance for premium surfaces (respects reduced motion). */
+/* Entrance — soft rise (respects reduced motion). */
 @keyframes at-fade-in {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-.at-fade-in { animation: at-fade-in 0.35s ease-out both; }
+@keyframes at-fade-soft {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.at-fade-in { animation: at-fade-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.at-fade-soft { animation: at-fade-soft 0.7s ease-out both; }
+.at-delay-1 { animation-delay: 0.08s; }
+.at-delay-2 { animation-delay: 0.16s; }
+.at-delay-3 { animation-delay: 0.24s; }
+
 @media (prefers-reduced-motion: reduce) {
-  .at-fade-in { animation: none; }
+  .at-fade-in,
+  .at-fade-soft { animation: none; }
+}
+
+/* Marketing display measure helpers */
+.mkt-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  font-weight: 550;
+}
+.mkt-lede {
+  max-width: var(--marketing-measure);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--color-ink-500);
+}
+.mkt-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold-700);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-feature-settings: "ss01" on, "cv11" on;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle warm atmospheric wash behind marketing pages */
+.mkt-atmosphere {
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(252, 243, 227, 0.9), transparent 55%),
+    radial-gradient(80% 50% at 100% 20%, rgba(238, 243, 239, 0.45), transparent 50%),
+    var(--background);
 }

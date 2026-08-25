@@ -1,39 +1,40 @@
 import { Container } from "@/components/ui/container";
 
 const CONTROLS = [
-  "Guides are reviewed and approved before they work with families",
-  "Sessions happen on-platform, not through personal contact",
+  "Guides are carefully vetted and approved before they work with families",
+  "Sessions happen on-platform — not through personal contact channels",
   "Sessions are recorded for quality and safety",
-  "You can report an issue with any session, and our team reviews it",
-  "Study Hall at Home can review session recordings when needed",
+  "Parents can review reports and recordings after Study Hall",
+  "You can report an issue with any session; our team reviews it",
   "Payments are handled securely",
-  "Guide and family contact details aren't unnecessarily shared",
-];
+  "Guide and family contact details aren’t unnecessarily shared",
+] as const;
 
+/**
+ * Trust & safety — typographic list, no bordered mini-cards.
+ */
 export function TrustSafety() {
   return (
-    <section className="bg-ink-50/60 py-20">
-      <Container className="grid gap-12 md:grid-cols-2 md:items-start">
-        <div>
-          <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">Trust &amp; safety</p>
-          <h2 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
-            Built with real safeguards.
-          </h2>
-          <p className="mt-4 text-base leading-7 text-ink-500">
-            Study Hall at Home manages the whole experience — so quality and safety are part of how the
-            platform works, not an afterthought.
-          </p>
+    <section className="scroll-mt-24 bg-ink-900 py-24 text-white sm:py-28">
+      <Container size="wide">
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.16em] text-gold-300 uppercase">Trust &amp; safety</p>
+            <h2 className="mkt-display mt-4 text-4xl sm:text-5xl">Built with real safeguards.</h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-white/70">
+              Study Hall at Home manages the whole experience — so quality and safety are part of how
+              the platform works, not an afterthought.
+            </p>
+          </div>
+          <ul className="divide-y divide-white/10 border-y border-white/10">
+            {CONTROLS.map((c) => (
+              <li key={c} className="flex gap-4 py-4 text-[15px] leading-7 text-white/85">
+                <span className="mt-2.5 h-1 w-1 flex-none rounded-full bg-gold-400" aria-hidden />
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="space-y-3">
-          {CONTROLS.map((c) => (
-            <li key={c} className="flex items-start gap-3 rounded-xl border border-ink-100 bg-white px-4 py-3">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="mt-0.5 h-4 w-4 flex-none text-forest-500">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.5c2.5 1.3 4.4 1.5 6.5 1.5 0 7-2.6 10.4-6.5 12.5C8.1 15.4 5.5 12 5.5 5c2.1 0 4-.2 6.5-1.5Z" />
-              </svg>
-              <span className="text-sm leading-6 text-ink-700">{c}</span>
-            </li>
-          ))}
-        </ul>
       </Container>
     </section>
   );
