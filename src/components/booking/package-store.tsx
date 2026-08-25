@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,10 +31,13 @@ export function PackageStore({
   creditCents: number;
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ minutes: number } | null>(null);
 
   async function buy(pkg: PackageRow) {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusyId(pkg.id);
     setError(null);
     track(ANALYTICS_EVENTS.packagePurchaseStarted, { minutes: pkg.minutes });
@@ -47,12 +50,14 @@ export function PackageStore({
       });
     } catch {
       setBusyId(null);
+      submittingRef.current = false;
       setError("Something went wrong. Please try again.");
       return;
     }
     const payload = await res.json().catch(() => null);
     if (!res.ok) {
       setBusyId(null);
+      submittingRef.current = false;
       setError(friendlyError(payload?.error));
       return;
     }
@@ -61,6 +66,7 @@ export function PackageStore({
       return;
     }
     setBusyId(null);
+    submittingRef.current = false;
     track(ANALYTICS_EVENTS.packagePurchaseCompleted, { minutes: pkg.minutes });
     setDone({ minutes: pkg.minutes });
   }
@@ -83,6 +89,23 @@ export function PackageStore({
           </a>
         </div>
       </Card>
+    );
+  }
+
+  if (packages.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-ink-200 bg-ink-50/50 px-5 py-8 text-center">
+        <p className="text-sm font-medium text-ink-800">Prepaid packages aren’t listed right now</p>
+        <p className="mt-1 text-sm text-ink-500">
+          You can still book a single Study Hall session anytime. Check back soon for prepaid hours.
+        </p>
+        <a
+          href="/dashboard/student/book"
+          className="mt-4 inline-block text-sm font-medium text-ink-800 underline-offset-4 hover:underline"
+        >
+          Book a Study Hall
+        </a>
+      </div>
     );
   }
 

@@ -1,42 +1,73 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-notice";
+import { ResendConfirmationForm } from "@/components/auth/resend-confirmation-form";
 import { Button } from "@/components/ui/button";
+import { sanitizeNextPath } from "@/lib/auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+function friendlyLoginError(message: string): { text: string; needsConfirm?: boolean } {
+  if (/email not confirmed|not confirmed|confirm your email/i.test(message)) {
+    return {
+      text: "Confirm your email before signing in. You can resend the confirmation link below.",
+      needsConfirm: true,
+    };
+  }
+  if (/invalid login|invalid credentials|wrong password/i.test(message)) {
+    return { text: "That email or password doesn’t look right. Try again, or reset your password." };
+  }
+  if (/rate limit|too many/i.test(message)) {
+    return { text: "Too many attempts. Please wait a minute and try again." };
+  }
+  return { text: "We couldn’t sign you in right now. Please try again." };
+}
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const submittingRef = useRef(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [emailForResend, setEmailForResend] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
+    submittingRef.current = true;
     setStatus("submitting");
     setErrorMessage(null);
+    setNeedsConfirm(false);
 
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
+    setEmailForResend(email);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      submittingRef.current = false;
       setStatus("error");
-      setErrorMessage(error.message);
+      const mapped = friendlyLoginError(error.message);
+      setErrorMessage(mapped.text);
+      setNeedsConfirm(Boolean(mapped.needsConfirm));
       return;
     }
 
-    const redirectTo = searchParams.get("redirectTo") ?? "/dashboard/student";
-    router.push(redirectTo);
+    // Prefer dashboard index so role/applicant routing stays authoritative.
+    const requested = sanitizeNextPath(searchParams.get("redirectTo"), "/dashboard");
+    const dest = requested.startsWith("/dashboard") ? "/dashboard" : requested;
+    void data;
+    router.push(dest);
     router.refresh();
   }
 
@@ -74,15 +105,11 @@ export function LoginForm() {
         />
       </div>
 
-      {status === "error" && errorMessage ? (
-        <p className="text-sm text-red-600">{errorMessage}</p>
-      ) : null}
+      {status === "error" && errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
 
-      <Button
-        type="submit"
-        disabled={!isSupabaseConfigured || status === "submitting"}
-        className="w-full"
-      >
+      {needsConfirm ? <ResendConfirmationForm defaultEmail={emailForResend} /> : null}
+
+      <Button type="submit" disabled={!isSupabaseConfigured || status === "submitting"} className="w-full">
         {status === "submitting" ? "Logging in..." : "Log In"}
       </Button>
     </form>

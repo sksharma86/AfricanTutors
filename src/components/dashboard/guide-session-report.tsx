@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   FOCUS_LABELS,
@@ -28,6 +28,7 @@ export function GuideSessionReport({
   alreadySubmitted: boolean;
 }) {
   const router = useRouter();
+  const submittingRef = useRef(false);
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState<FocusRating | "">("");
   const [work, setWork] = useState("");
@@ -46,28 +47,34 @@ export function GuideSessionReport({
       setError("Focus, what they worked on, and redirection are required.");
       return;
     }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true);
     setError(null);
-    const res = await fetch("/api/tutor/session-report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bookingId,
-        focusRating: focus,
-        workSummary: work.trim(),
-        redirectionLevel: redirection,
-        guideNote: note.trim() || null,
-      }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(false);
-    if (!res.ok) {
-      setError(data?.error ?? "Unable to submit.");
-      return;
+    try {
+      const res = await fetch("/api/tutor/session-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          focusRating: focus,
+          workSummary: work.trim(),
+          redirectionLevel: redirection,
+          guideNote: note.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? "Unable to submit.");
+        return;
+      }
+      setSubmitted(true);
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setBusy(false);
+      submittingRef.current = false;
     }
-    setSubmitted(true);
-    setOpen(false);
-    router.refresh();
   }
 
   return (

@@ -273,7 +273,7 @@ export default async function GuideDashboardPage() {
         <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Upcoming assignments</h3>
         {laterUpcoming.length === 0 && today.length === 0 ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
-            No upcoming Study Hall assignments.
+            No upcoming Study Hall assignments. Keep your availability up to date so you can be matched.
           </p>
         ) : laterUpcoming.length === 0 ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-4 text-center text-sm text-ink-400">

@@ -320,6 +320,16 @@ export default async function StudentDashboardPage() {
           </section>
         ) : null}
 
+        {!parentPhone ? (
+          <section className="mt-4 rounded-xl border border-ink-100 bg-white px-4 py-3 text-sm text-ink-600 sm:px-5">
+            Add a phone number in{" "}
+            <a href="#account" className="font-medium text-ink-800 underline-offset-4 hover:underline">
+              Account
+            </a>{" "}
+            so we can reach you if your child needs you during Study Hall. Your number is never shared with Guides.
+          </section>
+        ) : null}
+
         {/* Next Study Hall — primary focus */}
         <div className="mt-8">
           <SectionHeader title="Next Study Hall" />
@@ -344,7 +354,7 @@ export default async function StudentDashboardPage() {
         {/* Prepaid Hours (unused package balance) */}
         <div className="mt-8">
           <SectionHeader title="Prepaid Hours" />
-          <BalanceCards minutes={minutes} creditCents={creditCents} />
+          <BalanceCards minutes={minutes} creditCents={creditCents} preferFreeSession={freeTrialAvailable} />
         </div>
 
         {/* Upcoming */}
@@ -421,12 +431,18 @@ export default async function StudentDashboardPage() {
               actionLabel="Book a Study Hall"
             />
           )}
-          <p className="mt-6 text-sm text-ink-500">
-            Looking for prepaid hours?{" "}
-            <Link href="/dashboard/student/packages#prepaid" className="font-medium text-ink-800 underline-offset-4 hover:underline">
-              Buy hours &amp; save
-            </Link>
-          </p>
+          {!freeTrialAvailable ? (
+            <p className="mt-6 text-sm text-ink-500">
+              Looking for prepaid hours?{" "}
+              <Link href="/dashboard/student/packages#prepaid" className="font-medium text-ink-800 underline-offset-4 hover:underline">
+                Buy hours &amp; save
+              </Link>
+            </p>
+          ) : (
+            <p className="mt-6 text-sm text-ink-500">
+              After your free session, you can book pay-as-you-go or save with prepaid hours.
+            </p>
+          )}
         </div>
       </div>
     </CustomerShell>
