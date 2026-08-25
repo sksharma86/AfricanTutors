@@ -1,13 +1,14 @@
-import { LinkButton } from "@/components/ui/button";
+import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
+import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
 
 export function CtaSection({
   title,
   description,
   primaryHref = "/signup",
-  primaryLabel = "Start free session",
-  secondaryHref = "/how-it-works",
-  secondaryLabel = "See how it works",
+  primaryLabel = FREE_TRIAL_CTA,
+  secondaryHref,
+  secondaryLabel,
 }: {
   title: string;
   description: string;
@@ -17,28 +18,36 @@ export function CtaSection({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="py-20">
-      <Container>
-        <div className="flex flex-col items-start justify-between gap-8 rounded-3xl bg-ink-900 p-10 sm:p-14 md:flex-row md:items-center">
-          <div className="max-w-xl">
-            <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-              {title}
-            </h2>
-            <p className="mt-3 text-base leading-7 text-ink-200">{description}</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <LinkButton href={primaryHref} variant="secondary" size="lg">
-              {primaryLabel}
-            </LinkButton>
-            <LinkButton
-              href={secondaryHref}
-              variant="outline"
+    <section className="bg-ink-900 py-16 text-white sm:py-20">
+      <Container size="wide">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="mkt-display text-3xl sm:text-[2.5rem]">{title}</h2>
+          <p className="mx-auto mt-4 max-w-lg text-[16px] leading-7 text-white/65">{description}</p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <TrackCta
+              href={primaryHref}
+              cta={primaryLabel}
+              location="final_cta"
+              variant="secondary"
               size="lg"
-              className="border-white/20 text-white hover:border-white/40 hover:bg-white/5"
             >
-              {secondaryLabel}
-            </LinkButton>
+              {primaryLabel}
+            </TrackCta>
+            {secondaryHref && secondaryLabel ? (
+              <TrackCta
+                href={secondaryHref}
+                cta={secondaryLabel}
+                location="final_cta_secondary"
+                variant="text"
+                className="text-white/70 hover:text-white"
+              >
+                {secondaryLabel}
+              </TrackCta>
+            ) : null}
           </div>
+          <p className="mt-5 text-sm text-white/45">
+            {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
+          </p>
         </div>
       </Container>
     </section>

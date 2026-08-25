@@ -1,25 +1,29 @@
 export const SITE_NAME = "Study Hall at Home";
 
 export const SITE_DESCRIPTION =
-  "Affordable live homework supervision for families. A trained Guide keeps your children on task by video while they do their schoolwork — accountability, routine, and evening relief for parents. Your first session is free, no credit card required.";
+  "Live online Study Hall for families. A highly vetted Guide keeps your child focused while they do their own homework. First 60 minutes free. As low as $9/hour.";
 
 /** Absolute base URL for SEO/canonical/OG. Override with NEXT_PUBLIC_SITE_URL. */
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://studyhallathome.com";
 
 export const PUBLIC_NAV_LINKS = [
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "Why Study Hall", href: "/#why" },
+  { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
 ] as const;
 
 export const FOOTER_SECTIONS = [
   {
-    heading: "Company",
+    heading: "Product",
     links: [
-      { label: "How It Works", href: "/how-it-works" },
+      { label: "How it works", href: "/how-it-works" },
       { label: "Pricing", href: "/pricing" },
       { label: "FAQ", href: "/faq" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
     ],

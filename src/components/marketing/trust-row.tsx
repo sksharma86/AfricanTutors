@@ -1,25 +1,25 @@
 import { Container } from "@/components/ui/container";
 
-const SIGNALS = [
-  "Approved Guides",
-  "Sessions recorded for quality & safety",
-  "Secure payments",
-  "Flexible online booking",
-];
+const ITEMS = [
+  "Highly vetted Guides",
+  "60-day recording access",
+  "After-session reports",
+  "Parents always within reach",
+  "First hour free",
+] as const;
 
 export function TrustRow() {
   return (
-    <div className="border-b border-ink-100 bg-white">
-      <Container className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-5">
-        {SIGNALS.map((label) => (
-          <span key={label} className="inline-flex items-center gap-2 text-sm text-ink-600">
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.9} stroke="currentColor" className="h-4 w-4 text-forest-500">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
-            </svg>
-            {label}
-          </span>
-        ))}
+    <section aria-label="Why families choose Study Hall" className="border-b border-ink-100 bg-white">
+      <Container size="wide" className="py-5">
+        <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-between">
+          {ITEMS.map((item) => (
+            <li key={item} className="text-[13px] font-medium tracking-[-0.01em] text-ink-500">
+              {item}
+            </li>
+          ))}
+        </ul>
       </Container>
-    </div>
+    </section>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { LinkButton } from "@/components/ui/button";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
 export function MobileMenu({
   isAuthed,
@@ -25,7 +26,7 @@ export function MobileMenu({
         aria-expanded={open}
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink-800 hover:bg-ink-50"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] text-ink-800 transition-colors hover:bg-ink-50"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor" className="h-6 w-6">
           {open ? (
@@ -37,20 +38,20 @@ export function MobileMenu({
       </button>
 
       {open ? (
-        <div className="absolute inset-x-0 top-full border-t border-ink-100 bg-white px-6 py-6 shadow-lg">
+        <div className="absolute inset-x-0 top-full border-t border-ink-100 bg-[#f7f4ee]/98 px-6 py-7 backdrop-blur-xl">
           <nav className="flex flex-col gap-1">
             {PUBLIC_NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={close}
-                className="rounded-lg px-3 py-2.5 text-base font-medium text-ink-700 hover:bg-ink-50"
+                className="rounded-[14px] px-3 py-3 text-base font-medium tracking-[-0.01em] text-ink-800 hover:bg-white/70"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
-          <div className="mt-5 flex flex-col gap-3">
+          <div className="mt-6 flex flex-col gap-3">
             {isAuthed ? (
               <>
                 <LinkButton href={dashboardHref} variant="outline" className="w-full" onClick={close}>
@@ -68,7 +69,7 @@ export function MobileMenu({
                   Sign in
                 </LinkButton>
                 <LinkButton href="/signup" variant="primary" className="w-full" onClick={close}>
-                  Start free
+                  {FREE_TRIAL_CTA}
                 </LinkButton>
               </>
             )}

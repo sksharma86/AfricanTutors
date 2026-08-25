@@ -41,14 +41,21 @@ export function isStudyHallDuration(n: unknown): n is StudyHallDuration {
 export const PAYG_MINUTES = 60;
 export const PAYG_PRICE_USD = 12;
 
+/** Lowest prepaid effective hourly rate (28 Hour Routine). Marketing only. */
+export const PREPAID_FROM_HOURLY_USD = 9;
+
 /** Length of the free introductory Study Hall session (one per account). */
 export const FREE_TRIAL_MINUTES = 60;
 
 /** Primary acquisition call-to-action label (kept consistent site-wide). */
-export const FREE_TRIAL_CTA = "Start free session";
+export const FREE_TRIAL_CTA = "Start your free session";
 
 /** Friction-reducing microcopy. Use sparingly — do not repeat site-wide. */
 export const NO_CARD_REQUIRED = "No credit card required.";
+
+/** Accurate marketing price framing — prepaid floor, not PAYG. */
+export const PLANS_FROM_LABEL = `Plans from $${PREPAID_FROM_HOURLY_USD}/hour`;
+export const AS_LOW_AS_LABEL = `As low as $${PREPAID_FROM_HOURLY_USD}/hour`;
 
 export function formatUsd(amount: number): string {
   return `$${amount}`;

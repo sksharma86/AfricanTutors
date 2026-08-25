@@ -8,11 +8,10 @@ import { FAQ_ITEMS } from "@/lib/faq";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about Study Hall at Home: how it works, who the Guides are, pricing, the free session, recorded sessions, booking for multiple children, cancellations, and more.",
+    "Answers about Study Hall at Home: how it works, Guides, pricing, the free session, Call Parent, recordings, and more.",
   alternates: { canonical: "/faq" },
 };
 
-// Structured data (FAQPage) — accurate, sourced from the same FAQ content.
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -25,18 +24,18 @@ const faqJsonLd = {
 
 export default function FaqPage() {
   return (
-    <>
+    <div className="mkt-atmosphere">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <PageHeader
         eyebrow="FAQ"
         title="Questions, answered."
-        description="Everything you need to know before your first session. Still have a question? Contact us anytime."
+        description="Clear answers before your first Study Hall. Still unsure? Contact us anytime."
       />
       <Faq eyebrow="Common questions" title="Frequently asked questions" />
       <CtaSection
         title="Ready to try it?"
         description="Your first session is free — no credit card required."
       />
-    </>
+    </div>
   );
 }

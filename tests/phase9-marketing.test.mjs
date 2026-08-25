@@ -13,19 +13,25 @@ const MARKETING_FILES = [
   "src/app/(marketing)/pricing/page.tsx",
   "src/app/(marketing)/subjects/page.tsx",
   "src/app/(marketing)/faq/page.tsx",
+  "src/app/(marketing)/how-it-works/page.tsx",
+  "src/app/(marketing)/about/page.tsx",
+  "src/app/(marketing)/contact/page.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/pricing-section.tsx",
   "src/components/marketing/free-trial-section.tsx",
   "src/components/marketing/why-african-tutors.tsx",
   "src/components/marketing/trust-safety.tsx",
   "src/components/marketing/trust-row.tsx",
-  "src/components/marketing/subjects-section.tsx",
-  "src/components/marketing/audiences.tsx",
+  "src/components/marketing/steps.tsx",
+  "src/components/marketing/cta-section.tsx",
   "src/components/marketing/faq.tsx",
+  "src/components/marketing/product-showcase.tsx",
+  "src/components/marketing/product-visuals.tsx",
   "src/components/layout/navbar.tsx",
   "src/components/layout/mobile-menu.tsx",
   "src/components/layout/footer.tsx",
   "src/lib/faq.ts",
+  "src/lib/constants.ts",
 ];
 const marketingText = MARKETING_FILES.map(read).join("\n");
 
@@ -55,7 +61,6 @@ describe("Phase 9 — marketing copy matches real business rules", () => {
   });
 
   it("packages never expire; marketing does not push a subscription plan (items 11,12)", () => {
-    // PR2 removed the "not a subscription" marketing line; keep never-expire checks.
     assert.match(pricing, /never expire/i);
     assert.match(faq, /never expire/i);
     assert.doesNotMatch(marketingText, /subscription plan|monthly plan|recurring billing subscription/i);
@@ -85,9 +90,12 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   const home = read("src/app/(marketing)/page.tsx");
   const mobile = read("src/components/layout/mobile-menu.tsx");
   const navbar = read("src/components/layout/navbar.tsx");
+  const pricingLib = read("src/lib/pricing.ts");
 
   it("anonymous primary CTA routes to signup with consistent label (item 15)", () => {
-    assert.match(home, /href:\s*"\/signup",\s*label:\s*"Start free session"/);
+    assert.match(pricingLib, /FREE_TRIAL_CTA = "Start your free session"/);
+    assert.match(home, /href:\s*"\/signup"/);
+    assert.match(home, /FREE_TRIAL_CTA/);
   });
 
   it("authenticated student CTA routes to booking (item 16)", () => {
