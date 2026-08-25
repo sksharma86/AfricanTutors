@@ -3,8 +3,9 @@ import { Container } from "@/components/ui/container";
 const CONTROLS = [
   "Guides are carefully vetted and approved before they work with families",
   "Sessions stay on-platform — not through personal contacts",
-  "Sessions are recorded for quality and safety",
-  "Parents get reports — and recordings for 60 days",
+  "Sessions are recorded for quality and safety; parents can review recordings for 60 days",
+  "If your child needs you, Guides can reach you through Call Parent without seeing your number",
+  "Parents get a short session report after every Study Hall",
   "Report any session; our team reviews it",
   "Payments are handled securely",
 ] as const;
@@ -13,15 +14,16 @@ export function TrustSafety() {
   return (
     <section className="scroll-mt-24 border-y border-ink-100 bg-white py-20 sm:py-24">
       <Container size="wide">
-        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
             <p className="mkt-eyebrow">Trust &amp; safety</p>
             <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-4xl">
-              Built with real safeguards.
+              You’re never in the dark.
             </h2>
             <p className="mt-4 max-w-md text-[15px] leading-7 text-ink-500">
-              Study Hall at Home manages the experience end to end — so quality and safety are part of
-              the product, not an afterthought.
+              Session reports keep you informed. Recordings remain available in your account for 60
+              days. And if your child needs you during Study Hall, Call Parent brings you back in —
+              while your personal number stays private.
             </p>
           </div>
           <ul className="divide-y divide-ink-100 border-y border-ink-100">

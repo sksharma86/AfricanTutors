@@ -28,6 +28,7 @@ const HOME_FAQ = FAQ_ITEMS.filter((f) =>
     "How much does it cost?",
     "Is the first session really free?",
     "Do prepaid hours expire?",
+    "Are sessions recorded?",
   ].includes(f.q),
 );
 
@@ -44,8 +45,8 @@ export default async function HomePage() {
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
       <TrustRow />
-      <ProductShowcase />
       <Steps />
+      <ProductShowcase />
       <WhyStudyHall />
       <PricingSection packages={packages} ctaHref={primary.href} />
       <TrustSafety />
