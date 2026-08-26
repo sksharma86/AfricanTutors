@@ -60,7 +60,7 @@ export function MobileMenu({
                 </LinkButton>
                 {showParentBookCta ? (
                   <LinkButton href="/dashboard/student/book" variant="primary" className="w-full" onClick={close}>
-                    Book a session
+                    Book a Study Hall
                   </LinkButton>
                 ) : null}
               </>

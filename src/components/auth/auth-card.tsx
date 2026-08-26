@@ -19,7 +19,7 @@ export function AuthCard({
       <Container className="max-w-md">
         <div className="rounded-2xl border border-ink-100 bg-white p-8 shadow-sm">
           <Link href="/" className="text-xs font-semibold tracking-wide text-brand-600 uppercase">
-            Study Hall at Home
+            Study Hall <span className="font-medium text-ink-500">(at home)</span>
           </Link>
           <h1 className="mt-3 font-display text-2xl font-semibold text-ink-900">{title}</h1>
           <p className="mt-1.5 text-sm text-ink-500">{description}</p>

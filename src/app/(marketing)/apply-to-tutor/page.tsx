@@ -6,13 +6,13 @@ import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
   title: "Become a Guide",
-  description: "Apply to become a Study Hall at Home Guide and help families build dependable homework routines.",
+  description: "Apply to become a Study Hall (at home) Guide and help families build dependable homework routines.",
 };
 
 export default function ApplyToTutorPage() {
   return (
     <AuthCard
-      title="Become a Guide with Study Hall at Home"
+      title="Become a Guide with Study Hall (at home)"
       description="Create an account to start your Guide application. Our team reviews every application before granting Guide access."
       footer={
         <>

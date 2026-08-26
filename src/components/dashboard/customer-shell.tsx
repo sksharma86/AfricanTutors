@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const NAV: { label: string; href: string }[] = [
   { label: "Dashboard", href: "/dashboard/student" },
   { label: "Book", href: "/dashboard/student/book" },
+  { label: "Hours", href: "/dashboard/student/packages#prepaid" },
   { label: "Sessions", href: "/dashboard/student#sessions" },
   { label: "Account", href: "/dashboard/student#account" },
 ];

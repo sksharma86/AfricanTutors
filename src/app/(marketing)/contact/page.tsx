@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with the Study Hall at Home team.",
+  description: "Get in touch with the Study Hall (at home) team.",
 };
 
 export default function ContactPage() {

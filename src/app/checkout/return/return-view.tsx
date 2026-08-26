@@ -120,17 +120,17 @@ export function CheckoutReturnView() {
             </Link>
             {status?.purpose === "package" ? (
               <Link
-                href="/dashboard/student/packages"
+                href="/dashboard/student/packages#prepaid"
                 className="rounded-lg border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 hover:border-ink-300"
               >
-                View packages
+                View prepaid hours
               </Link>
             ) : (
               <Link
                 href="/dashboard/student/book"
                 className="rounded-lg border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 hover:border-ink-300"
               >
-                Book another session
+                Book another Study Hall
               </Link>
             )}
           </div>

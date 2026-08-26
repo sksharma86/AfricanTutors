@@ -6,7 +6,7 @@ import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 
 export const metadata: Metadata = {
   title: "Set a New Password",
-  description: "Choose a new password for your Study Hall at Home account.",
+  description: "Choose a new password for your Study Hall (at home) account.",
 };
 
 export default function ResetPasswordPage() {

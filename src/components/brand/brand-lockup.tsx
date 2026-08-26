@@ -58,7 +58,7 @@ export function BrandLockup({
           textClassName,
         )}
       >
-        Study Hall <span className="font-medium text-ink-500">at Home</span>
+        Study Hall <span className="font-medium text-ink-500">(at home)</span>
       </span>
     </Link>
   );

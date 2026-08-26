@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { formatCents } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe/config";
@@ -8,6 +9,16 @@ import { getStripe } from "@/lib/stripe/client";
 import { ensureStripeCustomer } from "@/lib/stripe/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/service";
+
+/** Pending Guide applicants keep role=student but must not book or buy hours. */
+async function assertNotGuideApplicant(userId: string): Promise<void> {
+  const applicant = await getGuideApplicantInfo(userId);
+  if (applicant) {
+    throw new Error(
+      "Your Guide application is under review. Parent booking and packages are not available on this account.",
+    );
+  }
+}
 
 /**
  * Server-side checkout orchestration (Phase 4B).
@@ -72,6 +83,7 @@ export async function createBookingCheckout(
   baseUrl: string,
 ): Promise<StartResult> {
   const { supabase, user } = await authed();
+  await assertNotGuideApplicant(user.id);
 
   // Study Hall (null subject) always schedules with p_start. Legacy unscheduled
   // "Other" requests only occur when both subject and start are null.
@@ -188,6 +200,7 @@ export async function createBookingCheckout(
 
 export async function createPackageCheckout(packageId: string, baseUrl: string): Promise<StartResult> {
   const { supabase, user } = await authed();
+  await assertNotGuideApplicant(user.id);
 
   const { data, error } = await supabase.rpc("purchase_package", { p_package_id: packageId });
   if (error) throw new Error(error.message);

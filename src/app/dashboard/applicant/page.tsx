@@ -8,7 +8,7 @@ import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
-  title: "Guide application · Study Hall at Home",
+  title: "Guide application · Study Hall (at home)",
 };
 
 export default async function GuideApplicantPage() {

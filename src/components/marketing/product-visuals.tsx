@@ -242,7 +242,7 @@ export function ProductCallParentCard({ className = "", bordered = true }: CardP
         Step away without being out of reach.
       </p>
       <p className="mt-2 text-sm leading-6 text-ink-500">
-        If your child needs you, their Guide can use Call Parent. Study Hall at Home contacts your
+        If your child needs you, their Guide can use Call Parent. Study Hall (at home) contacts your
         phone — your number stays private.
       </p>
       <div className="mt-4 flex items-center gap-3 rounded-lg bg-ink-50 px-3.5 py-3">
@@ -267,7 +267,7 @@ export function HeroProductVisual() {
           <span className="h-1.5 w-1.5 rounded-full bg-ink-200" aria-hidden />
           <span className="h-1.5 w-1.5 rounded-full bg-ink-200" aria-hidden />
           <span className="h-1.5 w-1.5 rounded-full bg-ink-200" aria-hidden />
-          <p className="ml-2 text-[11px] font-medium text-ink-400">Study Hall at Home</p>
+          <p className="ml-2 text-[11px] font-medium text-ink-400">Study Hall (at home)</p>
         </div>
 
         <div className="border-b border-ink-100 px-4 py-4 sm:px-5 sm:py-5">
