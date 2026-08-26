@@ -262,7 +262,46 @@ export async function notifyBookingConfirmed(bookingId: string) {
       }),
     });
   }
+
+  // Prepaid balance alerts — only after package-funded bookings, once per booking.
+  if (funding === "package" && b.account_id) {
+    await maybeNotifyPackageBalanceAfterBooking(service, b.account_id, bookingId);
+  }
+
   return { status: "ok" };
+}
+
+/** Warn once per booking when prepaid minutes hit zero or fall below one hour. */
+async function maybeNotifyPackageBalanceAfterBooking(
+  service: SupabaseClient,
+  accountId: string,
+  bookingId: string,
+): Promise<void> {
+  try {
+    const { data: bal } = await service.rpc("get_package_minutes", { p_account: accountId });
+    const minutes = typeof bal === "number" ? bal : 0;
+    if (minutes <= 0) {
+      await deliver({
+        key: `package-depleted-after:${bookingId}`,
+        type: "package_balance_depleted",
+        accountId,
+        bookingId,
+        rendered: T.packageBalanceDepleted({ appUrl: APP_URL }),
+      });
+      return;
+    }
+    if (minutes < 60) {
+      await deliver({
+        key: `package-low-after:${bookingId}`,
+        type: "package_balance_low",
+        accountId,
+        bookingId,
+        rendered: T.packageBalanceLow({ balanceMinutes: minutes, appUrl: APP_URL }),
+      });
+    }
+  } catch {
+    /* best-effort */
+  }
 }
 
 export async function notifyPackagePurchased(paymentId: string) {
@@ -513,6 +552,25 @@ export async function notifyWelcome(accountId: string, name?: string | null) {
     type: "welcome",
     accountId,
     rendered: T.welcome({ name: firstName(name), appUrl: `${APP_URL}/dashboard` }),
+  });
+}
+
+/** Positive account-credit grant (admin adjustment). Idempotent per ledger reference. */
+export async function notifyAccountCreditApplied(
+  accountId: string,
+  amountCents: number,
+  opts: { reason?: string | null; reference: string },
+) {
+  if (!accountId || !(amountCents > 0) || !opts.reference) return { status: "skipped" };
+  return deliver({
+    key: `credit-applied:${opts.reference}`,
+    type: "account_credit_applied",
+    accountId,
+    rendered: T.accountCreditApplied({
+      amountCents,
+      reason: opts.reason ?? null,
+      appUrl: `${APP_URL}/dashboard/student`,
+    }),
   });
 }
 

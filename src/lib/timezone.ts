@@ -5,6 +5,15 @@
  * timestamp as the source of truth.
  */
 
+export {
+  formatAdminSessionWhen,
+  formatDayHeading,
+  formatInTz,
+  formatTime,
+  isValidTimezone,
+  tzAbbreviation,
+} from "./timezone-format.mjs";
+
 /** A curated list of IANA timezones offered in selects (US + Africa focus). */
 export const COMMON_TIMEZONES: { value: string; label: string }[] = [
   { value: "America/New_York", label: "Eastern (New York)" },
@@ -23,15 +32,6 @@ export const COMMON_TIMEZONES: { value: string; label: string }[] = [
   { value: "UTC", label: "UTC" },
 ];
 
-export function isValidTimezone(tz: string): boolean {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /** The viewer's own IANA timezone (client-side). */
 export function browserTimezone(): string {
   try {
@@ -39,34 +39,6 @@ export function browserTimezone(): string {
   } catch {
     return "America/Chicago";
   }
-}
-
-/** Format a UTC ISO instant in a given timezone. */
-export function formatInTz(
-  iso: string,
-  tz: string,
-  opts: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" },
-): string {
-  return new Intl.DateTimeFormat("en-US", { timeZone: tz, ...opts }).format(new Date(iso));
-}
-
-/** Short timezone label, e.g. "CST" / "WAT", for the given instant + zone. */
-export function tzAbbreviation(iso: string, tz: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
-    timeZoneName: "short",
-  }).formatToParts(new Date(iso));
-  return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
-}
-
-/** e.g. "Mon, Aug 24" in the given timezone (for grouping slots by day). */
-export function formatDayHeading(iso: string, tz: string): string {
-  return formatInTz(iso, tz, { weekday: "short", month: "short", day: "numeric" });
-}
-
-/** e.g. "5:30 PM" in the given timezone. */
-export function formatTime(iso: string, tz: string): string {
-  return formatInTz(iso, tz, { hour: "numeric", minute: "2-digit" });
 }
 
 /**

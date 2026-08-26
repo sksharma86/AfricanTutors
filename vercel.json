@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/recording-retention",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/admin/cron/release-expired",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

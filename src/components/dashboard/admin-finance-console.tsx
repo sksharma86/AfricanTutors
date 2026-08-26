@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { AdminWhen } from "@/components/dashboard/admin-when";
 import { Button } from "@/components/ui/button";
 import { formatCents } from "@/lib/pricing";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -250,7 +251,15 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
               <tr key={e.id}>
                 <td className="py-2 pr-3">{e.status === "earned" || e.status === "adjusted" || e.status === "pending" ? <input type="checkbox" checked={selected.has(e.id)} onChange={() => toggle(e.id)} /> : null}</td>
                 <td className="py-2 pr-3 text-ink-800">{e.tutor_name}</td>
-                <td className="py-2 pr-3 text-ink-600">{e.subject ?? "—"}{e.when ? ` · ${new Date(e.when).toLocaleDateString()}` : ""}</td>
+                <td className="py-2 pr-3 text-ink-600">
+                  {e.subject ?? "—"}
+                  {e.when ? (
+                    <>
+                      {" · "}
+                      <AdminWhen iso={e.when} className="inline-block align-baseline" />
+                    </>
+                  ) : null}
+                </td>
                 <td className="py-2 pr-3 text-ink-600">{e.duration_minutes}</td>
                 <td className="py-2 pr-3 text-ink-600">{formatCents(e.rate_cents_per_hour)}/hr</td>
                 <td className="py-2 pr-3 font-medium text-ink-900">{formatCents(e.amount_cents)}{e.adjusted_from_cents != null ? <span className="ml-1 text-xs text-ink-400 line-through">{formatCents(e.adjusted_from_cents)}</span> : null}</td>
@@ -287,7 +296,11 @@ function DisputesTab({ rows, payments, onOk, onErr }: { rows: DisputeRow[]; paym
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-medium text-ink-900">{d.subject ?? "Session"} · {d.category}</p>
-                <p className="text-xs text-ink-500">{d.ref ? `Ref ${d.ref} · ` : ""}{d.when ? new Date(d.when).toLocaleString() : ""}{d.tutor_name ? ` · Guide ${d.tutor_name}` : ""}</p>
+                <p className="text-xs text-ink-500">
+                  {d.ref ? `Ref ${d.ref} · ` : ""}
+                  {d.when ? <AdminWhen iso={d.when} className="inline-block align-baseline" /> : null}
+                  {d.tutor_name ? ` · Guide ${d.tutor_name}` : ""}
+                </p>
                 {d.complaint ? <p className="mt-1 text-sm text-ink-600">“{d.complaint}”</p> : null}
                 <RecordingStatus recordings={d.recordings ?? []} onErr={onErr} />
               </div>
@@ -446,9 +459,15 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
     const cents = Math.round(parseFloat(val) * 100);
     if (!Number.isFinite(cents) || cents === 0) return onErr("Invalid amount.");
     const reason = window.prompt("Reason:") || "admin adjustment";
-    const { error } = await supabase.rpc("admin_adjust_dollar_credit", { p_account: accountId.trim(), p_amount_cents: cents, p_reason: reason, p_reference: `adj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` });
-    if (error) return onErr(error.message.replace(/^.*:\s*/, ""));
-    onOk("Credit adjusted."); load();
+    const res = await fetch("/api/admin/adjust-balance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "credit", accountId: accountId.trim(), amountCents: cents, reason }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) return onErr(data?.error ?? "Could not adjust credit.");
+    onOk(cents > 0 ? "Credit adjusted (parent notified)." : "Credit adjusted.");
+    load();
   }
   async function adjustMinutes() {
     const val = window.prompt("Minute adjustment (negative to deduct):");
@@ -456,9 +475,15 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
     const m = parseInt(val, 10);
     if (!Number.isInteger(m) || m === 0) return onErr("Invalid amount.");
     const reason = window.prompt("Reason:") || "admin adjustment";
-    const { error } = await supabase.rpc("admin_adjust_package_minutes", { p_account: accountId.trim(), p_minutes: m, p_reason: reason, p_reference: `adj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` });
-    if (error) return onErr(error.message.replace(/^.*:\s*/, ""));
-    onOk("Minutes adjusted."); load();
+    const res = await fetch("/api/admin/adjust-balance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "minutes", accountId: accountId.trim(), minutes: m, reason }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) return onErr(data?.error ?? "Could not adjust minutes.");
+    onOk("Minutes adjusted.");
+    load();
   }
 
   return (

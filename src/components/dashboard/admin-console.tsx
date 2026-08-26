@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { AdminWhen } from "@/components/dashboard/admin-when";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
-import { formatDayHeading, formatTime } from "@/lib/timezone";
 
 export interface AdminTutor {
   profile_id: string;
@@ -15,6 +15,8 @@ export interface AdminBooking {
   subject_name: string | null;
   other_subject_text: string | null;
   student_first_name: string | null;
+  /** Child / family IANA timezone for secondary display. */
+  student_timezone: string | null;
   tutor_display_name: string | null;
   scheduled_start: string | null;
   duration_minutes: number | null;
@@ -175,7 +177,7 @@ export function AdminConsole({
                 <th className="py-2 pr-4">Child</th>
                 <th className="py-2 pr-4">Session</th>
                 <th className="py-2 pr-4">Guide</th>
-                <th className="py-2 pr-4">When (UTC)</th>
+                <th className="py-2 pr-4">When</th>
                 <th className="py-2 pr-4">Len</th>
                 <th className="py-2 pr-4">Type</th>
                 <th className="py-2 pr-4">Status</th>
@@ -195,10 +197,8 @@ export function AdminConsole({
                     <td className="py-2.5 pr-4 text-ink-800">{b.student_first_name ?? "—"}</td>
                     <td className="py-2.5 pr-4 text-ink-800">Study Hall</td>
                     <td className="py-2.5 pr-4 text-ink-600">{b.tutor_display_name ?? "unassigned"}</td>
-                    <td className="py-2.5 pr-4 text-ink-600">
-                      {b.scheduled_start
-                        ? `${formatDayHeading(b.scheduled_start, "UTC")} ${formatTime(b.scheduled_start, "UTC")}`
-                        : "—"}
+                    <td className="py-2.5 pr-4">
+                      <AdminWhen iso={b.scheduled_start} familyTz={b.student_timezone} />
                     </td>
                     <td className="py-2.5 pr-4 text-ink-600">{b.duration_minutes ?? "—"}</td>
                     <td className="py-2.5 pr-4">
