@@ -113,7 +113,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall at Home · Live session</p>
+          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
           <p className="mt-1 text-sm text-ink-300">
             {isGuide ? "Supervising" : "Guide"}: {info.counterpart ?? "—"}

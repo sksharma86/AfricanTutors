@@ -26,10 +26,12 @@ export function PricingSection({
   packages,
   withHeader = true,
   ctaHref = "/signup",
+  ctaLabel = FREE_TRIAL_CTA,
 }: {
   packages: PublicPackage[];
   withHeader?: boolean;
   ctaHref?: string;
+  ctaLabel?: string;
 }) {
   const sorted = [...packages].sort((a, b) => a.minutes - b.minutes);
 
@@ -128,8 +130,8 @@ export function PricingSection({
               Pricing questions
             </Link>
           </p>
-          <TrackCta href={ctaHref} cta={FREE_TRIAL_CTA} location="pricing" variant="primary" size="lg">
-            {FREE_TRIAL_CTA}
+          <TrackCta href={ctaHref} cta={ctaLabel} location="pricing" variant="primary" size="lg">
+            {ctaLabel}
           </TrackCta>
         </div>
       </Container>

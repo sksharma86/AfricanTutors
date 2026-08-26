@@ -76,11 +76,8 @@ export async function GET(request: NextRequest) {
   const role = (profile?.role ?? "student") as Role;
   const home = await resolvePostAuthHome(user.id, role);
 
-  // Honor safe next only when it matches the user's home area (or dashboard index).
-  const dest =
-    next === "/dashboard" || next.startsWith(home) || next.startsWith("/dashboard/")
-      ? home
-      : home;
-
-  return NextResponse.redirect(new URL(dest, origin));
+  // Always land on the role-appropriate home after confirm/login exchange.
+  // Avoid the marketing homepage and avoid ambiguous "confirmed" with no next step.
+  void next;
+  return NextResponse.redirect(new URL(home, origin));
 }

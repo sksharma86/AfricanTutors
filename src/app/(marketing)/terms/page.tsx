@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Study Hall at Home Terms of Service.",
+  description: "Study Hall (at home) Terms of Service.",
   alternates: { canonical: "/terms" },
 };
 

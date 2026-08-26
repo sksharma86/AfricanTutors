@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Study Hall at Home Privacy Policy.",
+  description: "Study Hall (at home) Privacy Policy.",
   alternates: { canonical: "/privacy" },
 };
 

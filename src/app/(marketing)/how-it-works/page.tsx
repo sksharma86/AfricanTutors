@@ -28,7 +28,7 @@ export default function HowItWorksPage() {
         <div className="max-w-2xl border-t border-ink-100 pt-10">
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink-900">Fully managed</h2>
           <p className="mt-3 text-[15px] leading-7 text-ink-500">
-            Scheduling, sessions, and payments run through Study Hall at Home. Every Guide is
+            Scheduling, sessions, and payments run through Study Hall (at home). Every Guide is
             recruited, carefully vetted, and approved — you’re never left to find someone on your
             own.
           </p>

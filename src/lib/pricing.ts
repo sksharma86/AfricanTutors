@@ -1,5 +1,5 @@
 /**
- * Customer-facing pricing for Study Hall at Home.
+ * Customer-facing pricing for Study Hall (at home).
  *
  * IMPORTANT: This module holds ONLY customer-facing pricing. Never place Guide
  * compensation or internal unit economics here (or anywhere shipped to the

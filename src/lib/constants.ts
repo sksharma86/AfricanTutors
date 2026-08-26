@@ -1,4 +1,4 @@
-export const SITE_NAME = "Study Hall at Home";
+export const SITE_NAME = "Study Hall (at home)";
 
 export const SITE_DESCRIPTION =
   "Live online Study Hall for families. A highly vetted Guide keeps your child focused while they do their own homework. First 60 minutes free. As low as $9/hour.";

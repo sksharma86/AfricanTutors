@@ -142,7 +142,12 @@ function RecordingBlock({
   }
 
   if (recording.status !== "completed") {
-    return null;
+    return (
+      <div className="mt-4 border-t border-ink-100 pt-3">
+        <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
+        <p className="mt-0.5 text-sm text-ink-600">Recording is processing — check back soon.</p>
+      </div>
+    );
   }
 
   const until = formatAvailableUntil(recording.retention_until, timezone);

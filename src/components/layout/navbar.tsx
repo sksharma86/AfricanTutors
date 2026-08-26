@@ -46,7 +46,7 @@ export async function Navbar() {
               </LinkButton>
               {showParentBookCta ? (
                 <LinkButton href="/dashboard/student/book" variant="primary" size="sm">
-                  Book a session
+                  Book a Study Hall
                 </LinkButton>
               ) : null}
             </>

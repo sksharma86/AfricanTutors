@@ -32,7 +32,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
         return;
       }
       setSaved(data.phone ?? null);
-      setNote("Saved. We’ll only use this if your child needs you during Study Hall.");
+      setNote("Saved. We’ll only use this for Call Parent if your child needs you during Study Hall.");
       router.refresh();
     } finally {
       setBusy(false);
@@ -42,10 +42,11 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
 
   return (
     <div className="rounded-xl border border-ink-100 bg-white p-4 sm:p-5">
-      <p className="text-sm font-medium text-ink-900">Phone number</p>
+      <p className="text-sm font-medium text-ink-900">Phone number for Call Parent</p>
       <p className="mt-1.5 text-sm leading-6 text-ink-500">
-        We use your number so we can reach you if your child needs you during a Study Hall session.
-        Your number is never shared with Guides. You don’t need to keep this portal open.
+        Study Hall (at home) needs your phone so we can reach you if a Guide uses Call Parent during a session —
+        for example if your child needs you. Your number is never shared with Guides, and we do not sell or release
+        it to third parties. You don’t need to keep this portal open.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <label className="sr-only" htmlFor="parent-phone">

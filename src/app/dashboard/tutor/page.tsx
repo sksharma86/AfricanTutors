@@ -18,7 +18,7 @@ import { tutorTimezone } from "@/lib/tutor-schedule.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
-export const metadata: Metadata = { title: "Guide Dashboard · Study Hall at Home" };
+export const metadata: Metadata = { title: "Guide Dashboard · Study Hall (at home)" };
 
 interface GuideBooking {
   id: string;
@@ -376,7 +376,7 @@ export default async function GuideDashboardPage() {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall at Home.</p>
+          <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall (at home).</p>
         </section>
       ) : null}
 

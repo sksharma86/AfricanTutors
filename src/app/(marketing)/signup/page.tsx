@@ -6,7 +6,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
   title: "Sign Up",
-  description: "Create your Study Hall at Home account.",
+  description: "Create your Study Hall (at home) account.",
 };
 
 export default function SignupPage() {

@@ -272,7 +272,13 @@ export default async function StudentDashboardPage() {
         whenLabel={whenLabelOf(b)}
         durationLabel={b.duration_minutes ? formatDuration(b.duration_minutes) : undefined}
         personLabel={b.students?.full_name}
-        tutorLabel={b.tutor_display_name ? `Guide: ${b.tutor_display_name}` : undefined}
+        tutorLabel={
+          b.tutor_display_name
+            ? `Guide: ${b.tutor_display_name}`
+            : b.status === "confirmed" || b.status === "pending"
+              ? "Guide: Matching an available Guide"
+              : undefined
+        }
         focus={!opts.history && b.request_note ? b.request_note : undefined}
         statusLabel={status.label}
         statusTone={status.tone as StatusTone}
@@ -334,7 +340,8 @@ export default async function StudentDashboardPage() {
             <a href="#account" className="font-medium text-ink-800 underline-offset-4 hover:underline">
               Account
             </a>{" "}
-            so we can reach you if your child needs you during Study Hall. Your number is never shared with Guides.
+            so Study Hall (at home) can reach you if a Guide uses Call Parent during a session. Your number is never
+            shown to Guides and is not sold or shared with third parties.
           </section>
         ) : null}
 
@@ -346,7 +353,7 @@ export default async function StudentDashboardPage() {
           ) : (
             <EmptyState
               title="No upcoming Study Hall"
-              description="Book a session whenever you’re ready — homework gets done, you get your evening back."
+              description="Book a Study Hall whenever you’re ready — homework gets done, you get your evening back."
               actionHref="/dashboard/student/book"
               actionLabel="Book a Study Hall"
               icon={

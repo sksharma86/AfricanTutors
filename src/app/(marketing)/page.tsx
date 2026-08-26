@@ -11,6 +11,7 @@ import { TrustSafety } from "@/components/marketing/trust-safety";
 import { WhyStudyHall } from "@/components/marketing/why-african-tutors";
 import { getCurrentUser } from "@/lib/auth";
 import { FAQ_ITEMS } from "@/lib/faq";
+import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { getPublicPackages } from "@/lib/marketing";
 import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA } from "@/lib/pricing";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 const HOME_FAQ = FAQ_ITEMS.filter((f) =>
   [
-    "What is Study Hall at Home?",
+    "What is Study Hall (at home)?",
     "Who are the Guides?",
     "How much does it cost?",
     "Is the first session really free?",
@@ -35,12 +36,15 @@ const HOME_FAQ = FAQ_ITEMS.filter((f) =>
 
 export default async function HomePage() {
   const [user, packages] = await Promise.all([getCurrentUser(), getPublicPackages()]);
+  const applicant = user?.role === "student" ? await getGuideApplicantInfo(user.id) : null;
 
-  const primary = user
-    ? user.role === "student"
-      ? { href: "/dashboard/student/book", label: "Book a session" }
-      : { href: DASHBOARD_PATH_BY_ROLE[user.role], label: "Go to dashboard" }
-    : { href: "/signup", label: FREE_TRIAL_CTA };
+  const primary = !user
+    ? { href: "/signup", label: FREE_TRIAL_CTA }
+    : applicant
+      ? { href: "/dashboard/applicant", label: "View application status" }
+      : user.role === "student"
+        ? { href: "/dashboard/student/book", label: "Book a Study Hall" }
+        : { href: DASHBOARD_PATH_BY_ROLE[user.role], label: "Go to dashboard" };
 
   return (
     <div className="mkt-atmosphere">
@@ -49,7 +53,7 @@ export default async function HomePage() {
       <Steps />
       <ProductShowcase />
       <WhyStudyHall />
-      <PricingSection packages={packages} ctaHref={primary.href} />
+      <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />
       <Faq eyebrow="FAQ" title="Quick answers." items={HOME_FAQ} />
       <CtaSection

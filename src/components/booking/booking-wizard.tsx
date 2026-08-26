@@ -88,6 +88,8 @@ export function BookingWizard({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+  /** Collapse long 21-day strips so parents aren’t trapped in endless horizontal scroll. */
+  const [showAllDates, setShowAllDates] = useState(false);
 
   const [confirmation, setConfirmation] = useState<{
     ref: string;
@@ -197,6 +199,7 @@ export function BookingWizard({
     setSlots([]);
     setSelectedSlot(null);
     setSelectedDayKey(null);
+    setShowAllDates(false);
     const from = new Date(Date.now() + MIN_BOOKING_NOTICE_MINUTES * 60000).toISOString();
     const to = new Date(Date.now() + BOOKING_HORIZON_DAYS * 86400000).toISOString();
     const { data, error: e } = await supabase.rpc("get_available_slots", {
@@ -314,6 +317,10 @@ export function BookingWizard({
     if (!activeDayKey) return [];
     return slotsByDay.find(([k]) => k === activeDayKey)?.[1] ?? [];
   }, [slotsByDay, activeDayKey]);
+
+  const DATE_STRIP_INITIAL = 7;
+  const visibleDays = showAllDates ? slotsByDay : slotsByDay.slice(0, DATE_STRIP_INITIAL);
+  const hasMoreDates = slotsByDay.length > DATE_STRIP_INITIAL;
 
   // ---- rendering helpers ----
   const card =
@@ -565,7 +572,7 @@ export function BookingWizard({
         </div>
       ) : null}
 
-      {/* STEP 3: date & time — day strip + times (no nested all-days scroll) */}
+      {/* STEP 3: date & time — compact day strip + times (no nested page scroll trap) */}
       {step === "time" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a date &amp; time</h2>
@@ -582,13 +589,19 @@ export function BookingWizard({
           ) : (
             <div className="mt-5 space-y-5">
               <div>
-                <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Date</p>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Date</p>
+                  {visibleDays.length > 3 ? (
+                    <p className="text-xs text-ink-400">Scroll sideways for more dates</p>
+                  ) : null}
+                </div>
+                {/* Visible scrollbar so parents can discover horizontal scroll without trapping the page. */}
                 <div
-                  className="mt-2 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="mt-2 flex gap-2 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-gutter:stable]"
                   role="listbox"
                   aria-label="Available dates"
                 >
-                  {slotsByDay.map(([day, isos]) => {
+                  {visibleDays.map(([day, isos]) => {
                     const active = day === activeDayKey;
                     return (
                       <button
@@ -614,6 +627,17 @@ export function BookingWizard({
                     );
                   })}
                 </div>
+                {hasMoreDates ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllDates((v) => !v)}
+                    className="mt-2 text-sm font-medium text-ink-700 underline-offset-4 hover:underline"
+                  >
+                    {showAllDates
+                      ? "Show fewer dates"
+                      : `Show more dates (${slotsByDay.length - DATE_STRIP_INITIAL} more)`}
+                  </button>
+                ) : null}
               </div>
 
               <div>
@@ -637,13 +661,19 @@ export function BookingWizard({
               </div>
             </div>
           )}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => setStep("duration")}>
-              Back
-            </Button>
-            <Button onClick={() => setStep("confirm")} disabled={!selectedSlot}>
-              Continue
-            </Button>
+          {/* Sticky actions so Continue stays reachable without hunting outside a scroll area */}
+          <div className="sticky bottom-0 z-10 -mx-6 mt-6 border-t border-ink-100 bg-white/95 px-6 py-4 backdrop-blur sm:-mx-8 sm:px-8">
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" onClick={() => setStep("duration")}>
+                Back
+              </Button>
+              <Button onClick={() => setStep("confirm")} disabled={!selectedSlot} className="min-w-[8.5rem]">
+                Continue
+              </Button>
+            </div>
+            {!selectedSlot && slotsByDay.length > 0 ? (
+              <p className="mt-2 text-xs text-ink-400">Select a date and time, then tap Continue.</p>
+            ) : null}
           </div>
         </div>
       ) : null}

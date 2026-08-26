@@ -7,7 +7,7 @@ import { LinkButton } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Email confirmation",
-  description: "Confirm your Study Hall at Home account.",
+  description: "Confirm your Study Hall (at home) account.",
 };
 
 export default async function AuthConfirmedPage({
@@ -26,8 +26,8 @@ export default async function AuthConfirmedPage({
         title={expired ? "This confirmation link has expired" : "This confirmation link is no longer valid"}
         description={
           expired
-            ? "Request a new confirmation email, or sign in if you already confirmed your account."
-            : "The link may have already been used, or it isn’t valid anymore. You can request a new email or sign in."
+            ? "Request a new confirmation email below, then check your inbox. If you already confirmed, sign in to open your dashboard."
+            : "The link may have already been used, or it isn’t valid anymore. Request a new confirmation email or sign in."
         }
         footer={
           <>
@@ -52,7 +52,7 @@ export default async function AuthConfirmedPage({
     return (
       <AuthCard
         title="Email confirmed"
-        description="Your email is confirmed. Sign in to continue to your Study Hall account."
+        description="Your Study Hall (at home) account is ready. Sign in to open your parent dashboard."
         footer={
           <>
             Need an account?{" "}
@@ -69,11 +69,11 @@ export default async function AuthConfirmedPage({
     );
   }
 
-  // Default / unknown — point people to sign in rather than the homepage.
+  // Default / unknown — never dump people on the marketing homepage.
   return (
     <AuthCard
       title="Confirm your email"
-      description="Check your inbox for a confirmation link from Study Hall at Home. After you confirm, you’ll be signed in automatically when possible."
+      description="Check your inbox for a confirmation link from Study Hall (at home). After you confirm, you’ll be signed in automatically when possible. If not, you’ll see a clear Sign in step."
       footer={
         <>
           Already confirmed?{" "}

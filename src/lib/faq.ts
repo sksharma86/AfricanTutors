@@ -12,7 +12,7 @@ export interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    q: "What is Study Hall at Home?",
+    q: "What is Study Hall (at home)?",
     a: "Live online Study Hall for kids. A highly vetted Guide stays with your child on video while they do their own homework — supervision, focus, and accountability, not tutoring.",
   },
   {
@@ -21,7 +21,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Where do Guides work from?",
-    a: "Guides work remotely from Kenya. They’re carefully vetted and trained for Study Hall at Home. Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
+    a: "Guides work remotely from Kenya. They’re carefully vetted and trained for Study Hall (at home). Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
   },
   {
     q: "How much does it cost?",
@@ -45,7 +45,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "What if my child needs me during Study Hall?",
-    a: "Their Guide can use Call Parent. Study Hall at Home contacts your phone. You don’t need to keep an app or portal open — and Guides never see your private number.",
+    a: "Their Guide can use Call Parent. Study Hall (at home) contacts your phone. You don’t need to keep an app or portal open — and Guides never see your private number.",
   },
   {
     q: "Can I book for more than one child?",
@@ -69,7 +69,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How are Guides approved?",
-    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall at Home, and must be approved before working with families.",
+    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall (at home), and must be approved before working with families.",
   },
   {
     q: "What happens if I have a problem with a session?",

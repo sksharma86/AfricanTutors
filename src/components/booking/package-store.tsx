@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function PackageStore({
   packages: PackageRow[];
   creditCents: number;
 }) {
+  const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +71,8 @@ export function PackageStore({
     submittingRef.current = false;
     track(ANALYTICS_EVENTS.packagePurchaseCompleted, { minutes: pkg.minutes });
     setDone({ minutes: pkg.minutes });
+    // Credit-redeem path completes without Stripe redirect — refresh balance UI.
+    router.refresh();
   }
 
   if (done) {
@@ -85,7 +89,7 @@ export function PackageStore({
         </p>
         <div className="mt-6">
           <a href="/dashboard/student/book" className="font-medium text-gold-700 hover:underline">
-            Book a session →
+            Book a Study Hall →
           </a>
         </div>
       </Card>
