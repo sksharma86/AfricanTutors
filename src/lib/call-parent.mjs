@@ -28,10 +28,10 @@ export const ESCALATION_COOLDOWN_MS = 5 * 60 * 1000;
 
 /** Automated voice / SMS copy — no child or session details. */
 export const CALL_PARENT_VOICE_MESSAGE =
-  "Study Hall at Home needs your attention. Please check on your child now.";
+  "Study Hall (at home) needs your attention. Please check on your child now.";
 
 export const CALL_PARENT_SMS_MESSAGE =
-  "Study Hall at Home needs your attention. Please check on your child.";
+  "Study Hall (at home) needs your attention. Please check on your child.";
 
 /**
  * @param {string | null | undefined} value

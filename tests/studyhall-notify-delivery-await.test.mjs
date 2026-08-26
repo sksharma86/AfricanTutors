@@ -95,6 +95,8 @@ describe("Notify delivery hardening — await vs void (source)", () => {
     assert.doesNotMatch(transport, /console\.(info|error).*html/);
     // Must not interpolate the raw API key into log strings.
     assert.doesNotMatch(transport, /console\.(info|error)[^\n]*RESEND_API_KEY/);
+    // Temporary PR #39 diagnostic must stay removed after Resend diagnosis.
+    assert.doesNotMatch(transport, /\[email-config\]/);
   });
 
   it("pricing / payment semantics unchanged in checkout-service", () => {

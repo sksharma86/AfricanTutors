@@ -303,7 +303,7 @@ describe("Study Hall PR7 — telephony client (mocked fetch, no real calls)", ()
       assert.equal(callJson.sid, "CAtest123");
       assert.match(calls[0].body, /15559876543/);
       const decoded = decodeURIComponent(calls[0].body.replace(/\+/g, " "));
-      assert.match(decoded, /Study Hall at Home needs your attention/);
+      assert.match(decoded, /Study Hall \(at home\) needs your attention/);
       assert.doesNotMatch(decoded, /dashboard\/session|https?:\/\/app\./i);
 
       const smsBody = new URLSearchParams({

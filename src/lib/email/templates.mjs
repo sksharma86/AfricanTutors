@@ -1,16 +1,16 @@
 /**
- * Pure email templates for Study Hall at Home transactional email. No provider, no
+ * Pure email templates for Study Hall (at home) transactional email. No provider, no
  * DB, no secrets — each builder returns { subject, html, text } from already-
  * resolved SAFE data (first-name display identity only; never email/phone).
  *
- * Session links always point at the authenticated Study Hall at Home route
+ * Session links always point at the authenticated Study Hall (at home) route
  * (APP_URL/dashboard/session/<booking_id>), never a Daily room/token — the app
  * performs authorization and mints Daily access at click time.
  *
  * Plain ESM (+ .d.ts) so subjects/URLs/timezone rendering are unit-testable.
  */
 
-const BRAND = "Study Hall at Home";
+const BRAND = "Study Hall (at home)";
 
 export function formatMoney(cents) {
   const d = (cents ?? 0) / 100;
@@ -57,7 +57,7 @@ function layout(heading, paragraphsHtml, cta) {
     ${paragraphsHtml}
     ${button}
   </div>
-  <p style="color:#9ca3af;font-size:12px;margin-top:16px">You're receiving this because you have an ${BRAND} account. Sessions are conducted on-platform for your safety.</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:16px">You're receiving this because you have a ${BRAND} account. Sessions are conducted on-platform for your safety.</p>
 </div></body></html>`;
 }
 
@@ -165,7 +165,7 @@ export function reminder(ctx) {
   }
 
   const lines = [
-    `Study Hall at Home reminder: ${child}'s Study Hall starts at ${when}.`,
+    `${BRAND} reminder: ${child}'s Study Hall starts at ${when}.`,
     "Please have them ready at their workspace.",
     `Duration: ${hours}`,
     "The room opens 5 minutes before — join from your dashboard when it's time.",
@@ -253,14 +253,14 @@ export function disputeResolved(ctx) {
     ctx.restoredMinutes ? `Package minutes added: ${ctx.restoredMinutes}` : null,
     ctx.creditCents ? `Account credit added: ${formatMoney(ctx.creditCents)} (usable on future sessions).` : null,
     ctx.refundCents ? `Refund to your original payment method: ${formatMoney(ctx.refundCents)} (card/Stripe refund, not account credit).` : null,
-    "Thank you for helping us keep Study Hall at Home high quality.",
+    `Thank you for helping us keep ${BRAND} high quality.`,
   ];
   return { subject: "Update on your session concern", html: layout("Concern resolved", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
 export function tutorApproved(ctx) {
-  const lines = [`Hi ${ctx.name || "there"},`, "Congratulations — your Study Hall at Home Guide application has been approved. You can set your availability and you'll be matched to sessions."];
-  return { subject: "You're approved to Guide with Study Hall at Home", html: layout("You're approved!", lines.map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Set your availability" } : null), text: textJoin(lines) };
+  const lines = [`Hi ${ctx.name || "there"},`, `Congratulations — your ${BRAND} Guide application has been approved. You can set your availability and you'll be matched to sessions.`];
+  return { subject: `You're approved to Guide with ${BRAND}`, html: layout("You're approved!", lines.map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Set your availability" } : null), text: textJoin(lines) };
 }
 
 export function tutorNewSession(ctx) {
@@ -297,7 +297,7 @@ export function tutorRemoved(ctx) {
 
 export function adminAlert(ctx) {
   const lines = [ctx.summary || "An operational event needs attention.", ...(ctx.lines || [])];
-  return { subject: `[Ops] ${ctx.title || "Study Hall at Home alert"}`, html: layout(ctx.title || "Operational alert", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
+  return { subject: `[Ops] ${ctx.title || `${BRAND} alert`}`, html: layout(ctx.title || "Operational alert", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
 /** Guide: please submit the post-session report. */
