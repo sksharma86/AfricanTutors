@@ -5,7 +5,7 @@ import {
   type AvailabilityBlock,
   type ExceptionRow,
 } from "@/components/dashboard/availability-manager";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardShell, GUIDE_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSessionReport } from "@/components/dashboard/guide-session-report";
 import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request";
@@ -211,12 +211,7 @@ export default async function GuideDashboardPage() {
       role="tutor"
       title="Guide workspace"
       description="Your Study Hall assignments, earnings, and availability."
-      navItems={[
-        { label: "Study Halls", available: true },
-        { label: "Earnings", available: true },
-        { label: "Availability", available: true },
-        { label: "Messages", available: false },
-      ]}
+      navItems={GUIDE_PORTAL_NAV}
     >
       {profile?.status && profile.status !== "approved" ? (
         <div className="mb-6 rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm text-gold-800">
@@ -234,30 +229,50 @@ export default async function GuideDashboardPage() {
         </p>
       </section>
 
-      <section className="mb-8 grid gap-3 sm:grid-cols-4">
-        <div className="rounded-2xl border border-ink-100 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
-          <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
+      <section id="earnings" className="scroll-mt-24 mb-8 space-y-6">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
+          </div>
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalPaid)}</p>
+          </div>
+          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
+            <p className="text-xs uppercase tracking-wide text-gold-700">Outstanding</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-gold-800">{formatCents(outstanding)}</p>
+          </div>
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Your rate</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
+              {typeof profile?.comp_rate_cents_per_hour === "number"
+                ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
+                : "Not set"}
+            </p>
+            <p className="mt-0.5 text-[11px] text-ink-400">Set by admin · scales with session length</p>
+          </div>
         </div>
-        <div className="rounded-2xl border border-ink-100 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
-          <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalPaid)}</p>
-        </div>
-        <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
-          <p className="text-xs uppercase tracking-wide text-gold-700">Outstanding</p>
-          <p className="mt-1 font-display text-2xl font-semibold text-gold-800">{formatCents(outstanding)}</p>
-        </div>
-        <div className="rounded-2xl border border-ink-100 bg-white p-4">
-          <p className="text-xs uppercase tracking-wide text-ink-400">Your rate</p>
-          <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
-            {typeof profile?.comp_rate_cents_per_hour === "number"
-              ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
-              : "Not set"}
-          </p>
-          <p className="mt-0.5 text-[11px] text-ink-400">Set by admin · scales with session length</p>
-        </div>
+        {payouts.length > 0 ? (
+          <div>
+            <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Payout history</h3>
+            <div className="space-y-2">
+              {payouts.map((e, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-2.5 text-sm"
+                >
+                  <span className="text-ink-600">Paid {e.paid_at ? formatDayHeading(e.paid_at, tz) : ""}</span>
+                  <span className="font-medium text-ink-900">{formatCents(e.amount_cents)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall (at home).</p>
+          </div>
+        ) : null}
       </section>
 
+      <div id="study-halls" className="scroll-mt-24">
       {today.length > 0 ? (
         <section className="mb-8">
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Today&apos;s Study Halls</h3>
@@ -361,26 +376,9 @@ export default async function GuideDashboardPage() {
           </p>
         </section>
       ) : null}
+      </div>
 
-      {payouts.length > 0 ? (
-        <section className="mb-8">
-          <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Payout history</h3>
-          <div className="space-y-2">
-            {payouts.map((e, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-2.5 text-sm"
-              >
-                <span className="text-ink-600">Paid {e.paid_at ? formatDayHeading(e.paid_at, tz) : ""}</span>
-                <span className="font-medium text-ink-900">{formatCents(e.amount_cents)}</span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall (at home).</p>
-        </section>
-      ) : null}
-
-      <section>
+      <section id="availability" className="scroll-mt-24">
         <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Availability</h3>
         <p className="mb-3 text-sm text-ink-500">
           Keep continuous blocks open for the full Study Hall length parents book (1, 2, or 3 hours). Assignment never

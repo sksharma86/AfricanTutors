@@ -1,20 +1,21 @@
 import type { ReactNode } from "react";
 
+import {
+  DashboardSideNav,
+  type DashboardNavItem,
+} from "@/components/dashboard/dashboard-side-nav";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import type { Role } from "@/lib/roles";
+
+export type { DashboardNavItem };
 
 const ROLE_LABEL: Record<Role, string> = {
   student: "Parent",
   tutor: "Guide",
   admin: "Manager",
 };
-
-export interface DashboardNavItem {
-  label: string;
-  available: boolean;
-}
 
 export function DashboardShell({
   role,
@@ -35,8 +36,8 @@ export function DashboardShell({
   return (
     <div className="min-h-full bg-ink-50/50">
       <div className="border-b border-ink-100 bg-white">
-        <Container className="flex items-center justify-between py-5">
-          <div>
+        <Container className="flex items-center justify-between gap-4 py-5">
+          <div className="min-w-0">
             <Badge>{badgeLabel ?? `${ROLE_LABEL[role]} Dashboard`}</Badge>
             <h1 className="mt-2 font-display text-2xl font-semibold text-ink-900">{title}</h1>
             <p className="mt-1 text-sm text-ink-500">{description}</p>
@@ -45,29 +46,28 @@ export function DashboardShell({
         </Container>
       </div>
 
-      <Container className="grid gap-8 py-10 lg:grid-cols-[220px_1fr]">
-        <nav className="space-y-1">
-          {navItems.map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium ${
-                item.available
-                  ? "bg-ink-900 text-white"
-                  : "text-ink-400"
-              }`}
-            >
-              <span>{item.label}</span>
-              {!item.available ? (
-                <span className="rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-ink-500 uppercase">
-                  Soon
-                </span>
-              ) : null}
-            </div>
-          ))}
-        </nav>
+      <Container className="grid gap-6 py-8 sm:gap-8 sm:py-10 lg:grid-cols-[220px_1fr]">
+        <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+          <DashboardSideNav items={navItems} />
+        </aside>
 
-        <div>{children}</div>
+        <div className="min-w-0">{children}</div>
       </Container>
     </div>
   );
 }
+
+/** Shared Management portal destinations (admin + finance). */
+export const ADMIN_PORTAL_NAV: DashboardNavItem[] = [
+  { label: "Overview", href: "/dashboard/admin#overview" },
+  { label: "Guide Approvals", href: "/dashboard/admin#guide-approvals" },
+  { label: "Sessions", href: "/dashboard/admin#sessions" },
+  { label: "Finance", href: "/dashboard/admin/finance" },
+];
+
+/** Shared Guide workspace destinations. */
+export const GUIDE_PORTAL_NAV: DashboardNavItem[] = [
+  { label: "Study Halls", href: "/dashboard/tutor#study-halls" },
+  { label: "Earnings", href: "/dashboard/tutor#earnings" },
+  { label: "Availability", href: "/dashboard/tutor#availability" },
+];
