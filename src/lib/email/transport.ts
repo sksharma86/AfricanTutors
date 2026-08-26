@@ -28,6 +28,10 @@ export async function sendEmail(msg: {
 }): Promise<SendResult> {
   const type = msg.type || "untyped";
   if (!msg.to) return { status: "skipped", error: "no recipient" };
+  // TEMPORARY runtime diagnostic — remove after Production env diagnosis.
+  console.info(
+    `[email-config] configured=${Boolean(process.env.RESEND_API_KEY)} length=${(process.env.RESEND_API_KEY ?? "").length}`,
+  );
   if (!isEmailConfigured) {
     console.info(`[email:stub] type=${type} subject=${JSON.stringify(msg.subject)}`);
     return { status: "skipped", error: "provider not configured" };
