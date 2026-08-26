@@ -80,7 +80,11 @@ async function handle(request: NextRequest) {
       p_id: row.id,
       p_error: result.error ?? "deletion failed",
     });
-    void notifyRecordingDeletionFailure(row.id as string, result.error ?? "deletion failed");
+    try {
+      await notifyRecordingDeletionFailure(row.id as string, result.error ?? "deletion failed");
+    } catch {
+      /* best-effort */
+    }
     failed += 1;
   }
 

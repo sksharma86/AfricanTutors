@@ -71,7 +71,13 @@ async function deliver(opts: {
       await service.rpc("complete_email_delivery", { p_key: opts.key, p_status: "skipped", p_error: "no recipient email" });
       return { status: "skipped" };
     }
-    const result = await sendEmail({ to, subject: opts.rendered.subject, html: opts.rendered.html, text: opts.rendered.text });
+    const result = await sendEmail({
+      to,
+      subject: opts.rendered.subject,
+      html: opts.rendered.html,
+      text: opts.rendered.text,
+      type: opts.type,
+    });
     await service.rpc("complete_email_delivery", {
       p_key: opts.key,
       p_status: result.status,
@@ -308,7 +314,7 @@ export async function notifyCancellation(
   });
   // Parent SMS for immediate awareness (idempotent; skipped if no phone).
   if (b.account_id) {
-    void deliverParentSms({
+    await deliverParentSms({
       key: `cancellation-sms:${bookingId}`,
       type: "cancellation_sms",
       accountId: b.account_id,
@@ -418,7 +424,7 @@ export async function notifyReassignment(
   }
 
   if (recipients.managerExceptionAlert) {
-    void notifyAdminAlert(`guide-reassignment-failed:${bookingId}`, {
+    await notifyAdminAlert(`guide-reassignment-failed:${bookingId}`, {
       title: "Guide reassignment failed — session impacted",
       summary: `Booking ${bookingId} could not keep an assigned Guide; customer was notified.`,
       lines: [
@@ -547,7 +553,7 @@ export async function notifyReminder(bookingId: string, role: "customer" | "tuto
 
   // Parent 1h SMS (separate idempotency key). Missing phone → skipped, never fails booking.
   if (role === "customer" && kind === "1h" && b.account_id) {
-    void deliverParentSms({
+    await deliverParentSms({
       key: `reminder-1h-sms:${bookingId}`,
       type: "reminder_1h_sms",
       accountId: b.account_id,
@@ -599,7 +605,7 @@ export async function notifyGuideReportOverdue(bookingId: string) {
       appUrl: APP_URL,
     }),
   });
-  void notifyAdminAlert(`guide-report-overdue:${bookingId}`, {
+  await notifyAdminAlert(`guide-report-overdue:${bookingId}`, {
     title: "Guide report overdue",
     summary: `Booking ${bookingId} has no post-session report after the overdue window.`,
     lines: [

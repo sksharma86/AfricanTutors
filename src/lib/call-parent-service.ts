@@ -84,7 +84,11 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
       p_outcome: "not_configured",
       p_error_detail: "TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_NUMBER missing",
     });
-    void notifyCallParentFailure(escalationId, "telephony not configured");
+    try {
+      await notifyCallParentFailure(escalationId, "telephony not configured");
+    } catch {
+      /* best-effort admin alert */
+    }
     return resultOf(escalationId, "not_configured");
   }
 
@@ -101,7 +105,11 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
       p_outcome: "no_phone",
       p_error_detail: "parent has no phone_e164 on file",
     });
-    void notifyCallParentFailure(escalationId, "parent has no phone_e164 on file");
+    try {
+      await notifyCallParentFailure(escalationId, "parent has no phone_e164 on file");
+    } catch {
+      /* best-effort admin alert */
+    }
     return resultOf(escalationId, "unable_to_contact");
   }
 
@@ -209,7 +217,11 @@ async function deliverClaimedSmsFallback(
       p_error_detail: "parent has no phone_e164 on file at SMS fallback",
       p_sms_attempted: true,
     });
-    void notifyCallParentFailure(row.id, "parent has no phone_e164 on file at SMS fallback");
+    try {
+      await notifyCallParentFailure(row.id, "parent has no phone_e164 on file at SMS fallback");
+    } catch {
+      /* best-effort admin alert */
+    }
     return { ok: true, action: "sms_no_phone" };
   }
 
@@ -244,7 +256,11 @@ async function deliverClaimedSmsFallback(
     p_error_detail: sms.error ?? `sms fallback failed (${reasonTag})`,
     p_sms_attempted: true,
   });
-  void notifyCallParentFailure(row.id, sms.error ?? `sms fallback failed (${reasonTag})`);
+  try {
+    await notifyCallParentFailure(row.id, sms.error ?? `sms fallback failed (${reasonTag})`);
+  } catch {
+    /* best-effort admin alert */
+  }
   return { ok: true, action: "sms_failed" };
 }
 
@@ -285,10 +301,14 @@ async function sendSmsFallbackForEscalation(
     p_call_attempted: true,
     p_sms_attempted: true,
   });
-  void notifyCallParentFailure(
-    escalationId,
-    [callError, sms.error].filter(Boolean).join("; ") || "call and sms failed",
-  );
+  try {
+    await notifyCallParentFailure(
+      escalationId,
+      [callError, sms.error].filter(Boolean).join("; ") || "call and sms failed",
+    );
+  } catch {
+    /* best-effort admin alert */
+  }
   return resultOf(escalationId, "unable_to_contact");
 }
 

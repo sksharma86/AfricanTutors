@@ -106,7 +106,11 @@ export async function POST(request: NextRequest) {
     try {
       await supabase.rpc("record_recording_event", args);
       if (type === "recording.error") {
-        void notifyRecordingFailure(bookingId, (payload.error_msg as string) ?? "recording error");
+        try {
+          await notifyRecordingFailure(bookingId, (payload.error_msg as string) ?? "recording error");
+        } catch {
+          /* best-effort alert */
+        }
       }
     } catch {
       /* best-effort; recording is evidence only and never blocks anything */

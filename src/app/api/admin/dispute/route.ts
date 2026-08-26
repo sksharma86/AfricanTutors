@@ -95,12 +95,16 @@ export async function POST(request: NextRequest) {
   // Notify the customer (best-effort, idempotent).
   const { data: d } = await supabase.from("disputes").select("account_id").eq("id", body.disputeId).maybeSingle();
   if (d?.account_id) {
-    void notifyDisputeResolved(body.disputeId, d.account_id, {
-      resolution: body.resolution,
-      creditCents,
-      restoredMinutes: restoreMinutes,
-      refundCents: refundStripeId ? refundCents : 0,
-    });
+    try {
+      await notifyDisputeResolved(body.disputeId, d.account_id, {
+        resolution: body.resolution,
+        creditCents,
+        restoredMinutes: restoreMinutes,
+        refundCents: refundStripeId ? refundCents : 0,
+      });
+    } catch {
+      /* best-effort */
+    }
   }
   return NextResponse.json(data);
 }

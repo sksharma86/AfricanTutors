@@ -25,11 +25,15 @@ export async function POST(request: NextRequest) {
 
   const result = data as { status: string; early?: boolean; restored_minutes?: number; restored_credit_cents?: number };
   if (result.status === "cancelled") {
-    void notifyCancellation(body.bookingId, {
-      early: Boolean(result.early),
-      restoredMinutes: result.restored_minutes ?? null,
-      restoredCreditCents: result.restored_credit_cents ?? null,
-    });
+    try {
+      await notifyCancellation(body.bookingId, {
+        early: Boolean(result.early),
+        restoredMinutes: result.restored_minutes ?? null,
+        restoredCreditCents: result.restored_credit_cents ?? null,
+      });
+    } catch {
+      /* best-effort */
+    }
   }
   return NextResponse.json(result);
 }

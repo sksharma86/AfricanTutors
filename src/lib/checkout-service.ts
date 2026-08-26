@@ -98,9 +98,15 @@ export async function createBookingCheckout(
   };
 
   // Non-Stripe outcomes are already final in the DB transaction.
+  // Await notify so Vercel keeps the invocation alive until Resend dispatch
+  // finishes; never let email failure undo a committed booking.
   if (q.stripe_cents_due <= 0) {
     if (q.funding !== "request") {
-      void notifyBookingConfirmed(q.booking_id);
+      try {
+        await notifyBookingConfirmed(q.booking_id);
+      } catch {
+        /* best-effort */
+      }
     }
     return {
       status: q.funding === "request" ? "request" : "confirmed",
@@ -197,7 +203,11 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
   };
 
   if (q.stripe_cents_due <= 0) {
-    void notifyPackagePurchased(q.payment_id);
+    try {
+      await notifyPackagePurchased(q.payment_id);
+    } catch {
+      /* best-effort; package already credited */
+    }
     return {
       status: "completed",
       paymentId: q.payment_id,

@@ -316,11 +316,17 @@ describe("Study Hall PR8 — architecture source contracts", () => {
     assert.match(checkout, /stripe_cents_due <= 0/);
     assert.match(checkout, /funding !== "request"/);
     assert.match(checkout, /notifyPackagePurchased/);
+    // Launch fix: must await (not void) so Vercel keeps the invocation alive.
+    assert.match(checkout, /await\s+notifyBookingConfirmed/);
+    assert.match(checkout, /await\s+notifyPackagePurchased/);
+    assert.doesNotMatch(checkout, /void\s+notifyBookingConfirmed/);
+    assert.doesNotMatch(checkout, /void\s+notifyPackagePurchased/);
 
     const wh = read("src/app/api/stripe/webhook/route.ts");
     assert.match(wh, /notifyPackagePurchased/);
     assert.match(wh, /notifyBookingConfirmed/);
     assert.match(wh, /result\?\.status === "confirmed"/);
+    assert.match(wh, /await\s+notifyBookingConfirmed/);
   });
 
   it("Call Parent failure and recording.error hook admin alerts without changing PR7 core", () => {

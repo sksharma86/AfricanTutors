@@ -18,10 +18,18 @@ export interface SendResult {
   error?: string | null;
 }
 
-export async function sendEmail(msg: { to: string; subject: string; html: string; text: string }): Promise<SendResult> {
+export async function sendEmail(msg: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  /** Optional notification_type for ops logs (never the recipient address). */
+  type?: string;
+}): Promise<SendResult> {
+  const type = msg.type || "untyped";
   if (!msg.to) return { status: "skipped", error: "no recipient" };
   if (!isEmailConfigured) {
-    console.info(`[email:stub] to=${msg.to} subject=${JSON.stringify(msg.subject)}`);
+    console.info(`[email:stub] type=${type} subject=${JSON.stringify(msg.subject)}`);
     return { status: "skipped", error: "provider not configured" };
   }
   try {
@@ -32,11 +40,17 @@ export async function sendEmail(msg: { to: string; subject: string; html: string
     });
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      return { status: "failed", error: `resend ${res.status} ${detail.slice(0, 200)}` };
+      const err = `resend ${res.status} ${detail.slice(0, 200)}`;
+      console.error(`[email] failed type=${type} status=${res.status}`);
+      return { status: "failed", error: err };
     }
     const data = (await res.json().catch(() => ({}))) as { id?: string };
-    return { status: "sent", id: data.id ?? null };
+    const id = data.id ?? null;
+    console.info(`[email] sent type=${type}${id ? ` id=${id}` : ""}`);
+    return { status: "sent", id };
   } catch (e) {
-    return { status: "failed", error: e instanceof Error ? e.message : "send error" };
+    const err = e instanceof Error ? e.message : "send error";
+    console.error(`[email] failed type=${type} error=${err}`);
+    return { status: "failed", error: err };
   }
 }

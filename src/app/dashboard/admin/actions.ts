@@ -35,7 +35,7 @@ export async function approveTutorAction(formData: FormData) {
   // Best-effort, idempotent tutor-approved email (never blocks approval).
   try {
     const { data: p } = await getServiceSupabase().from("profiles").select("display_name").eq("id", profileId).maybeSingle();
-    void notifyTutorApproved(profileId, p?.display_name ?? null);
+    await notifyTutorApproved(profileId, p?.display_name ?? null);
   } catch {
     /* ignore */
   }
