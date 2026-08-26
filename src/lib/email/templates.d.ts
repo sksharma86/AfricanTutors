@@ -91,3 +91,10 @@ export function guideReportOverdue(ctx: {
   tz?: string | null;
   appUrl?: string | null;
 }): RenderedEmail;
+export function packageBalanceDepleted(ctx: { appUrl?: string | null }): RenderedEmail;
+export function packageBalanceLow(ctx: { balanceMinutes?: number | null; appUrl?: string | null }): RenderedEmail;
+export function accountCreditApplied(ctx: {
+  amountCents: number;
+  reason?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;

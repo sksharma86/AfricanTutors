@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AdminConsole, type AdminBooking, type AdminTutor } from "@/components/dashboard/admin-console";
+import { AdminWhen } from "@/components/dashboard/admin-when";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Button, LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
@@ -35,7 +36,7 @@ export default async function AdminDashboardPage() {
       supabase!
         .from("bookings")
         .select(
-          "id, public_reference, subject_name, other_subject_text, subject_id, student_first_name, tutor_display_name, scheduled_start, duration_minutes, status, is_free_trial, price_cents, payment_status",
+          "id, public_reference, subject_name, other_subject_text, subject_id, student_first_name, tutor_display_name, scheduled_start, duration_minutes, status, is_free_trial, price_cents, payment_status, students(timezone)",
         )
         .order("scheduled_start", { ascending: false, nullsFirst: false }),
       supabase!
@@ -171,7 +172,12 @@ export default async function AdminDashboardPage() {
                 </p>
                 <p className="text-xs text-ink-500">
                   Child {r.bookings?.student_first_name ?? "—"}
-                  {r.bookings?.scheduled_start ? ` · ${new Date(r.bookings.scheduled_start).toLocaleString()}` : ""}
+                  {r.bookings?.scheduled_start ? (
+                    <>
+                      {" · "}
+                      <AdminWhen iso={r.bookings.scheduled_start} className="inline-block align-baseline" />
+                    </>
+                  ) : null}
                 </p>
                 {r.reason ? <p className="mt-1 text-sm text-ink-600">Reason: {r.reason}</p> : null}
                 <p className="mt-1 text-xs text-ink-400">
@@ -204,11 +210,14 @@ export default async function AdminDashboardPage() {
                   {e.bookings?.student_first_name ?? "Child"} · Guide {e.bookings?.tutor_display_name ?? "—"}
                 </p>
                 <p className="text-xs text-ink-500">
-                  {new Date(e.created_at).toLocaleString()}
+                  <AdminWhen iso={e.created_at} className="inline-block align-baseline" />
                   {e.bookings?.public_reference ? ` · Ref ${e.bookings.public_reference}` : ""}
-                  {e.bookings?.scheduled_start
-                    ? ` · Session ${new Date(e.bookings.scheduled_start).toLocaleString()}`
-                    : ""}
+                  {e.bookings?.scheduled_start ? (
+                    <>
+                      {" · Session "}
+                      <AdminWhen iso={e.bookings.scheduled_start} className="inline-block align-baseline" />
+                    </>
+                  ) : null}
                 </p>
                 <p className="mt-1 text-sm text-ink-600">
                   Reason: {e.reason.replace(/_/g, " ")} · Status: {e.status}
@@ -245,7 +254,14 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <AdminConsole bookings={(bookings ?? []) as AdminBooking[]} />
+      <AdminConsole
+        bookings={((bookings ?? []) as unknown as (Omit<AdminBooking, "student_timezone"> & {
+          students: { timezone: string | null } | null;
+        })[]).map((b) => ({
+          ...b,
+          student_timezone: b.students?.timezone ?? null,
+        }))}
+      />
     </DashboardShell>
   );
 }

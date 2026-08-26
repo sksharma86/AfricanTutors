@@ -12,6 +12,10 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   GUIDE_REASSIGNMENT_FAILED: "guide_reassignment_failed",
   SESSION_REMINDER_1H: "session_reminder_1h",
   PACKAGE_PURCHASED: "package_purchased",
+  PACKAGE_BALANCE_LOW: "package_balance_low",
+  PACKAGE_BALANCE_DEPLETED: "package_balance_depleted",
+  ACCOUNT_CREDIT_APPLIED: "account_credit_applied",
+  WELCOME: "welcome",
   SESSION_REPORT_READY: "session_report_ready",
   GUIDE_ASSIGNMENT: "guide_assignment",
   GUIDE_SESSION_REMINDER: "guide_session_reminder",
@@ -27,6 +31,10 @@ export const CHANNEL_POLICY = Object.freeze({
   email: [
     "booking_confirmed",
     "package_purchased",
+    "package_balance_low",
+    "package_balance_depleted",
+    "account_credit_applied",
+    "welcome",
     "session_report_ready",
     "booking_cancelled",
     // Parent email only for failed/impacted reassignment (release), not successful swap.

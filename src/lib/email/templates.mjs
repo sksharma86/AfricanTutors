@@ -333,3 +333,45 @@ export function guideReportOverdue(ctx) {
     text: textJoin([...lines.filter(Boolean), "", dash]),
   };
 }
+
+/** Parent: prepaid minutes ran out after a booking. */
+export function packageBalanceDepleted(ctx) {
+  const lines = [
+    "Your prepaid Study Hall hours are used up.",
+    "Buy more hours anytime — they never expire and apply automatically when you book.",
+  ];
+  return {
+    subject: "Your prepaid Study Hall hours are used up",
+    html: layout("Prepaid hours used up", lines.map(p).join(""), ctx.appUrl ? { href: `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student/packages`, label: "Buy more hours" } : null),
+    text: textJoin([...lines, "", ctx.appUrl ? `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student/packages` : ""]),
+  };
+}
+
+/** Parent: prepaid minutes low (less than one standard hour left). */
+export function packageBalanceLow(ctx) {
+  const mins = typeof ctx.balanceMinutes === "number" ? ctx.balanceMinutes : 0;
+  const label = mins <= 0 ? "0 minutes" : mins === 60 ? "1 hour" : `${mins} minutes`;
+  const lines = [
+    `Your prepaid Study Hall balance is running low (${label} left).`,
+    "Buy more hours anytime so your next booking stays covered.",
+  ];
+  return {
+    subject: "Your prepaid Study Hall balance is low",
+    html: layout("Prepaid balance low", lines.map(p).join(""), ctx.appUrl ? { href: `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student/packages`, label: "Buy more hours" } : null),
+    text: textJoin([...lines, "", ctx.appUrl ? `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student/packages` : ""]),
+  };
+}
+
+/** Parent: admin (or system) applied account credit. */
+export function accountCreditApplied(ctx) {
+  const lines = [
+    `We've added ${formatMoney(ctx.amountCents)} account credit to your ${BRAND} account.`,
+    ctx.reason ? `Note: ${ctx.reason}` : null,
+    "Credit applies automatically toward future Study Hall bookings.",
+  ];
+  return {
+    subject: "Account credit added",
+    html: layout("Account credit added", lines.filter(Boolean).map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "View dashboard" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}

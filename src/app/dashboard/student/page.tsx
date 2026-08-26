@@ -74,6 +74,14 @@ export default async function StudentDashboardPage() {
   }
   const supabase = await createSupabaseServerClient();
 
+  // One-time parent welcome (idempotent key welcome:<accountId>). Not sent to Guides/applicants.
+  try {
+    const { notifyWelcome } = await import("@/lib/notify");
+    await notifyWelcome(user.id, user.displayName ?? user.email ?? null);
+  } catch {
+    /* best-effort — never block dashboard */
+  }
+
   const { data: userData } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   const uid = userData?.user?.id ?? null;
 
