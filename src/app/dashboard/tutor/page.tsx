@@ -191,6 +191,9 @@ export default async function GuideDashboardPage() {
 
   const { upcoming, past } = partitionBookings(bookings);
   const { today, later: laterUpcoming } = splitToday(upcoming);
+  const nextAssignment = today[0] ?? laterUpcoming[0] ?? null;
+  const restToday = today.filter((b) => b.id !== nextAssignment?.id);
+  const restLater = laterUpcoming.filter((b) => b.id !== nextAssignment?.id);
   const needsReport = reportsReady
     ? past.filter((b) => b.status === "completed" && !reportedBookings.has(b.id))
     : [];
@@ -229,55 +232,19 @@ export default async function GuideDashboardPage() {
         </p>
       </section>
 
-      <section id="earnings" className="scroll-mt-24 mb-8 space-y-6">
-        <div className="grid gap-3 sm:grid-cols-4">
-          <div className="rounded-2xl border border-ink-100 bg-white p-4">
-            <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
-          </div>
-          <div className="rounded-2xl border border-ink-100 bg-white p-4">
-            <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalPaid)}</p>
-          </div>
-          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
-            <p className="text-xs uppercase tracking-wide text-gold-700">Outstanding</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-gold-800">{formatCents(outstanding)}</p>
-          </div>
-          <div className="rounded-2xl border border-ink-100 bg-white p-4">
-            <p className="text-xs uppercase tracking-wide text-ink-400">Your rate</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
-              {typeof profile?.comp_rate_cents_per_hour === "number"
-                ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
-                : "Not set"}
-            </p>
-            <p className="mt-0.5 text-[11px] text-ink-400">Set by admin · scales with session length</p>
-          </div>
-        </div>
-        {payouts.length > 0 ? (
-          <div>
-            <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Payout history</h3>
-            <div className="space-y-2">
-              {payouts.map((e, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-2.5 text-sm"
-                >
-                  <span className="text-ink-600">Paid {e.paid_at ? formatDayHeading(e.paid_at, tz) : ""}</span>
-                  <span className="font-medium text-ink-900">{formatCents(e.amount_cents)}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall (at home).</p>
-          </div>
-        ) : null}
-      </section>
-
       <div id="study-halls" className="scroll-mt-24">
-      {today.length > 0 ? (
+      {nextAssignment ? (
+        <section className="mb-8">
+          <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Next Study Hall</h3>
+          <AssignmentCard b={nextAssignment} tz={tz} openRequest={openReqBookings.has(nextAssignment.id)} />
+        </section>
+      ) : null}
+
+      {restToday.length > 0 ? (
         <section className="mb-8">
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Today&apos;s Study Halls</h3>
           <div className="space-y-3">
-            {today.map((b) => (
+            {restToday.map((b) => (
               <AssignmentCard key={b.id} b={b} tz={tz} openRequest={openReqBookings.has(b.id)} />
             ))}
           </div>
@@ -286,17 +253,17 @@ export default async function GuideDashboardPage() {
 
       <section className="mb-8">
         <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Upcoming assignments</h3>
-        {laterUpcoming.length === 0 && today.length === 0 ? (
+        {!nextAssignment ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
             No upcoming Study Hall assignments. Keep your availability up to date so you can be matched.
           </p>
-        ) : laterUpcoming.length === 0 ? (
+        ) : restLater.length === 0 ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-4 text-center text-sm text-ink-400">
-            Nothing else scheduled after today.
+            Nothing else scheduled after this assignment.
           </p>
         ) : (
           <div className="space-y-3">
-            {laterUpcoming.map((b) => (
+            {restLater.map((b) => (
               <AssignmentCard key={b.id} b={b} tz={tz} openRequest={openReqBookings.has(b.id)} />
             ))}
           </div>
@@ -377,6 +344,49 @@ export default async function GuideDashboardPage() {
         </section>
       ) : null}
       </div>
+
+      <section id="earnings" className="scroll-mt-24 mb-8 space-y-6">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
+          </div>
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalPaid)}</p>
+          </div>
+          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
+            <p className="text-xs uppercase tracking-wide text-gold-700">Outstanding</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-gold-800">{formatCents(outstanding)}</p>
+          </div>
+          <div className="rounded-2xl border border-ink-100 bg-white p-4">
+            <p className="text-xs uppercase tracking-wide text-ink-400">Your rate</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
+              {typeof profile?.comp_rate_cents_per_hour === "number"
+                ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
+                : "Not set"}
+            </p>
+            <p className="mt-0.5 text-[11px] text-ink-400">Set by admin · scales with session length</p>
+          </div>
+        </div>
+        {payouts.length > 0 ? (
+          <div>
+            <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Payout history</h3>
+            <div className="space-y-2">
+              {payouts.map((e, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-2.5 text-sm"
+                >
+                  <span className="text-ink-600">Paid {e.paid_at ? formatDayHeading(e.paid_at, tz) : ""}</span>
+                  <span className="font-medium text-ink-900">{formatCents(e.amount_cents)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-ink-400">Payouts are processed manually by Study Hall (at home).</p>
+          </div>
+        ) : null}
+      </section>
 
       <section id="availability" className="scroll-mt-24">
         <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Availability</h3>

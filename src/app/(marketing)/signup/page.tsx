@@ -13,7 +13,7 @@ export default function SignupPage() {
   return (
     <AuthCard
       title="Create your account"
-      description="Set up your parent account, or apply to become a Guide."
+      description="Parents book Study Hall. Guides apply separately."
       footer={
         <>
           Already have an account?{" "}

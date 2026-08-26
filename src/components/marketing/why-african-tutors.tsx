@@ -1,39 +1,50 @@
-import Link from "next/link";
+import Image from "next/image";
 
+import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 
 /**
- * Habit / relief story — typography-forward, dark product moment.
- * Replaces lifestyle-photo-heavy “why” grid.
+ * Parent-relief contrast — photography + typography. No shame, no cards.
  */
 export function WhyStudyHall() {
   return (
-    <section id="why" className="scroll-mt-24 bg-ink-900 py-16 text-white sm:py-20">
-      <Container size="wide">
-        <div className="grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-end lg:gap-16">
-          <div className="max-w-xl">
-            <p className="text-sm font-medium text-gold-300">The routine</p>
-            <h2 className="mkt-display mt-3 text-3xl sm:text-[2.5rem]">
-              A homework habit — without the nightly battle.
-            </h2>
-            <p className="mt-5 text-[16px] leading-7 text-white/65">
-              Session after session, your child practices sitting down, staying with the work, and
-              finishing — with a Guide for presence, focus, and calm redirection.
-            </p>
-            <Link
-              href="/pricing"
-              className="mt-8 inline-flex text-[15px] font-semibold text-gold-300 transition-colors hover:text-gold-200"
-            >
-              See plans →
-            </Link>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 sm:p-7">
-            <p className="text-xs font-medium text-white/40">Study Hall streak</p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">5 days in a row</p>
-            <p className="mt-3 text-sm leading-6 text-white/55">
-              Maya’s building the habit — and you’re not negotiating homework every night.
-            </p>
-          </div>
+    <section id="why" className="relative overflow-hidden bg-ink-900 py-20 text-white sm:py-28">
+      <Image
+        src="/images/marketing/studyhall-routine-evening.webp"
+        alt="A calm evening at home after homework is underway"
+        fill
+        sizes="100vw"
+        className="object-cover opacity-35"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink-900 via-ink-900/88 to-ink-900/55" aria-hidden />
+
+      <Container size="wide" className="relative z-10">
+        <Reveal>
+          <p className="text-[13px] font-medium tracking-[0.16em] text-white/45 uppercase">The evening</p>
+          <h2 className="mkt-display mt-3 max-w-[14ch] text-4xl sm:text-5xl">
+            Less checking. More breathing room.
+          </h2>
+        </Reveal>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-2">
+          <Reveal>
+            <p className="text-sm font-semibold tracking-[0.08em] text-white/40 uppercase">Before</p>
+            <ul className="mt-4 space-y-3 text-2xl font-semibold tracking-[-0.03em] text-white/55 sm:text-3xl">
+              <li>“Did you start?”</li>
+              <li>“Are you working?”</li>
+              <li>“Put the phone down.”</li>
+              <li>“Finish your homework.”</li>
+            </ul>
+          </Reveal>
+          <Reveal delay={90}>
+            <p className="text-sm font-semibold tracking-[0.08em] text-gold-300 uppercase">After</p>
+            <ul className="mt-4 space-y-3 text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
+              <li>The hour is booked.</li>
+              <li>The Guide is present.</li>
+              <li>You’re available if needed.</li>
+              <li>The evening is yours again.</li>
+            </ul>
+          </Reveal>
         </div>
       </Container>
     </section>

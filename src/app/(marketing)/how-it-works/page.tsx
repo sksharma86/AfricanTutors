@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CtaSection } from "@/components/marketing/cta-section";
+import { LiveStudyHallDemo } from "@/components/marketing/live-studyhall";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Steps } from "@/components/marketing/steps";
 import { Container } from "@/components/ui/container";
@@ -18,11 +19,12 @@ export default function HowItWorksPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="How it works"
-        title="From signup to Study Hall — and everything after."
-        description="We handle matching, scheduling, and the live session. You get reports, recordings, and Call Parent when your child needs you — we contact your phone without sharing your number."
+        title="Book. Study Hall. Done."
+        description="We handle matching, scheduling, and the live session. Guides supervise and encourage — they do not tutor. You get reports, recordings, and Call Parent when your child needs you."
       />
 
-      <Steps />
+      <Steps withHeader={false} />
+      <LiveStudyHallDemo />
 
       <Container size="wide" className="pb-10">
         <div className="max-w-2xl border-t border-ink-100 pt-10">

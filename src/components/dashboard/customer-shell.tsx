@@ -37,7 +37,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-full flex-col bg-ink-50/40">
+    <div className="flex min-h-full flex-col bg-[#f4f5f7]">
       <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur">
         <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
           <BrandLockup href="/dashboard/student" variant="product" />

@@ -14,7 +14,7 @@ export default function LoginPage() {
   return (
     <AuthCard
       title="Welcome back"
-      description="Log in to access your dashboard."
+      description="Sign in to your Study Hall (at home) account."
       footer={
         <>
           <Link href="/forgot-password" className="font-medium text-brand-600 hover:underline">

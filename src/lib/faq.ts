@@ -16,6 +16,18 @@ export const FAQ_ITEMS: FaqItem[] = [
     a: "Live online Study Hall for kids. A highly vetted Guide stays with your child on video while they do their own homework — supervision, focus, and accountability, not tutoring.",
   },
   {
+    q: "Is this tutoring?",
+    a: "No. Study Hall (at home) is live homework supervision. Guides keep children focused and on task. They do not teach lessons, give answers, or complete homework for the child.",
+  },
+  {
+    q: "What does the Guide actually do?",
+    a: "The Guide stays present on video, encourages your child to start and stay with the work, and redirects calmly when attention drifts. Their job is structure and company — not subject instruction.",
+  },
+  {
+    q: "Can my child ask for homework help?",
+    a: "Children should bring their own homework and work independently. Guides may encourage them to try the next step, but they do not tutor, teach lessons, or provide answers.",
+  },
+  {
     q: "Who are the Guides?",
     a: "Guides are highly vetted supervisors. They keep children focused, accountable, and encouraged — and redirect calmly when attention drifts. Every Guide is reviewed and approved before working with families.",
   },
@@ -30,6 +42,26 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "Is the first session really free?",
     a: "Yes. Your first 1-hour Study Hall session is free — a real session with a Guide, not a sales call. No credit card required. The free session is one per account.",
+  },
+  {
+    q: "How does the free first session work?",
+    a: "Create a parent account, add your child, and book a 60-minute Study Hall. Eligible new accounts get the first hour free — no credit card. The free session is one per account, not one per child.",
+  },
+  {
+    q: "How long can I access recordings?",
+    a: "Recordings stay available for 60 days after the session. They are not stored permanently.",
+  },
+  {
+    q: "Can siblings participate?",
+    a: "You can book separate Study Halls for siblings from the same parent account. Each session is one child with one Guide. The free first session applies once per account.",
+  },
+  {
+    q: "Can I cancel?",
+    a: "Yes. Cancel 24 or more hours before a session and the session value returns to your account. Cancellations within 24 hours of the start time are non-refundable.",
+  },
+  {
+    q: "What equipment does my child need?",
+    a: "A computer or tablet with a camera and microphone, a reliable internet connection, and their homework. They join from home through Study Hall (at home).",
   },
   {
     q: "Do I need a credit card for the free session?",
