@@ -89,12 +89,9 @@ export default async function AdminDashboardPage() {
     profile_id: t.profile_id,
     display_name: t.profiles?.display_name ?? null,
   })) as AdminTutor[];
-  const sessionRows = (bookings ?? []) as { status?: string; scheduled_start?: string | null }[];
-  const upcomingCount = sessionRows.filter(
-    (b) =>
-      (b.status === "pending" || b.status === "confirmed") &&
-      b.scheduled_start &&
-      new Date(b.scheduled_start).getTime() >= Date.now(),
+  const sessionRows = (bookings ?? []) as { status?: string }[];
+  const scheduledCount = sessionRows.filter(
+    (b) => b.status === "pending" || b.status === "confirmed",
   ).length;
 
   return (
@@ -114,8 +111,8 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 font-display text-2xl font-medium text-ink-900">{cancellationRequests.length}</p>
         </div>
         <div className="rounded-2xl border border-ink-100 bg-white p-4">
-          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Upcoming sessions</p>
-          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{upcomingCount}</p>
+          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Scheduled sessions</p>
+          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{scheduledCount}</p>
         </div>
         <div className="rounded-2xl border border-ink-100 bg-white p-4">
           <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Call Parent (recent)</p>

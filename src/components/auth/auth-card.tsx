@@ -15,7 +15,10 @@ export function AuthCard({
   footer: ReactNode;
 }) {
   return (
-    <section className="flex flex-1 items-center justify-center bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(232,183,84,0.18),transparent_55%)] py-16">
+    <section
+      aria-label="Study Hall (at home)"
+      className="flex flex-1 items-center justify-center bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(232,183,84,0.18),transparent_55%)] py-16"
+    >
       <Container className="max-w-md">
         <div className="rounded-[22px] border border-ink-100 bg-surface p-8 shadow-[var(--shadow-md)] sm:p-9">
           <BrandLockup href="/" variant="product" />

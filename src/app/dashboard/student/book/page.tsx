@@ -45,7 +45,7 @@ export default async function BookSessionPage({
           Book a Study Hall session
         </h1>
         <p className="mt-2 text-base leading-7 text-ink-500">
-          Choose your child, session length, and time. We match an available Guide for live homework
+          Choose your child, session length, and time. We match an approved Guide for live homework
           supervision.
         </p>
         <div className="mt-8">
