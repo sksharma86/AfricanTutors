@@ -57,7 +57,7 @@ function layout(heading, paragraphsHtml, cta) {
     ${paragraphsHtml}
     ${button}
   </div>
-  <p style="color:#9ca3af;font-size:12px;margin-top:16px">You're receiving this because you have an ${BRAND} account. Sessions are conducted on-platform for your safety.</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:16px">You're receiving this because you have a ${BRAND} account. Sessions are conducted on-platform for your safety.</p>
 </div></body></html>`;
 }
 
