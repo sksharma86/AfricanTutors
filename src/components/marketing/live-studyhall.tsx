@@ -59,7 +59,7 @@ export function LiveStudyHallDemo() {
                 Study Hall (at home) · Live session
               </p>
               <p className="mt-1 text-lg font-semibold tracking-[-0.03em]">Study Hall</p>
-              <p className="text-sm text-white/50">Guide: Amina · Tonight · 60 minutes</p>
+              <p className="text-sm text-white/50">Guide: James · Tonight · 60 minutes</p>
             </div>
             <div className="sh-stage sh-stage-3 flex items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-1 font-medium text-white/80">
@@ -80,7 +80,7 @@ export function LiveStudyHallDemo() {
                 className="object-cover object-[30%_30%]"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 py-3">
-                <p className="text-sm font-medium">Maya · Working</p>
+                <p className="text-sm font-medium">Jordan · Working</p>
                 <p className="text-xs text-white/55">Homework in front of them · camera on</p>
               </div>
             </div>
@@ -94,7 +94,7 @@ export function LiveStudyHallDemo() {
                   className="object-cover object-[50%_20%]"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2.5">
-                  <p className="text-sm font-medium">Amina · Guide</p>
+                  <p className="text-sm font-medium">James · Guide</p>
                   <p className="text-xs text-white/55">Supervising — not tutoring</p>
                 </div>
               </div>

@@ -41,8 +41,8 @@ export function ProductShowcase() {
                   Next Study Hall
                 </p>
                 <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink-900">Tonight, 6:30 PM</p>
-                <p className="mt-2 text-[15px] text-ink-600">Maya · 60 minutes · America/Chicago</p>
-                <p className="mt-3 text-sm text-ink-500">Guide: Amina · Matching complete</p>
+                <p className="mt-2 text-[15px] text-ink-600">Jordan · 60 minutes · America/Chicago</p>
+                <p className="mt-3 text-sm text-ink-500">Guide: James · Matching complete</p>
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <span className="rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white">
                     Join Study Hall
@@ -65,7 +65,7 @@ export function ProductShowcase() {
                     Last report
                   </p>
                   <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-ink-900">
-                    Maya’s Study Hall
+                    Jordan’s Study Hall
                   </p>
                   <p className="mt-1 text-sm text-ink-500">Tue · Focus: Strong · Redirection: Light</p>
                   <p className="mt-3 text-sm leading-6 text-ink-600">
