@@ -16,7 +16,7 @@ export default function ResetPasswordPage() {
       description="Choose a new password for your account."
       footer={
         <>
-          <Link href="/login" className="font-medium text-brand-600 hover:underline">
+          <Link href="/login" className="font-medium text-gold-700 hover:underline">
             Back to login
           </Link>
         </>

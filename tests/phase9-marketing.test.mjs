@@ -93,7 +93,7 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   const pricingLib = read("src/lib/pricing.ts");
 
   it("anonymous primary CTA routes to signup with consistent label (item 15)", () => {
-    assert.match(pricingLib, /FREE_TRIAL_CTA = "Start your free session"/);
+    assert.match(pricingLib, /FREE_TRIAL_CTA = "Try your first Study Hall free"/);
     assert.match(home, /href:\s*"\/signup"/);
     assert.match(home, /FREE_TRIAL_CTA/);
   });

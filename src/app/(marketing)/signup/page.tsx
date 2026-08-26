@@ -13,11 +13,11 @@ export default function SignupPage() {
   return (
     <AuthCard
       title="Create your account"
-      description="Set up your parent account, or apply to become a Guide."
+      description="Set up a parent account for Study Hall (at home), or apply to become a Guide."
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-brand-600 hover:underline">
+          <Link href="/login" className="font-medium text-gold-700 hover:underline">
             Log in
           </Link>
         </>

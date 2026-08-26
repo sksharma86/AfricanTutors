@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Container } from "@/components/ui/container";
 
 export function AuthCard({
@@ -15,18 +15,16 @@ export function AuthCard({
   footer: ReactNode;
 }) {
   return (
-    <section className="flex flex-1 items-center justify-center bg-ink-50/60 py-16">
+    <section className="flex flex-1 items-center justify-center bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(232,183,84,0.18),transparent_55%)] py-16">
       <Container className="max-w-md">
-        <div className="rounded-2xl border border-ink-100 bg-white p-8 shadow-sm">
-          <Link href="/" className="text-xs font-semibold tracking-wide text-brand-600 uppercase">
-            Study Hall <span className="font-medium text-ink-500">(at home)</span>
-          </Link>
-          <h1 className="mt-3 font-display text-2xl font-semibold text-ink-900">{title}</h1>
-          <p className="mt-1.5 text-sm text-ink-500">{description}</p>
+        <div className="rounded-[22px] border border-ink-100 bg-surface p-8 shadow-[var(--shadow-md)] sm:p-9">
+          <BrandLockup href="/" variant="product" />
+          <h1 className="mt-6 font-display text-3xl font-medium text-ink-900">{title}</h1>
+          <p className="mt-2 text-sm leading-6 text-ink-500">{description}</p>
 
-          <div className="mt-6">{children}</div>
+          <div className="mt-7">{children}</div>
 
-          <p className="mt-6 text-center text-sm text-ink-500">{footer}</p>
+          <p className="mt-7 text-center text-sm text-ink-500">{footer}</p>
         </div>
       </Container>
     </section>

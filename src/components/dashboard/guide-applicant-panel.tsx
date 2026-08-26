@@ -25,21 +25,21 @@ export function GuideApplicantPanel({ info }: { info: GuideApplicantInfo }) {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <section className="rounded-2xl border border-ink-100 bg-white p-6 sm:p-8">
-        <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Guide application</p>
-        <h2 className="mt-2 font-display text-2xl font-semibold text-ink-900">
+      <section className="rounded-[22px] border border-ink-100 bg-surface p-6 shadow-[var(--shadow-sm)] sm:p-8">
+        <p className="mkt-eyebrow">Guide application</p>
+        <h2 className="mt-3 font-display text-3xl font-medium text-ink-900">
           {isSuspended ? "Application paused" : "Application received"}
         </h2>
-        <p className="mt-3 text-sm leading-6 text-ink-600">
+        <p className="mt-3 text-sm leading-7 text-ink-600">
           {isSuspended
             ? "Your Study Hall Guide application is not active right now. Contact us if you have questions about next steps."
-            : "Your application to become a Study Hall Guide is under review. We will email you when there is an update."}
+            : "Your application is under review. We will email you when there is an update."}
         </p>
 
         <dl className="mt-6 space-y-3 border-t border-ink-100 pt-5 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-ink-500">Status</dt>
-            <dd className="font-medium capitalize text-ink-900">{info.status}</dd>
+            <dd className="font-medium capitalize text-ink-900">{isSuspended ? "Paused" : "Under review"}</dd>
           </div>
           {submitted ? (
             <div className="flex justify-between gap-4">
@@ -56,14 +56,22 @@ export function GuideApplicantPanel({ info }: { info: GuideApplicantInfo }) {
         </dl>
       </section>
 
-      <section className="rounded-2xl border border-ink-100 bg-white p-6 sm:p-8">
-        <h3 className="font-display text-lg font-semibold text-ink-900">What happens next</h3>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-ink-600">
-          <li>Our team reviews your application.</li>
-          <li>If approved, this account becomes your Guide workspace — no new signup needed.</li>
-          <li>Approval is not guaranteed; we only hire Guides who fit Study Hall supervision needs.</li>
-        </ul>
-        <p className="mt-4 text-sm text-ink-500">
+      <section className="rounded-[22px] border border-ink-100 bg-surface p-6 shadow-[var(--shadow-sm)] sm:p-8">
+        <h3 className="font-display text-xl font-medium text-ink-900">What happens next</h3>
+        <ol className="mt-4 space-y-3 text-sm leading-6 text-ink-600">
+          <li>
+            <span className="font-medium text-ink-800">1. Review.</span> Our team reviews your application.
+          </li>
+          <li>
+            <span className="font-medium text-ink-800">2. Decision.</span> If approved, this account becomes
+            your Guide workspace — no new signup needed.
+          </li>
+          <li>
+            <span className="font-medium text-ink-800">3. Not guaranteed.</span> We only hire Guides who fit
+            Study Hall supervision needs.
+          </li>
+        </ol>
+        <p className="mt-5 text-sm text-ink-500">
           Questions?{" "}
           <Link href="/contact" className="font-medium text-ink-800 underline-offset-4 hover:underline">
             Contact support

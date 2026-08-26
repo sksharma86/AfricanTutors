@@ -86,7 +86,7 @@ export function LoginForm() {
           required
           disabled={!isSupabaseConfigured}
           autoComplete="email"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
+          className="sh-input mt-1.5"
         />
       </div>
 
@@ -101,7 +101,7 @@ export function LoginForm() {
           required
           disabled={!isSupabaseConfigured}
           autoComplete="current-password"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
+          className="sh-input mt-1.5"
         />
       </div>
 

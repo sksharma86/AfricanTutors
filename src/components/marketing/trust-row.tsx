@@ -1,20 +1,20 @@
 import { Container } from "@/components/ui/container";
 
 const ITEMS = [
-  "Highly vetted Guides",
+  "Carefully vetted Guides",
+  "Recorded sessions",
   "60-day recording access",
-  "After-session reports",
-  "Parents always within reach",
+  "Call Parent if needed",
   "First hour free",
 ] as const;
 
 export function TrustRow() {
   return (
-    <section aria-label="Why families choose Study Hall" className="border-b border-ink-100 bg-white">
+    <section aria-label="Why families choose Study Hall" className="border-y border-ink-100/80 bg-surface/70">
       <Container size="wide" className="py-5">
-        <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-between">
+        <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
           {ITEMS.map((item) => (
-            <li key={item} className="text-[13px] font-medium tracking-[-0.01em] text-ink-500">
+            <li key={item} className="text-[13px] font-medium tracking-[-0.01em] text-ink-600">
               {item}
             </li>
           ))}

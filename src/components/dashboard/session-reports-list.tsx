@@ -28,6 +28,7 @@ export interface ParentSessionReport {
   redirection_level: RedirectionLevel;
   guide_note: string | null;
   child_first_name: string;
+  guide_name?: string | null;
   scheduled_start: string | null;
   duration_minutes: number | null;
   timezone: string;
@@ -45,7 +46,7 @@ export interface ParentSessionReport {
 export function SessionReportsList({ reports }: { reports: ParentSessionReport[] }) {
   if (reports.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-4 py-8 text-center">
+      <div className="rounded-[22px] border border-dashed border-ink-200 bg-surface px-4 py-8 text-center">
         <p className="text-sm font-medium text-ink-700">No session reports yet</p>
         <p className="mt-1 text-sm text-ink-400">
           After a Study Hall ends, your Guide shares a short note about how the session went.
@@ -63,10 +64,13 @@ export function SessionReportsList({ reports }: { reports: ParentSessionReport[]
         return (
           <article
             key={r.id}
-            className="rounded-2xl border border-ink-100 bg-white p-4 shadow-[0_8px_24px_-18px_rgba(19,19,17,0.2)] sm:p-5"
+            className="rounded-[22px] border border-ink-100 bg-surface p-4 shadow-[var(--shadow-sm)] sm:p-5"
           >
             <header className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-              <h3 className="font-medium text-ink-900">{r.child_first_name}&apos;s Study Hall</h3>
+              <div>
+                <h3 className="font-display text-lg font-medium text-ink-900">{r.child_first_name}&apos;s Study Hall</h3>
+                {r.guide_name ? <p className="mt-0.5 text-sm text-ink-500">Guide: {r.guide_name}</p> : null}
+              </div>
               <p className="text-sm text-ink-500">
                 {dateLabel}
                 {duration !== "—" ? <span className="text-ink-400"> · {duration}</span> : null}
@@ -145,7 +149,7 @@ function RecordingBlock({
     return (
       <div className="mt-4 border-t border-ink-100 pt-3">
         <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
-        <p className="mt-0.5 text-sm text-ink-600">Recording is processing — check back soon.</p>
+        <p className="mt-0.5 text-sm text-ink-600">Recording processing — check back soon.</p>
       </div>
     );
   }
@@ -155,9 +159,10 @@ function RecordingBlock({
   return (
     <div className="mt-4 border-t border-ink-100 pt-3">
       <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
-      <p className="mt-0.5 text-sm text-ink-700">
+      <p className="mt-0.5 text-sm font-medium text-forest-800">Recording ready</p>
+      <p className="text-sm text-ink-600">
         Available for 60 days
-        {until ? <span className="text-ink-500"> · Available until {until}</span> : null}
+        {until ? <span className="text-ink-500"> · until {until}</span> : null}
       </p>
       <WatchRecordingButton recordingId={recording.id} />
     </div>

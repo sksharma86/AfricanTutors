@@ -34,12 +34,12 @@ export function DashboardShell({
   badgeLabel?: string;
 }) {
   return (
-    <div className="min-h-full bg-ink-50/50">
-      <div className="border-b border-ink-100 bg-white">
+    <div className="min-h-full bg-[color:var(--background)]">
+      <div className="border-b border-ink-100/80 bg-surface">
         <Container className="flex items-center justify-between gap-4 py-5">
           <div className="min-w-0">
             <Badge>{badgeLabel ?? `${ROLE_LABEL[role]} Dashboard`}</Badge>
-            <h1 className="mt-2 font-display text-2xl font-semibold text-ink-900">{title}</h1>
+            <h1 className="mt-2 font-display text-3xl font-medium text-ink-900">{title}</h1>
             <p className="mt-1 text-sm text-ink-500">{description}</p>
           </div>
           <LogoutButton />

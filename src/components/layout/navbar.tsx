@@ -22,7 +22,7 @@ export async function Navbar() {
   const showParentBookCta = user?.role === "student" && !applicant;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ink-100/80 bg-white/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-ink-100/70 bg-[color:var(--surface)]/88 backdrop-blur-xl">
       <Container size="wide" className="flex h-14 items-center justify-between gap-4 sm:h-16">
         <BrandLockup priority variant="product" />
 

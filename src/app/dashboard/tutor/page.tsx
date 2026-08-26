@@ -191,6 +191,9 @@ export default async function GuideDashboardPage() {
 
   const { upcoming, past } = partitionBookings(bookings);
   const { today, later: laterUpcoming } = splitToday(upcoming);
+  const nextAssignment = today[0] ?? laterUpcoming[0] ?? null;
+  const restToday = today.filter((b) => b.id !== nextAssignment?.id);
+  const restLater = laterUpcoming.filter((b) => b.id !== nextAssignment?.id);
   const needsReport = reportsReady
     ? past.filter((b) => b.status === "completed" && !reportedBookings.has(b.id))
     : [];
@@ -220,7 +223,7 @@ export default async function GuideDashboardPage() {
         </div>
       ) : null}
 
-      <section className="mb-8 rounded-xl border border-forest-200 bg-forest-50/60 p-4 text-sm leading-6 text-ink-700">
+      <section className="mb-8 rounded-[22px] border border-forest-200 bg-forest-50/70 p-5 text-sm leading-6 text-ink-700">
         <p className="font-medium text-ink-900">Your Study Hall role</p>
         <p className="mt-1">
           Be present, supervise homework, encourage focus, redirect gently when needed, and keep a calm productive
@@ -233,7 +236,7 @@ export default async function GuideDashboardPage() {
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-ink-100 bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
+            <p className="mt-1 font-display text-2xl font-medium text-ink-900">{formatCents(totalEarned)}</p>
           </div>
           <div className="rounded-2xl border border-ink-100 bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
@@ -273,11 +276,20 @@ export default async function GuideDashboardPage() {
       </section>
 
       <div id="study-halls" className="scroll-mt-24">
-      {today.length > 0 ? (
+      {nextAssignment ? (
+        <section className="mb-8">
+          <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Next assignment</h3>
+          <div className="rounded-[22px] border border-forest-200 bg-forest-50/50 p-1">
+            <AssignmentCard b={nextAssignment} tz={tz} openRequest={openReqBookings.has(nextAssignment.id)} />
+          </div>
+        </section>
+      ) : null}
+
+      {restToday.length > 0 ? (
         <section className="mb-8">
           <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Today&apos;s Study Halls</h3>
           <div className="space-y-3">
-            {today.map((b) => (
+            {restToday.map((b) => (
               <AssignmentCard key={b.id} b={b} tz={tz} openRequest={openReqBookings.has(b.id)} />
             ))}
           </div>
@@ -286,17 +298,17 @@ export default async function GuideDashboardPage() {
 
       <section className="mb-8">
         <h3 className="mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Upcoming assignments</h3>
-        {laterUpcoming.length === 0 && today.length === 0 ? (
+        {!nextAssignment ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
             No upcoming Study Hall assignments. Keep your availability up to date so you can be matched.
           </p>
-        ) : laterUpcoming.length === 0 ? (
+        ) : restLater.length === 0 ? (
           <p className="rounded-lg border border-dashed border-ink-200 px-4 py-4 text-center text-sm text-ink-400">
-            Nothing else scheduled after today.
+            Nothing else scheduled after this assignment.
           </p>
         ) : (
           <div className="space-y-3">
-            {laterUpcoming.map((b) => (
+            {restLater.map((b) => (
               <AssignmentCard key={b.id} b={b} tz={tz} openRequest={openReqBookings.has(b.id)} />
             ))}
           </div>

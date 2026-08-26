@@ -1,48 +1,52 @@
-import {
-  ProductCallParentCard,
-  ProductHoursCard,
-  ProductReportCard,
-  ProductStreakCard,
-} from "@/components/marketing/product-visuals";
 import { Container } from "@/components/ui/container";
 
 /**
- * Parent account showcase — booking, reports, hours, Call Parent.
- * Call Parent reaches the parent’s phone; the account is for booking & history.
+ * Parent outcomes — real capabilities, no fabricated portal screenshots.
  */
 export function ProductShowcase() {
+  const items = [
+    {
+      title: "Book from home",
+      body: "Choose a child, a length, and a time. We match an available Guide.",
+    },
+    {
+      title: "Reports after every session",
+      body: "A short note from the Guide — what they worked on, and how the hour went.",
+    },
+    {
+      title: "Recordings for 60 days",
+      body: "Review the session when you want. Recordings are not stored forever.",
+    },
+    {
+      title: "Call Parent, if needed",
+      body: "If your child needs you, we reach your phone. Guides never see the number.",
+    },
+  ];
+
   return (
-    <section
-      id="parent-account"
-      className="scroll-mt-24 border-b border-ink-100 bg-surface-muted/35 py-16 sm:py-20"
-    >
+    <section id="parent-account" className="scroll-mt-24 py-16 sm:py-22">
       <Container size="wide">
         <div className="max-w-xl">
-          <p className="mkt-eyebrow">Your Study Hall account</p>
-          <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">
-            Everything in one place.
+          <p className="mkt-eyebrow">Your parent account</p>
+          <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.6rem]">
+            The evening, handled.
           </h2>
           <p className="mt-4 text-[16px] leading-7 text-ink-500">
-            Book sessions, review reports and recordings, track prepaid hours, and see how a
-            homework routine builds — all from your parent account.
+            Book Study Halls, see what’s next, review reports and recordings, and keep Study Hall
+            hours on hand — all in one calm place.
           </p>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-ink-100 bg-white mkt-depth-sm">
-          <div className="grid sm:grid-cols-2">
-            <div className="border-b border-ink-100 sm:border-r">
-              <ProductReportCard bordered={false} />
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {items.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-[22px] border border-ink-100 bg-surface p-6 shadow-[var(--shadow-sm)]"
+            >
+              <h3 className="font-display text-xl text-ink-900">{item.title}</h3>
+              <p className="mt-2 text-[15px] leading-7 text-ink-500">{item.body}</p>
             </div>
-            <div className="border-b border-ink-100">
-              <ProductStreakCard bordered={false} />
-            </div>
-            <div className="border-b border-ink-100 sm:border-r sm:border-b-0">
-              <ProductHoursCard bordered={false} />
-            </div>
-            <div>
-              <ProductCallParentCard bordered={false} />
-            </div>
-          </div>
+          ))}
         </div>
       </Container>
     </section>

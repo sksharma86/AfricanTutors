@@ -1,9 +1,8 @@
 import Link from "next/link";
 
-import { HeroProductVisual } from "@/components/marketing/product-visuals";
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA } from "@/lib/pricing";
+import { FREE_TRIAL_CTA, STARTING_AT_LABEL } from "@/lib/pricing";
 
 export function SiteHero({
   primaryHref,
@@ -16,38 +15,34 @@ export function SiteHero({
   hourlyHighUsd?: number;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-ink-100 bg-white">
-      <Container
-        size="wide"
-        className="grid items-center gap-10 py-12 sm:gap-12 sm:py-16 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:py-20"
-      >
-        <div className="max-w-[34rem]">
-          <p className="mkt-eyebrow at-fade-in">Live online Study Hall</p>
-          <h1 className="mkt-display at-fade-in at-delay-1 mt-3 text-[2.35rem] leading-[1.08] text-ink-900 sm:text-[3rem] lg:text-[3.25rem] lg:leading-[1.05]">
+    <section className="relative overflow-hidden border-b border-ink-100/80">
+      <Container size="wide" className="py-16 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-[40rem] text-center">
+          <p className="mkt-eyebrow at-fade-in">Study Hall (at home)</p>
+          <h1 className="mkt-display at-fade-in at-delay-1 mt-4 text-[2.4rem] text-ink-900 sm:text-[3.35rem] lg:text-[3.75rem]">
             Homework gets done.
-            <span className="mt-1.5 block text-ink-400">You get your evening back.</span>
+            <span className="mt-2 block text-ink-500">You get your evening back.</span>
           </h1>
-          <p className="at-fade-in at-delay-2 mt-5 max-w-[30rem] text-[16px] leading-7 text-ink-500">
-            A highly vetted Guide stays with your child on video while they do their own homework.
-            Less hovering. A calmer night.
+          <p className="at-fade-in at-delay-2 mx-auto mt-6 max-w-[32rem] text-[17px] leading-8 text-ink-600">
+            Live online homework supervision. A carefully vetted Guide stays with your child on
+            video while they do their own work — so someone is actually watching, and you don&apos;t
+            have to hover.
           </p>
-          <div className="at-fade-in at-delay-3 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="at-fade-in at-delay-3 mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <TrackCta href={primaryHref} cta={primaryLabel} location="hero" variant="primary" size="lg">
               {primaryLabel}
             </TrackCta>
             <Link
               href="/how-it-works"
-              className="inline-flex min-h-11 items-center text-[15px] font-medium text-ink-500 transition-colors hover:text-ink-900"
+              className="inline-flex min-h-12 items-center rounded-[14px] px-5 text-[15px] font-semibold text-ink-700 transition-colors hover:text-ink-900"
             >
               See how it works
             </Link>
           </div>
-          <p className="at-fade-in at-delay-3 mt-5 text-[13px] leading-5 text-ink-400">
-            First 60 minutes free · No credit card required · {AS_LOW_AS_LABEL}
+          <p className="at-fade-in at-delay-3 mt-6 text-[13px] leading-6 text-ink-500">
+            First hour free · No credit card · {STARTING_AT_LABEL}
           </p>
         </div>
-
-        <HeroProductVisual />
       </Container>
     </section>
   );

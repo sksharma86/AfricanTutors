@@ -49,7 +49,7 @@ export default async function PricingPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="Pricing"
-        title={`${AS_LOW_AS_LABEL}. First hour free.`}
+        title={`Starting at ${formatUsd(PAYG_PRICE_USD)}/hour. First hour free.`}
         description={`Try a real Study Hall with a highly vetted Guide — no credit card. Then ${formatUsd(PAYG_PRICE_USD)}/hour as you go, or save with prepaid hours that never expire.`}
       />
 

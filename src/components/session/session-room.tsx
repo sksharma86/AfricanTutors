@@ -110,7 +110,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     .join(" · ");
 
   return (
-    <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
+    <div className="rounded-[22px] border border-ink-700 bg-ink-900 p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
@@ -167,7 +167,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
                   disabled={busy}
                   className="mt-6 rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
                 >
-                  {busy ? "Connecting…" : isGuide ? "Join Study Hall" : "Join session"}
+                  {busy ? "Connecting…" : "Join Study Hall"}
                 </button>
               </>
             ) : state === "too_early" ? (

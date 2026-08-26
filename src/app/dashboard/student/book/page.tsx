@@ -41,11 +41,12 @@ export default async function BookSessionPage({
         <Link href="/dashboard/student" className="text-sm font-medium text-gold-700 hover:underline">
           ← Back to dashboard
         </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
+        <h1 className="mt-3 font-display text-3xl font-medium text-ink-900 sm:text-4xl">
           Book a Study Hall session
         </h1>
-        <p className="mt-2 text-base text-ink-500">
-          Choose your child, session length, and time — we match an approved Guide for live homework supervision.
+        <p className="mt-2 text-base leading-7 text-ink-500">
+          Choose your child, session length, and time. We match an available Guide for live homework
+          supervision.
         </p>
         <div className="mt-8">
           <BookingWizard students={(students ?? []) as StudentRow[]} initialDuration={initialDuration} />

@@ -20,7 +20,7 @@ export function Card({
   return (
     <Component
       className={cn(
-        "rounded-2xl border border-ink-100 bg-white shadow-[0_1px_2px_rgba(19,19,17,0.04),0_8px_24px_-16px_rgba(19,19,17,0.12)]",
+        "rounded-[22px] border border-ink-100 bg-surface shadow-[var(--shadow-sm)]",
         interactive && "transition-shadow duration-150 hover:shadow-[0_1px_2px_rgba(19,19,17,0.06),0_12px_32px_-16px_rgba(19,19,17,0.18)]",
         className,
       )}

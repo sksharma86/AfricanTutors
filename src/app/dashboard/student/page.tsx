@@ -104,7 +104,7 @@ export default async function StudentDashboardPage() {
         ? supabase
             .from("session_reports")
             .select(
-              "id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id, bookings(scheduled_start, duration_minutes, student_first_name, students(full_name, timezone))",
+              "id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id, bookings(scheduled_start, duration_minutes, student_first_name, tutor_display_name, students(full_name, timezone))",
             )
             .order("submitted_at", { ascending: false })
             .then(
@@ -176,6 +176,7 @@ export default async function StudentDashboardPage() {
       scheduled_start: string | null;
       duration_minutes: number | null;
       student_first_name: string | null;
+      tutor_display_name: string | null;
       students: { full_name: string; timezone: string } | null;
     } | null;
   };
@@ -219,6 +220,7 @@ export default async function StudentDashboardPage() {
       redirection_level: r.redirection_level,
       guide_note: r.guide_note,
       child_first_name: first,
+      guide_name: r.bookings?.tutor_display_name ?? null,
       scheduled_start: r.bookings?.scheduled_start ?? null,
       duration_minutes: r.bookings?.duration_minutes ?? null,
       timezone: r.bookings?.students?.timezone || DEFAULT_TZ,
@@ -311,8 +313,8 @@ export default async function StudentDashboardPage() {
         {/* Welcome */}
         <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm text-ink-500">Your Study Hall account</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-ink-900 sm:text-3xl">
+            <p className="text-sm text-ink-500">Study Hall (at home)</p>
+            <h1 className="mt-1 font-display text-3xl font-medium text-ink-900 sm:text-4xl">
               {firstName ? `Hi ${firstName}` : "Welcome"}
             </h1>
           </div>
@@ -323,7 +325,7 @@ export default async function StudentDashboardPage() {
 
         {/* Free session — only when eligible */}
         {freeTrialAvailable ? (
-          <section className="mt-6 rounded-2xl border border-forest-200 bg-forest-50/60 p-5 sm:p-6">
+          <section className="mt-6 rounded-[22px] border border-forest-200 bg-forest-50/70 p-5 sm:p-6">
             <p className="text-sm font-semibold text-forest-800">Your first Study Hall is on us</p>
             <p className="mt-1 text-sm text-ink-600">60 minutes free · No credit card required</p>
             <div className="mt-4">

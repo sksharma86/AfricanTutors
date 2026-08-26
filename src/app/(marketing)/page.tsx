@@ -25,12 +25,13 @@ export const metadata: Metadata = {
 const HOME_FAQ = FAQ_ITEMS.filter((f) =>
   [
     "What is Study Hall (at home)?",
+    "Is this tutoring?",
+    "What does the Guide actually do?",
     "Who are the Guides?",
-    "How much does it cost?",
-    "Is the first session really free?",
-    "What if my child needs me during Study Hall?",
     "Are sessions recorded?",
+    "What if my child needs me during Study Hall?",
     "Do prepaid hours expire?",
+    "How does the free first session work?",
   ].includes(f.q),
 );
 
@@ -51,14 +52,14 @@ export default async function HomePage() {
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
       <TrustRow />
       <Steps />
-      <ProductShowcase />
       <WhyStudyHall />
+      <ProductShowcase />
       <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />
-      <Faq eyebrow="FAQ" title="Quick answers." items={HOME_FAQ} />
+      <Faq eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
       <CtaSection
         title="Try your first hour free."
-        description="Create an account and book a real Study Hall. No credit card required."
+        description="Book a real Study Hall. No credit card required."
         primaryHref={primary.href}
         primaryLabel={primary.label}
         secondaryHref="/how-it-works"

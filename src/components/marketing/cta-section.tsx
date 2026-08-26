@@ -1,6 +1,6 @@
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
+import { FREE_TRIAL_CTA, NO_CARD_REQUIRED, STARTING_AT_LABEL } from "@/lib/pricing";
 
 export function CtaSection({
   title,
@@ -18,10 +18,10 @@ export function CtaSection({
   secondaryLabel?: string;
 }) {
   return (
-    <section className="bg-ink-900 py-16 text-white sm:py-20">
+    <section className="bg-ink-900 py-16 text-white sm:py-22">
       <Container size="wide">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mkt-display text-3xl sm:text-[2.5rem]">{title}</h2>
+          <h2 className="mkt-display text-3xl sm:text-[2.6rem]">{title}</h2>
           <p className="mx-auto mt-4 max-w-lg text-[16px] leading-7 text-white/65">{description}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <TrackCta
@@ -46,7 +46,7 @@ export function CtaSection({
             ) : null}
           </div>
           <p className="mt-5 text-sm text-white/45">
-            {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
+            {NO_CARD_REQUIRED} {STARTING_AT_LABEL}.
           </p>
         </div>
       </Container>

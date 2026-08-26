@@ -18,8 +18,8 @@ export default function HowItWorksPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="How it works"
-        title="From signup to Study Hall — and everything after."
-        description="We handle matching, scheduling, and the live session. You get reports, recordings, and Call Parent when your child needs you — we contact your phone without sharing your number."
+        title="Book. Join. Stay focused. Review."
+        description="We handle matching, scheduling, and the live session. Guides supervise and encourage — they do not tutor. You get reports, recordings, and Call Parent when your child needs you."
       />
 
       <Steps />

@@ -89,6 +89,13 @@ export default async function AdminDashboardPage() {
     profile_id: t.profile_id,
     display_name: t.profiles?.display_name ?? null,
   })) as AdminTutor[];
+  const sessionRows = (bookings ?? []) as { status?: string; scheduled_start?: string | null }[];
+  const upcomingCount = sessionRows.filter(
+    (b) =>
+      (b.status === "pending" || b.status === "confirmed") &&
+      b.scheduled_start &&
+      new Date(b.scheduled_start).getTime() >= Date.now(),
+  ).length;
 
   return (
     <DashboardShell
@@ -97,6 +104,25 @@ export default async function AdminDashboardPage() {
       description="Manage Guides, sessions, coverage, reports, and financial operations."
       navItems={ADMIN_PORTAL_NAV}
     >
+      <section className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-ink-100 bg-white p-4">
+          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Pending approvals</p>
+          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{pendingTutors.length}</p>
+        </div>
+        <div className="rounded-2xl border border-ink-100 bg-white p-4">
+          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Coverage exceptions</p>
+          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{cancellationRequests.length}</p>
+        </div>
+        <div className="rounded-2xl border border-ink-100 bg-white p-4">
+          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Upcoming sessions</p>
+          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{upcomingCount}</p>
+        </div>
+        <div className="rounded-2xl border border-ink-100 bg-white p-4">
+          <p className="text-xs font-semibold tracking-wide text-ink-400 uppercase">Call Parent (recent)</p>
+          <p className="mt-1 font-display text-2xl font-medium text-ink-900">{escalations.length}</p>
+        </div>
+      </section>
+
       <section id="overview" className="scroll-mt-24 mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold text-white">Financial operations</h2>

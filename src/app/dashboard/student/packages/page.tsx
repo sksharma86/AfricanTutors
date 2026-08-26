@@ -44,8 +44,8 @@ export default async function PackagesPage() {
         <Link href="/dashboard/student" className="text-sm font-medium text-ink-600 hover:text-ink-900 hover:underline">
           ← Back to dashboard
         </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
-          Pricing &amp; Study Hall options
+        <h1 className="mt-3 font-display text-3xl font-medium text-ink-900 sm:text-4xl">
+          Study Hall hours
         </h1>
         <p className="mt-2 max-w-xl text-base leading-7 text-ink-500">
           Book one session at a time, or save with prepaid hours. Prepaid hours never expire.

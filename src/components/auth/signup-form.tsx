@@ -165,7 +165,7 @@ export function SignupForm({
           disabled={!isSupabaseConfigured}
           autoComplete="name"
           placeholder="This is what other platform users will see"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none placeholder:text-ink-300 focus:border-ink-400 disabled:bg-ink-50"
+          className="sh-input mt-1.5"
         />
       </div>
 
@@ -180,7 +180,7 @@ export function SignupForm({
           required
           disabled={!isSupabaseConfigured}
           autoComplete="email"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
+          className="sh-input mt-1.5"
         />
       </div>
 
@@ -196,7 +196,7 @@ export function SignupForm({
           minLength={8}
           disabled={!isSupabaseConfigured}
           autoComplete="new-password"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
+          className="sh-input mt-1.5"
         />
       </div>
 

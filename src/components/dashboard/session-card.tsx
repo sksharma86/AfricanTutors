@@ -41,14 +41,14 @@ export function SessionCard({
     <Card
       className={cn(
         "p-5",
-        featured && "border-forest-200 ring-1 ring-forest-100",
+        featured && "border-forest-200 bg-forest-50/40 ring-1 ring-forest-100",
         className,
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-lg font-semibold text-ink-900">{subject}</h3>
+            <h3 className="font-display text-xl font-medium text-ink-900">{subject}</h3>
             {isFreeTrial ? (
               <span className="rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-gold-700 uppercase">
                 Free trial

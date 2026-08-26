@@ -48,7 +48,10 @@ export const PREPAID_FROM_HOURLY_USD = 9;
 export const FREE_TRIAL_MINUTES = 60;
 
 /** Primary acquisition call-to-action label (kept consistent site-wide). */
-export const FREE_TRIAL_CTA = "Start your free session";
+export const FREE_TRIAL_CTA = "Try your first Study Hall free";
+
+/** Retail pay-as-you-go cue for marketing heroes. */
+export const STARTING_AT_LABEL = `Starting at $${PAYG_PRICE_USD}/hour`;
 
 /** Friction-reducing microcopy. Use sparingly — do not repeat site-wide. */
 export const NO_CARD_REQUIRED = "No credit card required.";
