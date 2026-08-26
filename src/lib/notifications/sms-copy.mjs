@@ -14,7 +14,7 @@ export function parentSessionReminderSms(ctx) {
   const name = (ctx.studentName || "your child").trim() || "your child";
   const when = formatWhen(ctx.whenISO, ctx.tz);
   // Prefer a short local time if formatWhen is long — keep full when for clarity.
-  return `Study Hall at Home reminder: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
+  return `Study Hall (at home) reminder: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
 }
 
 /**
@@ -24,7 +24,7 @@ export function parentSessionReminderSms(ctx) {
 export function parentCancellationSms(ctx) {
   const name = (ctx.studentName || "your child").trim() || "your child";
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  return `Study Hall at Home: ${name}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
+  return `Study Hall (at home): ${name}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
 }
 
 /**
@@ -35,5 +35,5 @@ export function parentCancellationSms(ctx) {
 export function parentReassignmentSms(ctx) {
   const name = (ctx.studentName || "your child").trim() || "your child";
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  return `Study Hall at Home: ${name}'s session at ${when} was updated. Check your email or dashboard for details.`;
+  return `Study Hall (at home): ${name}'s session at ${when} was updated. Check your email or dashboard for details.`;
 }

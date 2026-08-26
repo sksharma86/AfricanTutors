@@ -62,7 +62,7 @@ describe("Study Hall PR8 — reminder policy (pure)", () => {
 describe("Study Hall PR8 — SMS copy (pure)", () => {
   it("parent 1h reminder matches preferred direction and never exposes phone", () => {
     const sms = parentSessionReminderSms({ studentName: "Maya", whenISO: ISO, tz: "America/New_York" });
-    assert.match(sms, /Study Hall at Home reminder: Maya's Study Hall starts at/);
+    assert.match(sms, /Study Hall \(at home\) reminder: Maya's Study Hall starts at/);
     assert.match(sms, /ready at her workspace/);
     assert.match(sms, /room opens 5 minutes before/i);
     assert.doesNotMatch(sms, /\+1|phone|twilio/i);
