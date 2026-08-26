@@ -15,7 +15,7 @@ export function AuthCard({
   footer: ReactNode;
 }) {
   return (
-    <section className="flex flex-1 items-center justify-center bg-ink-50/60 py-16">
+    <section className="flex flex-1 items-center justify-center bg-[#f4f5f7] py-16">
       <Container className="max-w-md">
         <div className="rounded-2xl border border-ink-100 bg-white p-8 shadow-sm">
           <Link href="/" className="text-xs font-semibold tracking-wide text-brand-600 uppercase">

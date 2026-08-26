@@ -34,7 +34,7 @@ export function DashboardShell({
   badgeLabel?: string;
 }) {
   return (
-    <div className="min-h-full bg-ink-50/50">
+    <div className="min-h-full bg-[#f4f5f7]">
       <div className="border-b border-ink-100 bg-white">
         <Container className="flex items-center justify-between gap-4 py-5">
           <div className="min-w-0">

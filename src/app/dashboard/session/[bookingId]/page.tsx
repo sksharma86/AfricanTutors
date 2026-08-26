@@ -23,7 +23,7 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
   const backHref = info.role === "tutor" ? "/dashboard/tutor" : info.role === "admin" ? "/dashboard/admin" : "/dashboard/student";
 
   return (
-    <div className="min-h-full bg-ink-900 py-8">
+    <div className="min-h-full bg-[#0b0d10] py-8">
       <Container className="max-w-5xl">
         <Link href={backHref} className="text-sm font-medium text-gold-300 hover:text-gold-200">
           ← Back to dashboard

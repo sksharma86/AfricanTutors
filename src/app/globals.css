@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Study Hall (at home) — crisp modern product UI.
-     Bright warm white, near-black type, restrained gold accent. */
-  --background: #fafaf8;
-  --foreground: #0c0c0b;
+  /* Study Hall (at home) — crisp modern product, not beige editorial. */
+  --background: #f4f5f7;
+  --foreground: #0b0d10;
   --surface: #ffffff;
-  --surface-muted: #f3f2ef;
-  --hairline: rgba(12, 12, 11, 0.08);
+  --surface-muted: #eef0f3;
+  --hairline: rgba(11, 13, 16, 0.08);
+  --live: #1f8a5b;
 
   /* Warm gold — accent only, never a foggy wash. */
   --color-gold-50: #fcf3e3;
@@ -66,7 +66,6 @@
   --color-surface-muted: var(--surface-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Display = modern sans for product marketing (Fraunces optional accent only). */
   --font-display: var(--font-geist-sans);
 
   --color-gold-50: var(--color-gold-50);
@@ -159,6 +158,10 @@
   color: var(--color-ink-500);
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -166,6 +169,47 @@ body {
   font-feature-settings: "ss01" on, "cv11" on;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+.sh-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sh-reveal[data-in="1"] {
+  opacity: 1;
+  transform: none;
+}
+
+.sh-stage {
+  opacity: 0;
+  transform: translateY(16px) scale(0.985);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-live="1"] .sh-stage-1 { opacity: 1; transform: none; }
+[data-live="1"] .sh-stage-2 { opacity: 1; transform: none; transition-delay: 0.22s; }
+[data-live="1"] .sh-stage-3 { opacity: 1; transform: none; transition-delay: 0.42s; }
+
+.sh-ken {
+  animation: sh-ken 22s ease-in-out alternate infinite;
+}
+@keyframes sh-ken {
+  from { transform: scale(1.04) translate3d(0, 0, 0); }
+  to { transform: scale(1.1) translate3d(-1.5%, -1%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-reveal,
+  .sh-stage,
+  [data-live="1"] .sh-stage-1,
+  [data-live="1"] .sh-stage-2,
+  [data-live="1"] .sh-stage-3 {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .sh-ken { animation: none; }
 }
 
 .mkt-atmosphere {

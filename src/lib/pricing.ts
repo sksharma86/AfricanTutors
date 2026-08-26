@@ -48,7 +48,10 @@ export const PREPAID_FROM_HOURLY_USD = 9;
 export const FREE_TRIAL_MINUTES = 60;
 
 /** Primary acquisition call-to-action label (kept consistent site-wide). */
-export const FREE_TRIAL_CTA = "Start your free session";
+export const FREE_TRIAL_CTA = "Try your first Study Hall free";
+
+/** Preferred marketing floor — prepaid 28h effective rate, not PAYG. */
+export const PLANS_AS_LOW_AS_LABEL = `Plans as low as $${PREPAID_FROM_HOURLY_USD}/hour`;
 
 /** Friction-reducing microcopy. Use sparingly — do not repeat site-wide. */
 export const NO_CARD_REQUIRED = "No credit card required.";

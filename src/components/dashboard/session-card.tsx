@@ -41,14 +41,16 @@ export function SessionCard({
     <Card
       className={cn(
         "p-5",
-        featured && "border-forest-200 ring-1 ring-forest-100",
+        featured && "border-ink-900/10 bg-white p-6 sm:p-7",
         className,
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-lg font-semibold text-ink-900">{subject}</h3>
+            <h3 className={cn("font-display font-semibold text-ink-900", featured ? "text-xl sm:text-2xl" : "text-lg")}>
+              {subject}
+            </h3>
             {isFreeTrial ? (
               <span className="rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-gold-700 uppercase">
                 Free trial
@@ -56,7 +58,7 @@ export function SessionCard({
             ) : null}
           </div>
           {whenLabel ? (
-            <p className="mt-1.5 flex items-center gap-2 text-sm text-ink-700">
+            <p className={cn("mt-1.5 flex items-center gap-2 text-ink-700", featured ? "text-base sm:text-lg" : "text-sm")}>
               <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7} stroke="currentColor" className="h-4 w-4 shrink-0 text-ink-400">
                 <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />

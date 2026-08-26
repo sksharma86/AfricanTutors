@@ -110,8 +110,8 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
     .join(" · ");
 
   return (
-    <div className="rounded-2xl border border-ink-700 bg-ink-800 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#12141a]">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 px-5 py-5 sm:px-6">
         <div>
           <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
@@ -120,13 +120,20 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           </p>
           <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
         </div>
-        <span className="rounded-full border border-ink-600 bg-ink-900 px-3 py-1 text-xs font-medium text-ink-200">
-          {customerBookingStatus(info.status ?? "", undefined).label}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-1 text-xs font-medium text-white/80">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+            Recording
+          </span>
+          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-ink-200">
+            {customerBookingStatus(info.status ?? "", undefined).label}
+          </span>
+        </div>
       </div>
+      <div className="p-5 sm:p-6">
 
-      {isGuide ? (
-        <div className="mt-4 rounded-lg border border-forest-700/50 bg-forest-950/40 p-3 text-xs leading-5 text-ink-200">
+        {isGuide ? (
+        <div className="rounded-lg border border-forest-700/50 bg-forest-950/40 p-3 text-xs leading-5 text-ink-200">
           <p className="font-medium text-forest-200">Guide expectations</p>
           <p className="mt-1">
             Stay present, encourage focus, redirect gently, and keep a calm study environment. Do not tutor, teach
@@ -208,6 +215,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
             {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
