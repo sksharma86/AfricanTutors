@@ -51,9 +51,17 @@ export async function POST(request: NextRequest) {
   // Customer + affected-tutor notifications for tutor-side outcomes (best-effort, idempotent).
   if (body.action === "reassign") {
     const removedTutorId = (res.data as { from_tutor?: string } | null)?.from_tutor ?? null;
-    void notifyReassignment(body.bookingId, { reassigned: true, removedTutorId });
+    try {
+      await notifyReassignment(body.bookingId, { reassigned: true, removedTutorId });
+    } catch {
+      /* best-effort */
+    }
   } else if (body.action === "release") {
-    void notifyReassignment(body.bookingId, { reassigned: false, compCreditCents: body.compCreditCents ?? 0 });
+    try {
+      await notifyReassignment(body.bookingId, { reassigned: false, compCreditCents: body.compCreditCents ?? 0 });
+    } catch {
+      /* best-effort */
+    }
   }
   return NextResponse.json(res.data);
 }

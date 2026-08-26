@@ -60,10 +60,14 @@ export async function POST(request: NextRequest) {
   }
 
   if (auto?.status === "reassigned") {
-    void notifyReassignment(bookingId, {
-      reassigned: true,
-      removedTutorId: auto.from_tutor ?? userRes.user.id,
-    });
+    try {
+      await notifyReassignment(bookingId, {
+        reassigned: true,
+        removedTutorId: auto.from_tutor ?? userRes.user.id,
+      });
+    } catch {
+      /* best-effort */
+    }
     return NextResponse.json({
       id: requestId,
       status: "reassigned",
@@ -73,16 +77,20 @@ export async function POST(request: NextRequest) {
   }
 
   // Coverage could not be restored — keep request open; alert manager.
-  void notifyAdminAlert(`guide-coverage-failed:${bookingId}`, {
-    title: "Guide coverage failed — needs reassignment",
-    summary:
-      "A Guide became unavailable and no eligible replacement was continuously available for the full Study Hall. Booking is unchanged for the parent; manager action required.",
-    lines: [
-      `Booking: ${bookingId}`,
-      SAFE.test(reason) ? `Reason: ${reason}` : "Reason: (provided)",
-      `Auto result: ${auto?.reason ?? "needs_admin"}`,
-    ],
-  });
+  try {
+    await notifyAdminAlert(`guide-coverage-failed:${bookingId}`, {
+      title: "Guide coverage failed — needs reassignment",
+      summary:
+        "A Guide became unavailable and no eligible replacement was continuously available for the full Study Hall. Booking is unchanged for the parent; manager action required.",
+      lines: [
+        `Booking: ${bookingId}`,
+        SAFE.test(reason) ? `Reason: ${reason}` : "Reason: (provided)",
+        `Auto result: ${auto?.reason ?? "needs_admin"}`,
+      ],
+    });
+  } catch {
+    /* best-effort */
+  }
 
   return NextResponse.json({
     id: requestId,

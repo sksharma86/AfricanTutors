@@ -31,6 +31,10 @@ export async function POST(request: NextRequest) {
         : "Unable to submit your concern.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
-  void notifyDisputeReceived(data as string, body.bookingId);
+  try {
+    await notifyDisputeReceived(data as string, body.bookingId);
+  } catch {
+    /* best-effort */
+  }
   return NextResponse.json({ id: data, status: "open" });
 }

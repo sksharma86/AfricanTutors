@@ -85,7 +85,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unable to submit the report." }, { status: 400 });
   }
 
-  void notifySessionReportReady(body.bookingId, data as string);
+  try {
+    await notifySessionReportReady(body.bookingId, data as string);
+  } catch {
+    /* best-effort; report already saved */
+  }
 
   return NextResponse.json({ id: data, status: "submitted" });
 }

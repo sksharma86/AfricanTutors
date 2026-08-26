@@ -74,7 +74,11 @@ export async function POST(request: NextRequest) {
   });
   if (error) return NextResponse.json({ error: "Refund recorded at Stripe but internal update failed; please reconcile." }, { status: 500 });
 
-  void notifyRefund(pay.id, refundId, body.amountCents, reason);
+  try {
+    await notifyRefund(pay.id, refundId, body.amountCents, reason);
+  } catch {
+    /* best-effort */
+  }
 
   return NextResponse.json(data);
 }
