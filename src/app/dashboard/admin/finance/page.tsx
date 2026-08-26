@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { AdminFinanceConsole, type EarningRow, type DisputeRow, type PaymentRow, type EmailFailureRow } from "@/components/dashboard/admin-finance-console";
-import { Container } from "@/components/ui/container";
+import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -110,19 +109,13 @@ export default async function AdminFinancePage() {
   const emailFailures = (failures ?? []) as EmailFailureRow[];
 
   return (
-    <div className="min-h-full bg-ink-50/50 py-10">
-      <Container className="max-w-6xl">
-        <Link href="/dashboard/admin" className="text-sm font-medium text-gold-700 hover:underline">
-          ← Back to admin
-        </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold text-ink-900">Financial operations</h1>
-        <p className="mt-1 text-sm text-ink-500">
-          Guide earnings &amp; payouts, customer balances &amp; adjustments, Stripe refunds, and dispute resolution.
-        </p>
-        <div className="mt-8">
-          <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} emailFailures={emailFailures} />
-        </div>
-      </Container>
-    </div>
+    <DashboardShell
+      role="admin"
+      title="Financial operations"
+      description="Guide earnings & payouts, customer balances & adjustments, Stripe refunds, and dispute resolution."
+      navItems={ADMIN_PORTAL_NAV}
+    >
+      <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} emailFailures={emailFailures} />
+    </DashboardShell>
   );
 }

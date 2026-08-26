@@ -33,11 +33,7 @@ export default async function GuideApplicantPage() {
       badgeLabel="Guide applicant"
       title="Application status"
       description="Your Study Hall Guide application is being reviewed."
-      navItems={[
-        { label: "Application", available: true },
-        { label: "Guide workspace", available: false },
-        { label: "Earnings", available: false },
-      ]}
+      navItems={[{ label: "Application", href: "/dashboard/applicant" }]}
     >
       <GuideApplicantPanel info={info} />
     </DashboardShell>

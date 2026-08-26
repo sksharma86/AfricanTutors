@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { AdminConsole, type AdminBooking, type AdminTutor } from "@/components/dashboard/admin-console";
 import { AdminWhen } from "@/components/dashboard/admin-when";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Button, LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -95,15 +95,9 @@ export default async function AdminDashboardPage() {
       role="admin"
       title="Operations overview"
       description="Manage Guides, sessions, coverage, reports, and financial operations."
-      navItems={[
-        { label: "Overview", available: true },
-        { label: "Guide Approvals", available: true },
-        { label: "Sessions", available: true },
-        { label: "Finance", available: true },
-        { label: "Settings", available: false },
-      ]}
+      navItems={ADMIN_PORTAL_NAV}
     >
-      <section className="mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
+      <section id="overview" className="scroll-mt-24 mb-8 flex flex-col gap-3 rounded-2xl border border-ink-100 bg-ink-900 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-lg font-semibold text-white">Financial operations</h2>
           <p className="mt-1 text-sm text-ink-200">
@@ -115,7 +109,7 @@ export default async function AdminDashboardPage() {
         </LinkButton>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
+      <section id="guide-approvals" className="scroll-mt-24 mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-900">Guide approvals</h2>
           <span className="rounded-full bg-ink-100 px-2.5 py-0.5 text-xs font-semibold text-ink-600">
@@ -254,14 +248,16 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <AdminConsole
-        bookings={((bookings ?? []) as unknown as (Omit<AdminBooking, "student_timezone"> & {
-          students: { timezone: string | null } | null;
-        })[]).map((b) => ({
-          ...b,
-          student_timezone: b.students?.timezone ?? null,
-        }))}
-      />
+      <section id="sessions" className="scroll-mt-24 mb-8">
+        <AdminConsole
+          bookings={((bookings ?? []) as unknown as (Omit<AdminBooking, "student_timezone"> & {
+            students: { timezone: string | null } | null;
+          })[]).map((b) => ({
+            ...b,
+            student_timezone: b.students?.timezone ?? null,
+          }))}
+        />
+      </section>
     </DashboardShell>
   );
 }
