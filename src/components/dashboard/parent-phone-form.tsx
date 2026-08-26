@@ -46,7 +46,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
       <p className="mt-1.5 text-sm leading-6 text-ink-500">
         Study Hall (at home) needs your phone so we can reach you if a Guide uses Call Parent during a session —
         for example if your child needs you. Your number is never shared with Guides, and we do not sell or release
-        it to third parties. You do not need to keep this portal open.
+        it to third parties. You don’t need to keep this portal open.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <label className="sr-only" htmlFor="parent-phone">

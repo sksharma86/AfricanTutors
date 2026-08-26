@@ -12,9 +12,11 @@ describe("PR10C — parent portal usability (source)", () => {
   const wizard = read("src/components/booking/booking-wizard.tsx");
   const phone = read("src/components/dashboard/parent-phone-form.tsx");
 
-  it("nav is parent-simple: Dashboard, Book, Sessions, Account", () => {
+  it("nav is parent-simple: Dashboard, Book, Hours, Sessions, Account", () => {
     assert.match(shell, /label:\s*"Dashboard"/);
     assert.match(shell, /label:\s*"Book"/);
+    assert.match(shell, /label:\s*"Hours"/);
+    assert.match(shell, /packages#prepaid/);
     assert.match(shell, /label:\s*"Sessions"/);
     assert.match(shell, /label:\s*"Account"/);
     assert.match(shell, /Book a Study Hall/);

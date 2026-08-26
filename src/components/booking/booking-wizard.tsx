@@ -642,7 +642,7 @@ export function BookingWizard({
 
               <div>
                 <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Time</p>
-                <div className="mt-2 grid max-h-[min(20rem,50vh)] grid-cols-3 gap-2 overflow-y-auto overscroll-contain sm:grid-cols-4 sm:max-h-none sm:overflow-visible">
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {timesForSelectedDay.map((iso) => (
                     <button
                       key={iso}
