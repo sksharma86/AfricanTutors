@@ -14,7 +14,6 @@ export default async function AdminStudyHallsPage() {
   await requireRole("admin", "/dashboard/admin/study-halls");
   const supabase = await createSupabaseServerClient();
   const data = await loadManagementWorkspace(supabase!);
-  const attentionBookingIds = data.attentionItems.map((i) => i.bookingId).filter(Boolean) as string[];
 
   return (
     <DashboardShell
@@ -27,7 +26,6 @@ export default async function AdminStudyHallsPage() {
         <ManagementStudyHalls
           bookings={data.bookings as never}
           presenceByBooking={data.presenceByBooking}
-          attentionBookingIds={attentionBookingIds}
         />
       </Suspense>
     </DashboardShell>

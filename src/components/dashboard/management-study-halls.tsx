@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { ManagementStatusPill } from "@/components/dashboard/management-status-pill";
+import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
 import {
   calendarDateInTz,
   managementOperationalStatus,
@@ -22,6 +22,14 @@ const VIEWS = [
   { id: "cancelled", label: "Cancelled" },
 ] as const;
 
+export interface StudyHallIssue {
+  kind: string;
+  title: string;
+  summary: string;
+  detail: string | null;
+  action: string;
+}
+
 export interface StudyHallListRow {
   id: string;
   student_first_name: string | null;
@@ -36,12 +44,12 @@ export interface StudyHallListRow {
   status: string;
   payment_status: string;
   is_free_trial: boolean;
+  issues?: StudyHallIssue[];
 }
 
 export function ManagementStudyHalls({
   bookings,
   presenceByBooking,
-  attentionBookingIds,
 }: {
   bookings: StudyHallListRow[];
   presenceByBooking: Record<
@@ -55,7 +63,6 @@ export function ManagementStudyHalls({
       tutor_last_left_at?: string | null;
     }
   >;
-  attentionBookingIds: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -65,7 +72,6 @@ export function ManagementStudyHalls({
   const view = VIEWS.some((v) => v.id === params.get("view")) ? (params.get("view") as string) : "today";
   const [q, setQ] = useState(params.get("q") ?? "");
   const [date, setDate] = useState(params.get("date") ?? "");
-  const attention = useMemo(() => new Set(attentionBookingIds), [attentionBookingIds]);
 
   function setView(next: string) {
     const sp = new URLSearchParams(params.toString());
@@ -103,16 +109,17 @@ export function ManagementStudyHalls({
         tz,
         nowMs,
         presence: presenceByBooking[b.id],
-        attention: attention.has(b.id),
+        issues: b.issues,
       });
     })
     .map((b) => ({
       booking: b,
+      issues: b.issues ?? [],
       layer: String(
         managementOperationalStatus(b as never, {
           presence: (presenceByBooking[b.id] ?? null) as never,
           nowMs,
-          attention: attention.has(b.id),
+          issues: b.issues as never,
         }),
       ),
     }))
@@ -161,49 +168,58 @@ export function ManagementStudyHalls({
       {rows.length === 0 ? (
         <p className="py-8 text-sm text-ink-500">No Study Halls in this view.</p>
       ) : (
-        <ul className="divide-y divide-ink-100">
-          {rows.map(({ booking: b, layer }) => {
-            const needsGuide = !b.tutor_id && (b.status === "confirmed" || b.status === "pending");
-            const quiet = layer === "completed" || layer === "cancelled";
-            return (
-              <li key={b.id} className={cn("py-3.5", quiet && "opacity-70")}>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
+        <div>
+          <div className="mb-1 hidden grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-x-4 px-0 text-[11px] font-medium tracking-wide text-ink-400 uppercase sm:grid">
+            <span>Time</span>
+            <span>Child</span>
+            <span>Guide</span>
+            <span>Status</span>
+            <span className="text-right">Action</span>
+          </div>
+          <ul className="divide-y divide-ink-100">
+            {rows.map(({ booking: b, layer, issues }) => {
+              const needsGuide = issues.some((i) => i.kind === "needs_guide" || i.kind === "coverage");
+              const quiet = layer === "completed" || layer === "cancelled";
+              const action = issues[0]?.action ?? (needsGuide ? "Assign Guide" : "View");
+              return (
+                <li key={b.id} className={cn("py-3", quiet && "opacity-70")}>
+                  <div className="grid grid-cols-1 items-baseline gap-x-4 gap-y-1 sm:grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
                     <p className={cn("text-sm font-medium", quiet ? "text-ink-500" : "text-ink-900")}>
-                      {b.scheduled_start ? (
-                        <>
-                          {formatTime(b.scheduled_start, tz)}
-                          {b.scheduled_end ? ` – ${formatTime(b.scheduled_end, tz)}` : null}
-                        </>
-                      ) : (
-                        "Time to confirm"
-                      )}
+                      {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
                     </p>
-                    <p className={cn("mt-0.5 text-sm", quiet ? "text-ink-400" : "text-ink-800")}>
+                    <p className={cn("text-sm", quiet ? "text-ink-400" : "text-ink-800")}>
                       {b.student_first_name ?? "Child"}
                     </p>
-                    <p className="text-sm text-ink-500">
-                      {needsGuide ? "No Guide" : `Guide: ${b.tutor_display_name ?? "—"}`}
-                      {b.parent_name ? ` · Parent: ${b.parent_name}` : null}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ManagementStatusPill status={layer} />
+                    <p className="text-sm text-ink-500">{needsGuide && !b.tutor_display_name ? "No Guide" : b.tutor_display_name ?? "—"}</p>
+                    <div className="min-w-0 text-sm">
+                      {issues.length === 0 ? (
+                        <ManagementStatusLabel status={layer} />
+                      ) : issues.length === 1 ? (
+                        <p className={cn("font-medium", issues[0].kind === "call_parent" || issues[0].kind === "no_join" ? "text-red-800" : "text-ink-800")}>
+                          {issues[0].title}
+                        </p>
+                      ) : (
+                        <div>
+                          <p className="font-medium text-ink-800">{issues.length} issues</p>
+                          <p className="text-ink-500">{issues.map((i) => i.title).join(" · ")}</p>
+                        </div>
+                      )}
+                    </div>
                     <Link
                       href={`/dashboard/admin/study-halls/${b.id}`}
                       className={cn(
-                        "text-sm font-semibold hover:underline",
+                        "text-sm font-semibold hover:underline sm:text-right",
                         quiet ? "text-ink-400" : "text-gold-700",
                       )}
                     >
-                      {needsGuide ? "Assign Guide" : "View"}
+                      {action}
                     </Link>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </div>
   );

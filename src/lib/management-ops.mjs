@@ -107,25 +107,210 @@ function paymentNeedsReview(booking) {
   return booking.payment_status === "awaiting_payment" || booking.payment_status === "failed";
 }
 
+const RECENT_NOTIFY_MS = 48 * 60 * 60 * 1000;
+const RECENT_RECORDING_MS = 7 * 24 * 60 * 60 * 1000;
+const RECENT_REPORT_MS = 14 * 24 * 60 * 60 * 1000;
+
+function bookingById(bookings) {
+  const map = new Map();
+  for (const b of bookings ?? []) {
+    if (b?.id) map.set(b.id, b);
+  }
+  return map;
+}
+
+function stillOperational(booking, nowMs) {
+  if (!booking) return false;
+  if (isOpenStudyHall(booking.status)) return true;
+  const end = sessionEndMs(booking);
+  return end != null && nowMs <= end + JOIN_CLOSE_GRACE_MIN * 60_000;
+}
+
+function recentlyFinished(booking, nowMs, windowMs) {
+  if (!booking || !isFinishedStatus(booking.status)) return false;
+  const end = sessionEndMs(booking);
+  if (end == null) return false;
+  return end < nowMs && nowMs - end <= windowMs;
+}
+
+function failedCall(e) {
+  return (
+    e?.status === "failed" ||
+    e?.status === "not_configured" ||
+    e?.outcome === "failed" ||
+    e?.outcome === "not_configured" ||
+    e?.outcome === "no_phone"
+  );
+}
+
 /**
- * Human management status. Internal booking statuses stay intact.
+ * Current unresolved issues for one Study Hall. Historical diagnostics stay out.
  */
-export function managementOperationalStatus(booking, { presence = null, nowMs = Date.now(), attention = false } = {}) {
-  if (!booking) return "needs_attention";
-  if (isCancelledStatus(booking.status)) return "cancelled";
-  if (isFinishedStatus(booking.status)) return attention ? "needs_attention" : "completed";
-  if (isStudyHallLive(booking, presence, nowMs)) return "live";
-  if (attention) return "needs_attention";
-  if (!hasGuide(booking) && isOpenStudyHall(booking.status)) return "needs_attention";
-  if (paymentNeedsReview(booking) && isOpenStudyHall(booking.status)) return "needs_attention";
+export function currentStudyHallIssues(booking, extras = {}) {
+  const {
+    presence = null,
+    cancelOpen = false,
+    escalations = [],
+    emailFailures = [],
+    recordingFailures = [],
+    missingReport = false,
+    nowMs = Date.now(),
+  } = extras;
+  if (!booking) return [];
+  const issues = [];
+
+  if (isOpenStudyHall(booking.status) && !hasGuide(booking)) {
+    issues.push({
+      kind: "needs_guide",
+      title: "Needs a Guide",
+      summary: "No Guide is assigned.",
+      detail: startsInLabel(booking.scheduled_start, nowMs),
+      action: "Assign Guide",
+    });
+  }
+
+  if (cancelOpen && isOpenStudyHall(booking.status)) {
+    issues.push({
+      kind: "coverage",
+      title: "Guide replacement failed",
+      summary: "We couldn't automatically find another Guide.",
+      detail: startsInLabel(booking.scheduled_start, nowMs),
+      action: "Reassign",
+    });
+  }
+
+  if (isOpenStudyHall(booking.status) && paymentNeedsReview(booking)) {
+    issues.push({
+      kind: "payment",
+      title: "Payment needs review",
+      summary: "Payment for this Study Hall has not completed.",
+      detail: booking.public_reference ?? null,
+      action: "Review",
+    });
+  }
+
   if (booking.status === "confirmed" && booking.scheduled_start) {
     const start = new Date(booking.scheduled_start).getTime();
     const close = (sessionEndMs(booking) ?? start) + JOIN_CLOSE_GRACE_MIN * 60_000;
-    if (nowMs >= start && nowMs <= close && !someoneJoined(presence)) return "needs_attention";
+    if (nowMs >= start && nowMs <= close && !someoneJoined(presence)) {
+      issues.push({
+        kind: "no_join",
+        title: "No one has joined",
+        summary: "This Study Hall is underway and nobody has joined yet.",
+        detail: booking.tutor_display_name ?? null,
+        action: "View",
+      });
+    }
   }
+
+  if (stillOperational(booking, nowMs) && escalations.some(failedCall)) {
+    issues.push({
+      kind: "call_parent",
+      title: "Parent needs help",
+      summary: "Parent assistance was requested and the parent was not reached.",
+      detail: null,
+      action: "View request",
+    });
+  }
+
+  const currentNotify = emailFailures.filter((d) => {
+    if (!stillOperational(booking, nowMs) && !recentlyFinished(booking, nowMs, RECENT_NOTIFY_MS)) return false;
+    const at = ms(d.updated_at);
+    return at == null || nowMs - at <= RECENT_NOTIFY_MS;
+  });
+  if (currentNotify.length) {
+    issues.push({
+      kind: "notify",
+      title: "Parent wasn't notified",
+      summary: "A current message to the parent did not send.",
+      detail: currentNotify[0].to_email ?? currentNotify[0].notification_type ?? null,
+      action: "View",
+    });
+  }
+
+  if (missingReport && recentlyFinished(booking, nowMs, RECENT_REPORT_MS)) {
+    const end = sessionEndMs(booking);
+    if (end != null && nowMs - end >= 24 * 60 * 60 * 1000) {
+      issues.push({
+        kind: "report",
+        title: "Guide report missing",
+        summary: "The completed Study Hall does not yet have its required report.",
+        detail: booking.tutor_display_name ?? null,
+        action: "View",
+      });
+    }
+  }
+
+  const failedRecs = recordingFailures.filter((r) => r.status === "failed" || !r.status);
+  if (failedRecs.length && recentlyFinished(booking, nowMs, RECENT_RECORDING_MS)) {
+    issues.push({
+      kind: "recording",
+      title: "Recording unavailable",
+      summary: "The recording for this completed Study Hall did not finish.",
+      detail: null,
+      action: "View",
+    });
+  }
+
+  return issues;
+}
+
+/**
+ * Human management status. Internal booking statuses stay intact.
+ * Needs attention only when currentStudyHallIssues is non-empty.
+ */
+export function managementOperationalStatus(booking, opts = {}) {
+  const { presence = null, nowMs = Date.now(), issues: provided } = opts;
+  if (!booking) return "needs_attention";
+  if (isCancelledStatus(booking.status)) return "cancelled";
+  const issues = provided ?? currentStudyHallIssues(booking, opts);
+  if (isStudyHallLive(booking, presence, nowMs)) return "live";
+  if (issues.length) return "needs_attention";
+  if (isFinishedStatus(booking.status)) return "completed";
   if (isOpenStudyHall(booking.status) && hasGuide(booking) && !paymentNeedsReview(booking)) return "ready";
   if (isOpenStudyHall(booking.status)) return "needs_attention";
   return "needs_attention";
+}
+
+export function managementGreeting(nowMs = Date.now(), tz = "UTC") {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz || "UTC",
+      hour: "numeric",
+      hourCycle: "h23",
+    }).formatToParts(new Date(nowMs));
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 12);
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  } catch {
+    return "Hello";
+  }
+}
+
+export function managementDateLabel(nowMs = Date.now(), tz = "UTC") {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: tz || "UTC",
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(nowMs));
+  } catch {
+    return "";
+  }
+}
+
+function groupRowsByBooking(rows) {
+  const map = new Map();
+  for (const row of rows ?? []) {
+    const id = row?.booking_id;
+    if (!id) continue;
+    const list = map.get(id) ?? [];
+    list.push(row);
+    map.set(id, list);
+  }
+  return map;
 }
 
 export function matchesStudyHallSearch(booking, query) {
@@ -144,9 +329,10 @@ export function matchesStudyHallSearch(booking, query) {
   return hay.includes(q);
 }
 
-export function studyHallViewMembership(booking, view, { tz, nowMs, presence, attention }) {
-  const status = managementOperationalStatus(booking, { presence, nowMs, attention });
-  if (view === "attention") return status === "needs_attention";
+export function studyHallViewMembership(booking, view, { tz, nowMs, presence, issues } = {}) {
+  const issueList = issues ?? booking.issues ?? currentStudyHallIssues(booking, { presence, nowMs });
+  const status = managementOperationalStatus(booking, { presence, nowMs, issues: issueList });
+  if (view === "attention") return issueList.length > 0;
   if (view === "completed") return status === "completed" || booking.status === "no_show";
   if (view === "cancelled") return status === "cancelled";
   if (view === "upcoming") {
@@ -177,8 +363,21 @@ function item(partial) {
   };
 }
 
+function attentionFromIssue(booking, issue) {
+  return item({
+    id: `${issue.kind}:${booking.id}`,
+    kind: issue.kind,
+    title: issue.title,
+    summary: issue.summary,
+    detail: [booking.student_first_name ?? "Child", booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    bookingId: booking.id,
+    href: `/dashboard/admin/study-halls/${booking.id}`,
+    action: issue.action,
+  });
+}
+
 /**
- * Aggregate actionable exceptions from existing records. No new backend state.
+ * Current unresolved exceptions only. Historical diagnostics stay on detail pages.
  */
 export function collectNeedsAttention({
   bookings = [],
@@ -193,115 +392,44 @@ export function collectNeedsAttention({
   nowMs = Date.now(),
 } = {}) {
   const items = [];
-  const cancelBookingIds = new Set(cancelRequests.map((r) => r.booking_id).filter(Boolean));
+  const bookingsMap = bookingById(bookings);
+  const cancelOpen = new Set(cancelRequests.map((r) => r.booking_id).filter(Boolean));
+  const escBy = groupRowsByBooking(escalations);
+  const emailBy = groupRowsByBooking(emailFailures);
+  const recBy = groupRowsByBooking(recordingFailures);
+  const missingSet = new Set((missingReports ?? []).map((b) => b.id).filter(Boolean));
+  const seen = new Set();
 
   for (const b of bookings) {
-    if (!isOpenStudyHall(b.status)) continue;
-    if (!hasGuide(b)) {
-      items.push(
-        item({
-          id: `no-guide:${b.id}`,
-          kind: "needs_guide",
-          title: "Study Hall needs a Guide",
-          detail: [b.student_first_name ?? "Child", startsInLabel(b.scheduled_start, nowMs)].filter(Boolean).join(" · "),
-          bookingId: b.id,
-          href: `/dashboard/admin/study-halls/${b.id}`,
-          action: "Assign Guide",
-        }),
-      );
-    } else if (b.status === "confirmed" && b.scheduled_start) {
-      const start = new Date(b.scheduled_start).getTime();
-      const close = (sessionEndMs(b) ?? start) + JOIN_CLOSE_GRACE_MIN * 60_000;
-      if (nowMs >= start && nowMs <= close && !someoneJoined(presenceByBooking[b.id])) {
-        items.push(
-          item({
-            id: `no-join:${b.id}`,
-            kind: "no_join",
-            title: "Study Hall started — no one has joined",
-            detail: [b.student_first_name ?? "Child", b.tutor_display_name].filter(Boolean).join(" · "),
-            bookingId: b.id,
-            href: `/dashboard/admin/study-halls/${b.id}`,
-            action: "View Study Hall",
-          }),
-        );
-      }
-    }
-    if (paymentNeedsReview(b)) {
-      items.push(
-        item({
-          id: `pay:${b.id}`,
-          kind: "payment",
-          title: "Payment needs review",
-          detail: [b.student_first_name ?? "Child", b.public_reference].filter(Boolean).join(" · "),
-          bookingId: b.id,
-          href: `/dashboard/admin/study-halls/${b.id}`,
-          action: "View Study Hall",
-        }),
-      );
-    }
+    if (!b?.id) continue;
+    seen.add(b.id);
+    const issues = currentStudyHallIssues(b, {
+      presence: presenceByBooking[b.id],
+      cancelOpen: cancelOpen.has(b.id),
+      escalations: escBy.get(b.id) ?? [],
+      emailFailures: emailBy.get(b.id) ?? [],
+      recordingFailures: recBy.get(b.id) ?? [],
+      missingReport: missingSet.has(b.id),
+      nowMs,
+    });
+    for (const issue of issues) items.push(attentionFromIssue(b, issue));
   }
 
   for (const r of cancelRequests) {
+    if (r.booking_id && seen.has(r.booking_id)) continue;
+    const start = r.scheduled_start ?? r.bookings?.scheduled_start ?? bookingsMap.get(r.booking_id)?.scheduled_start;
     items.push(
       item({
         id: `coverage:${r.id}`,
         kind: "coverage",
-        title: "Could not find a replacement Guide",
-        detail: [r.student_first_name ?? r.bookings?.student_first_name ?? "Child", startsInLabel(r.scheduled_start ?? r.bookings?.scheduled_start, nowMs)]
+        title: "Guide replacement failed",
+        summary: "We couldn't automatically find another Guide.",
+        detail: [r.student_first_name ?? r.bookings?.student_first_name ?? "Child", startsInLabel(start, nowMs)]
           .filter(Boolean)
           .join(" · "),
-        bookingId: r.booking_id,
+        bookingId: r.booking_id ?? null,
         href: r.booking_id ? `/dashboard/admin/study-halls/${r.booking_id}` : "/dashboard/admin/study-halls?view=attention",
-        action: "Assign Guide",
-      }),
-    );
-  }
-
-  for (const e of escalations) {
-    const failed =
-      e.status === "failed" ||
-      e.status === "not_configured" ||
-      e.outcome === "failed" ||
-      e.outcome === "not_configured" ||
-      e.outcome === "no_phone";
-    if (!failed) continue;
-    items.push(
-      item({
-        id: `call:${e.id}`,
-        kind: "call_parent",
-        title: "Call Parent did not reach the parent",
-        detail: e.bookings?.student_first_name ?? e.student_first_name ?? "Study Hall",
-        bookingId: e.booking_id,
-        href: e.booking_id ? `/dashboard/admin/study-halls/${e.booking_id}` : "/dashboard/admin/study-halls",
-        action: "View Study Hall",
-      }),
-    );
-  }
-
-  for (const d of emailFailures) {
-    items.push(
-      item({
-        id: `notify:${d.id}`,
-        kind: "notify",
-        title: "Parent wasn't notified",
-        detail: d.to_email ?? d.notification_type ?? "Message failed",
-        bookingId: d.booking_id ?? null,
-        href: d.booking_id ? `/dashboard/admin/study-halls/${d.booking_id}` : "/dashboard/admin/finance",
-        action: d.booking_id ? "View Study Hall" : "Open Finance",
-      }),
-    );
-  }
-
-  for (const rec of recordingFailures) {
-    items.push(
-      item({
-        id: `rec:${rec.id}`,
-        kind: "recording",
-        title: "Recording unavailable",
-        detail: rec.student_first_name ?? "Completed Study Hall",
-        bookingId: rec.booking_id,
-        href: rec.booking_id ? `/dashboard/admin/study-halls/${rec.booking_id}` : "/dashboard/admin/study-halls?view=completed",
-        action: "View Study Hall",
+        action: "Reassign",
       }),
     );
   }
@@ -313,24 +441,11 @@ export function collectNeedsAttention({
         id: `dispute:${d.id}`,
         kind: "dispute",
         title: "Payment needs review",
+        summary: "A parent dispute is waiting.",
         detail: "A parent dispute is waiting",
-        bookingId: d.booking_id,
+        bookingId: d.booking_id ?? null,
         href: "/dashboard/admin/finance",
-        action: "Open Finance",
-      }),
-    );
-  }
-
-  for (const b of missingReports) {
-    items.push(
-      item({
-        id: `report:${b.id}`,
-        kind: "report",
-        title: "Guide report overdue",
-        detail: [b.tutor_display_name ?? "Guide", b.student_first_name ?? "Child"].filter(Boolean).join(" · "),
-        bookingId: b.id,
-        href: `/dashboard/admin/study-halls/${b.id}`,
-        action: "View Study Hall",
+        action: "Review",
       }),
     );
   }
@@ -341,6 +456,7 @@ export function collectNeedsAttention({
         id: `applicant:${a.profile_id}`,
         kind: "applicant",
         title: "Guide application waiting",
+        summary: "A Guide application is waiting for a decision.",
         detail: a.display_name ?? a.profiles?.display_name ?? "Applicant",
         href: "/dashboard/admin/guides",
         action: "Review application",
@@ -348,11 +464,52 @@ export function collectNeedsAttention({
     );
   }
 
-  void cancelBookingIds;
   return items;
 }
 
-export function comingUpBookings(bookings, { presenceByBooking = {}, nowMs = Date.now(), limit = 8, attentionIds = new Set() } = {}) {
+/**
+ * Group per-Study-Hall issues so a manager sees every current reason, not a
+ * single meaningless "Needs attention" label.
+ */
+export function presentNeedsAttention(items = []) {
+  const presented = [];
+  const seenBookings = new Set();
+  for (const entry of items) {
+    if (!entry.bookingId) {
+      presented.push({
+        id: entry.id,
+        bookingId: null,
+        href: entry.href,
+        action: entry.action,
+        title: entry.title,
+        summary: entry.summary ?? "",
+        detail: entry.detail ?? "",
+        reasons: [entry.title],
+        issueCount: 1,
+        urgent: entry.kind === "call_parent" || entry.kind === "no_join" || entry.kind === "coverage",
+      });
+      continue;
+    }
+    if (seenBookings.has(entry.bookingId)) continue;
+    seenBookings.add(entry.bookingId);
+    const group = items.filter((i) => i.bookingId === entry.bookingId);
+    presented.push({
+      id: `booking:${entry.bookingId}`,
+      bookingId: entry.bookingId,
+      href: group[0].href,
+      action: group[0].action,
+      title: group.length === 1 ? group[0].title : `${group.length} issues`,
+      summary: group.length === 1 ? (group[0].summary ?? "") : "",
+      detail: group[0].detail ?? "",
+      reasons: group.map((i) => i.title),
+      issueCount: group.length,
+      urgent: group.some((i) => ["call_parent", "no_join", "coverage", "needs_guide"].includes(i.kind)),
+    });
+  }
+  return presented;
+}
+
+export function comingUpBookings(bookings, { presenceByBooking = {}, nowMs = Date.now(), limit = 8 } = {}) {
   return bookings
     .filter((b) => {
       if (!b.scheduled_start) return false;
@@ -362,12 +519,16 @@ export function comingUpBookings(bookings, { presenceByBooking = {}, nowMs = Dat
     })
     .sort((a, b) => new Date(a.scheduled_start).getTime() - new Date(b.scheduled_start).getTime())
     .slice(0, limit)
-    .map((b) => ({
-      ...b,
-      statusLayer: managementOperationalStatus(b, {
-        presence: presenceByBooking[b.id],
-        nowMs,
-        attention: attentionIds.has(b.id),
-      }),
-    }));
+    .map((b) => {
+      const issues = b.issues ?? currentStudyHallIssues(b, { presence: presenceByBooking[b.id], nowMs });
+      return {
+        ...b,
+        issues,
+        statusLayer: managementOperationalStatus(b, {
+          presence: presenceByBooking[b.id],
+          nowMs,
+          issues,
+        }),
+      };
+    });
 }

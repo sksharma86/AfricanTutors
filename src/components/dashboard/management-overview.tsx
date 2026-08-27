@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { ManagementStatusPill } from "@/components/dashboard/management-status-pill";
+import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
 import { formatCompensationTotals } from "@/lib/compensation-currency.mjs";
 import {
   comingUpBookings,
   isStudyHallLive,
+  managementDateLabel,
+  managementGreeting,
   managementOperationalStatus,
+  presentNeedsAttention,
   todayDateInTz,
   calendarDateInTz,
 } from "@/lib/management-ops.mjs";
@@ -25,6 +28,7 @@ export interface OverviewBooking {
   status: string;
   payment_status: string;
   is_free_trial: boolean;
+  issues?: { kind: string; title: string; summary: string; detail: string | null; action: string }[];
 }
 
 export interface AttentionItem {
@@ -34,6 +38,8 @@ export interface AttentionItem {
   href: string;
   action: string;
   bookingId?: string | null;
+  kind?: string;
+  summary?: string;
 }
 
 export function ManagementOverview({
@@ -62,60 +68,37 @@ export function ManagementOverview({
   const tz = useMemo(() => browserTimezone(), []);
   const [nowMs] = useState(() => Date.now());
   const today = todayDateInTz(tz, nowMs);
-  const attentionIds = useMemo(
-    () => new Set(attentionItems.map((i) => i.bookingId).filter(Boolean) as string[]),
-    [attentionItems],
-  );
+  const presented = useMemo(() => presentNeedsAttention(attentionItems), [attentionItems]);
 
   const todayCount = bookings.filter(
     (b) => b.scheduled_start && calendarDateInTz(b.scheduled_start, tz) === today,
   ).length;
   const liveCount = bookings.filter((b) => isStudyHallLive(b, presenceByBooking[b.id], nowMs)).length;
-  const coming = comingUpBookings(bookings, { presenceByBooking, nowMs, limit: 8, attentionIds });
+  const coming = comingUpBookings(bookings, { presenceByBooking, nowMs, limit: 8 });
+  const hasIssues = presented.length > 0;
 
   return (
     <div className="space-y-10">
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-ink-100 pb-6 sm:grid-cols-5">
+      <header>
+        <p className="font-display text-2xl font-semibold text-ink-900">{managementGreeting(nowMs, tz)}</p>
+        <p className="mt-1 text-sm text-ink-500">{managementDateLabel(nowMs, tz)}</p>
+      </header>
+
+      {hasIssues ? <AttentionBlock items={presented} dominate /> : null}
+
+      <dl className="flex flex-wrap gap-x-8 gap-y-4 border-y border-ink-100 py-5">
         <Metric label="Study Halls today" value={String(todayCount)} />
+        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
         <Metric label="Live now" value={String(liveCount)} live={liveCount > 0} />
+        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
         <Metric label="Guides active" value={String(guidesActive)} />
-        <Metric label="Needs attention" value={String(attentionItems.length)} alert={attentionItems.length > 0} />
-        <Metric
-          label="Outstanding Guide pay"
-          value={formatCompensationTotals(outstandingTotals, "outstanding")}
-        />
+        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
+        <Metric label="Need attention" value={String(presented.length)} alert={hasIssues} />
+        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
+        <Metric label="Outstanding Guide pay" value={formatCompensationTotals(outstandingTotals, "outstanding")} />
       </dl>
 
-      <section>
-        <h2 className="font-display text-lg font-semibold text-ink-900">Needs attention</h2>
-        <p className="mt-1 text-sm text-ink-500">
-          Call Parent escalations, coverage gaps, and failed parent messages appear here.
-        </p>
-        {attentionItems.length === 0 ? (
-          <p className="mt-3 text-sm leading-6 text-ink-600">
-            Everything is running normally.
-            <br />
-            No coverage issues, failed notifications, or unresolved parent requests.
-          </p>
-        ) : (
-          <ul className="mt-4 divide-y divide-ink-100">
-            {attentionItems.map((item) => (
-              <li key={item.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-ink-900">{item.title}</p>
-                  {item.detail ? <p className="mt-0.5 text-sm text-ink-500">{item.detail}</p> : null}
-                </div>
-                <Link
-                  href={item.href}
-                  className="shrink-0 text-sm font-semibold text-gold-700 hover:underline"
-                >
-                  {item.action}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {hasIssues ? null : <AttentionBlock items={presented} dominate={false} />}
 
       <section>
         <div className="flex items-baseline justify-between gap-3">
@@ -128,21 +111,31 @@ export function ManagementOverview({
           <p className="mt-3 text-sm text-ink-500">Nothing coming up right now.</p>
         ) : (
           <ul className="mt-3 divide-y divide-ink-100">
-            {(coming as (OverviewBooking & { statusLayer?: string })[]).map((b) => {
-              const status = String(b.statusLayer ?? managementOperationalStatus(b as never, {
-                presence: (presenceByBooking[b.id] ?? null) as never,
-                nowMs,
-                attention: attentionIds.has(b.id),
-              }));
+            {(coming as (OverviewBooking & { statusLayer?: string; issues?: OverviewBooking["issues"] })[]).map((b) => {
+              const status = String(
+                b.statusLayer ??
+                  managementOperationalStatus(b as never, {
+                    presence: (presenceByBooking[b.id] ?? null) as never,
+                    nowMs,
+                    issues: b.issues as never,
+                  }),
+              );
+              const reasons = (b.issues ?? []).map((i) => i.title);
               return (
-                <li key={b.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5 text-sm">
-                  <span className="w-20 font-medium text-ink-900">
+                <li key={b.id} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1 py-2.5 text-sm sm:grid-cols-[5rem_7rem_7rem_minmax(0,1fr)_auto]">
+                  <span className="font-medium text-ink-900">
                     {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
                   </span>
-                  <span className="min-w-[7rem] text-ink-800">{b.student_first_name ?? "Child"}</span>
-                  <span className="min-w-[7rem] text-ink-500">{b.tutor_display_name ?? "No Guide"}</span>
-                  <ManagementStatusPill status={status} />
-                  <Link href={`/dashboard/admin/study-halls/${b.id}`} className="ml-auto font-medium text-ink-600 hover:underline">
+                  <span className="truncate text-ink-800">{b.student_first_name ?? "Child"}</span>
+                  <span className="hidden truncate text-ink-500 sm:block">{b.tutor_display_name ?? "No Guide"}</span>
+                  <span className="col-span-2 min-w-0 sm:col-span-1">
+                    {reasons.length ? (
+                      <span className="text-ink-700">{reasons.join(" · ")}</span>
+                    ) : (
+                      <ManagementStatusLabel status={status} />
+                    )}
+                  </span>
+                  <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-600 hover:underline">
                     View
                   </Link>
                 </li>
@@ -152,6 +145,63 @@ export function ManagementOverview({
         )}
       </section>
     </div>
+  );
+}
+
+function AttentionBlock({
+  items,
+  dominate,
+}: {
+  items: {
+    id: string;
+    href: string;
+    action: string;
+    title: string;
+    summary: string;
+    detail: string;
+    reasons: string[];
+    issueCount: number;
+    urgent: boolean;
+  }[];
+  dominate: boolean;
+}) {
+  return (
+    <section>
+      <h2 className={dominate ? "font-display text-2xl font-semibold text-ink-900" : "font-display text-lg font-semibold text-ink-900"}>
+        Needs attention
+        {items.length > 0 ? <span className="text-ink-400"> · {items.length}</span> : null}
+      </h2>
+      {items.length === 0 ? (
+        <p className="mt-3 text-sm leading-6 text-ink-600">
+          Everything is running normally.
+          <br />
+          No coverage issues, failed notifications, or unresolved parent requests.
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-ink-100">
+          {items.map((item) => (
+            <li key={item.id} className="grid gap-1 py-3.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold ${item.urgent ? "text-red-800" : "text-ink-900"}`}>{item.title}</p>
+                {item.issueCount > 1 ? (
+                  <ul className="mt-1 text-sm text-ink-700">
+                    {item.reasons.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                  </ul>
+                ) : item.summary ? (
+                  <p className="mt-0.5 text-sm text-ink-600">{item.summary}</p>
+                ) : null}
+                {item.detail ? <p className="mt-0.5 text-sm text-ink-500">{item.detail}</p> : null}
+              </div>
+              <Link href={item.href} className="shrink-0 text-sm font-semibold text-gold-700 hover:underline">
+                {item.action}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -167,11 +217,11 @@ function Metric({
   alert?: boolean;
 }) {
   return (
-    <div>
+    <div className="min-w-[6.5rem]">
       <dt className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">{label}</dt>
       <dd
         className={`mt-1 font-display text-xl font-semibold ${
-          live ? "text-emerald-800" : alert ? "text-gold-800" : "text-ink-900"
+          live ? "text-emerald-800" : alert ? "text-red-800" : "text-ink-900"
         }`}
       >
         {value}

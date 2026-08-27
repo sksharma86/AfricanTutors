@@ -4,9 +4,12 @@ import { describe, it } from "node:test";
 
 import {
   collectNeedsAttention,
+  currentStudyHallIssues,
   isStudyHallLive,
+  managementGreeting,
   managementOperationalStatus,
   matchesStudyHallSearch,
+  presentNeedsAttention,
   studyHallViewMembership,
 } from "../src/lib/management-ops.mjs";
 
@@ -104,28 +107,96 @@ describe("Management Control Center — Needs Attention", () => {
     assert.deepEqual(collectNeedsAttention({}), []);
   });
 
-  it("aggregates existing operational exceptions in human language", () => {
+  it("aggregates current actionable exceptions with explicit reasons", () => {
+    const recentEnd = "2026-08-25T18:00:00.000Z";
     const items = collectNeedsAttention({
       bookings: [
         { id: "b1", status: "confirmed", tutor_id: null, student_first_name: "Sam", scheduled_start: start, payment_status: "paid" },
+        { id: "b3", status: "confirmed", tutor_id: "g1", tutor_display_name: "Jane", student_first_name: "Ivy", scheduled_start: start, scheduled_end: end, payment_status: "paid" },
+        { id: "b4", status: "completed", tutor_id: "g1", student_first_name: "Noah", scheduled_start: "2026-08-25T17:00:00.000Z", scheduled_end: recentEnd, payment_status: "paid" },
+        { id: "b6", status: "completed", tutor_id: "g1", tutor_display_name: "Chidi", student_first_name: "Sam", scheduled_start: "2026-08-24T17:00:00.000Z", scheduled_end: "2026-08-24T18:00:00.000Z", payment_status: "paid" },
       ],
       cancelRequests: [{ id: "c1", booking_id: "b2", student_first_name: "Ava", scheduled_start: start }],
-      emailFailures: [{ id: "e1", to_email: "parent@example.com", booking_id: "b3" }],
-      recordingFailures: [{ id: "r1", booking_id: "b4", student_first_name: "Noah" }],
+      emailFailures: [{ id: "e1", to_email: "parent@example.com", booking_id: "b3", updated_at: "2026-08-27T16:00:00.000Z" }],
+      recordingFailures: [{ id: "r1", booking_id: "b4", student_first_name: "Noah", status: "failed" }],
       disputes: [{ id: "d1", booking_id: "b5", status: "open" }],
-      missingReports: [{ id: "b6", tutor_display_name: "Chidi", student_first_name: "Sam" }],
+      missingReports: [{ id: "b6", status: "completed", tutor_display_name: "Chidi", student_first_name: "Sam", scheduled_start: "2026-08-24T17:00:00.000Z", scheduled_end: "2026-08-24T18:00:00.000Z" }],
       pendingApplicants: [{ profile_id: "g1", display_name: "Jane" }],
       nowMs: nowBefore,
     });
     const titles = items.map((i) => i.title);
-    assert.ok(titles.includes("Study Hall needs a Guide"));
-    assert.ok(titles.includes("Could not find a replacement Guide"));
+    assert.ok(titles.includes("Needs a Guide"));
+    assert.ok(titles.includes("Guide replacement failed"));
     assert.ok(titles.includes("Parent wasn't notified"));
     assert.ok(titles.includes("Recording unavailable"));
     assert.ok(titles.includes("Payment needs review"));
-    assert.ok(titles.includes("Guide report overdue"));
+    assert.ok(titles.includes("Guide report missing"));
     assert.ok(titles.includes("Guide application waiting"));
     assert.equal(items.find((i) => i.kind === "needs_guide").action, "Assign Guide");
+    assert.ok(items.find((i) => i.kind === "needs_guide").title !== "Needs attention");
+  });
+
+  it("does not permanently flag historical notification or recording failures", () => {
+    const items = collectNeedsAttention({
+      bookings: [
+        {
+          id: "old",
+          status: "completed",
+          tutor_id: "g1",
+          student_first_name: "Sam",
+          scheduled_start: "2026-07-20T18:00:00.000Z",
+          scheduled_end: "2026-07-20T19:00:00.000Z",
+          payment_status: "paid",
+        },
+      ],
+      emailFailures: [{ id: "e-old", booking_id: "old", to_email: "parent@example.com", updated_at: "2026-07-20T19:10:00.000Z" }],
+      recordingFailures: [{ id: "r-old", booking_id: "old", status: "failed" }],
+      nowMs: nowBefore,
+    });
+    assert.equal(items.length, 0);
+  });
+
+  it("does not flag orphan email failures with no booking as operational attention", () => {
+    const items = collectNeedsAttention({
+      emailFailures: [{ id: "orphan", to_email: "test@example.com", booking_id: null, updated_at: "2026-08-27T16:00:00.000Z" }],
+      nowMs: nowBefore,
+    });
+    assert.equal(items.length, 0);
+  });
+
+  it("lists every current issue on one Study Hall instead of collapsing to Needs attention", () => {
+    const booking = {
+      id: "multi",
+      status: "confirmed",
+      tutor_id: null,
+      student_first_name: "Sam",
+      scheduled_start: start,
+      scheduled_end: end,
+      payment_status: "awaiting_payment",
+      is_free_trial: false,
+    };
+    const issues = currentStudyHallIssues(booking, {
+      nowMs: nowBefore,
+      emailFailures: [{ id: "e", booking_id: "multi", updated_at: "2026-08-27T16:30:00.000Z" }],
+    });
+    const kinds = issues.map((i) => i.kind);
+    assert.ok(kinds.includes("needs_guide"));
+    assert.ok(kinds.includes("payment"));
+    assert.ok(kinds.includes("notify"));
+    assert.ok(issues.every((i) => i.title && i.title !== "Needs attention"));
+    const presented = presentNeedsAttention(
+      collectNeedsAttention({
+        bookings: [booking],
+        emailFailures: [{ id: "e", booking_id: "multi", updated_at: "2026-08-27T16:30:00.000Z" }],
+        nowMs: nowBefore,
+      }),
+    );
+    assert.equal(presented.length, 1);
+    assert.equal(presented[0].issueCount, 3);
+    assert.equal(presented[0].title, "3 issues");
+    assert.ok(presented[0].reasons.includes("Needs a Guide"));
+    assert.ok(presented[0].reasons.includes("Payment needs review"));
+    assert.ok(presented[0].reasons.includes("Parent wasn't notified"));
   });
 });
 
@@ -176,6 +247,9 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(overviewUi, /Needs attention/);
     assert.match(overviewUi, /Outstanding Guide pay/);
     assert.match(overviewUi, /Everything is running normally/);
+    assert.match(overviewUi, /managementGreeting/);
+    assert.match(overviewUi, /managementDateLabel/);
+    assert.match(overviewUi, /presentNeedsAttention/);
     assert.match(overviewUi, /browserTimezone/);
     assert.match(overviewUi, /formatCompensationTotals/);
     assert.doesNotMatch(overview, /AdminConsole/);
@@ -198,6 +272,13 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(detail, /AdminWhen/);
     assert.match(listUi, /Child, parent, Guide, or booking reference/);
     assert.match(listUi, /quiet \? "text-ink-500" \| "text-ink-900"|opacity-70/);
+    assert.match(listUi, /Time/);
+    assert.match(listUi, /Child/);
+    assert.match(detail, /Current issue/);
+    assert.match(detail, /currentStudyHallIssues/);
+    assert.match(detail, /History and diagnostics/);
+    assert.match(detail, /Parent wasn't notified/);
+    assert.match(detail, /ManagementNotifyRetry/);
   });
 
   it("Guides, Customers, and Finance remain authorized and reachable", () => {
@@ -214,9 +295,15 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(read("src/lib/auth.ts"), /user\.role !== role/);
     assert.match(read("src/lib/auth.ts"), /redirect\(DASHBOARD_PATH_BY_ROLE\[user\.role\]\)/);
     assert.match(read("src/app/dashboard/admin/finance/page.tsx"), /requireRole\("admin"/);
-    assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /Guide compensation/);
-    assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /Customer money/);
-    assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /Mixed currencies are never added together/);
+    const financeUi = read("src/components/dashboard/admin-finance-console.tsx");
+    assert.match(financeUi, /Guide compensation/);
+    assert.match(financeUi, /Customer money/);
+    assert.match(financeUi, /Customer balances/);
+    assert.match(financeUi, /Mixed currencies are never added together/);
+    assert.doesNotMatch(financeUi, /Parent wasn't notified/);
+    assert.doesNotMatch(financeUi, /"notifications"/);
+    assert.match(read("src/app/dashboard/admin/customers/[accountId]/page.tsx"), /Notifications/);
+    assert.match(read("src/app/dashboard/admin/customers/[accountId]/page.tsx"), /email_deliveries/);
   });
 
   it("does not change booking, Stripe, Daily, or compensation math", () => {
@@ -224,5 +311,29 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(ops, /Does not change booking, pay, matching/);
     assert.doesNotMatch(ops, /admin_complete_booking|session_list_price_cents|authorize_session_join/);
     assert.doesNotMatch(read("src/app/dashboard/admin/page.tsx"), /from\("bookings"\)\.update|rpc\("book_session"/);
+    assert.match(read("src/lib/timezone-format.mjs"), /minute: "2-digit"/);
+    assert.doesNotMatch(ops, /Math\.round\(.*scheduled_start|setMinutes\(0\)/);
+    assert.match(read("src/lib/pricing.ts"), /minutes: 60/);
+    assert.doesNotMatch(read("src/lib/pricing.ts"), /minutes: 30/);
+  });
+});
+
+describe("Management Control Center — Today order and greeting", () => {
+  it("keeps Live, Needs Attention, Ready ahead of Completed", () => {
+    const listUi = read("src/components/dashboard/management-study-halls.tsx");
+    const live = listUi.indexOf("live: 0");
+    const attention = listUi.indexOf("needs_attention: 1");
+    const ready = listUi.indexOf("ready: 2");
+    const completed = listUi.indexOf("completed: 3");
+    assert.ok(live >= 0 && attention > live && ready > attention && completed > ready);
+  });
+
+  it("greeting changes by hour without inventing booking times", () => {
+    const morning = Date.parse("2026-08-27T08:00:00.000Z");
+    const afternoon = Date.parse("2026-08-27T15:00:00.000Z");
+    const evening = Date.parse("2026-08-27T20:00:00.000Z");
+    assert.equal(managementGreeting(morning, "UTC"), "Good morning");
+    assert.equal(managementGreeting(afternoon, "UTC"), "Good afternoon");
+    assert.equal(managementGreeting(evening, "UTC"), "Good evening");
   });
 });

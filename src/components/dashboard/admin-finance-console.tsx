@@ -79,29 +79,18 @@ export interface PaymentRow {
   ref?: string | null;
 }
 
-export interface EmailFailureRow {
-  id: string;
-  notification_type: string;
-  to_email: string | null;
-  status: string;
-  error: string | null;
-  updated_at: string;
-}
-
-type Tab = "earnings" | "disputes" | "payments" | "customer" | "notifications";
+type Tab = "earnings" | "disputes" | "payments" | "customer";
 
 export function AdminFinanceConsole({
   earnings: initialEarnings,
   guides: initialGuides = [],
   disputes: initialDisputes,
   payments: initialPayments,
-  emailFailures = [],
 }: {
   earnings: EarningRow[];
   guides?: GuideCompRow[];
   disputes: DisputeRow[];
   payments: PaymentRow[];
-  emailFailures?: EmailFailureRow[];
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [tab, setTab] = useState<Tab>("earnings");
@@ -116,12 +105,12 @@ export function AdminFinanceConsole({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {(["earnings", "payments", "customer", "disputes", "notifications"] as Tab[]).map((t) => (
+      <div className="flex flex-wrap gap-1 border-b border-ink-100">
+        {(["earnings", "payments", "customer", "disputes"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-full border px-4 py-1.5 text-sm ${tab === t ? "border-ink-900 bg-ink-900 text-white" : "border-ink-200 text-ink-700 hover:border-ink-300"}`}
+            className={`px-3 py-2 text-sm font-medium ${tab === t ? "border-b-2 border-ink-900 text-ink-900" : "text-ink-500 hover:text-ink-800"}`}
           >
             {t === "earnings"
               ? "Guide compensation"
@@ -129,9 +118,7 @@ export function AdminFinanceConsole({
                 ? "Customer money"
                 : t === "customer"
                   ? "Customer balances"
-                  : t === "notifications"
-                    ? "Parent wasn't notified"
-                    : "Disputes"}
+                  : "Disputes"}
           </button>
         ))}
       </div>
@@ -144,57 +131,7 @@ export function AdminFinanceConsole({
       {tab === "disputes" ? <DisputesTab rows={initialDisputes} payments={initialPayments} onOk={flash} onErr={fail} /> : null}
       {tab === "payments" ? <PaymentsTab rows={initialPayments} onOk={flash} onErr={fail} /> : null}
       {tab === "customer" ? <CustomerTab supabase={supabase} onOk={flash} onErr={fail} /> : null}
-      {tab === "notifications" ? <NotificationsTab rows={emailFailures} /> : null}
     </div>
-  );
-}
-
-function NotificationsTab({ rows: initial }: { rows: EmailFailureRow[] }) {
-  const [rows, setRows] = useState(initial);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-
-  async function retry(id: string) {
-    setBusy(id);
-    setNote(null);
-    const res = await fetch("/api/admin/notifications/retry", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deliveryId: id }) });
-    const data = await res.json().catch(() => null);
-    setBusy(null);
-    if (res.ok && data?.retried) {
-      setRows((p) => p.filter((r) => r.id !== id)); // no longer a failure
-      setNote(data.status === "sent" ? "Notification resent." : `Retry recorded (${data.status}).`);
-    } else {
-      setNote(data?.reason ?? data?.error ?? "Retry failed.");
-    }
-  }
-
-  return (
-    <section className="rounded-2xl border border-ink-100 bg-white p-6">
-      <h3 className="font-display text-lg font-semibold text-ink-900">Notification failures</h3>
-      <p className="mt-1 text-sm text-ink-500">Transactional emails that failed to send. Business actions completed normally regardless. Retry re-sends the same message; it never re-runs the underlying operation.</p>
-      {note ? <p className="mt-2 rounded-lg border border-ink-200 bg-ink-50 p-2 text-sm text-ink-700">{note}</p> : null}
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="text-xs uppercase tracking-wide text-ink-400">
-            <tr><th className="py-2 pr-3">Type</th><th className="py-2 pr-3">Recipient</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3">Error</th><th className="py-2 pr-3">When</th><th className="py-2"></th></tr>
-          </thead>
-          <tbody className="divide-y divide-ink-100">
-            {rows.length === 0 ? (
-              <tr><td colSpan={6} className="py-6 text-center text-ink-400">No notification failures.</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id}>
-                <td className="py-2 pr-3 text-ink-800">{r.notification_type}</td>
-                <td className="py-2 pr-3 text-ink-600">{r.to_email ?? "—"}</td>
-                <td className="py-2 pr-3"><StatusPill s={r.status} /></td>
-                <td className="py-2 pr-3 text-ink-500">{r.error ?? ""}</td>
-                <td className="py-2 pr-3 text-ink-400">{new Date(r.updated_at).toLocaleString()}</td>
-                <td className="py-2"><button onClick={() => retry(r.id)} disabled={busy === r.id} className="text-xs font-medium text-gold-700 hover:underline disabled:opacity-50">{busy === r.id ? "Retrying…" : "Retry"}</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
 
@@ -264,7 +201,7 @@ function EarningsTab({
   }
 
   return (
-    <section className="rounded-2xl border border-ink-100 bg-white p-6">
+    <section>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-semibold text-ink-900">Guide compensation</h3>
@@ -272,16 +209,16 @@ function EarningsTab({
             Compensation is recorded in each Guide&apos;s payout currency. Mixed currencies are never added together.
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1 text-sm">
-          <span className="rounded-full border border-ink-200 px-3 py-1">Earned {formatCompensationTotals(totals, "earned")}</span>
-          <span className="rounded-full border border-ink-200 px-3 py-1">Paid {formatCompensationTotals(totals, "paid")}</span>
-          <span className="rounded-full border border-gold-200 bg-gold-50 px-3 py-1 text-gold-800">
+        <div className="flex flex-col items-end gap-1 text-sm text-ink-600">
+          <span>Earned {formatCompensationTotals(totals, "earned")}</span>
+          <span>Paid {formatCompensationTotals(totals, "paid")}</span>
+          <span className="font-medium text-gold-800">
             Outstanding {formatCompensationTotals(totals, "outstanding")}
           </span>
         </div>
       </div>
       {guideRows.length > 0 ? (
-        <div className="mt-5 overflow-x-auto rounded-xl border border-ink-100">
+        <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="text-xs uppercase tracking-wide text-ink-400">
               <tr>
@@ -370,13 +307,13 @@ function DisputesTab({ rows, payments, onOk, onErr }: { rows: DisputeRow[]; paym
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
-    <section className="rounded-2xl border border-ink-100 bg-white p-6">
+    <section>
       <h3 className="font-display text-lg font-semibold text-ink-900">Dispute queue</h3>
       <p className="mt-1 text-sm text-ink-500">{active.length} awaiting review · {disputes.length} total</p>
-      <div className="mt-4 space-y-3">
-        {active.length === 0 ? <p className="rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">No open disputes.</p> : null}
+      <div className="mt-4 divide-y divide-ink-100">
+        {active.length === 0 ? <p className="py-6 text-sm text-ink-400">No open disputes.</p> : null}
         {active.map((d) => (
-          <div key={d.id} className="rounded-xl border border-ink-100 p-4">
+          <div key={d.id} className="py-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-medium text-ink-900">{d.subject ?? "Session"} · {d.category}</p>
@@ -488,7 +425,7 @@ function PaymentsTab({ rows, onOk, onErr }: { rows: PaymentRow[]; onOk: (m: stri
     onOk(`Refund issued. Total refunded ${formatCents(payload.refunded_cents ?? cents)}.`);
   }
   return (
-    <section className="rounded-2xl border border-ink-100 bg-white p-6">
+    <section>
       <h3 className="font-display text-lg font-semibold text-ink-900">Customer money</h3>
       <p className="mt-1 text-sm text-ink-500">USD through Stripe. Separate from Guide compensation.</p>
       <div className="mt-4 overflow-x-auto">
@@ -572,7 +509,7 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
   }
 
   return (
-    <section className="rounded-2xl border border-ink-100 bg-white p-6">
+    <section>
       <h3 className="font-display text-lg font-semibold text-ink-900">Customer finance</h3>
       <p className="mt-1 text-sm text-ink-500">Look up an account by its id to view balances and ledgers, and make audited adjustments.</p>
       <div className="mt-4 flex flex-wrap gap-3">
@@ -581,9 +518,9 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
       </div>
       {bal ? (
         <div className="mt-5 space-y-5">
-          <div className="flex flex-wrap gap-3 text-sm">
-            <span className="rounded-full border border-ink-200 px-3 py-1">Package minutes: <b>{bal.minutes}</b></span>
-            <span className="rounded-full border border-ink-200 px-3 py-1">Account credit: <b>{formatCents(bal.credit)}</b></span>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-ink-700">
+            <span>Package minutes: <b className="text-ink-900">{bal.minutes}</b></span>
+            <span>Account credit: <b className="text-ink-900">{formatCents(bal.credit)}</b></span>
             <Button size="sm" variant="outline" onClick={adjustCredit}>Adjust credit</Button>
             <Button size="sm" variant="outline" onClick={adjustMinutes}>Adjust minutes</Button>
           </div>
@@ -599,7 +536,7 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
 
 function Ledger({ title, rows }: { title: string; rows: { delta: string; type: string; reason: string | null; at: string }[] }) {
   return (
-    <div className="rounded-xl border border-ink-100 p-4">
+    <div>
       <p className="text-sm font-semibold text-ink-800">{title}</p>
       <div className="mt-2 max-h-64 overflow-y-auto">
         <table className="w-full text-left text-xs">
@@ -692,9 +629,9 @@ function RecordingStatus({
 }
 
 function StatusPill({ s }: { s: string }) {
-  const tone = s === "paid" || s === "succeeded" ? "border-gold-200 bg-gold-50 text-gold-700"
-    : s === "voided" || s === "failed" || s === "canceled" ? "border-red-200 bg-red-50 text-red-600"
-    : s === "refunded" || s === "partially_refunded" ? "border-amber-300 bg-amber-50 text-amber-700"
-    : "border-ink-200 bg-ink-50 text-ink-600";
-  return <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}>{s}</span>;
+  const tone = s === "paid" || s === "succeeded" ? "text-gold-800"
+    : s === "voided" || s === "failed" || s === "canceled" ? "text-red-700"
+    : s === "refunded" || s === "partially_refunded" ? "text-ink-700"
+    : "text-ink-600";
+  return <span className={`text-xs font-medium ${tone}`}>{s}</span>;
 }

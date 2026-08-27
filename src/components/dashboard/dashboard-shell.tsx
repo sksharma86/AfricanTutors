@@ -51,7 +51,7 @@ export function DashboardShell({
           <DashboardSideNav items={navItems} />
         </aside>
 
-        <div className="min-w-0">{children}</div>
+        <div className={role === "admin" ? "min-w-0 max-w-4xl" : "min-w-0"}>{children}</div>
       </Container>
     </div>
   );

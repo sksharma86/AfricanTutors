@@ -1,17 +1,26 @@
 import "server-only";
 
-import { collectNeedsAttention as collectNeedsAttentionImpl } from "@/lib/management-ops.mjs";
+import {
+  collectNeedsAttention as collectNeedsAttentionImpl,
+  currentStudyHallIssues as currentStudyHallIssuesImpl,
+} from "@/lib/management-ops.mjs";
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const collectNeedsAttention = collectNeedsAttentionImpl as (input: object) => {
   id: string;
   kind: string;
   title: string;
+  summary?: string;
   detail: string;
   bookingId?: string | null;
   href: string;
   action: string;
 }[];
+
+const currentStudyHallIssues = currentStudyHallIssuesImpl as (
+  booking: Record<string, unknown>,
+  extras?: object,
+) => { kind: string; title: string; summary: string; detail: string | null; action: string }[];
 
 type SB = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
 
@@ -114,8 +123,9 @@ export async function loadManagementWorkspace(supabase: SB) {
   const reported = new Set(((reportRes.data ?? []) as { booking_id: string }[]).map((r) => r.booking_id));
   const now = Date.now();
   const dayAgo = now - 24 * 60 * 60 * 1000;
+  const reportWindowMs = 14 * 24 * 60 * 60 * 1000;
 
-  const bookings = ((bookingsRes.data ?? []) as unknown as Record<string, unknown>[]).map((b) => {
+  const bookingsBase = ((bookingsRes.data ?? []) as unknown as Record<string, unknown>[]).map((b) => {
     const students = b.students as { full_name?: string | null; timezone?: string | null } | null;
     return {
       ...b,
@@ -125,24 +135,62 @@ export async function loadManagementWorkspace(supabase: SB) {
     };
   }) as Record<string, unknown>[];
 
-  const missingReports = bookings.filter((b) => {
+  const missingReports = bookingsBase.filter((b) => {
     if (b.status !== "completed") return false;
     if (reported.has(b.id as string)) return false;
     const end = b.scheduled_end ? new Date(b.scheduled_end as string).getTime() : 0;
-    return end > 0 && end < dayAgo;
+    return end > 0 && end < dayAgo && now - end <= reportWindowMs;
   });
 
   const recFails = ((recRes.data ?? []) as { id: string; booking_id: string }[]).map((r) => {
-    const b = bookings.find((x) => x.id === r.booking_id);
+    const b = bookingsBase.find((x) => x.id === r.booking_id);
     return { ...r, student_first_name: (b?.student_first_name as string | null) ?? null };
   });
+
+  const cancelOpen = new Set(
+    ((cancelRes.data ?? []) as { booking_id: string | null }[]).map((r) => r.booking_id).filter((id): id is string => Boolean(id)),
+  );
+  const escBy = new Map<string, object[]>();
+  for (const e of (escRes.data ?? []) as { booking_id?: string | null }[]) {
+    if (!e.booking_id) continue;
+    const list = escBy.get(e.booking_id) ?? [];
+    list.push(e);
+    escBy.set(e.booking_id, list);
+  }
+  const emailBy = new Map<string, object[]>();
+  for (const d of (failRes.data ?? []) as { booking_id?: string | null }[]) {
+    if (!d.booking_id) continue;
+    const list = emailBy.get(d.booking_id) ?? [];
+    list.push(d);
+    emailBy.set(d.booking_id, list);
+  }
+  const recBy = new Map<string, object[]>();
+  for (const r of recFails) {
+    const list = recBy.get(r.booking_id) ?? [];
+    list.push(r);
+    recBy.set(r.booking_id, list);
+  }
+  const missingSet = new Set(missingReports.map((b) => b.id as string));
+
+  const bookings = bookingsBase.map((b) => ({
+    ...b,
+    issues: currentStudyHallIssues(b, {
+      presence: presenceByBooking[b.id as string],
+      cancelOpen: cancelOpen.has(b.id as string),
+      escalations: escBy.get(b.id as string) ?? [],
+      emailFailures: emailBy.get(b.id as string) ?? [],
+      recordingFailures: recBy.get(b.id as string) ?? [],
+      missingReport: missingSet.has(b.id as string),
+      nowMs: now,
+    }),
+  }));
 
   const pendingApplicants = ((guidesRes.data ?? []) as unknown as { profile_id: string; status: string; profiles: { display_name: string | null } | null }[])
     .filter((g) => g.status === "pending")
     .map((g) => ({ profile_id: g.profile_id, display_name: g.profiles?.display_name ?? null }));
 
   const attentionItems = collectNeedsAttention({
-    bookings,
+    bookings: bookingsBase,
     presenceByBooking,
     cancelRequests: (cancelRes.data ?? []) as object[],
     escalations: (escRes.data ?? []) as object[],

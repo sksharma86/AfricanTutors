@@ -3,14 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
+import { ManagementNotifyRetry } from "@/components/dashboard/management-notify-retry";
 import { ManagementRecordingAccess } from "@/components/dashboard/management-recording-access";
-import { ManagementStatusPill } from "@/components/dashboard/management-status-pill";
+import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
 import { ManagementStudyHallActions } from "@/components/dashboard/management-study-hall-actions";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { formatCents } from "@/lib/pricing";
-import { managementOperationalStatus } from "@/lib/management-ops.mjs";
+import { currentStudyHallIssues, managementOperationalStatus } from "@/lib/management-ops.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Study Hall · Management" };
@@ -47,7 +48,7 @@ export default async function AdminStudyHallDetailPage({
     supabase!.from("profiles").select("id, display_name, phone_e164").eq("id", raw.account_id).maybeSingle(),
     supabase!
       .from("session_presence")
-      .select("student_first_joined_at, tutor_first_joined_at, student_last_seen_at, tutor_last_seen_at")
+      .select("student_first_joined_at, tutor_first_joined_at, student_last_seen_at, tutor_last_seen_at, student_last_left_at, tutor_last_left_at")
       .eq("booking_id", bookingId)
       .maybeSingle(),
     supabase!
@@ -85,9 +86,19 @@ export default async function AdminStudyHallDetailPage({
 
   const students = raw.students as { full_name?: string | null; timezone?: string | null } | null;
   const openCancel = ((cancelRes.data ?? []) as { status: string }[]).some((r) => r.status === "open");
+  const failedEmails = ((notifyRes.data ?? []) as { id: string; status: string }[]).filter((n) => n.status === "failed");
+  const failedRecs = ((recRes.data ?? []) as { status: string }[]).filter((r) => r.status === "failed");
+  const issues = currentStudyHallIssues(raw as never, {
+    presence: presenceRes.data ?? null,
+    cancelOpen: openCancel,
+    escalations: (escRes.data ?? []) as object[],
+    emailFailures: failedEmails,
+    recordingFailures: failedRecs,
+    missingReport: ((reportRes.data ?? []) as unknown[]).length === 0 && raw.status === "completed",
+  });
   const layer = managementOperationalStatus(raw as never, {
     presence: (presenceRes.data ?? null) as never,
-    attention: openCancel || !raw.tutor_id,
+    issues,
   });
   const canAct = raw.status === "confirmed" || raw.status === "pending";
   const recordings = (recRes.data ?? []) as {
@@ -121,8 +132,39 @@ export default async function AdminStudyHallDetailPage({
             {raw.tutor_display_name ? `Guide: ${raw.tutor_display_name}` : "No Guide assigned"}
           </p>
         </div>
-        <ManagementStatusPill status={layer} />
+        <ManagementStatusLabel status={layer} />
       </header>
+
+      {issues.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">
+            {issues.length === 1 ? "Current issue" : "Current issues"}
+          </h2>
+          <ul className="mt-3 divide-y divide-ink-100">
+            {issues.map((issue) => (
+              <li key={issue.kind} className="py-3">
+                <p className="text-sm font-semibold text-ink-900">{issue.title}</p>
+                <p className="mt-0.5 text-sm text-ink-600">{issue.summary}</p>
+                {issue.detail ? <p className="mt-0.5 text-sm text-ink-500">{issue.detail}</p> : null}
+                {issue.kind === "notify" && failedEmails[0] ? (
+                  <div className="mt-2">
+                    <ManagementNotifyRetry deliveryId={failedEmails[0].id} />
+                  </div>
+                ) : null}
+                {(issue.kind === "needs_guide" || issue.kind === "coverage") && canAct ? (
+                  <div className="mt-3">
+                    <ManagementStudyHallActions
+                      bookingId={bookingId}
+                      canAct={canAct}
+                      needsGuide={!raw.tutor_id || issue.kind === "coverage"}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
         <Row label="When">
@@ -182,6 +224,15 @@ export default async function AdminStudyHallDetailPage({
         </div>
       </section>
 
+      <details className="mt-10 group">
+        <summary className="cursor-pointer text-sm font-semibold tracking-wide text-ink-400 uppercase">
+          History and diagnostics
+        </summary>
+        <p className="mt-2 text-sm text-ink-500">
+          Past notification attempts, recording events, and coverage requests. These do not change operational status
+          unless a current issue is still open above.
+        </p>
+
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Call Parent</h2>
         <HistoryList
@@ -204,6 +255,7 @@ export default async function AdminStudyHallDetailPage({
             title: n.status === "failed" ? "Parent wasn't notified" : n.notification_type.replace(/_/g, " "),
             meta: n.error ?? n.status,
             at: n.updated_at,
+            retryId: n.status === "failed" ? n.id : null,
           }))}
         />
       </section>
@@ -238,6 +290,7 @@ export default async function AdminStudyHallDetailPage({
         Created <AdminWhen iso={raw.created_at} />
         {parentRes.data?.phone_e164 ? " · Parent phone on file" : null}
       </p>
+      </details>
     </DashboardShell>
   );
 }
@@ -256,14 +309,17 @@ function HistoryList({
   rows,
 }: {
   empty: string;
-  rows: { id: string; title: string; meta: string; at: string | null }[];
+  rows: { id: string; title: string; meta: string; at: string | null; retryId?: string | null }[];
 }) {
   if (rows.length === 0) return <p className="mt-2 text-sm text-ink-500">{empty}</p>;
   return (
     <ul className="mt-2 divide-y divide-ink-100 text-sm">
       {rows.map((r) => (
         <li key={r.id} className="py-2">
-          <p className="text-ink-800">{r.title}</p>
+          <p className="text-ink-800">
+            {r.title}
+            {r.retryId ? <ManagementNotifyRetry deliveryId={r.retryId} /> : null}
+          </p>
           <p className="text-xs text-ink-400">
             {r.meta}
             {r.at ? (

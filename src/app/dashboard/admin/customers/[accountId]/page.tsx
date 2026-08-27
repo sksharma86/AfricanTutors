@@ -39,6 +39,7 @@ export default async function AdminCustomerDetailPage({
     { data: recordings },
     { data: minuteLedger },
     { data: creditLedger },
+    { data: deliveries },
   ] =
     await Promise.all([
       supabase!.from("profiles").select("id, display_name, phone_e164, role, created_at").eq("id", accountId).maybeSingle(),
@@ -76,6 +77,12 @@ export default async function AdminCustomerDetailPage({
         .eq("account_id", accountId)
         .order("created_at", { ascending: false })
         .limit(12),
+      supabase!
+        .from("email_deliveries")
+        .select("id, notification_type, status, to_email, error, updated_at")
+        .eq("recipient_account_id", accountId)
+        .order("updated_at", { ascending: false })
+        .limit(20),
     ]);
 
   if (!profile || profile.role !== "student") notFound();
@@ -218,6 +225,27 @@ export default async function AdminCustomerDetailPage({
             Adjust credit or hours in Finance
           </Link>
         </p>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Notifications</h2>
+        <ul className="mt-2 divide-y divide-ink-100 text-sm">
+          {((deliveries ?? []) as { id: string; notification_type: string; status: string; to_email: string | null; error: string | null }[]).length === 0 ? (
+            <li className="py-2 text-ink-500">No messages recorded for this parent.</li>
+          ) : (
+            ((deliveries ?? []) as { id: string; notification_type: string; status: string; to_email: string | null; error: string | null }[]).map((n) => (
+              <li key={n.id} className="py-2">
+                {n.status === "failed" ? "Parent wasn't notified" : n.notification_type.replace(/_/g, " ")}
+                <span className="text-ink-400">
+                  {" · "}
+                  {n.status}
+                  {n.to_email ? ` · ${n.to_email}` : ""}
+                  {n.error ? ` · ${n.error}` : ""}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
       </section>
     </DashboardShell>
   );

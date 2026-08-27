@@ -18,6 +18,25 @@ export function isStudyHallLive(
 export function isOpenStudyHall(status: string): boolean;
 export function isFinishedStatus(status: string): boolean;
 export function isCancelledStatus(status: string): boolean;
+export type StudyHallIssue = {
+  kind: string;
+  title: string;
+  summary: string;
+  detail: string | null;
+  action: string;
+};
+export function currentStudyHallIssues(
+  booking: Record<string, unknown> | null | undefined,
+  extras?: {
+    presence?: unknown;
+    cancelOpen?: boolean;
+    escalations?: object[];
+    emailFailures?: object[];
+    recordingFailures?: object[];
+    missingReport?: boolean;
+    nowMs?: number;
+  },
+): StudyHallIssue[];
 export function managementOperationalStatus(
   booking: Record<string, unknown> | null | undefined,
   opts?: {
@@ -30,27 +49,47 @@ export function managementOperationalStatus(
       tutor_last_left_at?: string | null;
     } | null | undefined;
     nowMs?: number;
-    attention?: boolean;
+    issues?: StudyHallIssue[];
+    cancelOpen?: boolean;
+    escalations?: object[];
+    emailFailures?: object[];
+    recordingFailures?: object[];
+    missingReport?: boolean;
   },
 ): "ready" | "live" | "needs_attention" | "completed" | "cancelled";
+export function managementGreeting(nowMs?: number, tz?: string): string;
+export function managementDateLabel(nowMs?: number, tz?: string): string;
 export function matchesStudyHallSearch(booking: Record<string, unknown>, query: string): boolean;
 export function studyHallViewMembership(
   booking: Record<string, unknown>,
   view: string,
-  opts: { tz: string; nowMs: number; presence?: unknown; attention?: boolean },
+  opts?: { tz: string; nowMs: number; presence?: unknown; issues?: StudyHallIssue[] },
 ): boolean;
 export function startsInLabel(iso: string | null | undefined, nowMs?: number): string | null;
 export function collectNeedsAttention(input?: Record<string, unknown> | object): {
   id: string;
   kind: string;
   title: string;
+  summary?: string;
   detail: string;
   bookingId?: string | null;
   href: string;
   action: string;
   severity: string;
 }[];
+export function presentNeedsAttention(items?: object[]): {
+  id: string;
+  bookingId: string | null;
+  href: string;
+  action: string;
+  title: string;
+  summary: string;
+  detail: string;
+  reasons: string[];
+  issueCount: number;
+  urgent: boolean;
+}[];
 export function comingUpBookings(
   bookings: Record<string, unknown>[],
-  opts?: { presenceByBooking?: Record<string, unknown>; nowMs?: number; limit?: number; attentionIds?: Set<string> },
+  opts?: { presenceByBooking?: Record<string, unknown>; nowMs?: number; limit?: number },
 ): Record<string, unknown>[];
