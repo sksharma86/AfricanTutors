@@ -1,6 +1,7 @@
 import "server-only";
 
 import { DAILY_API_KEY, DAILY_DOMAIN, recordingBucketConfig } from "./config";
+import { ROOM_PARTICIPANT_PROPERTIES, buildRoomProperties } from "./room-props.mjs";
 import { buildMeetingTokenProps } from "./token-props.mjs";
 
 /**
@@ -41,41 +42,55 @@ export interface DailyRoom {
 /**
  * Create (or reuse) a private room with a deterministic name so concurrent join
  * requests converge on ONE room. Room auto-expires at `notAfterUnix`; nbf gates
- * early creation misuse. Enables screen share + chat and CLOUD RECORDING so the
- * token-driven auto-start can begin recording on first join. If custom S3 is
- * configured (Mode B), recordings are written to that private bucket; otherwise
- * Daily-managed storage (Mode A) is used.
+ * early creation misuse. Chat is disabled; screen share + prejoin stay on;
+ * CLOUD RECORDING stays on so token-driven auto-start can begin recording on
+ * first join. If custom S3 is configured (Mode B), recordings are written to
+ * that private bucket; otherwise Daily-managed storage (Mode A) is used.
+ *
+ * On reuse, participant capabilities are re-applied so rooms created before
+ * chat/recording-UI restrictions do not keep the old Prebuilt controls.
  */
 export async function ensureRoom(name: string, notBeforeUnix: number, notAfterUnix: number): Promise<DailyRoom> {
   const bucket = recordingBucketConfig();
   const body = {
     name,
     privacy: "private",
-    properties: {
-      enable_screenshare: true,
-      enable_chat: true,
-      enable_prejoin_ui: true,
-      exp: notAfterUnix,
-      nbf: notBeforeUnix,
-      eject_at_room_exp: true,
-      enable_recording: "cloud",
-      ...(bucket ? { recordings_bucket: bucket } : {}),
-    },
+    properties: buildRoomProperties({
+      notBeforeUnix,
+      notAfterUnix,
+      recordingsBucket: bucket,
+    }),
   };
   const res = await dailyFetch("/rooms", { method: "POST", body: JSON.stringify(body) });
   if (res.status === 200) {
     const room = (await res.json()) as { name: string; url: string };
     return { name: room.name, url: room.url };
   }
-  // Already exists (concurrent creation / prior join) → fetch and reuse.
+  // Already exists (concurrent creation / prior join) → fetch, tighten, reuse.
   if (res.status === 400 || res.status === 409) {
     const existing = await dailyFetch(`/rooms/${encodeURIComponent(name)}`, { method: "GET" });
     if (existing.ok) {
       const room = (await existing.json()) as { name: string; url: string };
+      await applyRoomParticipantProperties(name);
       return { name: room.name, url: room.url };
     }
   }
   throw new DailyUnavailableError();
+}
+
+/**
+ * Best-effort re-apply of chat-off / cloud-recording / non-owner permission
+ * defaults on an already-created room. Failure is not fatal to join.
+ */
+async function applyRoomParticipantProperties(name: string): Promise<void> {
+  try {
+    await dailyFetch(`/rooms/${encodeURIComponent(name)}`, {
+      method: "POST",
+      body: JSON.stringify({ properties: ROOM_PARTICIPANT_PROPERTIES }),
+    });
+  } catch {
+    // best-effort; join still proceeds with the existing room
+  }
 }
 
 /**
