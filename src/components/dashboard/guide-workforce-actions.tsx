@@ -75,7 +75,7 @@ export function GuideWorkforceActions({
         const stuck = data?.needsAttention?.length ?? 0;
         if (stuck > 0) {
           setResult(
-            `Guide suspended. ${moved} upcoming Study Hall${moved === 1 ? "" : "s"} reassigned. ${stuck} still need manager attention — use Sessions to reassign.`,
+            `Guide suspended. ${moved} upcoming Study Hall${moved === 1 ? "" : "s"} reassigned. ${stuck} still need manager attention — use Study Halls to assign a Guide.`,
           );
         } else if (moved > 0) {
           setResult(`Guide suspended. ${moved} upcoming Study Hall${moved === 1 ? "" : "s"} reassigned automatically.`);

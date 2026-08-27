@@ -20,7 +20,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     assert.doesNotMatch(adminPage, /from\("subjects"\)/);
     assert.doesNotMatch(adminPage, /from\("tutor_subjects"\)/);
     assert.doesNotMatch(adminPage, /Applied to teach/);
-    assert.match(adminPage, /Approve as Guide|Guide application/);
+    assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /Approve as Guide|Guide application/);
   });
 
   it("admin Guide detail no longer shows Approved subjects / may teach UI", () => {

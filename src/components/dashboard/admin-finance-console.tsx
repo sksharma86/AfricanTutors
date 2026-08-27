@@ -117,13 +117,21 @@ export function AdminFinanceConsole({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {(["earnings", "disputes", "payments", "customer", "notifications"] as Tab[]).map((t) => (
+        {(["earnings", "payments", "customer", "disputes", "notifications"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-full border px-4 py-1.5 text-sm capitalize ${tab === t ? "border-ink-900 bg-ink-900 text-white" : "border-ink-200 text-ink-700 hover:border-ink-300"}`}
+            className={`rounded-full border px-4 py-1.5 text-sm ${tab === t ? "border-ink-900 bg-ink-900 text-white" : "border-ink-200 text-ink-700 hover:border-ink-300"}`}
           >
-            {t === "customer" ? "Customer finance" : t}
+            {t === "earnings"
+              ? "Guide compensation"
+              : t === "payments"
+                ? "Customer money"
+                : t === "customer"
+                  ? "Customer balances"
+                  : t === "notifications"
+                    ? "Parent wasn't notified"
+                    : "Disputes"}
           </button>
         ))}
       </div>
@@ -259,7 +267,7 @@ function EarningsTab({
     <section className="rounded-2xl border border-ink-100 bg-white p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-semibold text-ink-900">Guide earnings</h3>
+          <h3 className="font-display text-lg font-semibold text-ink-900">Guide compensation</h3>
           <p className="mt-1 text-xs text-ink-400">
             Compensation is recorded in each Guide&apos;s payout currency. Mixed currencies are never added together.
           </p>
@@ -481,7 +489,8 @@ function PaymentsTab({ rows, onOk, onErr }: { rows: PaymentRow[]; onOk: (m: stri
   }
   return (
     <section className="rounded-2xl border border-ink-100 bg-white p-6">
-      <h3 className="font-display text-lg font-semibold text-ink-900">Payments &amp; refunds</h3>
+      <h3 className="font-display text-lg font-semibold text-ink-900">Customer money</h3>
+      <p className="mt-1 text-sm text-ink-500">USD through Stripe. Separate from Guide compensation.</p>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-ink-400">

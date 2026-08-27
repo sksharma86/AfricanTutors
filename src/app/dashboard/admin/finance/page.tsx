@@ -12,7 +12,7 @@ import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboa
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Admin — Financial Operations" };
+export const metadata: Metadata = { title: "Finance · Management" };
 
 export default async function AdminFinancePage() {
   await requireRole("admin", "/dashboard/admin/finance");
@@ -134,8 +134,8 @@ export default async function AdminFinancePage() {
   return (
     <DashboardShell
       role="admin"
-      title="Financial operations"
-      description="Guide earnings & payouts, customer balances & adjustments, Stripe refunds, and dispute resolution."
+      title="Finance"
+      description="Customer money stays USD. Guide pay is a separate ledger and may use more than one currency."
       navItems={ADMIN_PORTAL_NAV}
     >
       <AdminFinanceConsole

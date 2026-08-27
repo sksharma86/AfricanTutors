@@ -78,8 +78,17 @@ export function DashboardSideNav({ items }: { items: DashboardNavItem[] }) {
       return samePageHashes[0] === hash;
     }
 
-    // Pure route destination (e.g. Finance console).
-    return pathname === path;
+    if (path === "/dashboard/admin") {
+      return pathname === "/dashboard/admin";
+    }
+    if (path === "/dashboard/admin/guides") {
+      return (
+        pathname === path ||
+        pathname.startsWith("/dashboard/admin/guides/") ||
+        pathname.startsWith("/dashboard/admin/tutors/")
+      );
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
   }
 
   return (

@@ -20,7 +20,7 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
     info = { authorized: false, reason: "error" };
   }
 
-  const backHref = info.role === "tutor" ? "/dashboard/tutor" : info.role === "admin" ? "/dashboard/admin" : "/dashboard/student";
+  const backHref = info.role === "tutor" ? "/dashboard/tutor" : info.role === "admin" ? `/dashboard/admin/study-halls/${bookingId}` : "/dashboard/student";
 
   return (
     <div className="min-h-full bg-[#0b0d10] py-8">

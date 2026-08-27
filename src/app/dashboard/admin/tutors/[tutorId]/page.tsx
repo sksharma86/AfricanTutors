@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
-import { Container } from "@/components/ui/container";
+import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import {
   aggregateCompensationByCurrency,
@@ -93,17 +93,20 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
   const openRequests = ((reqs ?? []) as { status: string }[]).filter((r) => r.status === "open").length;
 
   return (
-    <div className="min-h-full bg-ink-50/50 py-10">
-      <Container className="max-w-4xl">
-        <Link href="/dashboard/admin" className="text-sm font-medium text-gold-700 hover:underline">
-          ← Back to admin
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-3xl font-semibold text-ink-900">{name}</h1>
-          <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-sm capitalize text-ink-700">
-            {workforceLabel}
-          </span>
-        </div>
+    <DashboardShell
+      role="admin"
+      title={name}
+      description="Workforce actions, rate, and history for this Guide."
+      navItems={ADMIN_PORTAL_NAV}
+    >
+      <Link href="/dashboard/admin/guides" className="text-sm font-medium text-ink-500 hover:text-ink-800">
+        ← Guides
+      </Link>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-sm capitalize text-ink-700">
+          {workforceLabel}
+        </span>
+      </div>
         <div className="mt-4">
           <GuideWorkforceActions
             profileId={tutorId}
@@ -162,11 +165,10 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
           <Stat label="Disputes" value={String(disputeCount)} />
           <Stat label="Open cancel requests" value={String(openRequests)} />
         </div>
-        <p className="mt-3 text-xs text-ink-400">
-          Availability blocks: {availCount} · Operational visibility only (no scoring / automatic action). Guides are
-          not assigned by academic subject.
-        </p>
-      </Container>
-    </div>
+      <p className="mt-3 text-xs text-ink-400">
+        Availability blocks: {availCount} · Operational visibility only (no scoring / automatic action). Guides are
+        not assigned by academic subject.
+      </p>
+    </DashboardShell>
   );
 }
