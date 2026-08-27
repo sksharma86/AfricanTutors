@@ -60,7 +60,7 @@ export default async function PackagesPage() {
   return (
     <ParentPage wide>
       <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">Hours</h1>
-      <p className="mt-2 text-sm text-ink-500">Hours never expire.</p>
+      <p className="mt-2 text-sm text-ink-500">Pricing &amp; Study Hall options. Hours never expire.</p>
 
       <ParentSurface className="mt-8">
         <h2 className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Available hours</h2>

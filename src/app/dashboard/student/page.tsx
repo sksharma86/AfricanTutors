@@ -56,7 +56,7 @@ export default async function StudentDashboardPage() {
 
       {last ? (
         <div className="mt-6">
-          <ParentRecentActivity>
+          <ParentRecentActivity
             booking={last}
             report={data.reportByBooking.get(last.id) ?? null}
             recording={data.recordingByBooking.get(last.id) ?? null}
