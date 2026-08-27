@@ -44,7 +44,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
     <div className="rounded-2xl bg-white/80 px-4 py-4 ring-1 ring-ink-900/[0.05] sm:px-5">
       <p className="text-sm font-medium text-ink-900">Contact information</p>
       <p className="mt-1.5 text-sm leading-6 text-ink-500">
-        We’ll only use your number for important Study Hall communication, including Call Parent. Guides never see your phone number. You don’t need to keep this portal open.
+        We’ll only use your number for important Study Hall communication. Guides never see your phone number.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <label className="sr-only" htmlFor="parent-phone">

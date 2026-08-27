@@ -63,7 +63,8 @@ describe("PR10C — parent portal usability (source)", () => {
 
   it("phone copy explains purpose without requiring portal open", () => {
     assert.match(phone, /Guides never see your phone number|never shared with Guides/i);
-    assert.match(phone, /don.t need to keep this portal open/i);
+    assert.match(phone, /important Study Hall communication/i);
+    assert.doesNotMatch(phone, /keep this portal open/i);
     assert.doesNotMatch(phone, /Call Parent cannot reach you/);
   });
 

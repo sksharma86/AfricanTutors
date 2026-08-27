@@ -343,9 +343,9 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.doesNotMatch(account, /Your household/);
     assert.match(account, /Add a child when you book your first Study Hall|One account can book for multiple children/);
     assert.match(phone, /Contact information/);
-    assert.match(phone, /Guides never see your phone number/i);
-    assert.match(phone, /important Study Hall communication/i);
-    assert.match(phone, /don.t need to keep this portal open/i);
+    assert.match(phone, /We’ll only use your number for important Study Hall communication\. Guides never see your phone number\./);
+    assert.doesNotMatch(phone, /including Call Parent/);
+    assert.doesNotMatch(phone, /keep this portal open/i);
     assert.doesNotMatch(phone, /if your child needs you/i);
   });
 
