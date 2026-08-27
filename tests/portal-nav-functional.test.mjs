@@ -86,7 +86,14 @@ describe("Portal navigation — mobile + a11y surface", () => {
   it("mobile strip remains reachable without disappearing", () => {
     assert.match(sideNav, /overflow-x-auto/);
     assert.match(sideNav, /lg:flex-col/);
+    assert.match(sideNav, /whitespace-nowrap/);
+    assert.match(sideNav, /snap-x/);
     assert.match(shell, /lg:sticky/);
     assert.match(sideNav, /focus-visible:outline/);
+    assert.match(shell, /label: "Overview"/);
+    assert.match(shell, /label: "Study Halls"/);
+    assert.match(shell, /label: "Guides"/);
+    assert.match(shell, /label: "Customers"/);
+    assert.match(shell, /label: "Finance"/);
   });
 });

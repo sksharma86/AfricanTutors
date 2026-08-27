@@ -83,18 +83,31 @@ export async function loadManagementWorkspace(supabase: SB) {
   const { data: presenceRows } = bookingIds.length
     ? await supabase
         .from("session_presence")
-        .select("booking_id, student_first_joined_at, tutor_first_joined_at")
+        .select(
+          "booking_id, student_first_joined_at, tutor_first_joined_at, student_last_seen_at, tutor_last_seen_at, student_last_left_at, tutor_last_left_at",
+        )
         .in("booking_id", bookingIds)
     : { data: [] };
 
   const presenceByBooking: Record<
     string,
-    { student_first_joined_at?: string | null; tutor_first_joined_at?: string | null }
+    {
+      student_first_joined_at?: string | null;
+      tutor_first_joined_at?: string | null;
+      student_last_seen_at?: string | null;
+      tutor_last_seen_at?: string | null;
+      student_last_left_at?: string | null;
+      tutor_last_left_at?: string | null;
+    }
   > = {};
   for (const row of presenceRows ?? []) {
     presenceByBooking[row.booking_id as string] = {
       student_first_joined_at: row.student_first_joined_at as string | null,
       tutor_first_joined_at: row.tutor_first_joined_at as string | null,
+      student_last_seen_at: row.student_last_seen_at as string | null,
+      tutor_last_seen_at: row.tutor_last_seen_at as string | null,
+      student_last_left_at: row.student_last_left_at as string | null,
+      tutor_last_left_at: row.tutor_last_left_at as string | null,
     };
   }
 

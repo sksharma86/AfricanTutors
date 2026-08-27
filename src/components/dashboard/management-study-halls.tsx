@@ -44,7 +44,17 @@ export function ManagementStudyHalls({
   attentionBookingIds,
 }: {
   bookings: StudyHallListRow[];
-  presenceByBooking: Record<string, { student_first_joined_at?: string | null; tutor_first_joined_at?: string | null }>;
+  presenceByBooking: Record<
+    string,
+    {
+      student_first_joined_at?: string | null;
+      tutor_first_joined_at?: string | null;
+      student_last_seen_at?: string | null;
+      tutor_last_seen_at?: string | null;
+      student_last_left_at?: string | null;
+      tutor_last_left_at?: string | null;
+    }
+  >;
   attentionBookingIds: string[];
 }) {
   const router = useRouter();
@@ -77,16 +87,40 @@ export function ManagementStudyHalls({
   const query = params.get("q") ?? "";
   const dateFilter = params.get("date") ?? "";
 
-  const rows = bookings.filter((b) => {
-    if (!matchesStudyHallSearch(b, query)) return false;
-    if (dateFilter && calendarDateInTz(b.scheduled_start, tz) !== dateFilter) return false;
-    return studyHallViewMembership(b, view, {
-      tz,
-      nowMs,
-      presence: presenceByBooking[b.id],
-      attention: attention.has(b.id),
+  const RANK: Record<string, number> = {
+    live: 0,
+    needs_attention: 1,
+    ready: 2,
+    completed: 3,
+    cancelled: 4,
+  };
+
+  const rows = bookings
+    .filter((b) => {
+      if (!matchesStudyHallSearch(b, query)) return false;
+      if (dateFilter && calendarDateInTz(b.scheduled_start, tz) !== dateFilter) return false;
+      return studyHallViewMembership(b, view, {
+        tz,
+        nowMs,
+        presence: presenceByBooking[b.id],
+        attention: attention.has(b.id),
+      });
+    })
+    .map((b) => ({
+      booking: b,
+      layer: String(
+        managementOperationalStatus(b as never, {
+          presence: (presenceByBooking[b.id] ?? null) as never,
+          nowMs,
+          attention: attention.has(b.id),
+        }),
+      ),
+    }))
+    .sort((a, b) => {
+      const rank = (RANK[a.layer] ?? 9) - (RANK[b.layer] ?? 9);
+      if (rank !== 0) return rank;
+      return new Date(a.booking.scheduled_start ?? 0).getTime() - new Date(b.booking.scheduled_start ?? 0).getTime();
     });
-  });
 
   return (
     <div className="space-y-6">
@@ -128,18 +162,14 @@ export function ManagementStudyHalls({
         <p className="py-8 text-sm text-ink-500">No Study Halls in this view.</p>
       ) : (
         <ul className="divide-y divide-ink-100">
-          {rows.map((b) => {
-            const layer = managementOperationalStatus(b as never, {
-              presence: (presenceByBooking[b.id] ?? null) as never,
-              nowMs,
-              attention: attention.has(b.id),
-            });
+          {rows.map(({ booking: b, layer }) => {
             const needsGuide = !b.tutor_id && (b.status === "confirmed" || b.status === "pending");
+            const quiet = layer === "completed" || layer === "cancelled";
             return (
-              <li key={b.id} className="py-3.5">
+              <li key={b.id} className={cn("py-3.5", quiet && "opacity-70")}>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-ink-900">
+                    <p className={cn("text-sm font-medium", quiet ? "text-ink-500" : "text-ink-900")}>
                       {b.scheduled_start ? (
                         <>
                           {formatTime(b.scheduled_start, tz)}
@@ -149,7 +179,9 @@ export function ManagementStudyHalls({
                         "Time to confirm"
                       )}
                     </p>
-                    <p className="mt-0.5 text-sm text-ink-800">{b.student_first_name ?? "Child"}</p>
+                    <p className={cn("mt-0.5 text-sm", quiet ? "text-ink-400" : "text-ink-800")}>
+                      {b.student_first_name ?? "Child"}
+                    </p>
                     <p className="text-sm text-ink-500">
                       {needsGuide ? "No Guide" : `Guide: ${b.tutor_display_name ?? "—"}`}
                       {b.parent_name ? ` · Parent: ${b.parent_name}` : null}
@@ -159,7 +191,10 @@ export function ManagementStudyHalls({
                     <ManagementStatusPill status={layer} />
                     <Link
                       href={`/dashboard/admin/study-halls/${b.id}`}
-                      className="text-sm font-semibold text-gold-700 hover:underline"
+                      className={cn(
+                        "text-sm font-semibold hover:underline",
+                        quiet ? "text-ink-400" : "text-gold-700",
+                      )}
                     >
                       {needsGuide ? "Assign Guide" : "View"}
                     </Link>

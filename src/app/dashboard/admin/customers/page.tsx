@@ -69,7 +69,7 @@ export default async function AdminCustomersPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="Parent name, child name, or email from a sent message"
+          placeholder="Parent name, child name, or notified email"
           className="min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm outline-none focus:border-ink-400"
         />
         <button type="submit" className="rounded-lg bg-ink-900 px-3 py-2 text-sm font-medium text-white">
@@ -93,8 +93,8 @@ export default async function AdminCustomersPage({
         </ul>
       )}
       <p className="mt-8 text-xs text-ink-400">
-        Email search uses notification history. Auth emails are not stored on profiles, so a parent who has never been
-        emailed may only be found by name.
+        Email search uses notification history only. Auth emails are not on profiles, and there is no safe admin email
+        index — a parent who has never been emailed can be found by name. Detail still shows the authorized auth email.
       </p>
     </DashboardShell>
   );

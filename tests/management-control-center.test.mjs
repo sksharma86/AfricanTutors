@@ -47,6 +47,40 @@ describe("Management Control Center — operational status", () => {
     );
   });
 
+  it("does not stay LIVE after everyone has left", () => {
+    const booking = {
+      status: "confirmed",
+      tutor_id: "g1",
+      scheduled_start: start,
+      scheduled_end: end,
+      payment_status: "paid",
+    };
+    assert.equal(
+      isStudyHallLive(
+        booking,
+        {
+          student_first_joined_at: "2026-08-27T18:02:00.000Z",
+          student_last_seen_at: "2026-08-27T18:02:00.000Z",
+          student_last_left_at: "2026-08-27T18:15:00.000Z",
+        },
+        nowDuring,
+      ),
+      false,
+    );
+    assert.equal(
+      isStudyHallLive(
+        booking,
+        {
+          student_first_joined_at: "2026-08-27T18:02:00.000Z",
+          student_last_seen_at: "2026-08-27T18:18:00.000Z",
+          student_last_left_at: "2026-08-27T18:15:00.000Z",
+        },
+        nowDuring,
+      ),
+      true,
+    );
+  });
+
   it("maps finished and cancelled database states without rewriting them", () => {
     assert.equal(managementOperationalStatus({ status: "completed" }), "completed");
     assert.equal(managementOperationalStatus({ status: "no_show" }), "completed");
@@ -163,12 +197,15 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(read("src/components/dashboard/management-study-hall-actions.tsx"), /Assign Guide|Reassign Guide/);
     assert.match(detail, /AdminWhen/);
     assert.match(listUi, /Child, parent, Guide, or booking reference/);
+    assert.match(listUi, /quiet \? "text-ink-500" \| "text-ink-900"|opacity-70/);
   });
 
   it("Guides, Customers, and Finance remain authorized and reachable", () => {
     assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /requireRole\("admin"/);
     assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /GuideWorkforceActions/);
     assert.match(read("src/app/dashboard/admin/customers/page.tsx"), /requireRole\("admin"/);
+    assert.match(read("src/app/dashboard/admin/customers/page.tsx"), /Email search uses notification history/);
+    assert.doesNotMatch(read("src/app/dashboard/admin/customers/page.tsx"), /listUsers|getUserByEmail/);
     assert.match(read("src/app/dashboard/admin/customers/[accountId]/page.tsx"), /requireRole\("admin"/);
     assert.match(read("src/app/dashboard/admin/customers/[accountId]/page.tsx"), /lookupEmail/);
     assert.match(read("src/app/dashboard/admin/customers/[accountId]/page.tsx"), /get_customer_balances/);

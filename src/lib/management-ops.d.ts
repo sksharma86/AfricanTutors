@@ -5,7 +5,14 @@ export function todayDateInTz(tz: string, nowMs?: number): string | null;
 export function sessionEndMs(booking: { scheduled_end?: string | null; scheduled_start?: string | null; duration_minutes?: number | null }): number | null;
 export function isStudyHallLive(
   booking: { status?: string; scheduled_start?: string | null; scheduled_end?: string | null; duration_minutes?: number | null },
-  presence: { student_first_joined_at?: string | null; tutor_first_joined_at?: string | null } | null | undefined,
+  presence: {
+    student_first_joined_at?: string | null;
+    tutor_first_joined_at?: string | null;
+    student_last_seen_at?: string | null;
+    tutor_last_seen_at?: string | null;
+    student_last_left_at?: string | null;
+    tutor_last_left_at?: string | null;
+  } | null | undefined,
   nowMs?: number,
 ): boolean;
 export function isOpenStudyHall(status: string): boolean;
@@ -14,7 +21,14 @@ export function isCancelledStatus(status: string): boolean;
 export function managementOperationalStatus(
   booking: Record<string, unknown> | null | undefined,
   opts?: {
-    presence?: { student_first_joined_at?: string | null; tutor_first_joined_at?: string | null } | null | undefined;
+    presence?: {
+      student_first_joined_at?: string | null;
+      tutor_first_joined_at?: string | null;
+      student_last_seen_at?: string | null;
+      tutor_last_seen_at?: string | null;
+      student_last_left_at?: string | null;
+      tutor_last_left_at?: string | null;
+    } | null | undefined;
     nowMs?: number;
     attention?: boolean;
   },

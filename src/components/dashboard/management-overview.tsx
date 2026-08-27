@@ -44,7 +44,17 @@ export function ManagementOverview({
   outstandingTotals,
 }: {
   bookings: OverviewBooking[];
-  presenceByBooking: Record<string, { student_first_joined_at?: string | null; tutor_first_joined_at?: string | null }>;
+  presenceByBooking: Record<
+    string,
+    {
+      student_first_joined_at?: string | null;
+      tutor_first_joined_at?: string | null;
+      student_last_seen_at?: string | null;
+      tutor_last_seen_at?: string | null;
+      student_last_left_at?: string | null;
+      tutor_last_left_at?: string | null;
+    }
+  >;
   attentionItems: AttentionItem[];
   guidesActive: number;
   outstandingTotals: { currency: string; earned: number; paid: number; outstanding: number }[];

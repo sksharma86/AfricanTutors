@@ -46,9 +46,36 @@ function someoneJoined(presence) {
   return Boolean(presence?.student_first_joined_at || presence?.tutor_first_joined_at);
 }
 
+function ms(iso) {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? null : t;
+}
+
 /**
- * LIVE only when the Study Hall is in its operational period AND someone joined.
- * Scheduled time alone is not enough.
+ * A role is currently in the room when last_seen (or first_joined) is set
+ * and there is no later last_left. last_seen is written on join only — it is
+ * not a heartbeat — so recency of last_seen must not be required.
+ */
+function roleCurrentlyPresent(firstJoined, lastSeen, lastLeft) {
+  const presentAt = ms(lastSeen) ?? ms(firstJoined);
+  if (presentAt == null) return false;
+  const leftAt = ms(lastLeft);
+  return leftAt == null || presentAt >= leftAt;
+}
+
+function someoneCurrentlyPresent(presence) {
+  if (!presence) return false;
+  return (
+    roleCurrentlyPresent(presence.student_first_joined_at, presence.student_last_seen_at, presence.student_last_left_at) ||
+    roleCurrentlyPresent(presence.tutor_first_joined_at, presence.tutor_last_seen_at, presence.tutor_last_left_at)
+  );
+}
+
+/**
+ * LIVE only when the Study Hall is in its operational period AND a participant
+ * is currently present (join without a later leave). Scheduled time or a
+ * historical first_joined_at alone is not enough.
  */
 export function isStudyHallLive(booking, presence, nowMs = Date.now()) {
   if (!booking || booking.status !== "confirmed") return false;
@@ -56,7 +83,7 @@ export function isStudyHallLive(booking, presence, nowMs = Date.now()) {
   const start = new Date(booking.scheduled_start).getTime();
   const close = (sessionEndMs(booking) ?? start) + JOIN_CLOSE_GRACE_MIN * 60_000;
   if (nowMs < start || nowMs > close) return false;
-  return someoneJoined(presence);
+  return someoneCurrentlyPresent(presence);
 }
 
 export function isOpenStudyHall(status) {
