@@ -55,20 +55,25 @@ describe("Portal navigation — Guide", () => {
   const guide = read("src/app/dashboard/tutor/page.tsx");
   const applicant = read("src/app/dashboard/applicant/page.tsx");
 
-  it("GUIDE_PORTAL_NAV exposes Study Halls, Earnings, Availability — no Messages", () => {
+  it("GUIDE_PORTAL_NAV exposes Home, Study Halls, Availability, Earnings — no Messages", () => {
+    const nav = read("src/lib/guide-portal.mjs");
     assert.match(shell, /GUIDE_PORTAL_NAV/);
-    assert.match(shell, /label: "Study Halls".*href: "\/dashboard\/tutor#study-halls"/s);
-    assert.match(shell, /label: "Earnings".*href: "\/dashboard\/tutor#earnings"/s);
-    assert.match(shell, /label: "Availability".*href: "\/dashboard\/tutor#availability"/s);
-    assert.doesNotMatch(shell, /Messages/);
+    assert.match(nav, /label: "Home".*href: "\/dashboard\/tutor"/s);
+    assert.match(nav, /label: "Study Halls".*href: "\/dashboard\/tutor\/study-halls"/s);
+    assert.match(nav, /label: "Availability".*href: "\/dashboard\/tutor\/availability"/s);
+    assert.match(nav, /label: "Earnings".*href: "\/dashboard\/tutor\/earnings"/s);
+    assert.doesNotMatch(nav, /Messages|#study-halls|#earnings|#availability/);
   });
 
-  it("Guide page sections match nav hashes and use GUIDE_PORTAL_NAV", () => {
-    assert.match(guide, /navItems=\{GUIDE_PORTAL_NAV\}/);
-    assert.match(guide, /id="study-halls"/);
-    assert.match(guide, /id="earnings"/);
-    assert.match(guide, /id="availability"/);
+  it("Guide destinations are real authorized routes", () => {
+    const halls = read("src/app/dashboard/tutor/study-halls/page.tsx");
+    const avail = read("src/app/dashboard/tutor/availability/page.tsx");
+    const earn = read("src/app/dashboard/tutor/earnings/page.tsx");
     assert.match(guide, /requireRole\("tutor"/);
+    assert.match(halls, /requireRole\("tutor"/);
+    assert.match(avail, /requireRole\("tutor"/);
+    assert.match(earn, /requireRole\("tutor"/);
+    assert.match(guide, /GuidePage|GuideShell/);
     assert.doesNotMatch(guide, /Messages|available:\s*false|Soon/);
   });
 

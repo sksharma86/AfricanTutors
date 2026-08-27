@@ -17,9 +17,11 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 describe("Study Hall PR5 — Guide workspace (source)", () => {
   it("Guide dashboard uses Study Hall terminology (not Tutor/Tutoring)", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
+    const next = read("src/components/dashboard/guide-next-study-hall.tsx");
+    const today = read("src/components/dashboard/guide-today-schedule.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(page, /Today'?s Study Halls|Upcoming assignments/);
-    assert.match(page, /Join Study Hall|GuideJoinControl/);
+    assert.match(today, /Today'?s Study Halls|Upcoming assignments/);
+    assert.match(next, /Join Study Hall|GuideJoinControl/);
     assert.match(page, /presence, focus, accountability/i);
     assert.doesNotMatch(page, /Your tutor account|Approved subjects|Tutor Dashboard/i);
     // Role copy may say "not … teach lessons / subject tutor" — that is intentional framing.
@@ -37,7 +39,7 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     assert.equal(formatStudyHallDuration(60), "1 hour");
     assert.equal(formatStudyHallDuration(120), "2 hours");
     assert.equal(formatStudyHallDuration(180), "3 hours");
-    assert.match(read("src/app/dashboard/tutor/page.tsx"), /formatStudyHallDuration/);
+    assert.match(read("src/components/dashboard/guide-next-study-hall.tsx"), /formatStudyHallDuration/);
   });
 
   it("Guide join UI respects T−5 while pending stays non-joinable", () => {
