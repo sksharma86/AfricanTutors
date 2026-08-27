@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PackageStore, type PackageRow } from "@/components/booking/package-store";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentPage } from "@/components/dashboard/parent-page";
+import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { SingleSessionCards } from "@/components/dashboard/single-session-cards";
 import { requireRole } from "@/lib/auth";
 import { formatMoneyCents } from "@/lib/format.mjs";
@@ -58,18 +59,15 @@ export default async function PackagesPage() {
 
   return (
     <ParentPage wide>
-      <h1 className="font-display text-3xl font-semibold text-ink-900">Hours</h1>
-      <p className="mt-2 text-base leading-7 text-ink-500">Pricing &amp; Study Hall options</p>
-      <p className="mt-1 max-w-xl text-sm leading-6 text-ink-500">
-        Book one session at a time, or save with prepaid hours. Hours never expire.
-      </p>
+      <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">Hours</h1>
+      <p className="mt-2 text-sm text-ink-500">Hours never expire.</p>
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold tracking-wide text-ink-400 uppercase">Available hours</h2>
+      <ParentSurface className="mt-8">
+        <h2 className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Available hours</h2>
         <div className="mt-3">
           <BalanceCards minutes={minutes} creditCents={creditCents} />
         </div>
-      </div>
+      </ParentSurface>
 
       <div className="mt-10">
         <p className="mb-3 text-sm text-ink-600">Pay as you go · $12/hour</p>

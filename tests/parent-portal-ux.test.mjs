@@ -13,6 +13,8 @@ import {
   parentPaymentLineLabel,
   parentPaymentPurposeLabel,
   parentPaymentStatusLabel,
+  parentCanCancel,
+  parentCanDispute,
   parentPrimaryAction,
   parentStatusLabel,
   parentStudyHallLists,
@@ -114,15 +116,22 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     const home = read("src/app/dashboard/student/page.tsx");
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     const recent = read("src/components/dashboard/parent-recent-activity.tsx");
+    const surface = read("src/components/dashboard/parent-surface.tsx");
     assert.match(home, /ParentNextStudyHall/);
     assert.match(home, /BalanceCards/);
     assert.match(home, /compact/);
     assert.match(home, /ParentRecentActivity/);
+    assert.match(home, /Hi \$\{firstName\}/);
+    assert.doesNotMatch(home, /Your household|Your Study Hall account/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /No Study Hall scheduled/);
-    assert.match(next, /Book an hour whenever homework needs structure/);
+    assert.match(next, /Book a Study Hall/);
+    assert.match(next, /ParentSurface featured/);
+    assert.match(surface, /before:bg-gold-400/);
     assert.match(recent, /Last Study Hall/);
-    assert.match(recent, /Your completed Study Halls will appear here/);
+    assert.match(recent, /View report/);
+    assert.match(recent, /ParentSurface/);
+    assert.doesNotMatch(recent, /featured/);
   });
 
   it("Join dominates inside T−5 through end+15; Book when nothing is joinable", () => {
@@ -245,9 +254,35 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.match(rows, /Cancelled/);
     assert.match(rows, /view/);
     assert.match(row, /View/);
-    assert.match(row, /Guide:/);
+    assert.match(row, /Guide /);
+    assert.doesNotMatch(row, /Cancel/);
+    assert.doesNotMatch(rows, /Cancel session|CustomerBookingActions/);
     assert.doesNotMatch(row, /payment_status|matching state|Daily room|RPC|booking lifecycle/);
     assert.doesNotMatch(rows, /UUID|public_reference/);
+  });
+
+  it("Cancel is only offered for upcoming pending/confirmed Study Halls", () => {
+    const upcoming = booking({ id: "up", status: "confirmed" });
+    const completed = booking({
+      id: "done",
+      status: "completed",
+      scheduled_start: "2026-08-20T00:00:00Z",
+      scheduled_end: "2026-08-20T01:00:00Z",
+    });
+    const endedStillConfirmed = booking({ id: "ended" });
+    assert.equal(parentCanCancel(upcoming, START - 60 * 60000), true);
+    assert.equal(parentCanCancel(completed, START), false);
+    assert.equal(parentCanCancel(endedStillConfirmed, END + JOIN_CLOSE_GRACE_MIN * 60000 + 1), false);
+    assert.equal(parentCanDispute(completed), true);
+    assert.equal(parentCanDispute(upcoming), false);
+    const detail = read("src/app/dashboard/student/study-halls/[bookingId]/page.tsx");
+    const row = read("src/components/dashboard/parent-study-hall-row.tsx");
+    const list = read("src/components/dashboard/parent-study-halls.tsx");
+    assert.match(detail, /parentCanCancel/);
+    assert.match(detail, /canCancel=\{canCancel\}/);
+    assert.match(detail, /\{canCancel \|\| canDispute \?/);
+    assert.doesNotMatch(row, /Cancel session|canCancel/);
+    assert.doesNotMatch(list, /Cancel session|CustomerBookingActions/);
   });
 
   it("Study Hall detail shows parent-relevant facts and cancel/dispute, not admin internals", () => {
@@ -263,13 +298,11 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
   it("Reports & Recordings are one destination organized by Study Hall", () => {
     const reports = read("src/app/dashboard/student/reports/page.tsx");
     assert.match(reports, /Reports &amp; Recordings|Reports & Recordings/);
-    assert.match(reports, /60 days/);
+    assert.match(reports, /recordingAvailabilityLabel|60 days|Available for/);
     assert.match(reports, /Read report/);
     assert.match(reports, /WatchRecordingButton/);
     assert.match(reports, /Recording processing/);
-    assert.match(reports, /Your completed Study Halls will appear here/);
-    assert.match(reports, /Reports from completed Study Halls will appear here/);
-    assert.match(reports, /Recordings from completed Study Halls will appear here/);
+    assert.match(reports, /None yet|No report yet|No recording yet/);
   });
 
   it("60-day recording presentation does not change retention math", () => {
@@ -302,13 +335,18 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
   it("Account holds name, email, phone privacy copy, and children", () => {
     const account = read("src/app/dashboard/student/account/page.tsx");
     const phone = read("src/components/dashboard/parent-phone-form.tsx");
+    assert.match(account, /Parent information/);
     assert.match(account, /Parent name/);
     assert.match(account, /Email/);
     assert.match(account, /ParentPhoneForm/);
     assert.match(account, /Children/);
+    assert.doesNotMatch(account, /Your household/);
     assert.match(account, /Add a child when you book your first Study Hall|One account can book for multiple children/);
-    assert.match(phone, /never shared with Guides/i);
-    assert.match(phone, /do not sell or release/i);
+    assert.match(phone, /Contact information/);
+    assert.match(phone, /Guides never see your phone number/i);
+    assert.match(phone, /important Study Hall communication/i);
+    assert.match(phone, /don.t need to keep this portal open/i);
+    assert.doesNotMatch(phone, /if your child needs you/i);
   });
 
   it("multiple children stay obvious on Home, lists, and booking", () => {

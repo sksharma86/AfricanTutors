@@ -7,7 +7,6 @@ import { ParentHashRedirect } from "@/components/dashboard/parent-hash-redirect"
 import { ParentNextStudyHall } from "@/components/dashboard/parent-next-study-hall";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentRecentActivity } from "@/components/dashboard/parent-recent-activity";
-import { LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
@@ -43,47 +42,45 @@ export default async function StudentDashboardPage() {
   return (
     <ParentPage>
       <ParentHashRedirect />
-      <p className="text-sm text-ink-500">Your Study Hall account</p>
-      <h1 className="mt-1 font-display text-2xl font-semibold text-ink-900 sm:text-3xl">
+      <h1 className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-3xl">
         {firstName ? `Hi ${firstName}` : "Welcome"}
       </h1>
 
-      <div className="mt-8">
-        <ParentNextStudyHall next={next} bookings={data.bookings} />
+      <div className="mt-5">
+        <ParentNextStudyHall next={next} />
       </div>
 
-      <div className="mt-8 border-t border-ink-100 pt-6">
+      <div className="mt-4">
         <BalanceCards minutes={data.minutes} creditCents={data.creditCents} preferFreeSession={freeTrialAvailable} compact />
       </div>
 
-      <div className="mt-8 border-t border-ink-100 pt-6">
-        <ParentRecentActivity
-          booking={last}
-          report={last ? data.reportByBooking.get(last.id) ?? null : null}
-          recording={last ? data.recordingByBooking.get(last.id) ?? null : null}
-        />
-      </div>
+      {last ? (
+        <div className="mt-6">
+          <ParentRecentActivity>
+            booking={last}
+            report={data.reportByBooking.get(last.id) ?? null}
+            recording={data.recordingByBooking.get(last.id) ?? null}
+          />
+        </div>
+      ) : null}
 
       {freeTrialAvailable ? (
-        <section className="mt-8 border-t border-ink-100 pt-6">
-          <p className="text-sm font-semibold text-ink-900">Your first Study Hall is on us</p>
-          <p className="mt-1 text-sm text-ink-500">60 minutes free · No credit card required</p>
-          <div className="mt-3">
-            <LinkButton href="/dashboard/student/book" variant="primary" size="sm">
-              Book free session
-            </LinkButton>
-          </div>
-          <p className="mt-4 text-sm text-ink-500">After your free session, you can book pay-as-you-go or save with prepaid hours.</p>
-        </section>
+        <p className="mt-8 text-sm text-ink-500">
+          Your first Study Hall is on us — 60 minutes free, no credit card required.{" "}
+          <Link href="/dashboard/student/book" className="font-medium text-ink-800 underline-offset-4 hover:underline">
+            Book free session
+          </Link>
+          <span className="mt-1 block text-ink-400">After your free session, you can book pay-as-you-go or save with prepaid hours.</span>
+        </p>
       ) : null}
 
       {!data.parentPhone ? (
-        <p className="mt-8 text-sm text-ink-500">
-          Add a phone number in{" "}
-          <Link href="/dashboard/student/account" className="font-medium text-ink-800 underline-offset-4 hover:underline">
+        <p className="mt-6 text-sm text-ink-400">
+          Add a number in{" "}
+          <Link href="/dashboard/student/account" className="font-medium text-ink-600 underline-offset-4 hover:underline">
             Account
-          </Link>{" "}
-          so Study Hall (at home) can reach you if a Guide uses Call Parent during a session.
+          </Link>
+          .
         </p>
       ) : null}
     </ParentPage>

@@ -99,6 +99,21 @@ export function matchesParentStudyHallView(booking, view, nowMs = Date.now()) {
   return lists.upcoming.length > 0;
 }
 
+/**
+ * Cancel is only meaningful while the Study Hall is still upcoming.
+ * Does not change backend cancel/refund rules — presentation only.
+ */
+export function parentCanCancel(booking, nowMs = Date.now()) {
+  if (!booking) return false;
+  if (booking.status !== "pending" && booking.status !== "confirmed") return false;
+  return parentStudyHallLists([booking], nowMs).upcoming.length > 0;
+}
+
+export function parentCanDispute(booking, hasOpenIssue = false) {
+  if (!booking || hasOpenIssue) return false;
+  return booking.status === "completed" || booking.status === "no_show";
+}
+
 /** Parent-facing purchase label. Never print Stripe purpose enums. */
 export function parentPaymentPurposeLabel(purpose) {
   const p = String(purpose ?? "");

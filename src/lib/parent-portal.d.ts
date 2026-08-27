@@ -25,6 +25,14 @@ declare module "@/lib/parent-portal.mjs" {
     view: string,
     nowMs?: number,
   ): boolean;
+  export function parentCanCancel(
+    booking: { status?: string; scheduled_start?: string | null; scheduled_end?: string | null } | null | undefined,
+    nowMs?: number,
+  ): boolean;
+  export function parentCanDispute(
+    booking: { status?: string } | null | undefined,
+    hasOpenIssue?: boolean,
+  ): boolean;
   export function parentPaymentPurposeLabel(purpose: string | null | undefined): string;
   export function parentPaymentStatusLabel(status: string | null | undefined): string;
   export function parentPaymentLineLabel(booking: {

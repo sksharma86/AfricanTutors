@@ -23,19 +23,18 @@ export function BalanceCards({
 
   if (compact) {
     return (
-      <section>
+      <section className="flex items-center justify-between gap-4 rounded-2xl bg-white/75 px-4 py-3 ring-1 ring-ink-900/[0.05]">
         <p className="text-sm text-ink-700">
-          <span className="font-medium text-ink-900">{hours}</span>
+          <span className="font-semibold text-ink-900">{hours}</span>
           <span className="text-ink-500"> available</span>
         </p>
-        {preferFreeSession && minutes === 0 ? (
-          <p className="mt-1 text-sm text-ink-500">Prepaid packages are optional later.</p>
-        ) : (
-          <p className="mt-1">
-            <Link href="/dashboard/student/packages#prepaid" className="text-sm font-medium text-ink-600 hover:underline">
-              Buy hours &amp; save
-            </Link>
-          </p>
+        {preferFreeSession && minutes === 0 ? null : (
+          <Link
+            href="/dashboard/student/packages#prepaid"
+            className="shrink-0 text-sm font-medium text-ink-500 hover:text-ink-800"
+          >
+            Buy hours &amp; save →
+          </Link>
         )}
       </section>
     );

@@ -39,9 +39,9 @@ describe("Pre-launch functional UX — phone + packages + applicant gates", () =
   it("phone form explains Call Parent, privacy, and no third-party sale", () => {
     const phone = read("src/components/dashboard/parent-phone-form.tsx");
     assert.match(phone, /Call Parent/);
-    assert.match(phone, /never shared with Guides/i);
-    assert.match(phone, /sell or release/i);
-    assert.match(phone, /third parties/i);
+    assert.match(phone, /Guides never see your phone number/i);
+    assert.match(phone, /important Study Hall communication/i);
+    assert.match(phone, /don.t need to keep this portal open/i);
     assert.match(phone, /router\.refresh\(\)/);
   });
 

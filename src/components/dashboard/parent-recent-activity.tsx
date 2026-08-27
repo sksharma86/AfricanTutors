@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
 import { childFirstName, parentGuideLabel } from "@/lib/parent-portal.mjs";
 import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
@@ -17,14 +18,7 @@ export function ParentRecentActivity({
   report: ParentReport | null;
   recording: ParentRecording | null;
 }) {
-  if (!booking) {
-    return (
-      <section>
-        <h2 className="text-sm font-semibold tracking-wide text-ink-400 uppercase">Last Study Hall</h2>
-        <p className="mt-2 text-sm text-ink-500">Your completed Study Halls will appear here.</p>
-      </section>
-    );
-  }
+  if (!booking) return null;
 
   const tz = booking.students?.timezone || DEFAULT_TZ;
   const when = booking.scheduled_start ? formatDayHeading(booking.scheduled_start, tz) : "Recently";
@@ -42,29 +36,35 @@ export function ParentRecentActivity({
           : recordingAvailabilityLabel(recording.retention_until);
 
   return (
-    <section>
-      <h2 className="text-sm font-semibold tracking-wide text-ink-400 uppercase">Last Study Hall</h2>
-      <p className="mt-2 text-sm text-ink-800">
+    <ParentSurface>
+      <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Last Study Hall</p>
+      <p className="mt-2 text-sm font-medium text-ink-900">
         {when}
-        {guide ? ` · ${guide}` : ""}
         {child ? ` · ${child}` : ""}
       </p>
+      {guide ? <p className="mt-0.5 text-sm text-ink-500">Guide {guide}</p> : null}
       <p className="mt-2 text-sm text-ink-600">
         {report ? "Report ready" : "No report yet"}
         {recLabel ? ` · ${recLabel}` : ""}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         {report ? (
-          <Link href={`/dashboard/student/reports#hall-${booking.id}`} className="text-sm font-semibold text-gold-700 hover:underline">
+          <Link
+            href={`/dashboard/student/reports#hall-${booking.id}`}
+            className="text-sm font-medium text-gold-700 hover:underline"
+          >
             View report
           </Link>
         ) : (
-          <Link href={`/dashboard/student/study-halls/${booking.id}`} className="text-sm font-medium text-ink-600 hover:underline">
-            View
+          <Link
+            href={`/dashboard/student/study-halls/${booking.id}`}
+            className="text-sm font-medium text-ink-500 hover:underline"
+          >
+            View Study Hall
           </Link>
         )}
         {playable && recording ? <WatchRecordingButton recordingId={recording.id} /> : null}
       </div>
-    </section>
+    </ParentSurface>
   );
 }

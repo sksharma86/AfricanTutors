@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ParentStudyHallRow } from "@/components/dashboard/parent-study-hall-row";
+import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { parentStudyHallLists } from "@/lib/parent-portal.mjs";
 import { cn } from "@/lib/utils";
 import type { ParentBooking } from "@/lib/parent-portal-types";
@@ -31,15 +32,10 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
     router.replace(`${pathname}${sp.toString() ? `?${sp}` : ""}`);
   }
 
-  const empty =
-    view === "cancelled"
-      ? "Cancelled Study Halls will appear here."
-      : view === "past"
-        ? "Your completed Study Halls will appear here."
-        : "No Study Hall scheduled.";
+  const empty = view === "upcoming" ? "No Study Hall scheduled." : "None yet.";
 
   return (
-    <div>
+    <ParentSurface>
       <div className="flex flex-wrap gap-1 border-b border-ink-100">
         {VIEWS.map((v) => (
           <button
@@ -56,23 +52,23 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
         ))}
       </div>
       {rows.length === 0 ? (
-        <div className="mt-6">
+        <div className="py-5">
           <p className="text-sm text-ink-500">{empty}</p>
           {view === "upcoming" ? (
             <p className="mt-3">
-              <Link href="/dashboard/student/book" className="text-sm font-semibold text-gold-700 hover:underline">
+              <Link href="/dashboard/student/book" className="text-sm font-medium text-gold-700 hover:underline">
                 Book a Study Hall
               </Link>
             </p>
           ) : null}
         </div>
       ) : (
-        <ul className="mt-2 divide-y divide-ink-100">
+        <ul className="divide-y divide-ink-100">
           {rows.map((b: ParentBooking) => (
-            <ParentStudyHallRow key={b.id} booking={b} />
+            <ParentStudyHallRow key={b.id} booking={b} past={view !== "upcoming"} />
           ))}
         </ul>
       )}
-    </div>
+    </ParentSurface>
   );
 }

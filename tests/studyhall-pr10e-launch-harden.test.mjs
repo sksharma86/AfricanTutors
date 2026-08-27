@@ -158,7 +158,7 @@ describe("PR10E — role isolation + notifications + room access (source)", () =
   it("Call Parent never surfaces phone to Guide UI", () => {
     assert.match(callParent, /Never displays a phone number/);
     assert.doesNotMatch(callParent, /phone_e164|parentPhone|\+1/);
-    assert.match(phone, /never shared with Guides/i);
+    assert.match(phone, /Guides never see your phone number|never shared with Guides/i);
     assert.match(phone, /don.t need to keep this portal open/i);
     assert.match(callParent, /submittingRef/);
   });

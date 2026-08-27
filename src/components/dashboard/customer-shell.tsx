@@ -52,10 +52,10 @@ export function CustomerShell({ children }: { children: ReactNode }) {
             <LogoutButton />
           </div>
         </Container>
-        <div className="border-t border-ink-100 md:hidden">
+        <div className="relative border-t border-ink-100 md:hidden">
           <nav
             aria-label="Parent account"
-            className="flex gap-1 overflow-x-auto overscroll-x-contain px-4 py-2 snap-x snap-mandatory"
+            className="flex gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {PARENT_PORTAL_NAV.map((item) => (
               <Link
@@ -71,6 +71,10 @@ export function CustomerShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent"
+          />
         </div>
       </header>
 

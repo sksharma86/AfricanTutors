@@ -32,7 +32,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
         return;
       }
       setSaved(data.phone ?? null);
-      setNote("Saved. We’ll only use this for Call Parent if your child needs you during Study Hall.");
+      setNote("Saved.");
       router.refresh();
     } finally {
       setBusy(false);
@@ -41,12 +41,10 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
   }
 
   return (
-    <div className="rounded-xl border border-ink-100 bg-white p-4 sm:p-5">
-      <p className="text-sm font-medium text-ink-900">Phone number for Call Parent</p>
+    <div className="rounded-2xl bg-white/80 px-4 py-4 ring-1 ring-ink-900/[0.05] sm:px-5">
+      <p className="text-sm font-medium text-ink-900">Contact information</p>
       <p className="mt-1.5 text-sm leading-6 text-ink-500">
-        Study Hall (at home) needs your phone so we can reach you if a Guide uses Call Parent during a session —
-        for example if your child needs you. Your number is never shared with Guides, and we do not sell or release
-        it to third parties. You don’t need to keep this portal open.
+        We’ll only use your number for important Study Hall communication, including Call Parent. Guides never see your phone number. You don’t need to keep this portal open.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <label className="sr-only" htmlFor="parent-phone">
@@ -60,7 +58,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+15551234567"
-          className="w-full rounded-lg border border-ink-200 px-3 py-2.5 text-sm text-ink-900 sm:max-w-xs"
+          className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 sm:max-w-xs"
         />
         <button
           type="button"
@@ -71,13 +69,7 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
           {busy ? "Saving…" : "Save phone"}
         </button>
       </div>
-      {saved ? (
-        <p className="mt-2 text-xs text-forest-700">On file: {saved}</p>
-      ) : (
-        <p className="mt-2 text-xs text-ink-500">
-          Add a number so we can reach you if your child needs you during Study Hall.
-        </p>
-      )}
+      {saved ? <p className="mt-2 text-xs text-forest-700">On file: {saved}</p> : null}
       {note ? <p className="mt-1 text-xs text-ink-500">{note}</p> : null}
     </div>
   );
