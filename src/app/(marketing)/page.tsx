@@ -58,7 +58,7 @@ export default async function HomePage() {
       <WhyStudyHall />
       <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />
-      <Faq eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
+      <Faq id="faq" eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
       <CtaSection
         title="Try your first hour free."
         description="No credit card required."
