@@ -19,7 +19,7 @@ export default async function GuideHomePage() {
   const supabase = await createSupabaseServerClient();
   const data = await loadGuideWorkspace(supabase!, user.id);
   const tz = tutorTimezone(data.profile?.timezone);
-  const lists = guideStudyHallLists(data.bookings, Date.now(), tz);
+  const lists = guideStudyHallLists(data.bookings, undefined, tz);
   const unfinished = data.reportsReady ? unfinishedGuideReport(data.bookings, data.reportedBookings) : null;
 
   return (
