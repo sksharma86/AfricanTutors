@@ -36,16 +36,20 @@ describe("Phase 5B — meeting-token recording privileges", () => {
     assert.equal(RECORDING_OPTS.height, 720);
     // Must NOT grant recording-management permission → participant cannot stop it.
     assert.ok(!("enable_recording" in p), "participant token must not grant recording control");
+    assert.equal(p.enable_recording_ui, false, "Prebuilt Record/Stop is hidden for parents/students");
   });
 
-  it("without autoStartRecording, no recording properties are added", () => {
+  it("without autoStartRecording, no recording start properties are added", () => {
     const p = buildMeetingTokenProps({ room: "at-x", userName: "T", userId: "tutor", isOwner: false, expUnix: 1 });
     assert.ok(!("start_cloud_recording" in p));
+    assert.equal(p.enable_recording_ui, false);
   });
 
   it("admins are owners (support) but still don't carry enable_recording control on the token", () => {
     const p = buildMeetingTokenProps({ room: "at-x", userName: "Admin", userId: "admin", isOwner: true, expUnix: 1, autoStartRecording: true });
     assert.equal(p.is_owner, true);
     assert.ok(!("enable_recording" in p));
+    assert.equal(p.start_cloud_recording, true, "admin join still auto-starts recording");
+    assert.ok(!("enable_recording_ui" in p), "admin recording chrome is not newly restricted");
   });
 });

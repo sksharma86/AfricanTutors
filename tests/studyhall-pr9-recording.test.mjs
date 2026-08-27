@@ -196,7 +196,9 @@ describe("Study Hall PR9 — architecture source contracts", () => {
     assert.match(cfg, /recordingBucketConfig/);
     assert.match(cfg, /Mode A|Daily-managed|DAILY_S3/);
     const client = read("src/lib/daily/client.ts");
-    assert.match(client, /enable_recording: "cloud"/);
+    const roomProps = read("src/lib/daily/room-props.mjs");
+    assert.match(roomProps, /enable_recording: "cloud"/);
+    assert.match(client, /buildRoomProperties|enable_recording: "cloud"/);
   });
 
   it("pricing / free session / Call Parent / prepaid UX unchanged in spirit", () => {
