@@ -13,14 +13,14 @@ export const metadata: Metadata = { title: "Admin — Guide detail" };
 export const dynamic = "force-dynamic";
 
 // Module-scope so `Date` isn't called in the Server Component render body.
-function countUpcoming(bks: { status: string; scheduled_start: string | null }[]): number {
+function listUpcoming<T extends { status: string; scheduled_start: string | null }>(bks: T[]): T[] {
   const now = new Date().getTime();
   return bks.filter(
     (b) =>
       (b.status === "confirmed" || b.status === "pending") &&
       b.scheduled_start &&
       new Date(b.scheduled_start).getTime() > now,
-  ).length;
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -69,15 +69,8 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
     public_reference: string | null;
     student_first_name: string | null;
   }[];
-  const upcoming = countUpcoming(bks);
-  const upcomingRows = bks.filter((b) => {
-    const now = Date.now();
-    return (
-      (b.status === "confirmed" || b.status === "pending") &&
-      b.scheduled_start &&
-      new Date(b.scheduled_start).getTime() > now
-    );
-  });
+  const upcomingRows = listUpcoming(bks);
+  const upcoming = upcomingRows.length;
   const completed = bks.filter((b) => b.status === "completed").length;
   const cancelled = bks.filter((b) => b.status === "cancelled").length;
   const noShow = bks.filter((b) => b.status === "no_show").length;

@@ -59,7 +59,11 @@ export async function GET(request: NextRequest) {
     status: tp.status,
     approvedAt: tp.approved_at,
     label: guideWorkforceLabel(tp.status, tp.approved_at),
-    displayName: (tp.profiles as { display_name: string | null } | null)?.display_name ?? null,
+    displayName: (() => {
+      const profiles = tp.profiles as unknown as { display_name: string | null } | { display_name: string | null }[] | null;
+      if (Array.isArray(profiles)) return profiles[0]?.display_name ?? null;
+      return profiles?.display_name ?? null;
+    })(),
     futureAssignments: future,
   });
 }
