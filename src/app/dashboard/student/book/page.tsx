@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BookingWizard, type StudentRow } from "@/components/booking/booking-wizard";
-import { CustomerShell } from "@/components/dashboard/customer-shell";
+import { ParentPage } from "@/components/dashboard/parent-page";
 import { requireRole } from "@/lib/auth";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -36,21 +36,22 @@ export default async function BookSessionPage({
     .order("created_at");
 
   return (
-    <CustomerShell>
-      <div className="mx-auto w-full max-w-2xl px-6 py-10 lg:px-8">
-        <Link href="/dashboard/student" className="text-sm font-medium text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline">
-          ← Back to dashboard
-        </Link>
-        <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-4xl">
-          Book a Study Hall session
-        </h1>
-        <p className="mt-2 text-base leading-7 text-ink-500">
-          Choose your child, session length, and time — we match an approved Guide for live homework supervision.
-        </p>
-        <div className="mt-8">
-          <BookingWizard students={(students ?? []) as StudentRow[]} initialDuration={initialDuration} />
-        </div>
+    <ParentPage>
+      <Link
+        href="/dashboard/student"
+        className="text-sm font-medium text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline"
+      >
+        ← Home
+      </Link>
+      <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-4xl">
+        Book a Study Hall session
+      </h1>
+      <p className="mt-2 text-base leading-7 text-ink-500">
+        Choose your child, session length, and time — we match an approved Guide for live homework supervision.
+      </p>
+      <div className="mt-8">
+        <BookingWizard students={(students ?? []) as StudentRow[]} initialDuration={initialDuration} />
       </div>
-    </CustomerShell>
+    </ParentPage>
   );
 }
