@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LinkButton } from "@/components/ui/button";
+import { formatTime } from "@/lib/timezone";
 import { guideJoinUiState } from "@/lib/tutor-schedule.mjs";
 
-function formatOpenAt(iso: string | null | undefined): string {
+function formatOpenAt(iso: string | null | undefined, tz?: string): string {
   if (!iso) return "5 minutes before start";
   try {
+    if (tz) return formatTime(iso, tz);
     return new Date(iso).toLocaleTimeString(undefined, {
       hour: "numeric",
       minute: "2-digit",
@@ -27,12 +29,14 @@ export function GuideJoinControl({
   status,
   scheduledStart,
   scheduledEnd,
+  timezone,
   prominent = false,
 }: {
   bookingId: string;
   status: string;
   scheduledStart: string | null;
   scheduledEnd: string | null;
+  timezone?: string;
   prominent?: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -71,7 +75,7 @@ export function GuideJoinControl({
   if (ui.kind === "opens_at") {
     return (
       <p className={prominent ? "text-sm font-medium text-ink-600" : "text-xs font-medium text-ink-500"}>
-        Join opens at {formatOpenAt(ui.openAtISO)}.
+        Join opens at {formatOpenAt(ui.openAtISO, timezone)}.
       </p>
     );
   }

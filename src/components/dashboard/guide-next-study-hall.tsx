@@ -60,6 +60,7 @@ export function GuideNextStudyHall({
             status={next.status}
             scheduledStart={next.scheduled_start}
             scheduledEnd={next.scheduled_end}
+            timezone={tz}
             prominent
           />
         )}

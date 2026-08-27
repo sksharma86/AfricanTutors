@@ -94,6 +94,7 @@ export function GuideStudyHalls({
                       status={b.status}
                       scheduledStart={b.scheduled_start}
                       scheduledEnd={b.scheduled_end}
+                      timezone={tz}
                     />
                   ) : null}
                   {needs ? (
