@@ -13,15 +13,15 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "What is Study Hall (at home)?",
-    a: "Live online Study Hall for kids. A highly vetted Guide stays with your child on video while they do their own homework — supervision, focus, and accountability, not tutoring.",
+    a: "Live online homework supervision. A highly vetted Guide stays with your child on video while they do their own work — so they stay focused, and you get the evening back.",
   },
   {
     q: "Is this tutoring?",
-    a: "No. Study Hall (at home) is live homework supervision. Guides keep children focused and on task. They do not teach lessons, give answers, or complete homework for the child.",
+    a: "No. Study Hall (at home) provides live homework supervision and accountability rather than subject instruction.",
   },
   {
     q: "What does the Guide actually do?",
-    a: "The Guide stays present on video, encourages your child to start and stay with the work, and redirects calmly when attention drifts. Their job is structure and company — not subject instruction.",
+    a: "Guides create the structure that helps kids start, stay focused, and finish their work independently.",
   },
   {
     q: "Can my child ask for homework help?",
@@ -29,7 +29,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Who are the Guides?",
-    a: "Guides are highly vetted supervisors. They keep children focused, accountable, and encouraged — and redirect calmly when attention drifts. Every Guide is reviewed and approved before working with families.",
+    a: "Every Guide is reviewed and approved before working with families. They stay present, encourage focus, and keep the hour moving.",
   },
   {
     q: "Where do Guides work from?",
@@ -69,15 +69,15 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How does Study Hall work?",
-    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. The Guide keeps them on task while they do their homework. Afterward, you get a short report — and a recording available for 60 days.",
+    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. Afterward, you get a short report. Recordings stay available for 60 days.",
   },
   {
     q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for quality and safety. Parents can review recordings in their account for 60 days after the session.",
+    a: "Yes. Sessions are recorded for safety and parent review. Parents can access recordings in their account for 60 days after the Study Hall.",
   },
   {
     q: "What if my child needs me during Study Hall?",
-    a: "Their Guide can use Call Parent. Study Hall (at home) contacts your phone. You don’t need to keep an app or portal open — and Guides never see your private number.",
+    a: "If a Guide needs you during Study Hall, they can contact your phone directly through the platform. Guides never see your phone number.",
   },
   {
     q: "Can I book for more than one child?",

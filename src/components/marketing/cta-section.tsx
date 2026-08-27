@@ -9,6 +9,7 @@ export function CtaSection({
   primaryLabel = FREE_TRIAL_CTA,
   secondaryHref,
   secondaryLabel,
+  showFinePrint = true,
 }: {
   title: string;
   description: string;
@@ -16,6 +17,7 @@ export function CtaSection({
   primaryLabel?: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  showFinePrint?: boolean;
 }) {
   return (
     <section className="bg-ink-900 py-16 text-white sm:py-20">
@@ -45,9 +47,11 @@ export function CtaSection({
               </TrackCta>
             ) : null}
           </div>
-          <p className="mt-5 text-sm text-white/45">
-            {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
-          </p>
+          {showFinePrint ? (
+            <p className="mt-5 text-sm text-white/45">
+              {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
+            </p>
+          ) : null}
         </div>
       </Container>
     </section>

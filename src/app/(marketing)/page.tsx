@@ -61,11 +61,12 @@ export default async function HomePage() {
       <Faq eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
       <CtaSection
         title="Try your first hour free."
-        description="Book a real Study Hall. No credit card required."
+        description="No credit card required."
         primaryHref={primary.href}
         primaryLabel={primary.label}
         secondaryHref="/how-it-works"
         secondaryLabel="See how it works"
+        showFinePrint={false}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import { FOOTER_SECTIONS, SITE_NAME } from "@/lib/constants";
 export function Footer() {
   return (
     <footer className="border-t border-ink-100 bg-white">
-      <Container size="wide" className="grid gap-10 py-14 md:grid-cols-[1.4fr_repeat(5,1fr)]">
+      <Container size="wide" className="grid gap-8 py-10 md:grid-cols-[1.4fr_repeat(5,1fr)] md:gap-10 md:py-14">
         <div className="max-w-sm">
           <BrandLockup variant="product" />
           <p className="mt-4 text-sm leading-7 text-ink-500">

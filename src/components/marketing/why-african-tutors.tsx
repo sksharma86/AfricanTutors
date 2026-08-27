@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
  */
 export function WhyStudyHall() {
   return (
-    <section id="why" className="relative overflow-hidden bg-ink-900 py-20 text-white sm:py-28">
+    <section id="why" className="relative overflow-hidden bg-ink-900 py-16 text-white sm:py-28">
       <Image
         src="/images/marketing/studyhall-routine-evening.webp"
         alt="A calm evening at home after homework is underway"
@@ -26,7 +26,7 @@ export function WhyStudyHall() {
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-12 lg:grid-cols-2">
+        <div className="mt-10 grid gap-10 sm:mt-14 sm:gap-12 lg:grid-cols-2">
           <Reveal>
             <p className="text-sm font-semibold tracking-[0.08em] text-white/40 uppercase">Before</p>
             <ul className="mt-4 space-y-3 text-2xl font-semibold tracking-[-0.03em] text-white/55 sm:text-3xl">

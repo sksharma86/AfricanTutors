@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { FREE_TRIAL_CTA, PLANS_AS_LOW_AS_LABEL } from "@/lib/pricing";
+import { FREE_TRIAL_CTA, PREPAID_FROM_HOURLY_USD } from "@/lib/pricing";
 
 export function SiteHero({
   primaryHref,
@@ -31,19 +31,15 @@ export function SiteHero({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-transparent to-ink-900/20" aria-hidden />
 
-      <Container size="wide" className="relative z-10 flex min-h-[92vh] flex-col justify-end pb-14 pt-28 sm:pb-20">
-        <p className="at-fade-in text-[13px] font-medium tracking-[0.18em] text-white/55 uppercase">
-          Study Hall (at home)
-        </p>
-        <h1 className="at-fade-in at-delay-1 mkt-display mt-4 max-w-[16ch] text-[3.1rem] text-white sm:text-[4.4rem] lg:text-[5.4rem]">
+      <Container size="wide" className="relative z-10 flex min-h-[92vh] flex-col justify-end pb-12 pt-28 sm:pb-20">
+        <h1 className="at-fade-in mkt-display max-w-[16ch] text-[3.05rem] leading-[1.05] text-white sm:text-[4.4rem] lg:text-[5.4rem]">
           Homework gets done.
           <span className="mt-2 block text-white/62">You get your evening back.</span>
         </h1>
-        <p className="at-fade-in at-delay-2 mt-6 max-w-[34rem] text-[17px] leading-8 text-white/78">
-          Live online homework supervision that keeps your child focused, encouraged, and on task —
-          while a Guide stays present on video.
+        <p className="at-fade-in at-delay-1 mt-6 max-w-[30rem] text-[16px] leading-7 text-white/74 sm:text-[17px] sm:leading-8">
+          Live homework supervision that keeps your child focused, encouraged, and on task.
         </p>
-        <div className="at-fade-in at-delay-3 mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+        <div className="at-fade-in at-delay-2 mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <TrackCta href={primaryHref} cta={primaryLabel} location="hero" variant="secondary" size="lg">
             {primaryLabel}
           </TrackCta>
@@ -54,8 +50,8 @@ export function SiteHero({
             See how it works
           </Link>
         </div>
-        <p className="at-fade-in at-delay-3 mt-5 text-[13px] text-white/50">
-          First hour free · No credit card · {PLANS_AS_LOW_AS_LABEL}
+        <p className="at-fade-in at-delay-3 mt-5 text-[13px] tracking-wide text-white/50">
+          First hour free · No credit card · From ${PREPAID_FROM_HOURLY_USD}/hour
         </p>
       </Container>
     </section>

@@ -4,23 +4,18 @@ import { Container } from "@/components/ui/container";
 const STEPS = [
   {
     n: "01",
-    title: "Book a time.",
-    description: "Add your child and pick an hour. We match an approved Guide.",
+    title: "Pick a time.",
+    description: "Choose your child and when homework starts.",
   },
   {
     n: "02",
-    title: "Your child joins their Guide.",
-    description: "They open a private live Study Hall from home. The Guide stays on video.",
+    title: "They join their Guide.",
+    description: "Their Guide keeps the hour focused and moving.",
   },
   {
     n: "03",
-    title: "Homework gets done.",
-    description: "Guides supervise and encourage. They do not tutor or complete the work.",
-  },
-  {
-    n: "04",
-    title: "You receive the report.",
-    description: "A short note lands in your account. The recording stays available for 60 days.",
+    title: "You get the recap.",
+    description: "See what got done when the Study Hall ends.",
   },
 ] as const;
 
@@ -36,7 +31,7 @@ export function Steps({
   withHeader?: boolean;
 }) {
   return (
-    <section id="how-it-works" className="scroll-mt-24 bg-white py-20 sm:py-28">
+    <section id="how-it-works" className="scroll-mt-24 bg-white py-16 sm:py-24">
       <Container size="wide">
         {withHeader ? (
           <Reveal>
@@ -45,17 +40,17 @@ export function Steps({
           </Reveal>
         ) : null}
 
-        <ol className={`${withHeader ? "mt-14" : "mt-0"} divide-y divide-ink-100 border-y border-ink-100`}>
+        <ol className={`${withHeader ? "mt-12" : "mt-0"}`}>
           {steps.map((step, index) => (
             <Reveal key={step.title} delay={index * 70}>
-              <li className="grid gap-3 py-8 sm:grid-cols-[5rem_1fr] sm:items-baseline lg:grid-cols-[7rem_minmax(0,22rem)_1fr]">
+              <li className="grid gap-2 border-t border-ink-100 py-8 last:border-b sm:grid-cols-[5rem_minmax(0,22rem)_1fr] sm:items-baseline sm:gap-8">
                 <p className="text-sm font-semibold tabular-nums text-ink-300">
                   {step.n ?? String(index + 1).padStart(2, "0")}
                 </p>
-                <h3 className="text-2xl font-semibold tracking-[-0.04em] text-ink-900 sm:text-3xl">
+                <h3 className="text-[1.65rem] font-semibold tracking-[-0.04em] text-ink-900 sm:text-3xl">
                   {step.title}
                 </h3>
-                <p className="max-w-md text-[16px] leading-7 text-ink-500">{step.description}</p>
+                <p className="max-w-md text-[15px] leading-7 text-ink-500 sm:text-[16px]">{step.description}</p>
               </li>
             </Reveal>
           ))}
