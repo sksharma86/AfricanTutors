@@ -14,10 +14,12 @@ describe("Pricing page — single sessions before packages", () => {
   const wizard = read("src/components/booking/booking-wizard.tsx");
   const bookPage = read("src/app/dashboard/student/book/page.tsx");
 
-  it("authenticated customer nav includes Book and Sessions (not Packages)", () => {
-    assert.match(shell, /label:\s*"Book"/);
-    assert.match(shell, /label:\s*"Sessions"/);
-    assert.doesNotMatch(shell, /label:\s*"Packages"/);
+  it("authenticated customer nav includes Hours (not Packages) and a Book CTA", () => {
+    const nav = read("src/lib/parent-portal.mjs");
+    assert.match(nav, /label:\s*"Hours"/);
+    assert.match(nav, /label:\s*"Study Halls"/);
+    assert.doesNotMatch(nav, /label:\s*"Packages"/);
+    assert.match(shell, /PARENT_PORTAL_NAV/);
     assert.match(shell, /Book a Study Hall/);
   });
 

@@ -90,13 +90,15 @@ describe("Session join window — partitionBookings keeps active confirmed sessi
 });
 
 describe("Session join window — parent dashboard uses partition + join state", () => {
-  it("history cards are only used for the past list", () => {
+  it("parent Home uses join-window helpers for Next Study Hall + Join CTA", () => {
     const page = read("src/app/dashboard/student/page.tsx");
-    assert.match(page, /past\.map\(\(b\) => cardFor\(b, \{ history: true \}\)\)/);
-    assert.match(page, /laterUpcoming\.map\(\(b\) => cardFor\(b\)\)/);
-    assert.match(page, /cardFor\(next, \{ featured: true \}\)/);
-    assert.match(page, /state === "join"/);
-    assert.match(page, /Join Study Hall/);
+    const next = read("src/components/dashboard/parent-next-study-hall.tsx");
+    const helpers = read("src/lib/parent-portal.mjs");
+    assert.match(page, /ParentNextStudyHall/);
+    assert.match(next, /parentJoinHint|parentPrimaryAction/);
+    assert.match(next, /Join Study Hall/);
+    assert.match(helpers, /customerJoinState/);
+    assert.match(helpers, /state === "join"/);
   });
 
   it("partitionBookings uses customerJoinState rather than start < now", () => {
