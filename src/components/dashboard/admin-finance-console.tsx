@@ -38,6 +38,10 @@ export interface GuideCompRow {
   rate_cents: number | null;
   currency: string;
 }
+
+interface GuideLedgerRow extends GuideCompRow {
+  totals: { currency: string; earned: number; paid: number; outstanding: number }[];
+}
 export interface DisputeRow {
   id: string;
   booking_id: string;
@@ -207,7 +211,10 @@ function EarningsTab({
 
   const filtered = earnings.filter((e) => statusFilter === "all" || e.status === statusFilter);
   const totals = useMemo(() => aggregateCompensationByCurrency(earnings), [earnings]);
-  const guideRows = useMemo(() => summarizeGuideCompensation(guides, earnings), [guides, earnings]);
+  const guideRows = useMemo(
+    () => summarizeGuideCompensation(guides, earnings) as GuideLedgerRow[],
+    [guides, earnings],
+  );
 
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 

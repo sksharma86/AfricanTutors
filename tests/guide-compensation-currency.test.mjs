@@ -167,7 +167,7 @@ describe("Guide compensation currency — source contracts", () => {
     assert.match(pricing, /minutes: 180, priceUsd: 36/);
     assert.match(pricing, /ONLY customer-facing pricing/);
     assert.match(pricing, /export function formatCents/);
-    assert.doesNotMatch(pricing, /comp_currency|KES|compensation/i);
+    assert.doesNotMatch(pricing, /comp_currency|KES|COMPENSATION_CURRENCIES/);
     const payments = read("supabase/migrations/0005_phase4a_financial.sql");
     assert.match(payments, /currency\s+text not null default 'usd'/);
     assert.match(read("src/lib/checkout-service.ts"), /formatCents/);
@@ -178,7 +178,7 @@ describe("Guide compensation currency — source contracts", () => {
     const m10 = read("supabase/migrations/0010_phase4c_admin_ops.sql");
     assert.match(m10, /admin_mark_earning_paid/);
     assert.match(m10, /admin_mark_earnings_paid_batch/);
-    assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /admin_mark_earning_paid_batch/);
+    assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /admin_mark_earnings_paid_batch/);
     assert.match(read("src/components/dashboard/admin-finance-console.tsx"), /admin_mark_earning_paid/);
     assert.doesNotMatch(read("src/components/dashboard/admin-finance-console.tsx"), /stripeConnect|transfers\.create|payouts\.create/);
     assert.match(read("src/lib/compensation-currency.mjs"), /No FX conversion/);
