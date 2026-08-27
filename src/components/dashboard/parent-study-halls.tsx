@@ -68,7 +68,7 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
         </div>
       ) : (
         <ul className="mt-2 divide-y divide-ink-100">
-          {rows.map((b) => (
+          {rows.map((b: ParentBooking) => (
             <ParentStudyHallRow key={b.id} booking={b} />
           ))}
         </ul>

@@ -4,7 +4,7 @@ import {
   type FocusRating,
   type RedirectionLevel,
 } from "@/lib/session-report.mjs";
-import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
+import { formatAvailableUntil, recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading } from "@/lib/timezone";
 
@@ -147,11 +147,15 @@ function RecordingBlock({
     );
   }
 
-  void timezone;
+  const until = formatAvailableUntil(recording.retention_until, timezone);
   return (
     <div className="mt-4 border-t border-ink-100 pt-3">
       <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
-      <p className="mt-0.5 text-sm text-ink-700">{recordingAvailabilityLabel(recording.retention_until)}</p>
+      <p className="mt-0.5 text-sm text-ink-700">
+        Available for 60 days
+        {until ? <span className="text-ink-500"> · Available until {until}</span> : null}
+      </p>
+      <p className="text-sm text-ink-500">{recordingAvailabilityLabel(recording.retention_until)}</p>
       <WatchRecordingButton recordingId={recording.id} />
     </div>
   );

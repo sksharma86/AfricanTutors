@@ -38,7 +38,7 @@ export default async function ParentReportsPage() {
           <p className="text-sm text-ink-500">Your completed Study Halls will appear here.</p>
         ) : (
           <ul className="divide-y divide-ink-100">
-            {past.map((b) => {
+            {past.map((b: (typeof past)[number]) => {
               const report = data.reportByBooking.get(b.id);
               const rec = data.recordingByBooking.get(b.id);
               const recView = recordingSummary(rec);

@@ -138,7 +138,7 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
   });
 
   it("admin can see escalations; PR6 reports lightly note escalation", () => {
-    assert.match(read("src/components/dashboard/management-overview.tsx"), /Call Parent escalations/);
+    assert.match(read("src/app/dashboard/admin/study-halls/[bookingId]/page.tsx"), /Call Parent/);
     assert.match(read("src/components/dashboard/session-reports-list.tsx"), /had_parent_escalation/);
     assert.match(
       read("src/components/dashboard/session-reports-list.tsx"),
