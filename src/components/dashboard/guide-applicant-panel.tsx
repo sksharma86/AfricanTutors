@@ -84,7 +84,7 @@ export function GuideApplicantPanel({ info }: { info: GuideApplicantInfo }) {
       </section>
 
       <p className="text-center text-xs text-ink-400">
-        Parent booking, prepaid hours, and Guide tools are not available on this Guide application account.
+        Parent booking, prepaid hours, and Guide tools are unavailable while your application is under review.
       </p>
     </div>
   );
