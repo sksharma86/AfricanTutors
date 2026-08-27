@@ -53,19 +53,19 @@ describe("Guide workforce ops — source contracts", () => {
     assert.doesNotMatch(api, /deleteUser|hard-delete|from\("tutor_profiles"\)\.delete/);
   });
 
-  it("Management portal surfaces status and confirmations without changing nav", () => {
-    const admin = read("src/app/dashboard/admin/page.tsx");
+  it("Management portal surfaces status and confirmations on the Guides destination", () => {
+    const guides = read("src/app/dashboard/admin/guides/page.tsx");
     const actions = read("src/components/dashboard/guide-workforce-actions.tsx");
     const shell = read("src/components/dashboard/dashboard-shell.tsx");
-    assert.match(admin, /id="guide-approvals"/);
-    assert.match(admin, /Reject Application|GuideWorkforceActions/);
-    assert.match(admin, /pending|active|suspended|rejected/);
+    assert.match(guides, /Pending applicants|GuideWorkforceActions/);
+    assert.match(guides, /pending|active|suspended|rejected/);
+    assert.match(guides, /approveTutorAction|Approve as Guide/);
     assert.match(actions, /Suspend Guide\?/);
     assert.match(actions, /no longer be available for new Study Hall assignments/);
     assert.match(actions, /Reject Application\?/);
     assert.match(actions, /will not be approved as a Guide/);
-    assert.match(shell, /label: "Guide Approvals".*href: "\/dashboard\/admin#guide-approvals"/s);
-    assert.match(shell, /label: "Overview".*href: "\/dashboard\/admin#overview"/s);
+    assert.match(shell, /label: "Guides".*href: "\/dashboard\/admin\/guides"/s);
+    assert.match(shell, /label: "Overview".*href: "\/dashboard\/admin"/s);
   });
 
   it("applicant helper treats rejected and suspended as non-parent accounts", () => {

@@ -20,7 +20,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     assert.doesNotMatch(adminPage, /from\("subjects"\)/);
     assert.doesNotMatch(adminPage, /from\("tutor_subjects"\)/);
     assert.doesNotMatch(adminPage, /Applied to teach/);
-    assert.match(adminPage, /Approve as Guide|Guide application/);
+    assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /Approve as Guide|Guide application/);
   });
 
   it("admin Guide detail no longer shows Approved subjects / may teach UI", () => {
@@ -131,8 +131,8 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
   });
 
   it("preserves PR8 successful-reassignment-invisible-to-parent policy language", () => {
-    const admin = read("src/app/dashboard/admin/page.tsx");
-    assert.match(admin, /Successful reassignment\s+stays invisible to the parent/);
+    const detail = read("src/app/dashboard/admin/study-halls/[bookingId]/page.tsx");
+    assert.match(detail, /Successful reassignment\s+stays invisible to the parent/);
     const pr8 = read("tests/studyhall-pr8-notifications.test.mjs");
     assert.match(pr8, /reassign|invisible|parent/i);
   });

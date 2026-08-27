@@ -78,14 +78,23 @@ export function DashboardSideNav({ items }: { items: DashboardNavItem[] }) {
       return samePageHashes[0] === hash;
     }
 
-    // Pure route destination (e.g. Finance console).
-    return pathname === path;
+    if (path === "/dashboard/admin") {
+      return pathname === "/dashboard/admin";
+    }
+    if (path === "/dashboard/admin/guides") {
+      return (
+        pathname === path ||
+        pathname.startsWith("/dashboard/admin/guides/") ||
+        pathname.startsWith("/dashboard/admin/tutors/")
+      );
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
   }
 
   return (
     <nav
       aria-label="Portal"
-      className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 lg:flex-col lg:space-y-1 lg:overflow-visible lg:pb-0"
+      className="-mx-1 flex gap-1 overflow-x-auto overscroll-x-contain px-1 pb-1 snap-x snap-mandatory lg:mx-0 lg:flex-col lg:space-y-1 lg:overflow-visible lg:px-0 lg:pb-0 lg:snap-none"
     >
       {items.map((item) => {
         const active = isActive(item);
@@ -95,7 +104,7 @@ export function DashboardSideNav({ items }: { items: DashboardNavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "shrink-0 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
+              "shrink-0 snap-start whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 sm:px-3 sm:py-2.5 sm:text-sm",
               active ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
             )}
           >

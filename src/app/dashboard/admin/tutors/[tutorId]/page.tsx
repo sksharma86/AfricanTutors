@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
-import { Container } from "@/components/ui/container";
+import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import {
   aggregateCompensationByCurrency,
@@ -30,9 +30,9 @@ function listUpcoming<T extends { status: string; scheduled_start: string | null
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-ink-100 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-ink-400">{label}</p>
-      <p className="mt-1 font-display text-xl font-semibold text-ink-900">{value}</p>
+    <div className="min-w-[6rem]">
+      <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">{label}</p>
+      <p className="mt-1 font-display text-lg font-semibold text-ink-900">{value}</p>
     </div>
   );
 }
@@ -93,17 +93,18 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
   const openRequests = ((reqs ?? []) as { status: string }[]).filter((r) => r.status === "open").length;
 
   return (
-    <div className="min-h-full bg-ink-50/50 py-10">
-      <Container className="max-w-4xl">
-        <Link href="/dashboard/admin" className="text-sm font-medium text-gold-700 hover:underline">
-          ← Back to admin
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-3xl font-semibold text-ink-900">{name}</h1>
-          <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-sm capitalize text-ink-700">
-            {workforceLabel}
-          </span>
-        </div>
+    <DashboardShell
+      role="admin"
+      title={name}
+      description="Workforce actions, rate, and history for this Guide."
+      navItems={ADMIN_PORTAL_NAV}
+    >
+      <Link href="/dashboard/admin/guides" className="text-sm font-medium text-ink-500 hover:text-ink-800">
+        ← Guides
+      </Link>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm capitalize text-ink-600">{workforceLabel}</span>
+      </div>
         <div className="mt-4">
           <GuideWorkforceActions
             profileId={tutorId}
@@ -119,7 +120,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
             : "not set"}
         </p>
         {profile?.bio ? (
-          <p className="mt-3 rounded-xl border border-ink-100 bg-white p-4 text-sm text-ink-700">{profile.bio}</p>
+          <p className="mt-3 text-sm text-ink-700">{profile.bio}</p>
         ) : null}
 
         <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Compensation</h2>
@@ -130,7 +131,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         />
 
         <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Operations</h2>
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="flex flex-wrap gap-x-8 gap-y-4 border-y border-ink-100 py-4">
           <Stat label="Upcoming" value={String(upcoming)} />
           <Stat label="Completed" value={String(completed)} />
           <Stat label="Cancelled" value={String(cancelled)} />
@@ -162,11 +163,10 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
           <Stat label="Disputes" value={String(disputeCount)} />
           <Stat label="Open cancel requests" value={String(openRequests)} />
         </div>
-        <p className="mt-3 text-xs text-ink-400">
-          Availability blocks: {availCount} · Operational visibility only (no scoring / automatic action). Guides are
-          not assigned by academic subject.
-        </p>
-      </Container>
-    </div>
+      <p className="mt-3 text-xs text-ink-400">
+        Availability blocks: {availCount} · Operational visibility only (no scoring / automatic action). Guides are
+        not assigned by academic subject.
+      </p>
+    </DashboardShell>
   );
 }

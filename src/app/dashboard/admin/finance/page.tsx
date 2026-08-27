@@ -4,7 +4,6 @@ import {
   AdminFinanceConsole,
   type DisputeRow,
   type EarningRow,
-  type EmailFailureRow,
   type GuideCompRow,
   type PaymentRow,
 } from "@/components/dashboard/admin-finance-console";
@@ -12,7 +11,7 @@ import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboa
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Admin — Financial Operations" };
+export const metadata: Metadata = { title: "Finance · Management" };
 
 export default async function AdminFinancePage() {
   await requireRole("admin", "/dashboard/admin/finance");
@@ -123,19 +122,11 @@ export default async function AdminFinancePage() {
     ref: p.booking_id ? bookingMap.get(p.booking_id)?.ref ?? null : null,
   }));
 
-  const { data: failures } = await supabase!
-    .from("email_deliveries")
-    .select("id, notification_type, to_email, status, error, updated_at")
-    .eq("status", "failed")
-    .order("updated_at", { ascending: false })
-    .limit(50);
-  const emailFailures = (failures ?? []) as EmailFailureRow[];
-
   return (
     <DashboardShell
       role="admin"
-      title="Financial operations"
-      description="Guide earnings & payouts, customer balances & adjustments, Stripe refunds, and dispute resolution."
+      title="Finance"
+      description="Customer money stays USD. Guide pay is a separate ledger and may use more than one currency."
       navItems={ADMIN_PORTAL_NAV}
     >
       <AdminFinanceConsole
@@ -143,7 +134,6 @@ export default async function AdminFinancePage() {
         guides={guideRows}
         disputes={disputeRows}
         payments={paymentRows}
-        emailFailures={emailFailures}
       />
     </DashboardShell>
   );

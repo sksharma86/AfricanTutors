@@ -41,6 +41,7 @@ export async function approveTutorAction(formData: FormData) {
   }
 
   revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/guides");
   revalidatePath("/dashboard/applicant");
   revalidatePath("/dashboard/tutor");
 }

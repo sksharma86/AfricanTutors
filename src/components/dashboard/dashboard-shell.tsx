@@ -27,7 +27,7 @@ export function DashboardShell({
 }: {
   role: Role;
   title: string;
-  description: string;
+  description?: string;
   navItems: DashboardNavItem[];
   children: ReactNode;
   /** Override the default "{Role} Dashboard" badge (e.g. Guide applicant). */
@@ -40,7 +40,7 @@ export function DashboardShell({
           <div className="min-w-0">
             <Badge>{badgeLabel ?? `${ROLE_LABEL[role]} Dashboard`}</Badge>
             <h1 className="mt-2 font-display text-2xl font-semibold text-ink-900">{title}</h1>
-            <p className="mt-1 text-sm text-ink-500">{description}</p>
+            {description ? <p className="mt-1 text-sm text-ink-500">{description}</p> : null}
           </div>
           <LogoutButton />
         </Container>
@@ -51,17 +51,18 @@ export function DashboardShell({
           <DashboardSideNav items={navItems} />
         </aside>
 
-        <div className="min-w-0">{children}</div>
+        <div className={role === "admin" ? "min-w-0 max-w-4xl" : "min-w-0"}>{children}</div>
       </Container>
     </div>
   );
 }
 
-/** Shared Management portal destinations (admin + finance). */
+/** Shared Management portal destinations — real routes, not page anchors. */
 export const ADMIN_PORTAL_NAV: DashboardNavItem[] = [
-  { label: "Overview", href: "/dashboard/admin#overview" },
-  { label: "Guide Approvals", href: "/dashboard/admin#guide-approvals" },
-  { label: "Sessions", href: "/dashboard/admin#sessions" },
+  { label: "Overview", href: "/dashboard/admin" },
+  { label: "Study Halls", href: "/dashboard/admin/study-halls" },
+  { label: "Guides", href: "/dashboard/admin/guides" },
+  { label: "Customers", href: "/dashboard/admin/customers" },
   { label: "Finance", href: "/dashboard/admin/finance" },
 ];
 

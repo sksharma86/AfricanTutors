@@ -8,23 +8,29 @@ describe("Portal navigation — Management (admin)", () => {
   const shell = read("src/components/dashboard/dashboard-shell.tsx");
   const sideNav = read("src/components/dashboard/dashboard-side-nav.tsx");
   const admin = read("src/app/dashboard/admin/page.tsx");
+  const studyHalls = read("src/app/dashboard/admin/study-halls/page.tsx");
+  const guides = read("src/app/dashboard/admin/guides/page.tsx");
+  const customers = read("src/app/dashboard/admin/customers/page.tsx");
   const finance = read("src/app/dashboard/admin/finance/page.tsx");
 
-  it("ADMIN_PORTAL_NAV exposes real Overview, Approvals, Sessions, Finance destinations", () => {
+  it("ADMIN_PORTAL_NAV exposes real Overview, Study Halls, Guides, Customers, Finance destinations", () => {
     assert.match(shell, /ADMIN_PORTAL_NAV/);
-    assert.match(shell, /label: "Overview".*href: "\/dashboard\/admin#overview"/s);
-    assert.match(shell, /label: "Guide Approvals".*href: "\/dashboard\/admin#guide-approvals"/s);
-    assert.match(shell, /label: "Sessions".*href: "\/dashboard\/admin#sessions"/s);
+    assert.match(shell, /label: "Overview".*href: "\/dashboard\/admin"/s);
+    assert.match(shell, /label: "Study Halls".*href: "\/dashboard\/admin\/study-halls"/s);
+    assert.match(shell, /label: "Guides".*href: "\/dashboard\/admin\/guides"/s);
+    assert.match(shell, /label: "Customers".*href: "\/dashboard\/admin\/customers"/s);
     assert.match(shell, /label: "Finance".*href: "\/dashboard\/admin\/finance"/s);
+    assert.doesNotMatch(shell, /#overview|#guide-approvals|#sessions/);
     assert.doesNotMatch(shell, /Settings/);
     assert.doesNotMatch(shell, /Soon|SOON|available:\s*false/);
   });
 
-  it("admin page wires section anchors and uses ADMIN_PORTAL_NAV", () => {
+  it("each Management destination is its own authorized page", () => {
     assert.match(admin, /navItems=\{ADMIN_PORTAL_NAV\}/);
-    assert.match(admin, /id="overview"/);
-    assert.match(admin, /id="guide-approvals"/);
-    assert.match(admin, /id="sessions"/);
+    assert.match(admin, /requireRole\("admin"/);
+    assert.match(studyHalls, /requireRole\("admin"/);
+    assert.match(guides, /requireRole\("admin"/);
+    assert.match(customers, /requireRole\("admin"/);
     assert.doesNotMatch(admin, /Settings|available:\s*false|Soon/);
   });
 
@@ -80,7 +86,14 @@ describe("Portal navigation — mobile + a11y surface", () => {
   it("mobile strip remains reachable without disappearing", () => {
     assert.match(sideNav, /overflow-x-auto/);
     assert.match(sideNav, /lg:flex-col/);
+    assert.match(sideNav, /whitespace-nowrap/);
+    assert.match(sideNav, /snap-x/);
     assert.match(shell, /lg:sticky/);
     assert.match(sideNav, /focus-visible:outline/);
+    assert.match(shell, /label: "Overview"/);
+    assert.match(shell, /label: "Study Halls"/);
+    assert.match(shell, /label: "Guides"/);
+    assert.match(shell, /label: "Customers"/);
+    assert.match(shell, /label: "Finance"/);
   });
 });
