@@ -4,6 +4,13 @@ import { useMemo, useState } from "react";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
 import { Button } from "@/components/ui/button";
+import {
+  aggregateCompensationByCurrency,
+  formatCompensationHourly,
+  formatCompensationMinor,
+  formatCompensationTotals,
+  summarizeGuideCompensation,
+} from "@/lib/compensation-currency.mjs";
 import { formatCents } from "@/lib/pricing";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -14,6 +21,7 @@ export interface EarningRow {
   duration_minutes: number;
   rate_cents_per_hour: number;
   amount_cents: number;
+  currency?: string | null;
   status: string;
   earned_at: string | null;
   paid_at: string | null;
@@ -22,6 +30,17 @@ export interface EarningRow {
   tutor_name?: string;
   subject?: string | null;
   when?: string | null;
+}
+
+export interface GuideCompRow {
+  profile_id: string;
+  name: string;
+  rate_cents: number | null;
+  currency: string;
+}
+
+interface GuideLedgerRow extends GuideCompRow {
+  totals: { currency: string; earned: number; paid: number; outstanding: number }[];
 }
 export interface DisputeRow {
   id: string;
@@ -73,11 +92,13 @@ type Tab = "earnings" | "disputes" | "payments" | "customer" | "notifications";
 
 export function AdminFinanceConsole({
   earnings: initialEarnings,
+  guides: initialGuides = [],
   disputes: initialDisputes,
   payments: initialPayments,
   emailFailures = [],
 }: {
   earnings: EarningRow[];
+  guides?: GuideCompRow[];
   disputes: DisputeRow[];
   payments: PaymentRow[];
   emailFailures?: EmailFailureRow[];
@@ -109,7 +130,9 @@ export function AdminFinanceConsole({
       {msg ? <div className="rounded-lg border border-gold-200 bg-gold-50 p-3 text-sm text-gold-800">{msg}</div> : null}
       {err ? <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div> : null}
 
-      {tab === "earnings" ? <EarningsTab supabase={supabase} rows={initialEarnings} onOk={flash} onErr={fail} /> : null}
+      {tab === "earnings" ? (
+        <EarningsTab supabase={supabase} rows={initialEarnings} guides={initialGuides} onOk={flash} onErr={fail} />
+      ) : null}
       {tab === "disputes" ? <DisputesTab rows={initialDisputes} payments={initialPayments} onOk={flash} onErr={fail} /> : null}
       {tab === "payments" ? <PaymentsTab rows={initialPayments} onOk={flash} onErr={fail} /> : null}
       {tab === "customer" ? <CustomerTab supabase={supabase} onOk={flash} onErr={fail} /> : null}
@@ -169,22 +192,29 @@ function NotificationsTab({ rows: initial }: { rows: EmailFailureRow[] }) {
 
 type SB = NonNullable<ReturnType<typeof createSupabaseBrowserClient>>;
 
-function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: EarningRow[]; onOk: (m: string) => void; onErr: (m: string) => void }) {
+function EarningsTab({
+  supabase,
+  rows,
+  guides,
+  onOk,
+  onErr,
+}: {
+  supabase: SB;
+  rows: EarningRow[];
+  guides: GuideCompRow[];
+  onOk: (m: string) => void;
+  onErr: (m: string) => void;
+}) {
   const [earnings, setEarnings] = useState(rows);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const filtered = earnings.filter((e) => statusFilter === "all" || e.status === statusFilter);
-  const totals = useMemo(() => {
-    let earned = 0, paid = 0, outstanding = 0;
-    for (const e of earnings) {
-      if (e.status === "voided") continue;
-      earned += e.amount_cents;
-      if (e.status === "paid") paid += e.amount_cents;
-      else outstanding += e.amount_cents;
-    }
-    return { earned, paid, outstanding };
-  }, [earnings]);
+  const totals = useMemo(() => aggregateCompensationByCurrency(earnings), [earnings]);
+  const guideRows = useMemo(
+    () => summarizeGuideCompensation(guides, earnings) as GuideLedgerRow[],
+    [guides, earnings],
+  );
 
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
@@ -204,7 +234,9 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
     onOk("Earning marked paid.");
   }
   async function adjust(id: string) {
-    const val = window.prompt("New earning amount in dollars (e.g. 7.50):");
+    const row = earnings.find((e) => e.id === id);
+    const ccy = (row?.currency ?? "USD").toUpperCase();
+    const val = window.prompt(`New earning amount in ${ccy} (e.g. 7.50). Do not convert currencies:`);
     if (val === null) return;
     const cents = Math.round(parseFloat(val) * 100);
     if (!Number.isFinite(cents) || cents < 0) return onErr("Invalid amount.");
@@ -225,14 +257,49 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
 
   return (
     <section className="rounded-2xl border border-ink-100 bg-white p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="font-display text-lg font-semibold text-ink-900">Guide earnings</h3>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="rounded-full border border-ink-200 px-3 py-1">Earned {formatCents(totals.earned)}</span>
-          <span className="rounded-full border border-ink-200 px-3 py-1">Paid {formatCents(totals.paid)}</span>
-          <span className="rounded-full border border-gold-200 bg-gold-50 px-3 py-1 text-gold-800">Outstanding {formatCents(totals.outstanding)}</span>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-semibold text-ink-900">Guide earnings</h3>
+          <p className="mt-1 text-xs text-ink-400">
+            Compensation is recorded in each Guide&apos;s payout currency. Mixed currencies are never added together.
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 text-sm">
+          <span className="rounded-full border border-ink-200 px-3 py-1">Earned {formatCompensationTotals(totals, "earned")}</span>
+          <span className="rounded-full border border-ink-200 px-3 py-1">Paid {formatCompensationTotals(totals, "paid")}</span>
+          <span className="rounded-full border border-gold-200 bg-gold-50 px-3 py-1 text-gold-800">
+            Outstanding {formatCompensationTotals(totals, "outstanding")}
+          </span>
         </div>
       </div>
+      {guideRows.length > 0 ? (
+        <div className="mt-5 overflow-x-auto rounded-xl border border-ink-100">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-ink-400">
+              <tr>
+                <th className="px-3 py-2">Guide</th>
+                <th className="px-3 py-2">Rate</th>
+                <th className="px-3 py-2">Earned</th>
+                <th className="px-3 py-2">Outstanding</th>
+                <th className="px-3 py-2">Paid</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-100">
+              {guideRows.map((g) => (
+                <tr key={g.profile_id}>
+                  <td className="px-3 py-2 font-medium text-ink-900">{g.name}</td>
+                  <td className="px-3 py-2 text-ink-700">
+                    {typeof g.rate_cents === "number" ? formatCompensationHourly(g.rate_cents, g.currency) : "Not set"}
+                  </td>
+                  <td className="px-3 py-2 text-ink-800">{formatCompensationTotals(g.totals, "earned")}</td>
+                  <td className="px-3 py-2 text-gold-800">{formatCompensationTotals(g.totals, "outstanding")}</td>
+                  <td className="px-3 py-2 text-ink-800">{formatCompensationTotals(g.totals, "paid")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       <div className="mt-4 flex items-center gap-3">
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-1.5 text-sm">
           {["all", "earned", "adjusted", "paid", "voided", "pending"].map((s) => <option key={s} value={s}>{s}</option>)}
@@ -261,8 +328,17 @@ function EarningsTab({ supabase, rows, onOk, onErr }: { supabase: SB; rows: Earn
                   ) : null}
                 </td>
                 <td className="py-2 pr-3 text-ink-600">{e.duration_minutes}</td>
-                <td className="py-2 pr-3 text-ink-600">{formatCents(e.rate_cents_per_hour)}/hr</td>
-                <td className="py-2 pr-3 font-medium text-ink-900">{formatCents(e.amount_cents)}{e.adjusted_from_cents != null ? <span className="ml-1 text-xs text-ink-400 line-through">{formatCents(e.adjusted_from_cents)}</span> : null}</td>
+                <td className="py-2 pr-3 text-ink-600">
+                  {formatCompensationHourly(e.rate_cents_per_hour, e.currency ?? "USD")}
+                </td>
+                <td className="py-2 pr-3 font-medium text-ink-900">
+                  {formatCompensationMinor(e.amount_cents, e.currency ?? "USD")}
+                  {e.adjusted_from_cents != null ? (
+                    <span className="ml-1 text-xs text-ink-400 line-through">
+                      {formatCompensationMinor(e.adjusted_from_cents, e.currency ?? "USD")}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="py-2 pr-3"><StatusPill s={e.status} /></td>
                 <td className="py-2">
                   <div className="flex gap-2 text-xs">

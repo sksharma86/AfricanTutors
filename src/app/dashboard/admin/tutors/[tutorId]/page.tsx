@@ -5,8 +5,13 @@ import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-ac
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
 import { Container } from "@/components/ui/container";
 import { requireRole } from "@/lib/auth";
+import {
+  aggregateCompensationByCurrency,
+  formatCompensationHourly,
+  formatCompensationMinor,
+  formatCompensationTotals,
+} from "@/lib/compensation-currency.mjs";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
-import { formatCents } from "@/lib/pricing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin — Guide detail" };
@@ -41,11 +46,11 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
     await Promise.all([
       supabase!
         .from("tutor_profiles")
-        .select("status, approved_at, bio, timezone, comp_rate_cents_per_hour, profiles!tutor_profiles_profile_id_fkey(display_name)")
+        .select("status, approved_at, bio, timezone, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)")
         .eq("profile_id", tutorId)
         .maybeSingle(),
       supabase!.from("bookings").select("id, status, scheduled_start, public_reference, student_first_name").eq("tutor_id", tutorId),
-      supabase!.from("tutor_earnings").select("amount_cents, status").eq("tutor_id", tutorId),
+      supabase!.from("tutor_earnings").select("amount_cents, status, currency").eq("tutor_id", tutorId),
       supabase!.from("disputes").select("id").eq("tutor_id", tutorId),
       supabase!.from("tutor_cancellation_requests").select("id, status").eq("tutor_id", tutorId),
       supabase!.from("tutor_availability").select("id").eq("tutor_id", tutorId),
@@ -57,6 +62,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
     bio: string | null;
     timezone: string | null;
     comp_rate_cents_per_hour: number | null;
+    comp_currency: string | null;
     profiles: { display_name: string | null } | null;
   } | null;
   const name = profile?.profiles?.display_name ?? tutorId.slice(0, 8);
@@ -75,15 +81,13 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
   const cancelled = bks.filter((b) => b.status === "cancelled").length;
   const noShow = bks.filter((b) => b.status === "no_show").length;
 
-  let earned = 0,
-    paid = 0,
-    outstanding = 0;
-  for (const e of (earnings ?? []) as { amount_cents: number; status: string }[]) {
-    if (e.status === "voided") continue;
-    earned += e.amount_cents;
-    if (e.status === "paid") paid += e.amount_cents;
-    else outstanding += e.amount_cents;
-  }
+  const compCurrency = profile?.comp_currency ?? "USD";
+  const totals = aggregateCompensationByCurrency(
+    ((earnings ?? []) as { amount_cents: number; status: string; currency?: string | null }[]).map((e) => ({
+      ...e,
+      currency: e.currency ?? "USD",
+    })),
+  );
   const disputeCount = (disputes ?? []).length;
   const availCount = (avail ?? []).length;
   const openRequests = ((reqs ?? []) as { status: string }[]).filter((r) => r.status === "open").length;
@@ -111,7 +115,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         <p className="mt-1 text-sm text-ink-500">
           Timezone: {profile?.timezone ?? "—"} · Rate:{" "}
           {typeof profile?.comp_rate_cents_per_hour === "number"
-            ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
+            ? formatCompensationHourly(profile.comp_rate_cents_per_hour, compCurrency)
             : "not set"}
         </p>
         {profile?.bio ? (
@@ -119,7 +123,11 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         ) : null}
 
         <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Compensation</h2>
-        <TutorRateForm tutorId={tutorId} initialRateCents={profile?.comp_rate_cents_per_hour ?? null} />
+        <TutorRateForm
+          tutorId={tutorId}
+          initialRateCents={profile?.comp_rate_cents_per_hour ?? null}
+          initialCurrency={compCurrency}
+        />
 
         <h2 className="mt-8 mb-3 text-sm font-semibold tracking-wide text-ink-500 uppercase">Operations</h2>
         <div className="grid gap-3 sm:grid-cols-4">
@@ -127,9 +135,30 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
           <Stat label="Completed" value={String(completed)} />
           <Stat label="Cancelled" value={String(cancelled)} />
           <Stat label="No-shows" value={String(noShow)} />
-          <Stat label="Earned" value={formatCents(earned)} />
-          <Stat label="Paid" value={formatCents(paid)} />
-          <Stat label="Outstanding" value={formatCents(outstanding)} />
+          <Stat
+            label="Earned"
+            value={
+              totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "earned")
+            }
+          />
+          <Stat
+            label="Paid"
+            value={
+              totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "paid")
+            }
+          />
+          <Stat
+            label="Outstanding"
+            value={
+              totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "outstanding")
+            }
+          />
           <Stat label="Disputes" value={String(disputeCount)} />
           <Stat label="Open cancel requests" value={String(openRequests)} />
         </div>

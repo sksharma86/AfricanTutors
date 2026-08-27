@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 
-import { AdminFinanceConsole, type EarningRow, type DisputeRow, type PaymentRow, type EmailFailureRow } from "@/components/dashboard/admin-finance-console";
+import {
+  AdminFinanceConsole,
+  type DisputeRow,
+  type EarningRow,
+  type EmailFailureRow,
+  type GuideCompRow,
+  type PaymentRow,
+} from "@/components/dashboard/admin-finance-console";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -15,7 +22,7 @@ export default async function AdminFinancePage() {
     await Promise.all([
       supabase!
         .from("tutor_earnings")
-        .select("id, tutor_id, booking_id, duration_minutes, rate_cents_per_hour, amount_cents, status, earned_at, paid_at, adjusted_from_cents, reason")
+        .select("id, tutor_id, booking_id, duration_minutes, rate_cents_per_hour, amount_cents, currency, status, earned_at, paid_at, adjusted_from_cents, reason")
         .order("earned_at", { ascending: false, nullsFirst: false })
         .limit(200),
       supabase!
@@ -28,7 +35,9 @@ export default async function AdminFinancePage() {
         .select("id, account_id, purpose, gross_cents, stripe_paid_cents, credit_applied_cents, refunded_cents, status, booking_id")
         .order("created_at", { ascending: false })
         .limit(100),
-      supabase!.from("tutor_profiles").select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)").eq("status", "approved"),
+      supabase!
+        .from("tutor_profiles")
+        .select("profile_id, status, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)"),
       supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
     ]);
 
@@ -73,8 +82,22 @@ export default async function AdminFinancePage() {
   }
 
   const tutorName = new Map<string, string>();
-  for (const t of (tutors ?? []) as unknown as { profile_id: string; profiles: { display_name: string | null } | null }[]) {
-    tutorName.set(t.profile_id, t.profiles?.display_name ?? t.profile_id.slice(0, 8));
+  const guideRows: GuideCompRow[] = [];
+  for (const t of (tutors ?? []) as unknown as {
+    profile_id: string;
+    status: string;
+    comp_rate_cents_per_hour: number | null;
+    comp_currency: string | null;
+    profiles: { display_name: string | null } | null;
+  }[]) {
+    const name = t.profiles?.display_name ?? t.profile_id.slice(0, 8);
+    tutorName.set(t.profile_id, name);
+    guideRows.push({
+      profile_id: t.profile_id,
+      name,
+      rate_cents: t.comp_rate_cents_per_hour,
+      currency: t.comp_currency ?? "USD",
+    });
   }
   const bookingMap = new Map<string, { subject: string | null; when: string | null; ref: string | null; student: string | null }>();
   for (const b of (bookings ?? []) as { id: string; subject_name: string | null; scheduled_start: string | null; public_reference: string | null; student_first_name: string | null }[]) {
@@ -115,7 +138,13 @@ export default async function AdminFinancePage() {
       description="Guide earnings & payouts, customer balances & adjustments, Stripe refunds, and dispute resolution."
       navItems={ADMIN_PORTAL_NAV}
     >
-      <AdminFinanceConsole earnings={earningRows} disputes={disputeRows} payments={paymentRows} emailFailures={emailFailures} />
+      <AdminFinanceConsole
+        earnings={earningRows}
+        guides={guideRows}
+        disputes={disputeRows}
+        payments={paymentRows}
+        emailFailures={emailFailures}
+      />
     </DashboardShell>
   );
 }

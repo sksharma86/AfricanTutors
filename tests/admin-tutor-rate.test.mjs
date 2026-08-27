@@ -15,12 +15,15 @@ describe("Admin set tutor rate — UI wiring", () => {
     assert.match(page, /Compensation/);
     assert.match(page, /TutorRateForm/);
     assert.match(page, /initialRateCents=\{profile\?\.comp_rate_cents_per_hour \?\? null\}/);
+    assert.match(page, /initialCurrency=\{compCurrency\}/);
   });
 
-  it("form calls the existing admin RPC and converts dollars→cents (no duplicate system, no Stripe)", () => {
+  it("form calls the existing admin RPC and converts major units→cents (no duplicate system, no Stripe)", () => {
     assert.match(form, /admin_set_tutor_rate/);
-    assert.match(form, /Math\.round\(dollars \* 100\)/);
-    assert.match(form, /dollars < 0/); // client guard; server re-validates
+    assert.match(form, /p_currency: currency/);
+    assert.match(form, /Math\.round\(major \* 100\)/);
+    assert.match(form, /major < 0/); // client guard; server re-validates
+    assert.match(form, /COMPENSATION_CURRENCIES/);
     // No Stripe/automated-payout INTEGRATION (prose may still say "paid externally, not through Stripe").
     assert.doesNotMatch(form, /@stripe|loadStripe|getStripe|stripeConnect|stripe_connect|createPayout|payouts\.create|transfers\.create/i);
   });
