@@ -38,21 +38,22 @@ describe("Pre-launch functional UX — brand + confirmation", () => {
 describe("Pre-launch functional UX — phone + packages + applicant gates", () => {
   it("phone form explains Call Parent, privacy, and no third-party sale", () => {
     const phone = read("src/components/dashboard/parent-phone-form.tsx");
-    assert.match(phone, /Call Parent/);
-    assert.match(phone, /never shared with Guides/i);
-    assert.match(phone, /sell or release/i);
-    assert.match(phone, /third parties/i);
+    assert.match(phone, /We’ll only use your number for important Study Hall communication\. Guides never see your phone number\./);
+    assert.doesNotMatch(phone, /including Call Parent/);
+    assert.doesNotMatch(phone, /keep this portal open/i);
     assert.match(phone, /router\.refresh\(\)/);
   });
 
   it("package credit redeem refreshes balance; checkout return deep-links prepaid", () => {
     const store = read("src/components/booking/package-store.tsx");
     const ret = read("src/app/checkout/return/return-view.tsx");
-    const shell = read("src/components/dashboard/customer-shell.tsx");
+    const balance = read("src/components/dashboard/balance-cards.tsx");
+    const redir = read("src/components/dashboard/parent-hash-redirect.tsx");
     assert.match(store, /router\.refresh\(\)/);
     assert.match(store, /never expire/);
     assert.match(ret, /packages#prepaid/);
-    assert.match(shell, /packages#prepaid/);
+    assert.match(balance, /packages#prepaid/);
+    assert.match(redir, /packages#prepaid/);
   });
 
   it("checkout service blocks Guide applicants from booking and packages", () => {

@@ -4,7 +4,7 @@ import {
   type FocusRating,
   type RedirectionLevel,
 } from "@/lib/session-report.mjs";
-import { formatAvailableUntil } from "@/lib/recording-retention.mjs";
+import { formatAvailableUntil, recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading } from "@/lib/timezone";
 
@@ -45,11 +45,8 @@ export interface ParentSessionReport {
 export function SessionReportsList({ reports }: { reports: ParentSessionReport[] }) {
   if (reports.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-4 py-8 text-center">
-        <p className="text-sm font-medium text-ink-700">No session reports yet</p>
-        <p className="mt-1 text-sm text-ink-400">
-          After a Study Hall ends, your Guide shares a short note about how the session went.
-        </p>
+      <div className="rounded-2xl border-0 px-0 py-4">
+        <p className="text-sm font-medium text-ink-700">Reports from completed Study Halls will appear here.</p>
       </div>
     );
   }
@@ -61,9 +58,9 @@ export function SessionReportsList({ reports }: { reports: ParentSessionReport[]
         const dateLabel = r.scheduled_start ? formatDayHeading(r.scheduled_start, tz) : "Date pending";
         const duration = formatStudyHallDuration(r.duration_minutes);
         return (
-          <article
+            <article
             key={r.id}
-            className="rounded-2xl border border-ink-100 bg-white p-4 shadow-[0_8px_24px_-18px_rgba(19,19,17,0.2)] sm:p-5"
+            className="rounded-2xl border-0 py-4 sm:flex-col"
           >
             <header className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
               <h3 className="font-medium text-ink-900">{r.child_first_name}&apos;s Study Hall</h3>
@@ -151,7 +148,6 @@ function RecordingBlock({
   }
 
   const until = formatAvailableUntil(recording.retention_until, timezone);
-
   return (
     <div className="mt-4 border-t border-ink-100 pt-3">
       <p className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Session recording</p>
@@ -159,6 +155,7 @@ function RecordingBlock({
         Available for 60 days
         {until ? <span className="text-ink-500"> · Available until {until}</span> : null}
       </p>
+      <p className="text-sm text-ink-500">{recordingAvailabilityLabel(recording.retention_until)}</p>
       <WatchRecordingButton recordingId={recording.id} />
     </div>
   );

@@ -49,6 +49,24 @@ export function isRecordingPlayable(row, nowMs = Date.now()) {
  * @param {string|Date|null|undefined} retentionUntil
  * @param {string|null|undefined} [tz]
  */
+export function recordingDaysRemaining(retentionUntil, nowMs = Date.now()) {
+  if (!retentionUntil) return null;
+  const t = new Date(retentionUntil).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.ceil((t - nowMs) / 86_400_000);
+}
+
+/**
+ * Parent-facing remaining window. Policy stays 60 days; this only formats it.
+ */
+export function recordingAvailabilityLabel(retentionUntil, nowMs = Date.now()) {
+  const days = recordingDaysRemaining(retentionUntil, nowMs);
+  if (days == null) return "Available for 60 days after the Study Hall.";
+  if (days <= 0) return "Recording expired";
+  if (days === 1) return "Available for 1 more day";
+  return `Available for ${days} more days`;
+}
+
 export function formatAvailableUntil(retentionUntil, tz) {
   if (!retentionUntil) return null;
   try {

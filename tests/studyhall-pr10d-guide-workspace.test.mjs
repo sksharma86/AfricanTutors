@@ -75,6 +75,9 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
       "src/app/dashboard/student/page.tsx",
       "src/app/dashboard/student/book/page.tsx",
       "src/app/dashboard/student/packages/page.tsx",
+      "src/app/dashboard/student/study-halls/page.tsx",
+      "src/app/dashboard/student/reports/page.tsx",
+      "src/app/dashboard/student/account/page.tsx",
     ]) {
       const src = read(path);
       assert.match(src, /getGuideApplicantInfo/);

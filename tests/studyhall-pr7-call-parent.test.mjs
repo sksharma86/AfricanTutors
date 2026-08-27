@@ -130,15 +130,15 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
 
   it("parent phone form + Terms/Privacy disclose transactional contact", () => {
     assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Phone number/);
-    assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /never shared with Guides/i);
-    assert.match(read("src/app/dashboard/student/page.tsx"), /ParentPhoneForm/);
+    assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Guides never see your phone number|never shared with Guides/i);
+    assert.match(read("src/app/dashboard/student/account/page.tsx"), /ParentPhoneForm/);
     assert.match(read("src/app/(marketing)/privacy/page.tsx"), /call or text you/i);
     assert.match(read("src/app/(marketing)/terms/page.tsx"), /automated phone call or SMS/i);
     assert.match(read("src/app/(marketing)/privacy/page.tsx"), /attorney review/i);
   });
 
   it("admin can see escalations; PR6 reports lightly note escalation", () => {
-    assert.match(read("src/components/dashboard/management-overview.tsx"), /Call Parent escalations/);
+    assert.match(read("src/app/dashboard/admin/study-halls/[bookingId]/page.tsx"), /Call Parent/);
     assert.match(read("src/components/dashboard/session-reports-list.tsx"), /had_parent_escalation/);
     assert.match(
       read("src/components/dashboard/session-reports-list.tsx"),

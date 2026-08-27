@@ -11,6 +11,14 @@ declare module "@/lib/recording-retention.mjs" {
     } | null | undefined,
     nowMs?: number,
   ): boolean;
+  export function recordingDaysRemaining(
+    retentionUntil: string | Date | null | undefined,
+    nowMs?: number,
+  ): number | null;
+  export function recordingAvailabilityLabel(
+    retentionUntil: string | Date | null | undefined,
+    nowMs?: number,
+  ): string;
   export function formatAvailableUntil(
     retentionUntil: string | Date | null | undefined,
     tz?: string | null,

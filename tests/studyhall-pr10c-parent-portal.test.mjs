@@ -6,28 +6,35 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 describe("PR10C — parent portal usability (source)", () => {
   const dash = read("src/app/dashboard/student/page.tsx");
+  const next = read("src/components/dashboard/parent-next-study-hall.tsx");
+  const helpers = read("src/lib/parent-portal.mjs");
   const shell = read("src/components/dashboard/customer-shell.tsx");
   const balance = read("src/components/dashboard/balance-cards.tsx");
   const packages = read("src/app/dashboard/student/packages/page.tsx");
   const wizard = read("src/components/booking/booking-wizard.tsx");
   const phone = read("src/components/dashboard/parent-phone-form.tsx");
 
-  it("nav is parent-simple: Dashboard, Book, Hours, Sessions, Account", () => {
-    assert.match(shell, /label:\s*"Dashboard"/);
-    assert.match(shell, /label:\s*"Book"/);
-    assert.match(shell, /label:\s*"Hours"/);
-    assert.match(shell, /packages#prepaid/);
-    assert.match(shell, /label:\s*"Sessions"/);
-    assert.match(shell, /label:\s*"Account"/);
+  it("nav is parent-simple: Home, Study Halls, Reports & Recordings, Hours, Account", () => {
+    assert.match(helpers, /label:\s*"Home"/);
+    assert.match(helpers, /label:\s*"Study Halls"/);
+    assert.match(helpers, /label:\s*"Reports & Recordings"/);
+    assert.match(helpers, /label:\s*"Hours"/);
+    assert.match(helpers, /label:\s*"Account"/);
+    assert.match(helpers, /\/dashboard\/student\/packages/);
+    assert.match(shell, /PARENT_PORTAL_NAV/);
     assert.match(shell, /Book a Study Hall/);
-    assert.doesNotMatch(shell, /label:\s*"Packages"/);
+    assert.doesNotMatch(helpers, /label:\s*"Packages"/);
+    assert.doesNotMatch(helpers, /label:\s*"Dashboard"/);
   });
 
   it("dashboard hierarchy emphasizes Next Study Hall and Book CTA", () => {
-    assert.match(dash, /Next Study Hall/);
-    assert.match(dash, /Book a Study Hall/);
-    assert.match(dash, /Prepaid Hours/);
-    assert.match(dash, /Ready to join 5 minutes before start/);
+    assert.match(dash, /ParentNextStudyHall/);
+    assert.match(next, /Next Study Hall/);
+    assert.match(next, /Book a Study Hall/);
+    assert.match(balance, /Prepaid Hours/);
+    assert.match(helpers, /Ready to join 5 minutes before start/);
+    assert.doesNotMatch(next, /Join opens 5 minutes/);
+    assert.doesNotMatch(next, /Opens at /);
     assert.doesNotMatch(dash, /Join opens 5 minutes/);
     assert.doesNotMatch(dash, /Opens at /);
   });
@@ -55,8 +62,9 @@ describe("PR10C — parent portal usability (source)", () => {
   });
 
   it("phone copy explains purpose without requiring portal open", () => {
-    assert.match(phone, /never shared with Guides/i);
-    assert.match(phone, /don.t need to keep this portal open/i);
+    assert.match(phone, /Guides never see your phone number|never shared with Guides/i);
+    assert.match(phone, /important Study Hall communication/i);
+    assert.doesNotMatch(phone, /keep this portal open/i);
     assert.doesNotMatch(phone, /Call Parent cannot reach you/);
   });
 
