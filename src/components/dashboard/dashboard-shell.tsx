@@ -66,9 +66,5 @@ export const ADMIN_PORTAL_NAV: DashboardNavItem[] = [
   { label: "Finance", href: "/dashboard/admin/finance" },
 ];
 
-/** Shared Guide workspace destinations. */
-export const GUIDE_PORTAL_NAV: DashboardNavItem[] = [
-  { label: "Study Halls", href: "/dashboard/tutor#study-halls" },
-  { label: "Earnings", href: "/dashboard/tutor#earnings" },
-  { label: "Availability", href: "/dashboard/tutor#availability" },
-];
+/** Shared Guide workstation destinations — real routes. */
+export { GUIDE_PORTAL_NAV } from "@/lib/guide-portal.mjs";

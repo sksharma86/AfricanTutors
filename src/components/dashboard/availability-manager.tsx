@@ -8,6 +8,14 @@ import { COMMON_TIMEZONES, formatDayHeading, formatTime, tzAbbreviation, wallTim
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+function formatClock(t: string) {
+  const [hh, mm] = t.slice(0, 5).split(":").map(Number);
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return t;
+  const h12 = hh % 12 || 12;
+  const ap = hh >= 12 ? "PM" : "AM";
+  return `${h12}:${String(mm).padStart(2, "0")} ${ap}`;
+}
+
 export interface AvailabilityBlock {
   id: string;
   day_of_week: number;
@@ -41,7 +49,7 @@ export function AvailabilityManager({
 
   const [dow, setDow] = useState(1);
   const [start, setStart] = useState("17:00");
-  const [end, setEnd] = useState("21:00");
+  const [end, setEnd] = useState("22:00");
 
   const [exDate, setExDate] = useState("");
   const [exStart, setExStart] = useState("09:00");
@@ -148,27 +156,38 @@ export function AvailabilityManager({
         </select>
       </section>
 
-      <section className="rounded-2xl border border-ink-100 bg-white p-6">
-        <h3 className="font-display text-lg font-semibold text-ink-900">Weekly availability</h3>
-        <p className="mt-1 text-sm text-ink-500">Recurring blocks parents can book for Study Hall (your local time).</p>
+      <section className="rounded-2xl bg-white/80 px-5 py-5 ring-1 ring-ink-900/[0.05]">
+        <h3 className="font-display text-lg font-semibold text-ink-900">Your weekly availability</h3>
+        <p className="mt-1 text-sm text-ink-500">
+          Recurring blocks parents can book for Study Hall (your local time). Changes save when you add or remove a time.
+        </p>
 
-        {sortedBlocks.length === 0 ? (
-          <p className="mt-4 text-sm text-ink-400">No availability yet — add a block below.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-ink-100">
-            {sortedBlocks.map((b) => (
-              <li key={b.id} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-ink-800">
-                  <span className="font-medium">{DAYS[b.day_of_week]}</span> · {b.start_time.slice(0, 5)}–
-                  {b.end_time.slice(0, 5)}
-                </span>
-                <button onClick={() => removeBlock(b.id)} className="text-xs font-medium text-red-600 hover:underline">
-                  Remove
-                </button>
+        <ul className="mt-5 divide-y divide-ink-100">
+          {DAYS.map((day, i) => {
+            const dayBlocks = sortedBlocks.filter((b) => b.day_of_week === i);
+            return (
+              <li key={day} className="py-3">
+                <p className="text-sm font-medium text-ink-900">{day}</p>
+                {dayBlocks.length === 0 ? (
+                  <p className="mt-0.5 text-sm text-ink-400">Unavailable</p>
+                ) : (
+                  <ul className="mt-1 space-y-1">
+                    {dayBlocks.map((b) => (
+                      <li key={b.id} className="flex items-center justify-between gap-3 text-sm text-ink-700">
+                        <span>
+                          {formatClock(b.start_time)} → {formatClock(b.end_time)}
+                        </span>
+                        <button onClick={() => removeBlock(b.id)} className="text-xs font-medium text-ink-400 hover:text-red-600">
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
-            ))}
-          </ul>
-        )}
+            );
+          })}
+        </ul>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
           <select value={dow} onChange={(e) => setDow(Number(e.target.value))} className="rounded-lg border border-ink-200 px-3 py-2 text-sm">
@@ -181,12 +200,12 @@ export function AvailabilityManager({
           <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
           <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
           <Button onClick={addBlock} disabled={busy} variant="outline" size="sm">
-            Add block
+            Add another time
           </Button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-ink-100 bg-white p-6">
+      <section className="rounded-2xl bg-white/80 px-5 py-5 ring-1 ring-ink-900/[0.05]">
         <h3 className="font-display text-lg font-semibold text-ink-900">Time off / exceptions</h3>
         <p className="mt-1 text-sm text-ink-500">Mark yourself unavailable for a specific window, even inside your weekly hours.</p>
 
@@ -215,7 +234,7 @@ export function AvailabilityManager({
           <input type="time" value={exStart} onChange={(e) => setExStart(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
           <input type="time" value={exEnd} onChange={(e) => setExEnd(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
           <Button onClick={addException} disabled={busy} variant="outline" size="sm">
-            Add
+            Add time off
           </Button>
           <input
             value={exReason}

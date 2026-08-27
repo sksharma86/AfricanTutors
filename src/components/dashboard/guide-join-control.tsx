@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { LinkButton } from "@/components/ui/button";
+import { formatTime } from "@/lib/timezone";
 import { guideJoinUiState } from "@/lib/tutor-schedule.mjs";
 
-function formatOpenAt(iso: string | null | undefined): string {
+function formatOpenAt(iso: string | null | undefined, tz?: string): string {
   if (!iso) return "5 minutes before start";
   try {
-    return new Date(iso).toLocaleString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
+    if (tz) return formatTime(iso, tz);
+    return new Date(iso).toLocaleTimeString(undefined, {
       hour: "numeric",
       minute: "2-digit",
     });
@@ -29,11 +29,15 @@ export function GuideJoinControl({
   status,
   scheduledStart,
   scheduledEnd,
+  timezone,
+  prominent = false,
 }: {
   bookingId: string;
   status: string;
   scheduledStart: string | null;
   scheduledEnd: string | null;
+  timezone?: string;
+  prominent?: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -52,6 +56,13 @@ export function GuideJoinControl({
     );
   }
   if (ui.kind === "join") {
+    if (prominent) {
+      return (
+        <LinkButton href={`/dashboard/session/${bookingId}`} variant="secondary" size="lg" className="w-full sm:w-auto">
+          Join Study Hall
+        </LinkButton>
+      );
+    }
     return (
       <Link
         href={`/dashboard/session/${bookingId}`}
@@ -63,14 +74,9 @@ export function GuideJoinControl({
   }
   if (ui.kind === "opens_at") {
     return (
-      <div className="text-right">
-        <span className="inline-block rounded-lg border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-medium text-ink-500">
-          Join opens soon
-        </span>
-        <p className="mt-1 max-w-[11rem] text-[11px] leading-4 text-ink-400">
-          Available at {formatOpenAt(ui.openAtISO)} (5 min before start)
-        </p>
-      </div>
+      <p className={prominent ? "text-sm font-medium text-ink-600" : "text-xs font-medium text-ink-500"}>
+        Join opens at {formatOpenAt(ui.openAtISO, timezone)}.
+      </p>
     );
   }
   if (ui.kind === "ended") {

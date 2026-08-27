@@ -102,9 +102,15 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
 
   it("approved Guide workspace stays distinct from parent financial/booking UI", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
+    const earn = read("src/app/dashboard/tutor/earnings/page.tsx");
+    const avail = read("src/app/dashboard/tutor/availability/page.tsx");
+    const halls = read("src/app/dashboard/tutor/study-halls/page.tsx");
+    const today = read("src/components/dashboard/guide-today-schedule.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(page, /Today'?s Study Halls|Upcoming assignments/);
-    assert.match(page, /Availability|Outstanding|Earned/);
+    assert.match(today, /Today'?s Study Halls|Upcoming Study Halls/);
+    assert.match(earn, /Outstanding|Earned/);
+    assert.match(avail, /Availability/);
+    assert.match(halls, /Upcoming Study Halls/);
     assert.match(page, /Call Parent/);
     assert.doesNotMatch(page, /Buy hours|Prepaid Hours|Book a Study Hall|account credit|free-session offer/i);
     assert.doesNotMatch(page, /Parent escalation tools are coming/);
@@ -153,7 +159,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     assert.match(detail, /TutorRateForm/);
     const finance = read("src/components/dashboard/admin-finance-console.tsx");
     assert.match(finance, /paid|outstanding|earned/i);
-    const guide = read("src/app/dashboard/tutor/page.tsx");
+    const guide = read("src/app/dashboard/tutor/earnings/page.tsx");
     assert.match(guide, /Outstanding|Paid|Earned|comp_rate_cents_per_hour/);
   });
 

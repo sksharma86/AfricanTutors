@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CallParentControl } from "@/components/session/call-parent-control";
@@ -13,6 +14,12 @@ type Frame = {
   destroy: () => void;
   on: (e: string, cb: () => void) => void;
 };
+
+function sessionEndedForReport(info: SessionInfo): boolean {
+  if (info.status === "cancelled" || info.status === "expired" || info.status === "no_show") return false;
+  const end = info.scheduled_end ? Date.parse(info.scheduled_end) : NaN;
+  return Number.isFinite(end) && Date.now() >= end;
+}
 
 function formatWhen(iso?: string | null): string {
   if (!iso) return "To be scheduled";
@@ -30,6 +37,7 @@ function formatWhen(iso?: string | null): string {
 }
 
 export function SessionRoom({ bookingId, info }: { bookingId: string; info: SessionInfo }) {
+  const router = useRouter();
   const [state, setState] = useState(info.join_state ?? "not_joinable");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +109,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           frameRef.current = null;
           attachStartedRef.current = false;
           payloadRef.current = null;
+          if (isGuide && sessionEndedForReport(info)) {
+            router.push(`/dashboard/tutor/study-halls/${bookingId}/report`);
+          }
         });
         await frame.join({ url: payload.roomUrl, token: payload.token });
         setInCall(true);
@@ -112,7 +123,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
         setBusy(false);
       }
     })();
-  }, [stageOpen, leaveBeacon, teardownFrame]);
+  }, [stageOpen, leaveBeacon, teardownFrame, bookingId, info, isGuide, router]);
 
   async function join() {
     if (busy || stageOpen) return;
@@ -192,6 +203,20 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <span>This Study Hall session is recorded for quality assurance, safety, and dispute resolution.</span>
         </div>
 
+        {isGuide && inCall ? (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                void frameRef.current?.leave();
+              }}
+              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+            >
+              End Study Hall
+            </button>
+          </div>
+        ) : null}
+
         <div className="relative mt-6">
           <div
             ref={containerRef}
@@ -246,6 +271,14 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
                 <>
                   <h2 className="font-display text-xl font-semibold text-white">This session has ended</h2>
                   <p className="mt-1 text-sm text-ink-300">The room closed 15 minutes after the scheduled end time.</p>
+                  {isGuide && sessionEndedForReport(info) ? (
+                    <a
+                      href={`/dashboard/tutor/study-halls/${bookingId}/report`}
+                      className="mt-6 inline-block rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
+                    >
+                      Finish report
+                    </a>
+                  ) : null}
                 </>
               ) : state === "not_scheduled" ? (
                 <>

@@ -82,11 +82,11 @@ describe("Study Hall PR6 — session reports (source)", () => {
   });
 
   it("Guide workflow surfaces Complete report / Report submitted", () => {
-    const page = read("src/app/dashboard/tutor/page.tsx");
+    const page = read("src/app/dashboard/tutor/study-halls/[bookingId]/report/page.tsx");
     const form = read("src/components/dashboard/guide-session-report.tsx");
     const api = read("src/app/api/tutor/session-report/route.ts");
     assert.match(page, /GuideSessionReport/);
-    assert.match(page, /Reports to complete|Complete report/);
+    assert.match(page, /Study Hall complete|Finish report|Complete report|Before you finish/);
     assert.match(form, /Complete report/);
     assert.match(form, /Report submitted/);
     assert.match(form, /What did they work on/);

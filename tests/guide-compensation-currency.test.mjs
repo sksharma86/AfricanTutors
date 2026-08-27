@@ -143,7 +143,7 @@ describe("Guide compensation currency — source contracts", () => {
   it("Finance Center and Guide portal format compensation currency, not customer formatCents", () => {
     const finance = read("src/components/dashboard/admin-finance-console.tsx");
     const financePage = read("src/app/dashboard/admin/finance/page.tsx");
-    const guide = read("src/app/dashboard/tutor/page.tsx");
+    const guide = read("src/app/dashboard/tutor/earnings/page.tsx");
     assert.match(finance, /aggregateCompensationByCurrency/);
     assert.match(finance, /formatCompensationTotals/);
     assert.match(finance, /summarizeGuideCompensation/);

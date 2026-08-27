@@ -22,14 +22,16 @@ export function GuideSessionReport({
   bookingId,
   childName,
   alreadySubmitted,
+  variant = "inline",
 }: {
   bookingId: string;
   childName?: string | null;
   alreadySubmitted: boolean;
+  variant?: "inline" | "page";
 }) {
   const router = useRouter();
   const submittingRef = useRef(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(variant === "page");
   const [focus, setFocus] = useState<FocusRating | "">("");
   const [work, setWork] = useState("");
   const [redirection, setRedirection] = useState<RedirectionLevel | "">("");
@@ -70,7 +72,8 @@ export function GuideSessionReport({
       }
       setSubmitted(true);
       setOpen(false);
-      router.refresh();
+      if (variant === "page") router.push("/dashboard/tutor");
+      else router.refresh();
     } finally {
       setBusy(false);
       submittingRef.current = false;
@@ -78,7 +81,7 @@ export function GuideSessionReport({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1.5 sm:items-end">
+    <div className={variant === "page" ? "w-full" : "flex flex-col items-start gap-1.5 sm:items-end"}>
       {!open ? (
         <button
           type="button"
@@ -88,14 +91,16 @@ export function GuideSessionReport({
           Complete report
         </button>
       ) : (
-        <div className="w-full max-w-sm rounded-xl border border-ink-200 bg-white p-3 text-left shadow-sm sm:w-80">
+        <div className={variant === "page" ? "w-full text-left" : "w-full max-w-sm rounded-xl border border-ink-200 bg-white p-3 text-left shadow-sm sm:w-80"}>
           <p className="text-xs font-semibold text-ink-800">
             How did Study Hall go{childName ? ` for ${childName}` : ""}?
           </p>
           <p className="mt-0.5 text-[11px] text-ink-400">Short accountability note for the parent — not a grade.</p>
 
           <fieldset className="mt-3">
-            <legend className="text-[11px] font-medium tracking-wide text-ink-500 uppercase">Focus / engagement</legend>
+            <legend className="text-[11px] font-medium tracking-wide text-ink-500 uppercase">
+              Focus — How focused was the child?
+            </legend>
             <div className="mt-1.5 space-y-1.5">
               {FOCUS_RATINGS.map((value) => (
                 <label key={value} className="flex cursor-pointer items-center gap-2 text-xs text-ink-700">
@@ -107,7 +112,13 @@ export function GuideSessionReport({
                     onChange={() => setFocus(value)}
                     className="accent-ink-900"
                   />
-                  {FOCUS_LABELS[value]}
+                  {value === "great_focus"
+                    ? "Great"
+                    : value === "good_focus"
+                      ? "Good"
+                      : value === "difficult_session"
+                        ? "Had difficulty staying focused"
+                        : FOCUS_LABELS[value]}
                 </label>
               ))}
             </div>
@@ -177,14 +188,16 @@ export function GuideSessionReport({
             >
               {busy ? "Submitting…" : "Submit report"}
             </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              disabled={busy}
-              className="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50"
-            >
-              Cancel
-            </button>
+            {variant === "inline" ? (
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={busy}
+                className="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50"
+              >
+                Cancel
+              </button>
+            ) : null}
           </div>
           {error ? <p className="mt-1.5 text-xs text-red-600">{error}</p> : null}
         </div>
