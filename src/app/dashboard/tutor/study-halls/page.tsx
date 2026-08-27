@@ -20,7 +20,7 @@ export default async function GuideStudyHallsPage() {
   return (
     <GuidePage>
       <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">Study Halls</h1>
-      <p className="mt-1 text-sm text-ink-500">Upcoming assignments and completed Study Halls.</p>
+      <p className="mt-1 text-sm text-ink-500">Upcoming Study Halls and completed Study Halls.</p>
       <div className="mt-6">
         <Suspense fallback={<p className="text-sm text-ink-500">Loading Study Halls…</p>}>
           <GuideStudyHalls

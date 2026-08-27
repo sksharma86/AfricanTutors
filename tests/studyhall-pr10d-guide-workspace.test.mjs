@@ -107,10 +107,10 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     const halls = read("src/app/dashboard/tutor/study-halls/page.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(today, /Today'?s Study Halls|Upcoming assignments/);
+    assert.match(today, /Today'?s Study Halls|Upcoming Study Halls/);
     assert.match(earn, /Outstanding|Earned/);
     assert.match(avail, /Availability/);
-    assert.match(halls, /Upcoming assignments/);
+    assert.match(halls, /Upcoming Study Halls/);
     assert.match(page, /Call Parent/);
     assert.doesNotMatch(page, /Buy hours|Prepaid Hours|Book a Study Hall|account credit|free-session offer/i);
     assert.doesNotMatch(page, /Parent escalation tools are coming/);

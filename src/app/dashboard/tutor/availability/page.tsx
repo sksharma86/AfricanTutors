@@ -22,8 +22,8 @@ export default async function GuideAvailabilityPage() {
         Availability
       </h1>
       <p className="mt-2 text-sm text-ink-500">
-        Keep continuous blocks open for the full Study Hall length parents book (1, 2, or 3 hours). Assignment never
-        stitches multiple Guides into one session.
+        Keep continuous blocks open for the full Study Hall length parents book (1, 2, or 3 hours). A Study Hall is
+        never split across multiple Guides.
       </p>
       <div className="mt-6">
         <AvailabilityManager

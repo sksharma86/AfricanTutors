@@ -29,7 +29,7 @@ export default async function GuideHomePage() {
 
       {data.profile?.status && data.profile.status !== "approved" ? (
         <p className="mt-4 text-sm text-gold-800">
-          Your Guide account is {data.profile.status}. Assignment tools stay limited until an admin restores approval.
+          Your Guide account is {data.profile.status}. Study Hall tools stay limited until an admin restores approval.
         </p>
       ) : null}
 

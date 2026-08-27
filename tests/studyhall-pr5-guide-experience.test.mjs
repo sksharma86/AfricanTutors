@@ -20,7 +20,7 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     const next = read("src/components/dashboard/guide-next-study-hall.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(today, /Today'?s Study Halls|Upcoming assignments/);
+    assert.match(today, /Today'?s Study Halls|Upcoming Study Halls/);
     assert.match(next, /Join Study Hall|GuideJoinControl/);
     assert.match(page, /presence, focus, accountability/i);
     assert.doesNotMatch(page, /Your tutor account|Approved subjects|Tutor Dashboard/i);

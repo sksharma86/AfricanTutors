@@ -34,7 +34,7 @@ export function GuideTodaySchedule({
       )}
       <p className="mt-3">
         <Link href="/dashboard/tutor/study-halls" className="text-sm font-medium text-gold-700 hover:underline">
-          Upcoming assignments
+          Upcoming Study Halls
         </Link>
       </p>
     </section>
