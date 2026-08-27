@@ -78,6 +78,9 @@ export function ManagementOverview({
 
       <section>
         <h2 className="font-display text-lg font-semibold text-ink-900">Needs attention</h2>
+        <p className="mt-1 text-sm text-ink-500">
+          Call Parent escalations, coverage gaps, and failed parent messages appear here.
+        </p>
         {attentionItems.length === 0 ? (
           <p className="mt-3 text-sm leading-6 text-ink-600">
             Everything is running normally.

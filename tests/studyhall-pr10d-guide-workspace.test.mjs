@@ -131,8 +131,8 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
   });
 
   it("preserves PR8 successful-reassignment-invisible-to-parent policy language", () => {
-    const admin = read("src/app/dashboard/admin/page.tsx");
-    assert.match(admin, /Successful reassignment\s+stays invisible to the parent/);
+    const detail = read("src/app/dashboard/admin/study-halls/[bookingId]/page.tsx");
+    assert.match(detail, /Successful reassignment\s+stays invisible to the parent/);
     const pr8 = read("tests/studyhall-pr8-notifications.test.mjs");
     assert.match(pr8, /reassign|invisible|parent/i);
   });

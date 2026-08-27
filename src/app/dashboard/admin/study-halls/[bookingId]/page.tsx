@@ -153,6 +153,10 @@ export default async function AdminStudyHallDetailPage({
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Actions</h2>
+        <p className="mt-2 text-sm text-ink-500">
+          Automatic reassignment runs when a Guide becomes unavailable. Open requests mean coverage could not be
+          restored — Assign Guide (eligible Guides only) or cancel. Successful reassignment stays invisible to the parent.
+        </p>
         <div className="mt-3">
           <ManagementStudyHallActions
             bookingId={bookingId}

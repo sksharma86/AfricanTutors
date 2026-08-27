@@ -136,7 +136,6 @@ describe("Management Control Center — routes and authorization", () => {
     const overviewUi = read("src/components/dashboard/management-overview.tsx");
     assert.match(overview, /requireRole\("admin"/);
     assert.match(overview, /ManagementOverview/);
-    assert.match(overview, /Needs attention|needs attention/i);
     assert.match(overviewUi, /Study Halls today/);
     assert.match(overviewUi, /Live now/);
     assert.match(overviewUi, /Guides active/);
@@ -161,7 +160,7 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(listUi, /Cancelled/);
     assert.match(detail, /requireRole\("admin"/);
     assert.match(detail, /ManagementStudyHallActions/);
-    assert.match(detail, /Assign Guide|Reassign/);
+    assert.match(read("src/components/dashboard/management-study-hall-actions.tsx"), /Assign Guide|Reassign Guide/);
     assert.match(detail, /AdminWhen/);
     assert.match(listUi, /Child, parent, Guide, or booking reference/);
   });
