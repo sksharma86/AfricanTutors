@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AdminConsole, type AdminBooking, type AdminTutor } from "@/components/dashboard/admin-console";
+import { AdminConsole, type AdminBooking } from "@/components/dashboard/admin-console";
 import { AdminWhen } from "@/components/dashboard/admin-when";
+import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Button, LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
+import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { approveTutorAction } from "./actions";
@@ -14,25 +16,36 @@ export const metadata: Metadata = {
   title: "Admin Dashboard",
 };
 
-interface PendingTutor {
+interface GuideRow {
   profile_id: string;
+  status: string;
+  approved_at: string | null;
   profiles: { display_name: string | null } | null;
+}
+
+function statusChip(label: string) {
+  const tone =
+    label === "active"
+      ? "border-ink-200 bg-white text-ink-700"
+      : label === "pending"
+        ? "border-gold-200 bg-gold-50 text-gold-800"
+        : "border-ink-200 bg-[#f4f5f7] text-ink-600";
+  const text =
+    label === "active" ? "Active" : label === "pending" ? "Pending" : label === "rejected" ? "Rejected" : "Suspended";
+  return (
+    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${tone}`}>{text}</span>
+  );
 }
 
 export default async function AdminDashboardPage() {
   await requireRole("admin", "/dashboard/admin");
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: pending }, { data: tutorRows }, { data: bookings }, { data: cancelReqs }, { data: escalationsRaw }] =
+  const [{ data: guideRows }, { data: bookings }, { data: cancelReqs }, { data: escalationsRaw }] =
     await Promise.all([
       supabase!
         .from("tutor_profiles")
-        .select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)")
-        .eq("status", "pending"),
-      supabase!
-        .from("tutor_profiles")
-        .select("profile_id, profiles!tutor_profiles_profile_id_fkey(display_name)")
-        .eq("status", "approved"),
+        .select("profile_id, status, approved_at, profiles!tutor_profiles_profile_id_fkey(display_name)"),
       supabase!
         .from("bookings")
         .select(
@@ -84,11 +97,11 @@ export default async function AdminDashboardPage() {
       scheduled_start: string | null;
     } | null;
   }[];
-  const pendingTutors = (pending ?? []) as unknown as PendingTutor[];
-  const tutors = ((tutorRows ?? []) as unknown as PendingTutor[]).map((t) => ({
-    profile_id: t.profile_id,
-    display_name: t.profiles?.display_name ?? null,
-  })) as AdminTutor[];
+  const allGuides = (guideRows ?? []) as unknown as GuideRow[];
+  const pendingTutors = allGuides.filter((t) => t.status === "pending");
+  const activeGuides = allGuides.filter((t) => t.status === "approved");
+  const suspendedGuides = allGuides.filter((t) => guideWorkforceLabel(t.status, t.approved_at) === "suspended");
+  const rejectedGuides = allGuides.filter((t) => guideWorkforceLabel(t.status, t.approved_at) === "rejected");
 
   return (
     <DashboardShell
@@ -127,19 +140,22 @@ export default async function AdminDashboardPage() {
         ) : (
           <ul className="mt-5 divide-y divide-ink-100">
             {pendingTutors.map((tutor) => (
-              <li key={tutor.profile_id} className="flex items-center justify-between py-3">
+              <li key={tutor.profile_id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-ink-900">
                     {tutor.profiles?.display_name ?? "Unnamed applicant"}
                   </p>
                   <p className="text-xs text-ink-400">Guide application · awaiting review</p>
                 </div>
-                <form action={approveTutorAction}>
-                  <input type="hidden" name="profileId" value={tutor.profile_id} />
-                  <Button type="submit" className="px-4 py-2 text-sm">
-                    Approve as Guide
-                  </Button>
-                </form>
+                <div className="flex flex-wrap items-center gap-2">
+                  <form action={approveTutorAction}>
+                    <input type="hidden" name="profileId" value={tutor.profile_id} />
+                    <Button type="submit" className="px-4 py-2 text-sm">
+                      Approve as Guide
+                    </Button>
+                  </form>
+                  <GuideWorkforceActions profileId={tutor.profile_id} label="pending" compact />
+                </div>
               </li>
             ))}
           </ul>
@@ -229,23 +245,37 @@ export default async function AdminDashboardPage() {
       <section className="mb-8 rounded-2xl border border-ink-100 bg-white p-6">
         <h2 className="font-display text-lg font-semibold text-ink-900">Guide directory</h2>
         <p className="mt-1 text-sm text-ink-500">
-          Open a Guide to set hourly rate, review earnings, and check availability / operations.
+          Pending, active, suspended, and rejected Guides. Open a Guide for rate, history, and workforce actions.
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {tutors.length === 0 ? (
-            <span className="text-sm text-ink-400">No approved Guides yet.</span>
-          ) : (
-            tutors.map((t) => (
-              <Link
-                key={t.profile_id}
-                href={`/dashboard/admin/tutors/${t.profile_id}`}
-                className="rounded-full border border-ink-200 px-3 py-1 text-sm text-ink-700 hover:border-ink-300"
-              >
-                {t.display_name ?? t.profile_id.slice(0, 8)}
-              </Link>
-            ))
-          )}
+        <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-500">
+          <span>{pendingTutors.length} pending</span>
+          <span>· {activeGuides.length} active</span>
+          <span>· {suspendedGuides.length} suspended</span>
+          <span>· {rejectedGuides.length} rejected</span>
         </div>
+        {allGuides.length === 0 ? (
+          <p className="mt-4 text-sm text-ink-400">No Guide records yet.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-ink-100">
+            {allGuides.map((t) => {
+              const label = guideWorkforceLabel(t.status, t.approved_at);
+              return (
+                <li key={t.profile_id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link
+                      href={`/dashboard/admin/tutors/${t.profile_id}`}
+                      className="truncate text-sm font-medium text-ink-800 hover:underline"
+                    >
+                      {t.profiles?.display_name ?? t.profile_id.slice(0, 8)}
+                    </Link>
+                    {statusChip(label)}
+                  </div>
+                  <GuideWorkforceActions profileId={t.profile_id} label={label} compact />
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       <section id="sessions" className="scroll-mt-24 mb-8">

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
 import { Container } from "@/components/ui/container";
 import { requireRole } from "@/lib/auth";
+import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 import { formatCents } from "@/lib/pricing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -11,14 +13,14 @@ export const metadata: Metadata = { title: "Admin — Guide detail" };
 export const dynamic = "force-dynamic";
 
 // Module-scope so `Date` isn't called in the Server Component render body.
-function countUpcoming(bks: { status: string; scheduled_start: string | null }[]): number {
+function listUpcoming<T extends { status: string; scheduled_start: string | null }>(bks: T[]): T[] {
   const now = new Date().getTime();
   return bks.filter(
     (b) =>
       (b.status === "confirmed" || b.status === "pending") &&
       b.scheduled_start &&
       new Date(b.scheduled_start).getTime() > now,
-  ).length;
+  );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -39,10 +41,10 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
     await Promise.all([
       supabase!
         .from("tutor_profiles")
-        .select("status, bio, timezone, comp_rate_cents_per_hour, profiles!tutor_profiles_profile_id_fkey(display_name)")
+        .select("status, approved_at, bio, timezone, comp_rate_cents_per_hour, profiles!tutor_profiles_profile_id_fkey(display_name)")
         .eq("profile_id", tutorId)
         .maybeSingle(),
-      supabase!.from("bookings").select("status, scheduled_start").eq("tutor_id", tutorId),
+      supabase!.from("bookings").select("id, status, scheduled_start, public_reference, student_first_name").eq("tutor_id", tutorId),
       supabase!.from("tutor_earnings").select("amount_cents, status").eq("tutor_id", tutorId),
       supabase!.from("disputes").select("id").eq("tutor_id", tutorId),
       supabase!.from("tutor_cancellation_requests").select("id, status").eq("tutor_id", tutorId),
@@ -51,15 +53,24 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
 
   const profile = prof as unknown as {
     status: string;
+    approved_at: string | null;
     bio: string | null;
     timezone: string | null;
     comp_rate_cents_per_hour: number | null;
     profiles: { display_name: string | null } | null;
   } | null;
   const name = profile?.profiles?.display_name ?? tutorId.slice(0, 8);
+  const workforceLabel = guideWorkforceLabel(profile?.status, profile?.approved_at);
 
-  const bks = (bookings ?? []) as { status: string; scheduled_start: string | null }[];
-  const upcoming = countUpcoming(bks);
+  const bks = (bookings ?? []) as {
+    id: string;
+    status: string;
+    scheduled_start: string | null;
+    public_reference: string | null;
+    student_first_name: string | null;
+  }[];
+  const upcomingRows = listUpcoming(bks);
+  const upcoming = upcomingRows.length;
   const completed = bks.filter((b) => b.status === "completed").length;
   const cancelled = bks.filter((b) => b.status === "cancelled").length;
   const noShow = bks.filter((b) => b.status === "no_show").length;
@@ -86,8 +97,16 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-3xl font-semibold text-ink-900">{name}</h1>
           <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-sm capitalize text-ink-700">
-            {profile?.status ?? "unknown"}
+            {workforceLabel}
           </span>
+        </div>
+        <div className="mt-4">
+          <GuideWorkforceActions
+            profileId={tutorId}
+            label={workforceLabel}
+            futureCount={upcoming}
+            futureAssignments={upcomingRows}
+          />
         </div>
         <p className="mt-1 text-sm text-ink-500">
           Timezone: {profile?.timezone ?? "—"} · Rate:{" "}

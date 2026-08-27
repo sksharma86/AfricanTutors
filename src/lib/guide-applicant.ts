@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 
-export type GuideApplicantStatus = "pending" | "suspended";
+export type GuideApplicantStatus = "pending" | "suspended" | "rejected";
 
 export interface GuideApplicantInfo {
   status: GuideApplicantStatus;
@@ -10,8 +11,8 @@ export interface GuideApplicantInfo {
 }
 
 /**
- * Pending / suspended Guide applicants keep `profiles.role = 'student'` until
- * admin approval. Detect them so we can show the applicant experience instead
+ * Pending / rejected / suspended Guide applicants keep `profiles.role = 'student'`
+ * until admin approval. Detect them so we show the applicant experience instead
  * of the parent portal — without changing the security role model.
  */
 export async function getGuideApplicantInfo(
@@ -21,7 +22,7 @@ export async function getGuideApplicantInfo(
   if (!supabase) return null;
 
   const [{ data: tp }, { data: profile }] = await Promise.all([
-    supabase.from("tutor_profiles").select("status").eq("profile_id", userId).maybeSingle(),
+    supabase.from("tutor_profiles").select("status, approved_at").eq("profile_id", userId).maybeSingle(),
     supabase.from("profiles").select("display_name, created_at, role").eq("id", userId).maybeSingle(),
   ]);
 
@@ -34,8 +35,12 @@ export async function getGuideApplicantInfo(
     return null;
   }
 
+  const label = guideWorkforceLabel(tp.status, tp.approved_at);
+  const status: GuideApplicantStatus =
+    label === "rejected" ? "rejected" : label === "suspended" ? "suspended" : "pending";
+
   return {
-    status: tp.status as GuideApplicantStatus,
+    status,
     submittedAt: profile?.created_at ?? null,
     displayName: profile?.display_name ?? null,
   };
