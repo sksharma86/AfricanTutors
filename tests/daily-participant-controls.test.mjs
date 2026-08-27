@@ -110,11 +110,14 @@ describe("Daily participant controls — room capabilities", () => {
 
   it("ensureRoom uses the shared room properties and re-applies them on reuse", () => {
     const client = read("src/lib/daily/client.ts");
+    const roomProps = read("src/lib/daily/room-props.mjs");
     assert.match(client, /buildRoomProperties/);
     assert.match(client, /applyRoomParticipantProperties/);
     assert.match(client, /ROOM_PARTICIPANT_PROPERTIES/);
-    assert.match(client, /enable_recording: "cloud"/);
+    assert.match(roomProps, /enable_recording: "cloud"/);
+    assert.match(roomProps, /enable_chat:\s*false/);
     assert.doesNotMatch(client, /enable_chat:\s*true/);
+    assert.doesNotMatch(roomProps, /enable_chat:\s*true/);
   });
 
   it("session join still auto-starts recording for every role and only admins are owners", () => {
