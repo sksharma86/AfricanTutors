@@ -12,7 +12,12 @@ import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request"
 import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { partitionBookings } from "@/lib/bookings";
-import { formatCents } from "@/lib/pricing";
+import {
+  aggregateCompensationByCurrency,
+  formatCompensationHourly,
+  formatCompensationMinor,
+  formatCompensationTotals,
+} from "@/lib/compensation-currency.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { tutorTimezone } from "@/lib/tutor-schedule.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -39,6 +44,7 @@ interface Earning {
   status: string;
   earned_at: string | null;
   paid_at: string | null;
+  currency?: string | null;
 }
 
 function splitToday(upcoming: GuideBooking[]): { today: GuideBooking[]; later: GuideBooking[] } {
@@ -140,7 +146,9 @@ function HistoryRow({
           <span className="text-ink-400">—</span>
         )}
       </td>
-      <td className="py-2 pr-3 font-medium text-ink-900">{earning ? formatCents(earning.amount_cents) : "—"}</td>
+      <td className="py-2 pr-3 font-medium text-ink-900">
+        {earning ? formatCompensationMinor(earning.amount_cents, earning.currency ?? "USD") : "—"}
+      </td>
       <td className="py-2 text-ink-500">{earning ? earning.status : "—"}</td>
     </tr>
   );
@@ -156,7 +164,7 @@ export default async function GuideDashboardPage() {
 
   const [{ data: profile }, { data: bookingsRaw }, { data: avail }, { data: exc }, { data: earningsRaw }, { data: reqs }, reportsRes] =
     await Promise.all([
-      supabase!.from("tutor_profiles").select("timezone, comp_rate_cents_per_hour, status").eq("profile_id", tutorId).maybeSingle(),
+      supabase!.from("tutor_profiles").select("timezone, comp_rate_cents_per_hour, comp_currency, status").eq("profile_id", tutorId).maybeSingle(),
       supabase!
         .from("bookings")
         .select(
@@ -167,7 +175,7 @@ export default async function GuideDashboardPage() {
       supabase!.from("tutor_availability_exceptions").select("id, starts_at, ends_at, reason"),
       supabase!
         .from("tutor_earnings")
-        .select("booking_id, amount_cents, status, earned_at, paid_at")
+        .select("booking_id, amount_cents, status, earned_at, paid_at, currency")
         .order("earned_at", { ascending: false, nullsFirst: false }),
       supabase!.from("tutor_cancellation_requests").select("booking_id").eq("status", "open"),
       // Table lands with migration 0023; tolerate missing relation until applied.
@@ -198,15 +206,8 @@ export default async function GuideDashboardPage() {
     ? past.filter((b) => b.status === "completed" && !reportedBookings.has(b.id))
     : [];
 
-  let totalEarned = 0,
-    totalPaid = 0,
-    outstanding = 0;
-  for (const e of earnings) {
-    if (e.status === "voided") continue;
-    totalEarned += e.amount_cents;
-    if (e.status === "paid") totalPaid += e.amount_cents;
-    else outstanding += e.amount_cents;
-  }
+  const compCurrency = profile?.comp_currency ?? "USD";
+  const totals = aggregateCompensationByCurrency(earnings);
   const payouts = earnings.filter((e) => e.status === "paid" && e.paid_at);
 
   return (
@@ -349,21 +350,33 @@ export default async function GuideDashboardPage() {
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-ink-100 bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-ink-400">Earned</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalEarned)}</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
+              {totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "earned")}
+            </p>
           </div>
           <div className="rounded-2xl border border-ink-100 bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-ink-400">Paid</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{formatCents(totalPaid)}</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
+              {totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "paid")}
+            </p>
           </div>
           <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4">
             <p className="text-xs uppercase tracking-wide text-gold-700">Outstanding</p>
-            <p className="mt-1 font-display text-2xl font-semibold text-gold-800">{formatCents(outstanding)}</p>
+            <p className="mt-1 font-display text-2xl font-semibold text-gold-800">
+              {totals.length === 0
+                ? formatCompensationMinor(0, compCurrency)
+                : formatCompensationTotals(totals, "outstanding")}
+            </p>
           </div>
           <div className="rounded-2xl border border-ink-100 bg-white p-4">
             <p className="text-xs uppercase tracking-wide text-ink-400">Your rate</p>
             <p className="mt-1 font-display text-2xl font-semibold text-ink-900">
               {typeof profile?.comp_rate_cents_per_hour === "number"
-                ? `${formatCents(profile.comp_rate_cents_per_hour)}/hr`
+                ? formatCompensationHourly(profile.comp_rate_cents_per_hour, compCurrency)
                 : "Not set"}
             </p>
             <p className="mt-0.5 text-[11px] text-ink-400">Set by admin · scales with session length</p>
@@ -379,7 +392,9 @@ export default async function GuideDashboardPage() {
                   className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-2.5 text-sm"
                 >
                   <span className="text-ink-600">Paid {e.paid_at ? formatDayHeading(e.paid_at, tz) : ""}</span>
-                  <span className="font-medium text-ink-900">{formatCents(e.amount_cents)}</span>
+                  <span className="font-medium text-ink-900">
+                    {formatCompensationMinor(e.amount_cents, e.currency ?? "USD")}
+                  </span>
                 </div>
               ))}
             </div>
