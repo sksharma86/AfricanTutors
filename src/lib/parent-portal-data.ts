@@ -14,7 +14,24 @@ export type { ParentBooking, ParentRecording, ParentReport, ParentStudent };
 
 type SB = NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>;
 
+const PARENT_BOOKING_COLS =
+  "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, student_first_name, student_first_names, child_count, students(full_name, timezone)";
+const PARENT_BOOKING_COLS_LEGACY =
+  "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, students(full_name, timezone)";
+
 export async function loadParentWorkspace(supabase: SB, uid: string) {
+  const firstBookings = await supabase
+    .from("bookings")
+    .select(PARENT_BOOKING_COLS)
+    .order("scheduled_start", { ascending: true, nullsFirst: false });
+  const bookingsQuery =
+    firstBookings.error && /student_first_names|child_count/i.test(firstBookings.error.message)
+      ? supabase
+          .from("bookings")
+          .select(PARENT_BOOKING_COLS_LEGACY)
+          .order("scheduled_start", { ascending: true, nullsFirst: false })
+      : Promise.resolve(firstBookings);
+
   const [
     bookingsRes,
     studentsRes,
@@ -25,12 +42,7 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
     escalationsRes,
     paymentsRes,
   ] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select(
-        "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, student_first_name, student_first_names, child_count, students(full_name, timezone)",
-      )
-      .order("scheduled_start", { ascending: true, nullsFirst: false }),
+    bookingsQuery,
     supabase.from("students").select("id, full_name, grade_level").order("created_at").limit(50),
     supabase.rpc("get_customer_balances", { p_account: uid }),
     supabase.rpc("list_my_dispute_statuses").then((r) => r, () => ({ data: null, error: null })),
