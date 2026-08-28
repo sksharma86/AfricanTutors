@@ -9,13 +9,13 @@ const STEPS = [
   },
   {
     n: "02",
-    title: "They join their Guide.",
-    description: "Their Guide keeps the hour focused and moving.",
+    title: "Join Study Hall.",
+    description: "Their Guide is there to keep the session focused and moving.",
   },
   {
     n: "03",
-    title: "You get the recap.",
-    description: "See what got done when the Study Hall ends.",
+    title: "Get the recap.",
+    description: "See what got done when Study Hall ends.",
   },
 ] as const;
 

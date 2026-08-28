@@ -19,9 +19,9 @@ describe("Visual product story — homepage contracts", () => {
 
   it("live Study Hall demo uses real session chrome and photography", () => {
     const live = read("src/components/marketing/live-studyhall.tsx");
-    assert.match(live, /Study Hall \(at home\) · Live/);
-    assert.match(live, /Working independently/);
+    assert.match(live, /Study Hall/);
     assert.match(live, /Your Guide/);
+    assert.match(live, /Jordan/);
     assert.match(live, /studyhall-focus-close\.webp/);
     assert.match(live, /tutor-portrait\.jpg/);
     assert.doesNotMatch(live, /screen share|raise hand|whiteboard|chat panel/i);
@@ -42,7 +42,9 @@ describe("Visual product story — homepage contracts", () => {
     const steps = read("src/components/marketing/steps.tsx");
     assert.match(steps, /Book\. Study Hall\. Done/);
     assert.match(steps, /Pick a time/);
-    assert.match(steps, /You get the recap/);
+    assert.match(steps, /Get the recap/);
+    assert.match(steps, /Join Study Hall/);
+    assert.doesNotMatch(steps, /They join their Guide/);
     assert.doesNotMatch(steps, /do not tutor/i);
     assert.doesNotMatch(steps, /60 days/);
     assert.doesNotMatch(steps, /lg:grid-cols-4/);

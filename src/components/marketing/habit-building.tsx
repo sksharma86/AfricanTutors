@@ -4,21 +4,20 @@ import { Container } from "@/components/ui/container";
 const ARC = [
   {
     stage: "Tonight",
-    line: "Focused homework with an Accountability Guide.",
+    line: "Focused homework with a Guide present.",
   },
   {
     stage: "Routine",
-    line: "Study time becomes predictable.",
+    line: "Study Hall becomes a consistent part of the week.",
   },
   {
-    stage: "Independence",
-    line: "Better habits increasingly become their own.",
+    stage: "Progress",
+    line: "Better habits are reinforced every time they sit down to work.",
   },
 ] as const;
 
 /**
- * Long-term value: structure now, independence over time.
- * Editorial progression — not a card grid, not research claims.
+ * Recurring Study Hall is the routine — not a path to graduating from the service.
  */
 export function HabitBuilding() {
   return (
@@ -33,9 +32,9 @@ export function HabitBuilding() {
             It’s to build a better student.
           </p>
           <p className="mt-6 max-w-xl text-[15px] leading-7 text-ink-500 sm:text-[16px]">
-            Consistent Study Halls give homework a dedicated hour. Your child sits down, focuses,
-            works through assignments, and finishes what they started — while an Accountability Guide
-            stays present with encouragement, redirection, and accountability.
+            Consistent Study Halls give homework dedicated time. Your child sits down, focuses,
+            works through assignments, and finishes what they started, while their Guide stays
+            present with encouragement and redirection.
           </p>
         </Reveal>
 
@@ -54,8 +53,8 @@ export function HabitBuilding() {
 
         <Reveal delay={200}>
           <p className="mt-10 max-w-lg text-[16px] leading-7 text-ink-700 sm:text-[17px]">
-            Study Hall helps tonight.
-            <span className="mt-1 block text-ink-500">The habits can last far longer.</span>
+            Better evenings now.
+            <span className="mt-1 block text-ink-500">Better study habits over time.</span>
           </p>
         </Reveal>
       </Container>

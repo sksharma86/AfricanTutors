@@ -38,6 +38,7 @@ describe("Mobile homepage polish", () => {
     assert.match(visual, /studyhall-hero-desk\.webp/);
     assert.doesNotMatch(visual, /60 days/);
     assert.doesNotMatch(visual, /tutor-portrait|student-tutoring-session/);
+    assert.doesNotMatch(visual, /Present on video/);
   });
 
   it("keeps a simplified live Study Hall without SOP or join-window clutter", () => {
@@ -91,17 +92,17 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach|do not complete homework/i);
   });
 
-  it("homepage section order stays hero → visual → live → habits → steps → portal → why → pricing → trust → faq → cta", () => {
+  it("homepage section order stays hero → visual → breathing room → live → habits → steps → portal → pricing → trust → faq → cta", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
       "SiteHero",
       "TrustRow",
+      "WhyStudyHall",
       "LiveStudyHallDemo",
       "HabitBuilding",
       "Steps",
       "ProductShowcase",
-      "WhyStudyHall",
       "PricingSection",
       "TrustSafety",
       "Faq",
@@ -117,25 +118,37 @@ describe("Mobile homepage polish", () => {
 });
 
 describe("Homepage long-term value + product accuracy", () => {
-  it("habit-building section states developmental positioning without guarantees", () => {
+  it("habit-building section states recurring routine without graduating from Study Hall", () => {
     const habits = read("src/components/marketing/habit-building.tsx");
     assert.match(habits, /More than homework supervision/);
     assert.match(habits, /finish tonight/);
     assert.match(habits, /better student/i);
-    assert.match(habits, /Accountability Guide/);
+    assert.match(habits, /dedicated time/);
+    assert.match(habits, /their Guide stays\s+present with encouragement and redirection/);
     assert.match(habits, /Tonight/);
     assert.match(habits, /Routine/);
-    assert.match(habits, /Independence/);
-    assert.match(habits, /habits can last far longer/);
+    assert.match(habits, /Progress/);
+    assert.match(habits, /Better evenings now/);
+    assert.match(habits, /Better study habits over time/);
+    assert.doesNotMatch(habits, /Independence|graduate|need us less|eventually do it alone|outgrow|can last far longer/i);
+    assert.doesNotMatch(habits, /dedicated hour/);
+    assert.doesNotMatch(habits, /Accountability Guide[\s\S]*accountability/i);
     assert.doesNotMatch(habits, /guarantee|GPA|better grades|according to|study of|citation/i);
-    assert.doesNotMatch(habits, /always need an Accountability Guide/i);
   });
 
-  it("uses Accountability Guide selectively, not as a sitewide rename", () => {
-    const mentions = home.match(/Accountability Guide/g) ?? [];
-    assert.ok(mentions.length >= 1 && mentions.length <= 3, `expected 1–3 uses, got ${mentions.length}`);
-    assert.match(read("src/components/marketing/steps.tsx"), /Their Guide/);
-    assert.doesNotMatch(read("src/components/marketing/steps.tsx"), /Accountability Guide/);
+  it("uses Guide as the normal role name and does not rename the product as the Guide", () => {
+    assert.doesNotMatch(home, /Accountability Guide/);
+    assert.match(read("src/components/marketing/steps.tsx"), /Join Study Hall/);
+    assert.doesNotMatch(read("src/components/marketing/steps.tsx"), /They join their Guide/);
+  });
+
+  it("breathing-room section appears before habit-building and How it Works", () => {
+    const page = read("src/app/(marketing)/page.tsx");
+    const jsx = page.slice(page.indexOf("return"));
+    const why = jsx.indexOf("WhyStudyHall");
+    const habits = jsx.indexOf("HabitBuilding");
+    const steps = jsx.indexOf("<Steps");
+    assert.ok(why > -1 && why < habits && why < steps);
   });
 
   it("homepage marketing does not make absolute academic promises", () => {
@@ -148,7 +161,9 @@ describe("Homepage long-term value + product accuracy", () => {
     const child = live.indexOf("studyhall-focus-close.webp");
     assert.ok(guide > -1 && child > -1);
     assert.ok(guide < child, "Guide portrait should render as the main stage before the child PIP");
-    assert.match(live, /max-w-\[9\.5rem\]|max-w-\[11rem\]/);
+    assert.match(live, /max-w-\[7\.5rem\]|max-w-\[9rem\]/);
+    assert.match(live, /tutor-portrait\.jpg/);
+    assert.doesNotMatch(live, /Present on video/);
     assert.doesNotMatch(live, /sm:grid-cols-\[1\.35fr_0\.85fr\]/);
   });
 

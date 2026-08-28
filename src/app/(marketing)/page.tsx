@@ -20,7 +20,7 @@ import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
   title: "Live Online Study Hall for Families",
-  description: `Live online homework supervision for families. An Accountability Guide keeps your child focused tonight — and helps reinforce the study habits that last. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
+  description: `Live online homework supervision for families. A highly vetted Guide keeps your child focused while they do their own work — and helps reinforce better study habits over time. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
   alternates: { canonical: "/" },
 };
 
@@ -53,11 +53,11 @@ export default async function HomePage() {
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
       <TrustRow />
+      <WhyStudyHall />
       <LiveStudyHallDemo />
       <HabitBuilding />
       <Steps />
       <ProductShowcase />
-      <WhyStudyHall />
       <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />
       <Faq id="faq" eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />

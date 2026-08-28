@@ -6,9 +6,8 @@ import { useEffect, useRef } from "react";
 import { Container } from "@/components/ui/container";
 
 /**
- * Marketing demonstration of the live Study Hall experience.
- * Guide is the dominant remote participant; the child appears as a small self-view.
- * Real session chrome, no invented Daily controls, no Guide SOP copy.
+ * The screen the child experiences: Guide is the dominant video,
+ * the child's camera is a small self-view. No fake conferencing chrome.
  */
 export function LiveStudyHallDemo() {
   const ref = useRef<HTMLElement>(null);
@@ -38,7 +37,7 @@ export function LiveStudyHallDemo() {
     <section
       ref={ref}
       id="live-study-hall"
-      className="relative overflow-hidden bg-ink-900 py-16 text-white sm:py-24"
+      className="relative overflow-hidden bg-[#12141a] py-16 text-white sm:py-24"
     >
       <Container size="wide">
         <div className="max-w-xl">
@@ -48,47 +47,48 @@ export function LiveStudyHallDemo() {
           </p>
         </div>
 
-        <div className="sh-stage sh-stage-1 mt-10 overflow-hidden rounded-[20px] border border-white/10 bg-[#12141a]">
-          <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-gold-300 uppercase">
-              Study Hall (at home) · Live
+        <div className="sh-stage sh-stage-1 mt-10 overflow-hidden rounded-[22px] bg-[#0b0d10] shadow-[0_30px_80px_-40px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+          <div className="flex items-center justify-between px-5 py-3.5">
+            <p className="text-[13px] font-semibold tracking-[-0.02em] text-white">
+              Study Hall <span className="font-medium text-white/50">(at home)</span>
             </p>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/55">
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white/55">
               <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-              Recording
+              Live
             </span>
           </div>
 
-          <div className="sh-stage sh-stage-2 relative aspect-[4/5] p-3 sm:aspect-[16/10] sm:p-4">
-            <div className="relative h-full overflow-hidden rounded-xl bg-black">
-              <Image
-                src="/images/tutor-portrait.jpg"
-                alt="Guide present on video during Study Hall"
-                fill
-                sizes="100vw"
-                className="object-cover object-[50%_18%]"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
-                <p className="text-sm font-medium">James</p>
-                <p className="text-xs text-white/55">Your Guide</p>
-              </div>
+          <div className="sh-stage sh-stage-2 relative mx-3 mb-3 aspect-[4/5] overflow-hidden rounded-[16px] bg-black sm:mx-4 sm:mb-4 sm:aspect-[16/10]">
+            <Image
+              src="/images/tutor-portrait.jpg"
+              alt="James, their Guide, present on video"
+              fill
+              sizes="100vw"
+              className="object-cover object-[50%_18%]"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-4 py-3 sm:px-5">
+              <p className="text-sm font-medium">James</p>
+              <p className="text-xs text-white/55">Your Guide</p>
             </div>
 
-            <div className="absolute right-6 bottom-6 w-[34%] max-w-[9.5rem] overflow-hidden rounded-xl border border-white/20 bg-black shadow-[0_16px_36px_-18px_rgba(0,0,0,0.75)] sm:right-8 sm:bottom-8 sm:max-w-[11rem]">
+            <div className="absolute right-3 bottom-3 w-[28%] max-w-[7.5rem] overflow-hidden rounded-[12px] ring-1 ring-white/25 sm:right-4 sm:bottom-4 sm:max-w-[9rem]">
               <div className="relative aspect-[4/5]">
                 <Image
                   src="/images/marketing/studyhall-focus-close.webp"
-                  alt="Child working independently"
+                  alt="Jordan’s camera — working independently"
                   fill
-                  sizes="140px"
+                  sizes="120px"
                   className="object-cover object-[40%_30%]"
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2.5 py-2">
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 py-1.5">
                   <p className="text-[11px] font-medium">Jordan</p>
-                  <p className="text-[10px] text-white/55">Working independently</p>
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="px-5 pb-4">
+            <p className="text-[13px] font-medium text-white/70">Jordan’s Study Hall</p>
           </div>
         </div>
       </Container>
