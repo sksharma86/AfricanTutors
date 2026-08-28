@@ -462,8 +462,10 @@ export function BookingWizard({
                 return (
                   <label
                     key={s.id}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 ${
-                      checked ? "border-ink-900 bg-ink-50" : "border-ink-200 hover:border-ink-300"
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 transition-colors ${
+                      checked
+                        ? "border-ink-900 bg-ink-50"
+                        : "border-ink-200 bg-white hover:border-ink-300 hover:bg-ink-50"
                     }`}
                   >
                     <span>

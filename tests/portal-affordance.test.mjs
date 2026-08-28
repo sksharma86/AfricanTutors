@@ -235,6 +235,6 @@ describe("Portal affordance — IA and routes stay the same", () => {
   it("keeps the existing student_id booking embed explicit so status rows can load", () => {
     assert.match(read("src/lib/parent-portal-data.ts"), /students!student_id\(/);
     assert.match(read("src/lib/management-data.ts"), /students!student_id\(/);
-    assert.doesNotMatch(read("src/lib/parent-portal-data.ts"), /booking_children|session_report_children/);
+    assert.match(read("src/lib/parent-portal-data.ts"), /booking_children|session_report_children/);
   });
 });

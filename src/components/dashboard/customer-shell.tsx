@@ -24,16 +24,25 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-col bg-[#f4f5f7]">
       <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur">
-        <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
-          <BrandLockup href="/dashboard/student" variant="product" />
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Parent account">
+        <Container
+          size="wide"
+          className="flex h-14 flex-nowrap items-center justify-between gap-3 lg:h-[3.25rem] lg:gap-4"
+        >
+          <BrandLockup
+            href="/dashboard/student"
+            variant="product"
+            size={24}
+            className="shrink-0"
+            textClassName="text-[13px] sm:text-[14px]"
+          />
+          <nav className="hidden min-w-0 flex-nowrap items-center gap-0.5 lg:flex" aria-label="Parent account">
             {PARENT_PORTAL_NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "min-h-11 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  "inline-flex min-h-9 items-center whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-colors",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
                   isActive(item.href)
                     ? "border border-ink-900 bg-ink-900 text-white"
@@ -44,18 +53,18 @@ export function CustomerShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <Link
               href="/dashboard/student/book"
-              className="inline-flex min-h-11 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-semibold text-ink-800 hover:border-ink-300 hover:bg-ink-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
+              className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full border border-ink-900 bg-ink-900 px-3.5 text-sm font-semibold text-white hover:bg-ink-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 lg:min-h-9 lg:px-3 lg:text-[13px]"
             >
-              <span className="md:hidden">Book</span>
-              <span className="hidden md:inline">Book a Study Hall</span>
+              <span className="lg:hidden">Book</span>
+              <span className="hidden lg:inline">Book a Study Hall</span>
             </Link>
-            <LogoutButton />
+            <LogoutButton className="border-transparent bg-transparent px-2.5 text-[13px] font-medium text-ink-500 hover:border-transparent hover:bg-ink-50 hover:text-ink-700 lg:min-h-9" />
           </div>
         </Container>
-        <div className="relative border-t border-ink-100 md:hidden">
+        <div className="relative border-t border-ink-100 lg:hidden">
           <nav
             aria-label="Parent account"
             className="flex gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

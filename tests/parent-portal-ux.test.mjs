@@ -93,8 +93,8 @@ describe("Parent portal UX — routes and authorization", () => {
   it("shell marks the active destination and keeps all five labels on mobile", () => {
     const shell = read("src/components/dashboard/customer-shell.tsx");
     assert.match(shell, /aria-current=\{isActive\(item\.href\) \? "page"/);
-    assert.match(shell, /hidden items-center gap-1 md:flex/);
-    assert.match(shell, /md:hidden/);
+    assert.match(shell, /hidden min-w-0 flex-nowrap items-center gap-0.5 lg:flex/);
+    assert.match(shell, /lg:hidden/);
     assert.match(shell, /whitespace-nowrap/);
     assert.match(shell, /overflow-x-auto/);
     assert.match(shell, /snap-x/);
@@ -122,11 +122,14 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(home, /compact/);
     assert.match(home, /ParentRecentActivity/);
     assert.match(home, /Hi \$\{firstName\}/);
+    assert.match(home, /sm:text-\[2rem\]/);
     assert.doesNotMatch(home, /Your household|Your Study Hall account/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /No Study Hall scheduled/);
     assert.match(next, /Book a Study Hall/);
     assert.match(next, /ParentSurface featured/);
+    assert.match(next, /sm:text-\[1\.85rem\]/);
+    assert.match(next, /bookingChildNames/);
     assert.match(surface, /before:bg-gold-400/);
     assert.match(recent, /Last Study Hall/);
     assert.match(recent, /View report/);

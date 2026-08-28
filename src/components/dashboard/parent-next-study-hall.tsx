@@ -16,10 +16,10 @@ export function ParentNextStudyHall({
     return (
       <ParentSurface featured>
         <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Next Study Hall</p>
-        <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+        <p className="mt-2 font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-[1.85rem]">
           No Study Hall scheduled.
         </p>
-        <div className="mt-6">
+        <div className="mt-4">
           <LinkButton href="/dashboard/student/book" variant="primary" size="lg">
             Book a Study Hall
           </LinkButton>
@@ -41,12 +41,12 @@ export function ParentNextStudyHall({
   return (
     <ParentSurface featured>
       <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Next Study Hall</p>
-      <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.15rem]">
+      <p className="mt-2 font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-[1.85rem]">
         {when}
       </p>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mt-3.5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xl font-medium text-ink-900">{child}</p>
+          <p className="text-lg font-medium text-ink-900">{child}</p>
           {guide ? (
             <p className="mt-1 text-sm text-ink-500">
               Guide <span className="font-medium text-ink-800">{guide}</span>
@@ -59,13 +59,13 @@ export function ParentNextStudyHall({
       </div>
 
       {join.state === "join" ? (
-        <div className="mt-6">
+        <div className="mt-4">
           <LinkButton href={`/dashboard/session/${next.id}`} variant="primary" size="lg" className="w-full sm:w-auto">
             Join Study Hall
           </LinkButton>
         </div>
       ) : null}
-      <p className="mt-5">
+      <p className="mt-3.5">
         <LinkButton href={`/dashboard/student/study-halls/${next.id}`} variant="outline" size="sm">
           View Study Hall
         </LinkButton>

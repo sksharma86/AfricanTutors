@@ -42,20 +42,20 @@ export default async function StudentDashboardPage() {
   return (
     <ParentPage>
       <ParentHashRedirect />
-      <h1 className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-3xl">
+      <h1 className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2rem]">
         {firstName ? `Hi ${firstName}` : "Welcome"}
       </h1>
 
-      <div className="mt-5">
+      <div className="mt-3.5">
         <ParentNextStudyHall next={next} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3.5">
         <BalanceCards minutes={data.minutes} creditCents={data.creditCents} preferFreeSession={freeTrialAvailable} compact />
       </div>
 
       {last ? (
-        <div className="mt-6">
+        <div className="mt-5">
           <ParentRecentActivity
             booking={last}
             report={data.reportByBooking.get(last.id) ?? null}
