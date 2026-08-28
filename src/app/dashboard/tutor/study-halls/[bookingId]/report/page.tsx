@@ -33,14 +33,15 @@ export default async function GuideReportPage({
   const needed = guideNeedsReport(booking, submitted);
   const kidsRes = await supabase!
     .from("booking_children")
-    .select("student_id, sort_order, students(full_name)")
+    .select("student_id, sort_order, students!student_id(full_name)")
     .eq("booking_id", bookingId)
     .order("sort_order")
     .then((r) => r, () => ({ data: null, error: null }));
+  const storedNames = Array.isArray(booking.student_first_names) ? booking.student_first_names : [];
   const reportChildren = ((kidsRes.data ?? []) as { student_id: string; students?: { full_name?: string | null } | null }[])
-    .map((row) => ({
+    .map((row, i) => ({
       id: row.student_id,
-      firstName: firstNameOf(row.students?.full_name, "Child"),
+      firstName: firstNameOf(row.students?.full_name, storedNames[i] || "Child"),
     }))
     .filter((c) => c.id);
 
@@ -76,7 +77,7 @@ export default async function GuideReportPage({
             <GuideSessionReport
               bookingId={booking.id}
               childName={booking.student_first_name}
-              children={reportChildren}
+              childList={reportChildren}
               alreadySubmitted={false}
               variant="page"
             />

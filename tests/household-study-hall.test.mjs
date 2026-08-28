@@ -204,6 +204,9 @@ describe("Household Study Hall — reports & portals", () => {
     const api = read("src/app/api/tutor/session-report/route.ts");
     assert.match(api, /submit_household_session_report/);
     assert.match(api, /submit_session_report/);
+    const reportPage = read("src/app/dashboard/tutor/study-halls/[bookingId]/report/page.tsx");
+    assert.match(reportPage, /students!student_id\(full_name\)/);
+    assert.match(reportPage, /childList=\{reportChildren\}/);
   });
 
   it("parent detail organizes multi-child reports and lists children", () => {
@@ -211,6 +214,10 @@ describe("Household Study Hall — reports & portals", () => {
     assert.match(page, /Children/);
     assert.match(page, /report\.children/);
     assert.match(page, /bookingChildNames/);
+    const parentData = read("src/lib/parent-portal-data.ts");
+    assert.match(parentData, /students!student_id\(full_name, timezone\)/);
+    const mgmt = read("src/lib/management-data.ts");
+    assert.match(mgmt, /students!student_id\(full_name, timezone\)/);
   });
 
   it("Guide home shows child count for multi-child Study Halls", () => {
@@ -301,7 +308,16 @@ describe("Household Study Hall — live RPCs", { skip: !hasSupabaseEnv }, () => 
 
   after(async () => {
     if (accounts.length) {
-      await svc.from("bookings").delete().in("account_id", accounts);
+      const { data: bks } = await svc.from("bookings").select("id").in("account_id", accounts);
+      const ids = (bks ?? []).map((b) => b.id);
+      if (ids.length) {
+        await svc.from("session_report_children").delete().in("booking_id", ids);
+        await svc.from("session_reports").delete().in("booking_id", ids);
+        await svc.from("tutor_earnings").delete().in("booking_id", ids);
+        await svc.from("payments").delete().in("booking_id", ids);
+        await svc.from("bookings").delete().in("id", ids);
+      }
+      await svc.from("package_minute_ledger").delete().in("account_id", accounts);
       await svc.from("students").delete().in("account_id", accounts);
       await svc.from("tutor_availability").delete().eq("tutor_id", guide?.id ?? "00000000-0000-0000-0000-000000000000");
     }
@@ -418,5 +434,180 @@ describe("Household Study Hall — live RPCs", { skip: !hasSupabaseEnv }, () => 
     const q = await svc.rpc("booking_quote", { p_account: parent.id, p_duration: 60, p_is_free_trial: false });
     assert.equal(q.error, null, q.error?.message);
     assert.equal(q.data.session_price_cents, 1200);
+  });
+
+  it("prepaid 3-child Study Hall deducts one hour, not three", async (t) => {
+    if (!schemaReady) {
+      t.skip("migration 0031 not applied");
+      return;
+    }
+    const acct = await createUser({ requestedRole: "student", displayName: "Prepaid Household" });
+    accounts.push(acct.id);
+    const client = await signIn(acct.email, acct.password);
+    const ids = [];
+    for (const name of ["Jordan P", "Maya P", "Noah P"]) ids.push(await newStudent(acct.id, name));
+    await svc.from("package_minute_ledger").insert({
+      account_id: acct.id,
+      minutes_delta: 120,
+      entry_type: "purchase",
+      reason: "household prepaid grant",
+      reference: `hh-prepaid-${acct.id}`,
+    });
+    const { data, error } = await client.rpc("book_session", {
+      p_student_id: ids[0],
+      p_subject_id: null,
+      p_other_subject: null,
+      p_request_note: null,
+      p_duration: 60,
+      p_start: futureStart(74),
+      p_is_free_trial: false,
+      p_student_ids: ids,
+    });
+    assert.equal(error, null, error?.message);
+    assert.equal(data.funding, "package");
+    assert.equal(data.package_minutes_used, 60);
+    assert.equal(data.session_price_cents, 1200);
+    const bal = await svc.rpc("get_customer_balances", { p_account: acct.id });
+    assert.equal(bal.error, null, bal.error?.message);
+    assert.equal(Number(bal.data.package_minutes), 60);
+    const { data: kids } = await svc.from("booking_children").select("student_id").eq("booking_id", data.booking_id);
+    assert.equal(kids.length, 3);
+  });
+
+  it("cancelling a 3-child prepaid Study Hall restores one hour once", async (t) => {
+    if (!schemaReady) {
+      t.skip("migration 0031 not applied");
+      return;
+    }
+    const acct = await createUser({ requestedRole: "student", displayName: "Cancel Household" });
+    accounts.push(acct.id);
+    const client = await signIn(acct.email, acct.password);
+    const ids = [];
+    for (const name of ["Jordan C", "Maya C", "Noah C"]) ids.push(await newStudent(acct.id, name));
+    await svc.from("package_minute_ledger").insert({
+      account_id: acct.id,
+      minutes_delta: 180,
+      entry_type: "purchase",
+      reason: "household cancel grant",
+      reference: `hh-cancel-${acct.id}`,
+    });
+    const booked = await client.rpc("book_session", {
+      p_student_id: ids[0],
+      p_subject_id: null,
+      p_other_subject: null,
+      p_request_note: null,
+      p_duration: 60,
+      p_start: futureStart(80),
+      p_is_free_trial: false,
+      p_student_ids: ids,
+    });
+    assert.equal(booked.error, null, booked.error?.message);
+    const cancel = await client.rpc("customer_cancel_booking", { p_booking: booked.data.booking_id });
+    assert.equal(cancel.error, null, cancel.error?.message);
+    assert.equal(cancel.data.early, true);
+    assert.equal(Number(cancel.data.restored_minutes), 60);
+    const bal = await svc.rpc("get_customer_balances", { p_account: acct.id });
+    assert.equal(Number(bal.data.package_minutes), 180);
+    const { data: bk } = await svc.from("bookings").select("status, child_count").eq("id", booked.data.booking_id).single();
+    assert.equal(bk.status, "cancelled");
+    assert.equal(bk.child_count, 3);
+  });
+
+  it("Guide compensation for a 3-child hour is rate times duration, not children", async (t) => {
+    if (!schemaReady) {
+      t.skip("migration 0031 not applied");
+      return;
+    }
+    await svc.from("tutor_profiles").update({ comp_rate_cents_per_hour: 1500 }).eq("profile_id", guide.id);
+    const ids = [];
+    for (const name of ["Jordan E", "Maya E", "Noah E"]) ids.push(await newStudent(parent.id, name));
+    const start = new Date(Date.now() - 3 * 86400000);
+    start.setUTCMinutes(0, 0, 0);
+    const end = new Date(start.getTime() + 60 * 60000);
+    const { data: bk, error } = await svc
+      .from("bookings")
+      .insert({
+        student_id: ids[0],
+        account_id: parent.id,
+        tutor_id: guide.id,
+        scheduled_start: start.toISOString(),
+        scheduled_end: end.toISOString(),
+        duration_minutes: 60,
+        status: "completed",
+        payment_status: "paid",
+        price_cents: 1200,
+        is_free_trial: false,
+        student_first_name: "Jordan",
+        tutor_display_name: "Household Guide",
+        completed_at: end.toISOString(),
+      })
+      .select("id")
+      .single();
+    assert.equal(error, null, error?.message);
+    const attached = await svc.rpc("attach_booking_children", { p_booking: bk.id, p_student_ids: ids });
+    assert.equal(attached.error, null, attached.error?.message);
+    const earn = await svc.rpc("record_tutor_earning", {
+      p_booking: bk.id,
+      p_reason: "household compensation check",
+    });
+    assert.equal(earn.error, null, earn.error?.message);
+    const { data: row } = await svc
+      .from("tutor_earnings")
+      .select("amount_cents, duration_minutes, rate_cents_per_hour")
+      .eq("booking_id", bk.id)
+      .single();
+    assert.equal(row.duration_minutes, 60);
+    assert.equal(row.rate_cents_per_hour, 1500);
+    assert.equal(row.amount_cents, 1500);
+  });
+
+  it("household report writes one session report with a section per child", async (t) => {
+    if (!schemaReady) {
+      t.skip("migration 0031 not applied");
+      return;
+    }
+    const ids = [];
+    for (const name of ["Jordan R", "Maya R", "Noah R"]) ids.push(await newStudent(parent.id, name));
+    const start = new Date(Date.now() - 2 * 86400000);
+    start.setUTCMinutes(30, 0, 0);
+    const end = new Date(start.getTime() + 60 * 60000);
+    const { data: bk, error } = await svc
+      .from("bookings")
+      .insert({
+        student_id: ids[0],
+        account_id: parent.id,
+        tutor_id: guide.id,
+        scheduled_start: start.toISOString(),
+        scheduled_end: end.toISOString(),
+        duration_minutes: 60,
+        status: "completed",
+        payment_status: "paid",
+        price_cents: 0,
+        is_free_trial: false,
+        student_first_name: "Jordan",
+        tutor_display_name: "Household Guide",
+        completed_at: end.toISOString(),
+      })
+      .select("id")
+      .single();
+    assert.equal(error, null, error?.message);
+    const attached = await svc.rpc("attach_booking_children", { p_booking: bk.id, p_student_ids: ids });
+    assert.equal(attached.error, null, attached.error?.message);
+    const guideClient = await signIn(guide.email, guide.password);
+    const reports = [
+      { student_id: ids[0], focus: "good_focus", work_summary: "Math worksheet and reading", redirection: "a_little", guide_note: "Started slowly" },
+      { student_id: ids[1], focus: "great_focus", work_summary: "Science review", redirection: "none", guide_note: null },
+      { student_id: ids[2], focus: "good_focus", work_summary: "History notes", redirection: "none", guide_note: null },
+    ];
+    const sub = await guideClient.rpc("submit_household_session_report", {
+      p_booking: bk.id,
+      p_child_reports: reports,
+    });
+    assert.equal(sub.error, null, sub.error?.message);
+    const { data: header } = await svc.from("session_reports").select("id, booking_id").eq("booking_id", bk.id);
+    assert.equal(header.length, 1);
+    const { data: kids } = await svc.from("session_report_children").select("student_first_name, work_summary").eq("booking_id", bk.id);
+    assert.equal(kids.length, 3);
+    assert.ok(kids.some((k) => k.work_summary === "Science review"));
   });
 });

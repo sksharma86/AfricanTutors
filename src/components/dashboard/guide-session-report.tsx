@@ -33,26 +33,26 @@ type ChildDraft = {
 export function GuideSessionReport({
   bookingId,
   childName,
-  children = [],
+  childList = [],
   alreadySubmitted,
   variant = "inline",
 }: {
   bookingId: string;
   childName?: string | null;
-  children?: ChildTarget[];
+  childList?: ChildTarget[];
   alreadySubmitted: boolean;
   variant?: "inline" | "page";
 }) {
   const router = useRouter();
   const submittingRef = useRef(false);
-  const multi = children.length > 1;
+  const multi = childList.length > 1;
   const [open, setOpen] = useState(variant === "page");
   const [focus, setFocus] = useState<FocusRating | "">("");
   const [work, setWork] = useState("");
   const [redirection, setRedirection] = useState<RedirectionLevel | "">("");
   const [note, setNote] = useState("");
   const [drafts, setDrafts] = useState<ChildDraft[]>(() =>
-    children.map((c) => ({
+    childList.map((c) => ({
       studentId: c.id,
       firstName: c.firstName,
       focus: "",

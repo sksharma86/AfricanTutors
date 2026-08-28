@@ -28,9 +28,9 @@ export default async function AdminStudyHallDetailPage({
   const supabase = await createSupabaseServerClient();
 
   const householdSelect =
-    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students(full_name, timezone)";
+    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students!student_id(full_name, timezone)";
   const legacySelect =
-    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students(full_name, timezone)";
+    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students!student_id(full_name, timezone)";
   const first = await supabase!.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
   const raw =
     first.data ??
