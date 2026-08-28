@@ -241,7 +241,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           </div>
 
           <div
-            className="relative mx-auto flex w-full flex-col items-center rounded-[20px] border px-2 pb-3 pt-3 xl:px-3"
+            className="relative mx-auto flex w-full flex-col items-center rounded-[20px] border px-2 pb-4 pt-3.5 xl:px-3"
             data-qa="hshw-study"
             style={{ backgroundColor: CREAM, borderColor: BORDER }}
           >
@@ -251,7 +251,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               </span>
               <StageHeading>Study Hall</StageHeading>
             </div>
-            <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="mt-5 flex items-center justify-center gap-4">
               <span className="h-px w-[48px]" style={{ backgroundColor: GOLD }} />
               <p className="text-[16px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
                 LIVE GUIDE PRESENCE
