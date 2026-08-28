@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
+import { HERO_HOUSEHOLD_CUE } from "@/lib/household-pricing-copy.mjs";
 import { FREE_TRIAL_CTA, PREPAID_FROM_HOURLY_USD } from "@/lib/pricing";
 
 export function SiteHero({
@@ -38,6 +39,9 @@ export function SiteHero({
         </h1>
         <p className="at-fade-in at-delay-1 mt-6 max-w-[30rem] text-[16px] leading-7 text-white/74 sm:text-[17px] sm:leading-8">
           Live homework supervision that keeps your child focused, encouraged, and on task.
+        </p>
+        <p className="at-fade-in at-delay-1 mt-3 text-[15px] font-medium text-white/68 sm:text-[16px]">
+          {HERO_HOUSEHOLD_CUE}
         </p>
         <div className="at-fade-in at-delay-2 mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
           <TrackCta href={primaryHref} cta={primaryLabel} location="hero" variant="secondary" size="lg">

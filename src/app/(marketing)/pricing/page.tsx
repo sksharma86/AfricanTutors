@@ -70,6 +70,7 @@ export default async function PricingPage() {
           [
             "How much does it cost?",
             "Is the first session really free?",
+            "Can siblings join the same Study Hall?",
             "Do prepaid hours expire?",
             "What happens if I cancel?",
           ].includes(f.q),

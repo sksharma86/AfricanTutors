@@ -22,6 +22,7 @@ import {
   uniqueStudentIds,
   wouldExceedChildLimit,
 } from "@/lib/household-children.mjs";
+import { BOOKING_SAME_PRICE_NOTE } from "@/lib/household-pricing-copy.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -457,6 +458,7 @@ export function BookingWizard({
           ) : students.length > 1 ? (
             <div className="mt-4 space-y-3">
               <p className="text-sm text-ink-500">Select up to {MAX_CHILDREN_PER_STUDY_HALL} children.</p>
+              <p className="text-sm text-ink-600">{BOOKING_SAME_PRICE_NOTE}</p>
               {students.map((s) => {
                 const checked = studentIds.includes(s.id);
                 return (

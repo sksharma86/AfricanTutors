@@ -1,3 +1,23 @@
+export const HERO_HOUSEHOLD_CUE: string;
+export const HOUSEHOLD_VALUE_EYEBROW: string;
+export const HOUSEHOLD_VALUE_HEADLINE: string;
+export const HOUSEHOLD_VALUE_BODY: string;
+export const HOUSEHOLD_VALUE_STEPS: readonly { count: string; price: string }[];
 export const FAMILY_VALUE_EYEBROW: string;
 export const FAMILY_VALUE_BODY: string;
 export const FAMILY_VALUE_RATE: string;
+export const FAMILY_VALUE_MATH: readonly string[];
+export const FREE_STUDY_HALL_HOUSEHOLD: string;
+export const BOOKING_SAME_PRICE_NOTE: string;
+export const INFOGRAPHIC_BOOK_BODY: string;
+export const INFOGRAPHIC_STUDY_BODY: string;
+export const INFOGRAPHIC_REPORT_BODY: string;
+export const HOW_IT_WORKS_HOUSEHOLD: string;
+export const MULTI_CHILD_CAMPAIGN: {
+  readonly headline: string;
+  readonly support: string;
+  readonly price: string;
+  readonly cta: string;
+  readonly altHeadline: string;
+  readonly altSupport: string;
+};
