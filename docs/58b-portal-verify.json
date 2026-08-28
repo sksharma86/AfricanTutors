@@ -1,0 +1,201 @@
+{
+  "origin": "http://127.0.0.1:3456",
+  "screenshots": {
+    "adminHome": "/opt/cursor/artifacts/58b-cleanup/01-management-home.png",
+    "adminHalls": "/opt/cursor/artifacts/58b-cleanup/02-management-study-halls.png",
+    "adminGuides": "/opt/cursor/artifacts/58b-cleanup/03-management-guides.png",
+    "adminAttn": "/opt/cursor/artifacts/58b-cleanup/04-management-needs-attention.png",
+    "adminFin": "/opt/cursor/artifacts/58b-cleanup/05-management-finance.png",
+    "parentHome": "/opt/cursor/artifacts/58b-cleanup/06-parent-home.png",
+    "parentHalls": "/opt/cursor/artifacts/58b-cleanup/07-parent-study-halls.png",
+    "parentReports": "/opt/cursor/artifacts/58b-cleanup/08-parent-reports.png",
+    "parentHours": "/opt/cursor/artifacts/58b-cleanup/09-parent-hours.png",
+    "parentBook": "/opt/cursor/artifacts/58b-cleanup/14-parent-add-child-path.png",
+    "guideHome": "/opt/cursor/artifacts/58b-cleanup/10-guide-home.png",
+    "guideHalls": "/opt/cursor/artifacts/58b-cleanup/11-guide-study-halls.png",
+    "guideEarn": "/opt/cursor/artifacts/58b-cleanup/12-guide-earnings.png",
+    "guideAvail": "/opt/cursor/artifacts/58b-cleanup/13-guide-availability.png"
+  },
+  "welcome_created_then_removed": [
+    {
+      "id": "6ab90495-5c13-4b5b-be8e-b9d648673fda",
+      "idempotency_key": "welcome:a60dfd6f-3705-457d-8ccc-799fbd010099",
+      "notification_type": "welcome",
+      "status": "skipped"
+    }
+  ],
+  "before_ui": {
+    "label": "PRE_UI",
+    "at": "2026-08-28T22:13:08.776Z",
+    "auth_users": [
+      {
+        "id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "email": "halfoffwebhosting@gmail.com"
+      },
+      {
+        "id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "email": "studyhallathome@gmail.com"
+      },
+      {
+        "id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+        "email": "sksharma86@gmail.com"
+      }
+    ],
+    "auth_count": 3,
+    "tables": {
+      "profiles": 3,
+      "student_profiles": 2,
+      "tutor_profiles": 1,
+      "students": 0,
+      "bookings": 0,
+      "booking_children": 0,
+      "session_reports": 0,
+      "session_report_children": 0,
+      "session_recordings": 0,
+      "session_presence": 0,
+      "payments": 0,
+      "package_minute_ledger": 0,
+      "dollar_credit_ledger": 0,
+      "tutor_earnings": 0,
+      "refunds": 0,
+      "disputes": 0,
+      "email_deliveries": 0,
+      "parent_escalation_requests": 0,
+      "tutor_cancellation_requests": 0,
+      "tutor_availability": 0,
+      "tutor_availability_exceptions": 0,
+      "tutor_subjects": 4,
+      "financial_audit_log": 0,
+      "stripe_events": 0,
+      "subjects": 19,
+      "package_products": 5,
+      "compensation_currencies": 5
+    },
+    "profiles": [
+      {
+        "id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "role": "admin",
+        "display_name": "Sumeet Sharma",
+        "stripe_customer_id": null
+      },
+      {
+        "id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+        "role": "student",
+        "display_name": "Test Student 2",
+        "stripe_customer_id": "cus_V6qbjS0UCeC97j"
+      },
+      {
+        "id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "role": "tutor",
+        "display_name": "Test Tutor 1",
+        "stripe_customer_id": null
+      }
+    ],
+    "tutors": [
+      {
+        "profile_id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "status": "approved",
+        "approved_by": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "timezone": "Africa/Lagos",
+        "comp_rate_cents_per_hour": 30000,
+        "comp_currency": "KES"
+      }
+    ],
+    "pending_applicants": 0,
+    "parent_balances": {
+      "package_minutes": 0,
+      "dollar_credit_cents": 0
+    },
+    "parent_free_trial_used": false,
+    "parent_stripe": "cus_V6qbjS0UCeC97j",
+    "needs_attention": [],
+    "admin_alert_email_env": null
+  },
+  "after_ui": {
+    "label": "POST_UI",
+    "at": "2026-08-28T22:14:01.027Z",
+    "auth_users": [
+      {
+        "id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "email": "halfoffwebhosting@gmail.com"
+      },
+      {
+        "id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "email": "studyhallathome@gmail.com"
+      },
+      {
+        "id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+        "email": "sksharma86@gmail.com"
+      }
+    ],
+    "auth_count": 3,
+    "tables": {
+      "profiles": 3,
+      "student_profiles": 2,
+      "tutor_profiles": 1,
+      "students": 0,
+      "bookings": 0,
+      "booking_children": 0,
+      "session_reports": 0,
+      "session_report_children": 0,
+      "session_recordings": 0,
+      "session_presence": 0,
+      "payments": 0,
+      "package_minute_ledger": 0,
+      "dollar_credit_ledger": 0,
+      "tutor_earnings": 0,
+      "refunds": 0,
+      "disputes": 0,
+      "email_deliveries": 0,
+      "parent_escalation_requests": 0,
+      "tutor_cancellation_requests": 0,
+      "tutor_availability": 0,
+      "tutor_availability_exceptions": 0,
+      "tutor_subjects": 4,
+      "financial_audit_log": 0,
+      "stripe_events": 0,
+      "subjects": 19,
+      "package_products": 5,
+      "compensation_currencies": 5
+    },
+    "profiles": [
+      {
+        "id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "role": "admin",
+        "display_name": "Sumeet Sharma",
+        "stripe_customer_id": null
+      },
+      {
+        "id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+        "role": "student",
+        "display_name": "Test Student 2",
+        "stripe_customer_id": "cus_V6qbjS0UCeC97j"
+      },
+      {
+        "id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "role": "tutor",
+        "display_name": "Test Tutor 1",
+        "stripe_customer_id": null
+      }
+    ],
+    "tutors": [
+      {
+        "profile_id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "status": "approved",
+        "approved_by": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "timezone": "Africa/Lagos",
+        "comp_rate_cents_per_hour": 30000,
+        "comp_currency": "KES"
+      }
+    ],
+    "pending_applicants": 0,
+    "parent_balances": {
+      "package_minutes": 0,
+      "dollar_credit_cents": 0
+    },
+    "parent_free_trial_used": false,
+    "parent_stripe": "cus_V6qbjS0UCeC97j",
+    "needs_attention": [],
+    "admin_alert_email_env": null
+  }
+}

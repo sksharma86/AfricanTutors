@@ -135,7 +135,7 @@ async function main() {
   mkdirSync(OUT, { recursive: true });
   const beforeUi = await snapshot("PRE_UI");
 
-  const { chromium } = await import("/tmp/pw/node_modules/playwright-core/index.js");
+  const { chromium } = await import("/tmp/pw/node_modules/playwright-core/index.mjs");
   const browser = await chromium.launch({
     executablePath: "/usr/local/bin/google-chrome",
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
