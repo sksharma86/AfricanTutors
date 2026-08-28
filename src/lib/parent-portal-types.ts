@@ -16,6 +16,9 @@ export type ParentBooking = {
   is_free_trial: boolean;
   payment_status: string;
   tutor_display_name: string | null;
+  student_first_name?: string | null;
+  student_first_names?: string[] | null;
+  child_count?: number | null;
   students: { full_name: string; timezone: string } | null;
 };
 
@@ -31,6 +34,15 @@ export type ParentRecording = {
   completed_at: string | null;
 };
 
+export type ParentChildReport = {
+  student_id: string;
+  student_first_name: string;
+  focus_rating: FocusRating;
+  work_summary: string;
+  redirection_level: RedirectionLevel;
+  guide_note: string | null;
+};
+
 export type ParentReport = {
   id: string;
   booking_id: string;
@@ -39,4 +51,5 @@ export type ParentReport = {
   work_summary: string;
   redirection_level: RedirectionLevel;
   guide_note: string | null;
+  children?: ParentChildReport[];
 };

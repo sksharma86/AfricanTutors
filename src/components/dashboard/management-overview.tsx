@@ -6,6 +6,7 @@ import { ManagementStatusLabel } from "@/components/dashboard/management-status-
 import { LinkButton } from "@/components/ui/button";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { formatCompensationTotals } from "@/lib/compensation-currency.mjs";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 import {
   comingUpBookings,
   isStudyHallLive,
@@ -21,6 +22,8 @@ import { browserTimezone, formatTime } from "@/lib/timezone";
 export interface OverviewBooking {
   id: string;
   student_first_name: string | null;
+  student_first_names?: string[] | null;
+  child_count?: number | null;
   tutor_display_name: string | null;
   tutor_id: string | null;
   scheduled_start: string | null;
@@ -125,7 +128,7 @@ export function ManagementOverview({
                   <span className="font-medium text-ink-900">
                     {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
                   </span>
-                  <span className="truncate text-ink-800">{b.student_first_name ?? "Child"}</span>
+                  <span className="truncate text-ink-800">{bookingChildNames(b, "Child")}</span>
                   <span className="hidden truncate text-ink-500 sm:block">{b.tutor_display_name ?? "No Guide"}</span>
                   <span className="col-span-2 min-w-0 sm:col-span-1">
                     {reasons.length ? (

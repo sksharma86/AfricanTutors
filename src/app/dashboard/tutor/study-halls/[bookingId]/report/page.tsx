@@ -6,6 +6,7 @@ import { GuidePage } from "@/components/dashboard/guide-page";
 import { GuideSessionReport } from "@/components/dashboard/guide-session-report";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { requireRole } from "@/lib/auth";
+import { firstNameOf } from "@/lib/household-children.mjs";
 import { guideChildName, guideNeedsReport } from "@/lib/guide-portal.mjs";
 import { loadGuideWorkspace } from "@/lib/guide-portal-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -30,6 +31,20 @@ export default async function GuideReportPage({
   const tz = tutorTimezone(data.profile?.timezone);
   const submitted = data.reportedBookings.has(booking.id);
   const needed = guideNeedsReport(booking, submitted);
+  const kidsRes = await supabase!
+    .from("booking_children")
+    .select("student_id, sort_order, students!student_id(full_name)")
+    .eq("booking_id", bookingId)
+    .order("sort_order")
+    .then((r) => r, () => ({ data: null, error: null }));
+  const storedNames = Array.isArray(booking.student_first_names) ? booking.student_first_names : [];
+  const reportChildren = ((kidsRes.data ?? []) as { student_id: string; students?: { full_name?: string | null } | null }[])
+    .map((row, i) => ({
+      id: row.student_id,
+      firstName: firstNameOf(row.students?.full_name, storedNames[i] || "Child"),
+    }))
+    .filter((c) => c.id);
+
   const when = booking.scheduled_start
     ? `${formatDayHeading(booking.scheduled_start, tz)} · ${formatTime(booking.scheduled_start, tz)}`
     : "Recently";
@@ -62,6 +77,7 @@ export default async function GuideReportPage({
             <GuideSessionReport
               bookingId={booking.id}
               childName={booking.student_first_name}
+              childList={reportChildren}
               alreadySubmitted={false}
               variant="page"
             />

@@ -23,6 +23,7 @@ export interface SessionInfo {
   is_owner?: boolean;
   safe_name?: string;
   counterpart?: string;
+  child_names?: string[];
   videoConfigured?: boolean;
 }
 

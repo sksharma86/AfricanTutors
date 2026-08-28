@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
 import { Button, LinkButton } from "@/components/ui/button";
 import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 import {
   calendarDateInTz,
   managementOperationalStatus,
@@ -34,6 +35,8 @@ export interface StudyHallIssue {
 export interface StudyHallListRow {
   id: string;
   student_first_name: string | null;
+  student_first_names?: string[] | null;
+  child_count?: number | null;
   student_full_name?: string | null;
   parent_name?: string | null;
   tutor_display_name: string | null;
@@ -180,7 +183,7 @@ export function ManagementStudyHalls({
                       {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
                     </p>
                     <p className={cn("text-sm", quiet ? "text-ink-400" : "text-ink-800")}>
-                      {b.student_first_name ?? "Child"}
+                      {bookingChildNames(b, "Child")}
                     </p>
                     <p className="text-sm text-ink-500">{needsGuide && !b.tutor_display_name ? "No Guide" : b.tutor_display_name ?? "—"}</p>
                     <div className="min-w-0 text-sm">

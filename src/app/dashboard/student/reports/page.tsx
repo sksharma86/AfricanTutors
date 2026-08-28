@@ -7,7 +7,8 @@ import { WatchRecordingButton } from "@/components/dashboard/watch-recording-but
 import { LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
-import { childFirstName, parentGuideLabel, parentStudyHallLists } from "@/lib/parent-portal.mjs";
+import { bookingChildNames } from "@/lib/household-children.mjs";
+import { parentGuideLabel, parentStudyHallLists } from "@/lib/parent-portal.mjs";
 import { loadParentWorkspace, recordingSummary } from "@/lib/parent-portal-data";
 import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -46,7 +47,7 @@ export default async function ParentReportsPage() {
                 return (
                   <li key={b.id} id={`hall-${b.id}`} className="scroll-mt-24 py-4 first:pt-1 last:pb-1">
                     <p className="text-sm font-medium text-ink-900">
-                      {when} · {childFirstName(b.students?.full_name)}
+                      {when} · {bookingChildNames(b)}
                     </p>
                     <p className="text-sm text-ink-500">Guide {parentGuideLabel(b) ?? "—"}</p>
                     {data.escalatedBookings.has(b.id) ? (

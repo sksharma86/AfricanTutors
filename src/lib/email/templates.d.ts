@@ -16,6 +16,7 @@ export function bookingConfirmed(ctx: {
   durationMinutes?: number | null;
   tutorName?: string | null;
   studentName?: string | null;
+  studentNames?: string[] | null;
   funding?: string | null;
   appUrl?: string | null;
   bookingId: string;
@@ -36,6 +37,7 @@ export function reminder(ctx: {
   durationMinutes?: number | null;
   tutorName?: string | null;
   studentName?: string | null;
+  studentNames?: string[] | null;
   appUrl?: string | null;
   bookingId: string;
 }): RenderedEmail;
@@ -51,6 +53,7 @@ export function refundIssued(ctx: { amountCents: number; reason?: string | null 
 export function disputeReceived(ctx: { subject?: string | null }): RenderedEmail;
 export function sessionReportReady(ctx: {
   studentName?: string | null;
+  studentNames?: string[] | null;
   whenISO?: string | null;
   tz?: string | null;
   appUrl?: string | null;
@@ -68,6 +71,7 @@ export function tutorNewSession(ctx: {
   tz?: string | null;
   durationMinutes?: number | null;
   studentName?: string | null;
+  studentNames?: string[] | null;
   appUrl?: string | null;
   bookingId: string;
 }): RenderedEmail;
@@ -81,12 +85,14 @@ export function tutorRemoved(ctx: { subject?: string | null; whenISO?: string | 
 export function adminAlert(ctx: { title?: string; summary?: string; lines?: string[] }): RenderedEmail;
 export function guideReportRequired(ctx: {
   studentName?: string | null;
+  studentNames?: string[] | null;
   whenISO?: string | null;
   tz?: string | null;
   appUrl?: string | null;
 }): RenderedEmail;
 export function guideReportOverdue(ctx: {
   studentName?: string | null;
+  studentNames?: string[] | null;
   whenISO?: string | null;
   tz?: string | null;
   appUrl?: string | null;

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { missingStudentIdsRpc } from "@/lib/household-children.mjs";
 import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { formatCents } from "@/lib/pricing";
 import { isStripeConfigured } from "@/lib/stripe/config";
@@ -73,6 +74,7 @@ async function rollbackReservation(
 export async function createBookingCheckout(
   params: {
     studentId: string;
+    studentIds?: string[];
     subjectId: string | null;
     otherSubject?: string | null;
     note?: string | null;
@@ -87,7 +89,9 @@ export async function createBookingCheckout(
 
   // Study Hall (null subject) always schedules with p_start. Legacy unscheduled
   // "Other" requests only occur when both subject and start are null.
-  const { data, error } = await supabase.rpc("book_session", {
+  // Price is duration-only; p_student_ids does not change hours or Stripe amount.
+  const studentIds = params.studentIds ?? [params.studentId];
+  const sessionArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
     p_other_subject: params.subjectId ? null : (params.otherSubject ?? null),
@@ -95,7 +99,17 @@ export async function createBookingCheckout(
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+  };
+  let { data, error } = await supabase.rpc("book_session", {
+    ...sessionArgs,
+    p_student_ids: studentIds,
   });
+  if (error && missingStudentIdsRpc(error)) {
+    if (studentIds.length > 1) {
+      throw new Error("Up to 3 children can join the same Study Hall.");
+    }
+    ({ data, error } = await supabase.rpc("book_session", sessionArgs));
+  }
   if (error) throw new Error(error.message);
 
   const q = data as {

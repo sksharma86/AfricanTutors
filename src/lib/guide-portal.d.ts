@@ -1,6 +1,16 @@
 declare module "@/lib/guide-portal.mjs" {
   export const GUIDE_PORTAL_NAV: readonly { label: string; href: string }[];
-  export function guideChildName(booking: { student_first_name?: string | null } | null | undefined, fallback?: string): string;
+  export function guideChildName(
+    booking: {
+      student_first_name?: string | null;
+      student_first_names?: string[] | null;
+      child_count?: number | null;
+    } | null | undefined,
+    fallback?: string,
+  ): string;
+  export function guideChildrenCaption(
+    booking: { student_first_names?: string[] | null; child_count?: number | null } | null | undefined,
+  ): string | null;
   export function guideStudyHallLists<T extends { status: string; scheduled_start?: string | null; scheduled_end?: string | null }>(
     bookings: T[],
     nowMs?: number,

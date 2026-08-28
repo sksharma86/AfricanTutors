@@ -10,8 +10,8 @@ import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { requireRole } from "@/lib/auth";
 import { formatDuration } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { bookingChildCount, bookingChildNames, firstNameOf } from "@/lib/household-children.mjs";
 import {
-  childFirstName,
   parentCanCancel,
   parentCanDispute,
   parentGuideLabel,
@@ -65,7 +65,7 @@ export default async function ParentStudyHallDetailPage({
       <ParentSurface featured={!isPast}>
         <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall</p>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
-          {childFirstName(booking.students?.full_name)}
+          {bookingChildNames(booking)}
         </h1>
         <p data-kind="status" className="mt-1 text-sm text-ink-500">
           {parentStatusLabel(booking)}
@@ -93,6 +93,22 @@ export default async function ParentStudyHallDetailPage({
           <div>
             <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Payment</dt>
             <dd className="mt-1 text-ink-800">{parentPaymentLineLabel(booking)}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">
+              {bookingChildCount(booking) > 1 ? "Children" : "Child"}
+            </dt>
+            <dd className="mt-1 text-ink-800">
+              {booking.student_first_names && booking.student_first_names.length > 1 ? (
+                <ul className="space-y-0.5">
+                  {booking.student_first_names.map((name) => (
+                    <li key={name}>{firstNameOf(name)}</li>
+                  ))}
+                </ul>
+              ) : (
+                bookingChildNames(booking)
+              )}
+            </dd>
           </div>
         </dl>
         <p className="mt-4 text-xs text-ink-400">Booking reference {booking.public_reference}</p>
@@ -129,22 +145,45 @@ export default async function ParentStudyHallDetailPage({
               <p className="mt-2 text-sm text-ink-600">A parent attention request was sent during this session.</p>
             ) : null}
             {report ? (
-              <div className="mt-2 space-y-3 text-sm text-ink-700">
-                <p className="whitespace-pre-wrap">{report.work_summary}</p>
-                <p>
-                  <span className="text-ink-400">Focus · </span>
-                  {FOCUS_LABELS[report.focus_rating] ?? report.focus_rating}
-                </p>
-                <p>
-                  <span className="text-ink-400">Redirection · </span>
-                  {REDIRECTION_LABELS[report.redirection_level] ?? report.redirection_level}
-                </p>
-                {report.guide_note ? (
-                  <p>
-                    <span className="text-ink-400">Note from Guide · </span>
-                    {report.guide_note}
-                  </p>
-                ) : null}
+              <div className="mt-2 space-y-5 text-sm text-ink-700">
+                {(report.children && report.children.length > 1 ? report.children : null)?.map((child) => (
+                  <div key={child.student_id} className="space-y-2 border-b border-ink-100 pb-4 last:border-0 last:pb-0">
+                    <p className="font-medium text-ink-900">{firstNameOf(child.student_first_name)}</p>
+                    <p className="whitespace-pre-wrap">{child.work_summary}</p>
+                    <p>
+                      <span className="text-ink-400">Focus · </span>
+                      {FOCUS_LABELS[child.focus_rating] ?? child.focus_rating}
+                    </p>
+                    <p>
+                      <span className="text-ink-400">Redirection · </span>
+                      {REDIRECTION_LABELS[child.redirection_level] ?? child.redirection_level}
+                    </p>
+                    {child.guide_note ? (
+                      <p>
+                        <span className="text-ink-400">Note from Guide · </span>
+                        {child.guide_note}
+                      </p>
+                    ) : null}
+                  </div>
+                )) ?? (
+                  <>
+                    <p className="whitespace-pre-wrap">{report.work_summary}</p>
+                    <p>
+                      <span className="text-ink-400">Focus · </span>
+                      {FOCUS_LABELS[report.focus_rating] ?? report.focus_rating}
+                    </p>
+                    <p>
+                      <span className="text-ink-400">Redirection · </span>
+                      {REDIRECTION_LABELS[report.redirection_level] ?? report.redirection_level}
+                    </p>
+                    {report.guide_note ? (
+                      <p>
+                        <span className="text-ink-400">Note from Guide · </span>
+                        {report.guide_note}
+                      </p>
+                    ) : null}
+                  </>
+                )}
               </div>
             ) : (
               <p className="mt-2 text-sm text-ink-500">No report yet.</p>

@@ -53,7 +53,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Can siblings participate?",
-    a: "You can book separate Study Halls for siblings from the same parent account. Each session is one child with one Guide. The free first session applies once per account.",
+    a: "Yes. Up to three children from the same household can join one Study Hall — one time, one Guide, one room — at no extra cost. The price is based on session length, not the number of children. The free first Study Hall is one per account and may include up to three children.",
   },
   {
     q: "Can I cancel?",
