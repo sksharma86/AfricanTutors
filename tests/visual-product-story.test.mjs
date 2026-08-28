@@ -31,9 +31,9 @@ describe("Visual product story — homepage contracts", () => {
   it("parent portal showcase is one composition, not a four-card grid", () => {
     const portal = read("src/components/marketing/product-showcase.tsx");
     assert.match(portal, /Next Study Hall/);
-    assert.match(portal, /Prepaid Hours/);
+    assert.match(portal, /11 hours/);
     assert.match(portal, /View report|Recording ready/);
-    assert.match(portal, /Study Halls/);
+    assert.match(portal, /PARENT_PORTAL_NAV|Study Halls/);
     assert.doesNotMatch(portal, /Matching complete|America\/Chicago|Dashboard \/ Book/);
     assert.doesNotMatch(portal, /ProductStreakCard|ProductHoursCard|sm:grid-cols-2[\s\S]*ProductReportCard/);
   });

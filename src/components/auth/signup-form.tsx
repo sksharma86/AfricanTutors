@@ -35,7 +35,7 @@ export function SignupForm({
 } = {}) {
   const router = useRouter();
   const submittingRef = useRef(false);
-  const [role, setRole] = useState<RequestableRole>(defaultRole);
+  const role = defaultRole;
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [signedUpEmail, setSignedUpEmail] = useState("");
@@ -117,45 +117,15 @@ export function SignupForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       {!isSupabaseConfigured ? <AuthNotConfiguredNotice /> : null}
 
-      <fieldset disabled={!isSupabaseConfigured}>
-        <legend className="block text-sm font-medium text-ink-800">I want to</legend>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          {(
-            [
-              { value: "student", label: "I'm a parent" },
-              { value: "tutor", label: "Become a Guide" },
-            ] as const
-          ).map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-medium ${
-                role === option.value
-                  ? "border-ink-900 bg-ink-900 text-white"
-                  : "border-ink-200 text-ink-700 hover:border-ink-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name="role"
-                value={option.value}
-                checked={role === option.value}
-                onChange={() => setRole(option.value)}
-                className="sr-only"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-        {role === "tutor" ? (
-          <p className="mt-2 text-xs text-ink-400">
-            Guide applications are reviewed by our team before you get full Guide access.
-          </p>
-        ) : null}
-      </fieldset>
+      {role === "tutor" ? (
+        <p className="text-xs leading-5 text-ink-400">
+          Guide applications are reviewed by our team before you get full Guide access.
+        </p>
+      ) : null}
 
       <div>
         <label htmlFor="displayName" className="block text-sm font-medium text-ink-800">
-          Display name
+          Full name
         </label>
         <input
           id="displayName"
@@ -164,8 +134,7 @@ export function SignupForm({
           required
           disabled={!isSupabaseConfigured}
           autoComplete="name"
-          placeholder="This is what other platform users will see"
-          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none placeholder:text-ink-300 focus:border-ink-400 disabled:bg-ink-50"
+          className="mt-1.5 w-full rounded-lg border border-ink-200 px-3.5 py-2.5 text-sm text-ink-900 outline-none focus:border-ink-400 disabled:bg-ink-50"
         />
       </div>
 
@@ -205,6 +174,15 @@ export function SignupForm({
       <Button type="submit" disabled={!isSupabaseConfigured || status === "submitting"} className="w-full">
         {status === "submitting" ? "Creating account..." : submitLabel}
       </Button>
+
+      {defaultRole === "student" ? (
+        <p className="text-center text-sm text-ink-400">
+          Applying as a Guide?{" "}
+          <Link href="/guides/apply" className="font-medium text-ink-700 underline-offset-4 hover:underline">
+            Start an application
+          </Link>
+        </p>
+      ) : null}
     </form>
   );
 }

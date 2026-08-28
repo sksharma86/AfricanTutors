@@ -15,8 +15,8 @@ const PILLARS = [
     body: "Sessions are recorded for quality and safety. Parents can review completed Study Halls.",
   },
   {
-    title: "You’re always reachable",
-    body: "A Guide can contact you through Call Parent without seeing your personal number.",
+    title: "Parent contact when needed",
+    body: "A Guide can reach you when necessary without seeing your private phone number.",
   },
 ] as const;
 

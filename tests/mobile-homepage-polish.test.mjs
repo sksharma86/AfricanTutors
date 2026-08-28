@@ -9,6 +9,7 @@ const home = [
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/trust-row.tsx",
   "src/components/marketing/live-studyhall.tsx",
+  "src/components/marketing/habit-building.tsx",
   "src/components/marketing/steps.tsx",
   "src/components/marketing/product-showcase.tsx",
   "src/components/marketing/why-african-tutors.tsx",
@@ -56,12 +57,13 @@ describe("Mobile homepage polish", () => {
 
   it("parent portal mock uses current destinations, not the old dashboard tabs", () => {
     const portal = read("src/components/marketing/product-showcase.tsx");
-    assert.match(portal, /Home/);
-    assert.match(portal, /Study Halls/);
-    assert.match(portal, /Hours/);
-    assert.match(portal, /Account/);
+    assert.match(portal, /PARENT_PORTAL_NAV/);
+    assert.match(portal, /Reports & Recordings|item\.label/);
+    assert.match(portal, /11 hours/);
+    assert.match(portal, /Buy hours &amp; save/);
     assert.doesNotMatch(portal, /Matching complete/);
     assert.doesNotMatch(portal, /Available for 60 days/);
+    assert.doesNotMatch(portal, /11h 30m|11 hours 30|30m/);
   });
 
   it("pricing separates the free hour from paid choices and does not change values", () => {
@@ -79,7 +81,8 @@ describe("Mobile homepage polish", () => {
     assert.match(trust, /Highly vetted Guides/);
     assert.match(trust, /Private, on-platform sessions/);
     assert.match(trust, /Recorded for safety/);
-    assert.match(trust, /always reachable/);
+    assert.match(trust, /Parent contact when needed/);
+    assert.doesNotMatch(trust, /always reachable/i);
     assert.doesNotMatch(trust, /tutor-portrait|Not stored forever|60 days/);
   });
 
@@ -88,13 +91,14 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach|do not complete homework/i);
   });
 
-  it("homepage section order stays hero → visual → live → steps → portal → why → pricing → trust → faq → cta", () => {
+  it("homepage section order stays hero → visual → live → habits → steps → portal → why → pricing → trust → faq → cta", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
       "SiteHero",
       "TrustRow",
       "LiveStudyHallDemo",
+      "HabitBuilding",
       "Steps",
       "ProductShowcase",
       "WhyStudyHall",
@@ -109,5 +113,73 @@ describe("Mobile homepage polish", () => {
       assert.ok(i > last, `${name} must follow previous section`);
       last = i;
     }
+  });
+});
+
+describe("Homepage long-term value + product accuracy", () => {
+  it("habit-building section states developmental positioning without guarantees", () => {
+    const habits = read("src/components/marketing/habit-building.tsx");
+    assert.match(habits, /More than homework supervision/);
+    assert.match(habits, /finish tonight/);
+    assert.match(habits, /better student/i);
+    assert.match(habits, /Accountability Guide/);
+    assert.match(habits, /Tonight/);
+    assert.match(habits, /Routine/);
+    assert.match(habits, /Independence/);
+    assert.match(habits, /habits can last far longer/);
+    assert.doesNotMatch(habits, /guarantee|GPA|better grades|according to|study of|citation/i);
+    assert.doesNotMatch(habits, /always need an Accountability Guide/i);
+  });
+
+  it("uses Accountability Guide selectively, not as a sitewide rename", () => {
+    const mentions = home.match(/Accountability Guide/g) ?? [];
+    assert.ok(mentions.length >= 1 && mentions.length <= 3, `expected 1–3 uses, got ${mentions.length}`);
+    assert.match(read("src/components/marketing/steps.tsx"), /Their Guide/);
+    assert.doesNotMatch(read("src/components/marketing/steps.tsx"), /Accountability Guide/);
+  });
+
+  it("homepage marketing does not make absolute academic promises", () => {
+    assert.doesNotMatch(home, /guarantees better grades|GPA|will become independent|guaranteed memory/i);
+  });
+
+  it("live Study Hall makes the Guide the dominant tile and the child a PIP", () => {
+    const live = read("src/components/marketing/live-studyhall.tsx");
+    const guide = live.indexOf("tutor-portrait.jpg");
+    const child = live.indexOf("studyhall-focus-close.webp");
+    assert.ok(guide > -1 && child > -1);
+    assert.ok(guide < child, "Guide portrait should render as the main stage before the child PIP");
+    assert.match(live, /max-w-\[9\.5rem\]|max-w-\[11rem\]/);
+    assert.doesNotMatch(live, /sm:grid-cols-\[1\.35fr_0\.85fr\]/);
+  });
+
+  it("parent portal mock matches current nav and whole-hour prepaid copy", () => {
+    const portal = read("src/components/marketing/product-showcase.tsx");
+    const nav = read("src/lib/parent-portal.mjs");
+    assert.match(nav, /Reports & Recordings/);
+    assert.match(portal, /Join Study Hall/);
+    assert.match(portal, /rounded-\[12px\]/);
+    assert.doesNotMatch(portal, /Dashboard \/ Book|America\/Chicago|Matching complete/);
+    assert.doesNotMatch(home + read("src/components/marketing/product-visuals.tsx"), /11h 30m/);
+  });
+
+  it("signup is a parent account, not a public marketplace", () => {
+    const signup = read("src/components/auth/signup-form.tsx");
+    const page = read("src/app/(marketing)/signup/page.tsx");
+    const apply = read("src/app/(marketing)/apply-to-tutor/page.tsx");
+    assert.match(page, /Create your parent account/);
+    assert.match(signup, /Full name/);
+    assert.match(signup, /name="displayName"/);
+    assert.match(signup, /requested_role: role/);
+    assert.match(signup, /\/guides\/apply/);
+    assert.match(apply, /defaultRole="tutor"/);
+    assert.match(apply, /Submit Application/);
+    assert.doesNotMatch(signup, /Display name|platform users|I'm a parent|Become a Guide/);
+    assert.doesNotMatch(page, /Parents book Study Hall|Guides apply separately|marketplace|browse Guides/i);
+    assert.doesNotMatch(signup, /grid-cols-2 gap-3/);
+  });
+
+  it("recording copy stays restrained on the homepage", () => {
+    assert.doesNotMatch(home, /60 days|not stored permanently|recordings deleted/i);
+    assert.match(read("src/lib/faq.ts"), /60 days after the Study Hall/);
   });
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CtaSection } from "@/components/marketing/cta-section";
 import { Faq } from "@/components/marketing/faq";
+import { HabitBuilding } from "@/components/marketing/habit-building";
 import { LiveStudyHallDemo } from "@/components/marketing/live-studyhall";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
@@ -19,7 +20,7 @@ import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
   title: "Live Online Study Hall for Families",
-  description: `Live online homework supervision for families. A highly vetted Guide keeps your child focused while they do their own work. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
+  description: `Live online homework supervision for families. An Accountability Guide keeps your child focused tonight — and helps reinforce the study habits that last. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
   alternates: { canonical: "/" },
 };
 
@@ -53,6 +54,7 @@ export default async function HomePage() {
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
       <TrustRow />
       <LiveStudyHallDemo />
+      <HabitBuilding />
       <Steps />
       <ProductShowcase />
       <WhyStudyHall />

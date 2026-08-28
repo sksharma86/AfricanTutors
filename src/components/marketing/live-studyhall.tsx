@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/container";
 
 /**
  * Marketing demonstration of the live Study Hall experience.
+ * Guide is the dominant remote participant; the child appears as a small self-view.
  * Real session chrome, no invented Daily controls, no Guide SOP copy.
  */
 export function LiveStudyHallDemo() {
@@ -58,31 +59,34 @@ export function LiveStudyHallDemo() {
             </span>
           </div>
 
-          <div className="grid gap-3 p-3 sm:grid-cols-[1.35fr_0.85fr] sm:p-4">
-            <div className="sh-stage sh-stage-2 relative aspect-[16/11] overflow-hidden rounded-xl bg-black">
-              <Image
-                src="/images/marketing/studyhall-focus-close.webp"
-                alt="Child working independently during Study Hall"
-                fill
-                sizes="(max-width: 768px) 100vw, 60vw"
-                className="object-cover object-[40%_30%]"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
-                <p className="text-sm font-medium">Jordan</p>
-                <p className="text-xs text-white/55">Working independently</p>
-              </div>
-            </div>
-            <div className="sh-stage sh-stage-2 relative min-h-[11rem] overflow-hidden rounded-xl bg-black sm:min-h-0">
+          <div className="sh-stage sh-stage-2 relative aspect-[4/5] p-3 sm:aspect-[16/10] sm:p-4">
+            <div className="relative h-full overflow-hidden rounded-xl bg-black">
               <Image
                 src="/images/tutor-portrait.jpg"
-                alt="Guide present on video"
+                alt="Guide present on video during Study Hall"
                 fill
-                sizes="(max-width: 768px) 100vw, 30vw"
+                sizes="100vw"
                 className="object-cover object-[50%_18%]"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
                 <p className="text-sm font-medium">James</p>
                 <p className="text-xs text-white/55">Your Guide</p>
+              </div>
+            </div>
+
+            <div className="absolute right-6 bottom-6 w-[34%] max-w-[9.5rem] overflow-hidden rounded-xl border border-white/20 bg-black shadow-[0_16px_36px_-18px_rgba(0,0,0,0.75)] sm:right-8 sm:bottom-8 sm:max-w-[11rem]">
+              <div className="relative aspect-[4/5]">
+                <Image
+                  src="/images/marketing/studyhall-focus-close.webp"
+                  alt="Child working independently"
+                  fill
+                  sizes="140px"
+                  className="object-cover object-[40%_30%]"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2.5 py-2">
+                  <p className="text-[11px] font-medium">Jordan</p>
+                  <p className="text-[10px] text-white/55">Working independently</p>
+                </div>
               </div>
             </div>
           </div>
