@@ -22,7 +22,7 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
     supabase
       .from("bookings")
       .select(
-        "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, students(full_name, timezone)",
+        "id, student_id, public_reference, subject_name, other_subject_text, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, payment_status, tutor_display_name, students!student_id(full_name, timezone)",
       )
       .order("scheduled_start", { ascending: true, nullsFirst: false }),
     supabase.from("students").select("id, full_name, grade_level").order("created_at").limit(50),

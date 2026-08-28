@@ -39,7 +39,7 @@ export async function loadManagementWorkspace(supabase: SB) {
     supabase
       .from("bookings")
       .select(
-        "id, public_reference, account_id, student_id, tutor_id, student_first_name, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students(full_name, timezone)",
+        "id, public_reference, account_id, student_id, tutor_id, student_first_name, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students!student_id(full_name, timezone)",
       )
       .order("scheduled_start", { ascending: false, nullsFirst: false })
       .limit(400),

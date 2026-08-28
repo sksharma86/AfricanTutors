@@ -231,4 +231,10 @@ describe("Portal affordance — IA and routes stay the same", () => {
     assert.doesNotMatch(parentHalls, /book_session|session_list_price_cents|authorize_session_join/);
     assert.doesNotMatch(guideHalls, /comp_rate_cents_per_hour|stripe|rpc\(/);
   });
+
+  it("keeps the existing student_id booking embed explicit so status rows can load", () => {
+    assert.match(read("src/lib/parent-portal-data.ts"), /students!student_id\(/);
+    assert.match(read("src/lib/management-data.ts"), /students!student_id\(/);
+    assert.doesNotMatch(read("src/lib/parent-portal-data.ts"), /booking_children|session_report_children/);
+  });
 });
