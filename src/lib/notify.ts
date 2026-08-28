@@ -547,6 +547,7 @@ export async function notifySessionReportReady(bookingId: string, reportId: stri
       whenISO: b.scheduled_start,
       tz: b.studentTz,
       appUrl: APP_URL,
+      bookingId,
     }),
   });
 }

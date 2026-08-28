@@ -35,8 +35,24 @@ export const REDIRECTION_LABELS = Object.freeze({
   several_times: "Several times",
 });
 
+/** Parent recap uses short natural words, not the stored enum or Guide radio text. */
+export const PARENT_FOCUS_LABELS = Object.freeze({
+  great_focus: "Great",
+  good_focus: "Good",
+  needed_redirection: "Needed some redirection",
+  difficult_session: "Had difficulty staying focused",
+});
+
 export const WORK_SUMMARY_MAX = 280;
 export const GUIDE_NOTE_MAX = 280;
+export const WORK_COMPLETED_PLACEHOLDER = "e.g. Math worksheet and 20 minutes of reading";
+export const WORK_COMPLETED_HINT = "Name the work if you can — not just “homework.”";
+
+export function parentFocusLabel(value) {
+  if (value && PARENT_FOCUS_LABELS[value]) return PARENT_FOCUS_LABELS[value];
+  if (value && FOCUS_LABELS[value]) return FOCUS_LABELS[value];
+  return value || "";
+}
 
 /**
  * @param {string | null | undefined} value

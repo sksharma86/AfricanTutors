@@ -100,6 +100,7 @@ describe("Study Hall PR6 — session reports (source)", () => {
     const page = read("src/app/dashboard/student/reports/page.tsx");
     const list = read("src/components/dashboard/session-reports-list.tsx");
     const detail = read("src/app/dashboard/student/study-halls/[bookingId]/page.tsx");
+    const recap = read("src/components/dashboard/parent-session-recap.tsx");
     assert.match(page, /id="reports"/);
     assert.match(page, /not grades or academic assessments/i);
     assert.match(page, /Read report/);
@@ -107,8 +108,9 @@ describe("Study Hall PR6 — session reports (source)", () => {
     assert.match(list, /Focus|Redirection|Note from Guide/);
     assert.doesNotMatch(list, /grade point|mastery|tutoring results|academic diagnosis/i);
     assert.match(list, /max-w-|sm:|flex-col|rounded-2xl/);
-    assert.match(detail, /FOCUS_LABELS|Focus/);
-    assert.match(detail, /Note from Guide/);
+    assert.match(detail, /ParentSessionRecap/);
+    assert.match(recap, /Worked on/);
+    assert.match(recap, /Guide note/);
   });
 
   it("reports are final on submission (no edit RPC / update policy)", () => {

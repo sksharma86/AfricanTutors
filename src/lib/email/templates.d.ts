@@ -57,6 +57,7 @@ export function sessionReportReady(ctx: {
   whenISO?: string | null;
   tz?: string | null;
   appUrl?: string | null;
+  bookingId?: string | null;
 }): RenderedEmail;
 export function disputeResolved(ctx: {
   resolution: string;

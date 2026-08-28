@@ -55,7 +55,11 @@ export default async function ParentReportsPage() {
                     ) : null}
                     <p className="mt-3 text-sm text-ink-700">
                       {report ? (
-                        <span className="whitespace-pre-wrap">{report.work_summary}</span>
+                        report.children && report.children.length > 1 ? (
+                          <span>Report ready</span>
+                        ) : (
+                          <span className="whitespace-pre-wrap">{report.work_summary}</span>
+                        )
                       ) : (
                         <span className="text-ink-500">No report yet</span>
                       )}

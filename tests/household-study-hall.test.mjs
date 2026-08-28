@@ -211,9 +211,13 @@ describe("Household Study Hall — reports & portals", () => {
 
   it("parent detail organizes multi-child reports and lists children", () => {
     const page = read("src/app/dashboard/student/study-halls/[bookingId]/page.tsx");
+    const recap = read("src/components/dashboard/parent-session-recap.tsx");
     assert.match(page, /Children/);
-    assert.match(page, /report\.children/);
+    assert.match(page, /ParentSessionRecap/);
     assert.match(page, /bookingChildNames/);
+    assert.match(recap, /report\.children/);
+    assert.match(recap, /Worked on/);
+    assert.match(recap, /Guide note/);
     const parentData = read("src/lib/parent-portal-data.ts");
     assert.match(parentData, /students!student_id\(full_name, timezone\)/);
     const mgmt = read("src/lib/management-data.ts");

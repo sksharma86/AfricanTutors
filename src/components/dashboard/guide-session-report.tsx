@@ -3,12 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 import {
   FOCUS_LABELS,
   FOCUS_RATINGS,
   GUIDE_NOTE_MAX,
   REDIRECTION_LABELS,
   REDIRECTION_LEVELS,
+  WORK_COMPLETED_HINT,
+  WORK_COMPLETED_PLACEHOLDER,
   WORK_SUMMARY_MAX,
   type FocusRating,
   type RedirectionLevel,
@@ -184,14 +188,9 @@ export function GuideSessionReport({
             )}
 
           <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={submit}
-              disabled={busy}
-              className="flex-1 rounded-lg bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink-800 disabled:opacity-50"
-            >
+            <Button type="button" onClick={submit} disabled={busy} variant="primary" size="sm" className="flex-1">
               {busy ? "Submitting…" : "Submit report"}
-            </button>
+            </Button>
             {variant === "inline" ? (
               <button
                 type="button"
@@ -261,9 +260,10 @@ function ChildFields({
           onChange={(e) => onChange({ work: e.target.value.slice(0, WORK_SUMMARY_MAX) })}
           rows={2}
           maxLength={WORK_SUMMARY_MAX}
-          placeholder="e.g. Math worksheet, reading chapter 4"
+          placeholder={WORK_COMPLETED_PLACEHOLDER}
           className="mt-1 w-full rounded-lg border border-ink-200 px-2 py-1.5 text-xs text-ink-800"
         />
+        <span className="mt-0.5 block text-[10px] text-ink-400">{WORK_COMPLETED_HINT}</span>
         <span className="mt-0.5 block text-right text-[10px] text-ink-400">
           {draft.work.length}/{WORK_SUMMARY_MAX}
         </span>
