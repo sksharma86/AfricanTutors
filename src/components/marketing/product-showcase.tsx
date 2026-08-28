@@ -29,7 +29,7 @@ export function ProductShowcase() {
                 </p>
                 <span className="text-sm font-medium text-ink-600">Book</span>
               </div>
-              <div className="flex gap-1.5 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+              <div className="flex flex-wrap gap-1.5 px-4 pb-2.5 sm:px-6">
                 {PARENT_PORTAL_NAV.map((item, i) => (
                   <span
                     key={item.href}
