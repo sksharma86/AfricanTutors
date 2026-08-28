@@ -152,7 +152,7 @@ describe("Portal affordance — action hierarchy", () => {
     assert.match(row, /LinkButton/);
     assert.match(row, /variant="outline"/);
     assert.match(row, />\s*View\s*</);
-    assert.match(recent, /View report/);
+    assert.match(recent, /Read report/);
     assert.match(recent, /variant="outline"/);
     assert.match(watch, /variant="outline"/);
     assert.match(watch, /Watch recording/);

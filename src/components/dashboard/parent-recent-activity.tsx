@@ -2,8 +2,8 @@ import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
 import { LinkButton } from "@/components/ui/button";
 import { bookingChildNames } from "@/lib/household-children.mjs";
+import { parentRecordingHomeLabel } from "@/lib/parent-next-step.mjs";
 import { childFirstName, parentGuideLabel } from "@/lib/parent-portal.mjs";
-import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { formatDayHeading } from "@/lib/timezone";
 import type { ParentBooking, ParentRecording, ParentReport } from "@/lib/parent-portal-types";
 
@@ -25,15 +25,7 @@ export function ParentRecentActivity({
   const child = bookingChildNames(booking, childFirstName(booking.students?.full_name));
   const guide = parentGuideLabel(booking);
   const playable = recording?.status === "completed" && !recording.deleted_at;
-  const recLabel = !recording
-    ? null
-    : recording.status === "failed"
-      ? "Recording unavailable"
-      : recording.deleted_at
-        ? "Recording expired"
-        : recording.status !== "completed"
-          ? "Recording processing"
-          : recordingAvailabilityLabel(recording.retention_until);
+  const recLabel = parentRecordingHomeLabel(recording);
 
   return (
     <ParentSurface>
@@ -49,8 +41,8 @@ export function ParentRecentActivity({
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {report ? (
-          <LinkButton href={`/dashboard/student/reports#hall-${booking.id}`} variant="outline" size="sm">
-            View report
+          <LinkButton href={`/dashboard/student/study-halls/${booking.id}`} variant="outline" size="sm">
+            Read report
           </LinkButton>
         ) : (
           <LinkButton href={`/dashboard/student/study-halls/${booking.id}`} variant="outline" size="sm">

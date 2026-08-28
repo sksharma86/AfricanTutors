@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentHashRedirect } from "@/components/dashboard/parent-hash-redirect";
+import { ParentNextStep } from "@/components/dashboard/parent-next-step";
 import { ParentNextStudyHall } from "@/components/dashboard/parent-next-study-hall";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentRecentActivity } from "@/components/dashboard/parent-recent-activity";
 import { requireRole } from "@/lib/auth";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { parentPostSessionOffer } from "@/lib/parent-next-step.mjs";
 import { lastCompletedStudyHall, parentStudyHallLists } from "@/lib/parent-portal.mjs";
 import { loadParentWorkspace } from "@/lib/parent-portal-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -37,6 +39,13 @@ export default async function StudentDashboardPage() {
   const freeTrialAvailable = !accountFreeTrialUsed(data.bookings);
   const { next } = parentStudyHallLists(data.bookings);
   const last = lastCompletedStudyHall(data.bookings);
+  const lastReport = last ? data.reportByBooking.get(last.id) ?? null : null;
+  const nextStep = parentPostSessionOffer({
+    bookings: data.bookings,
+    last,
+    report: lastReport,
+    minutes: data.minutes,
+  });
   const firstName = (user.displayName ?? "").split(" ")[0];
 
   return (
@@ -58,8 +67,21 @@ export default async function StudentDashboardPage() {
         <div className="mt-5">
           <ParentRecentActivity
             booking={last}
-            report={data.reportByBooking.get(last.id) ?? null}
+            report={lastReport}
             recording={data.recordingByBooking.get(last.id) ?? null}
+          />
+        </div>
+      ) : null}
+
+      {nextStep.kind === "free_convert" || nextStep.kind === "repeat" ? (
+        <div className="mt-5">
+          <ParentNextStep
+            kind={nextStep.kind}
+            headline={nextStep.headline}
+            body={nextStep.body}
+            bookLabel={nextStep.bookLabel}
+            bookHref={nextStep.bookHref}
+            showBuyHours={nextStep.showBuyHours}
           />
         </div>
       ) : null}

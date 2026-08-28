@@ -132,7 +132,7 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(next, /bookingChildNames/);
     assert.match(surface, /before:bg-gold-400/);
     assert.match(recent, /Last Study Hall/);
-    assert.match(recent, /View report/);
+    assert.match(recent, /Read report/);
     assert.match(recent, /ParentSurface/);
     assert.doesNotMatch(recent, /featured/);
   });
@@ -191,8 +191,8 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
   it("Recent Activity is one completed Study Hall with report + recording", () => {
     const recent = read("src/components/dashboard/parent-recent-activity.tsx");
     assert.match(recent, /Report ready/);
-    assert.match(recent, /View report/);
-    assert.match(recent, /Recording processing|Recording unavailable|recordingAvailabilityLabel/);
+    assert.match(recent, /Read report/);
+    assert.match(recent, /parentRecordingHomeLabel|Recording processing|Recording ready/);
     const last = lastCompletedStudyHall([
       booking({ id: "old", status: "completed", scheduled_start: "2026-08-20T00:00:00Z" }),
       booking({ id: "new", status: "completed", scheduled_start: "2026-08-25T00:00:00Z" }),
@@ -294,7 +294,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.match(detail, /Booking reference/);
     assert.match(detail, /parentPaymentLineLabel|Paid or covered by hours|Free session/);
     assert.match(detail, /Join Study Hall/);
-    assert.match(detail, /Available for 60 days after the Study Hall/);
+    assert.match(read("src/components/dashboard/parent-session-recap.tsx"), /Available for 60 days after the Study Hall/);
     assert.doesNotMatch(detail, /daily_room|share_token|webhook|CRON|comp_rate/);
   });
 

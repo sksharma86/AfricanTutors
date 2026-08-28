@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
+import { ParentCompletedHeader, ParentSessionRecap } from "@/components/dashboard/parent-session-recap";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
-import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
 import { LinkButton } from "@/components/ui/button";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { requireRole } from "@/lib/auth";
@@ -19,9 +19,7 @@ import {
   parentPaymentLineLabel,
   parentStatusLabel,
 } from "@/lib/parent-portal.mjs";
-import { FOCUS_LABELS, REDIRECTION_LABELS } from "@/lib/session-report.mjs";
 import { loadParentWorkspace, recordingSummary } from "@/lib/parent-portal-data";
-import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { issueStatus } from "@/lib/status-labels.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
@@ -62,156 +60,118 @@ export default async function ParentStudyHallDetailPage({
         <PortalTextLink href="/dashboard/student/study-halls">← Study Halls</PortalTextLink>
       </p>
 
-      <ParentSurface featured={!isPast}>
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
-          {bookingChildNames(booking)}
-        </h1>
-        <p data-kind="status" className="mt-1 text-sm text-ink-500">
-          {parentStatusLabel(booking)}
-        </p>
-
-        <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">When</dt>
-            <dd className="mt-1 text-ink-800">
-              {booking.scheduled_start
+      {isPast ? (
+        <div className="space-y-6">
+          <ParentCompletedHeader
+            when={
+              booking.scheduled_start
                 ? `${formatDayHeading(booking.scheduled_start, tz)} · ${formatTime(booking.scheduled_start, tz)}${
                     booking.scheduled_end ? ` – ${formatTime(booking.scheduled_end, tz)}` : ""
-                  } (${tzAbbreviation(booking.scheduled_start, tz)})`
-                : "Time to confirm"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Guide</dt>
-            <dd className="mt-1 text-ink-800">{parentGuideLabel(booking) ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Length</dt>
-            <dd className="mt-1 text-ink-800">{booking.duration_minutes ? formatDuration(booking.duration_minutes) : "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Payment</dt>
-            <dd className="mt-1 text-ink-800">{parentPaymentLineLabel(booking)}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">
-              {bookingChildCount(booking) > 1 ? "Children" : "Child"}
-            </dt>
-            <dd className="mt-1 text-ink-800">
-              {booking.student_first_names && booking.student_first_names.length > 1 ? (
-                <ul className="space-y-0.5">
-                  {booking.student_first_names.map((name) => (
-                    <li key={name}>{firstNameOf(name)}</li>
-                  ))}
-                </ul>
-              ) : (
-                bookingChildNames(booking)
-              )}
-            </dd>
-          </div>
-        </dl>
-        <p className="mt-4 text-xs text-ink-400">Booking reference {booking.public_reference}</p>
-
-        {join.state === "join" ? (
-          <div className="mt-6">
-            <LinkButton href={`/dashboard/session/${booking.id}`} variant="primary" size="lg">
-              Join Study Hall
-            </LinkButton>
-          </div>
-        ) : join.state === "opens_at" && join.label ? (
-          <p className="mt-6 text-sm font-medium text-ink-600">{join.label}</p>
-        ) : null}
-
-        {booking.request_note ? <p className="mt-5 text-sm text-ink-600">{booking.request_note}</p> : null}
-
-        {canCancel || canDispute ? (
-          <div className="mt-6">
-            <CustomerBookingActions
-              bookingId={booking.id}
-              canCancel={canCancel}
-              canDispute={canDispute}
-              scheduledStartISO={booking.scheduled_start}
+                  }`
+                : "Recently"
+            }
+            childrenLine={bookingChildNames(booking)}
+            guide={parentGuideLabel(booking)}
+          />
+          <ParentSurface>
+            <ParentSessionRecap
+              report={report}
+              recording={recView}
+              escalated={data.escalatedBookings.has(booking.id)}
             />
-          </div>
-        ) : null}
-      </ParentSurface>
-
-      {isPast ? (
-        <div className="mt-6 space-y-6">
-          <section>
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Report</p>
-            {data.escalatedBookings.has(booking.id) ? (
-              <p className="mt-2 text-sm text-ink-600">A parent attention request was sent during this session.</p>
+            <p className="mt-5 text-xs text-ink-400">
+              {parentPaymentLineLabel(booking)}
+              {booking.public_reference ? ` · Booking reference ${booking.public_reference}` : ""}
+            </p>
+            {canDispute ? (
+              <div className="mt-4">
+                <CustomerBookingActions
+                  bookingId={booking.id}
+                  canCancel={canCancel}
+                  canDispute={canDispute}
+                  scheduledStartISO={booking.scheduled_start}
+                />
+              </div>
             ) : null}
-            {report ? (
-              <div className="mt-2 space-y-5 text-sm text-ink-700">
-                {(report.children && report.children.length > 1 ? report.children : null)?.map((child) => (
-                  <div key={child.student_id} className="space-y-2 border-b border-ink-100 pb-4 last:border-0 last:pb-0">
-                    <p className="font-medium text-ink-900">{firstNameOf(child.student_first_name)}</p>
-                    <p className="whitespace-pre-wrap">{child.work_summary}</p>
-                    <p>
-                      <span className="text-ink-400">Focus · </span>
-                      {FOCUS_LABELS[child.focus_rating] ?? child.focus_rating}
-                    </p>
-                    <p>
-                      <span className="text-ink-400">Redirection · </span>
-                      {REDIRECTION_LABELS[child.redirection_level] ?? child.redirection_level}
-                    </p>
-                    {child.guide_note ? (
-                      <p>
-                        <span className="text-ink-400">Note from Guide · </span>
-                        {child.guide_note}
-                      </p>
-                    ) : null}
-                  </div>
-                )) ?? (
-                  <>
-                    <p className="whitespace-pre-wrap">{report.work_summary}</p>
-                    <p>
-                      <span className="text-ink-400">Focus · </span>
-                      {FOCUS_LABELS[report.focus_rating] ?? report.focus_rating}
-                    </p>
-                    <p>
-                      <span className="text-ink-400">Redirection · </span>
-                      {REDIRECTION_LABELS[report.redirection_level] ?? report.redirection_level}
-                    </p>
-                    {report.guide_note ? (
-                      <p>
-                        <span className="text-ink-400">Note from Guide · </span>
-                        {report.guide_note}
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-ink-500">No report yet.</p>
-            )}
-          </section>
-
-          <section>
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Recording</p>
-            {!recView ? (
-              <p className="mt-2 text-sm text-ink-500">No recording yet.</p>
-            ) : recView.status === "failed" ? (
-              <p className="mt-2 text-sm text-ink-600">Recording unavailable</p>
-            ) : recView.deleted_at || (!recView.playable && recView.status === "completed") ? (
-              <p className="mt-2 text-sm text-ink-600">Recording expired</p>
-            ) : recView.status !== "completed" ? (
-              <p className="mt-2 text-sm text-ink-600">Recording processing</p>
-            ) : (
-              <div className="mt-2">
-                <p className="text-sm text-ink-700">{recordingAvailabilityLabel(recView.retention_until)}</p>
-                <p className="text-xs text-ink-400">Available for 60 days after the Study Hall.</p>
-                <WatchRecordingButton recordingId={recView.id} />
-              </div>
-            )}
-          </section>
-
+          </ParentSurface>
           {issueView ? <p className="text-sm text-ink-500">{issueView.label}</p> : null}
         </div>
-      ) : null}
+      ) : (
+        <ParentSurface featured>
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall</p>
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+            {bookingChildNames(booking)}
+          </h1>
+          <p data-kind="status" className="mt-1 text-sm text-ink-500">
+            {parentStatusLabel(booking)}
+          </p>
+
+          <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">When</dt>
+              <dd className="mt-1 text-ink-800">
+                {booking.scheduled_start
+                  ? `${formatDayHeading(booking.scheduled_start, tz)} · ${formatTime(booking.scheduled_start, tz)}${
+                      booking.scheduled_end ? ` – ${formatTime(booking.scheduled_end, tz)}` : ""
+                    } (${tzAbbreviation(booking.scheduled_start, tz)})`
+                  : "Time to confirm"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Guide</dt>
+              <dd className="mt-1 text-ink-800">{parentGuideLabel(booking) ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Length</dt>
+              <dd className="mt-1 text-ink-800">{booking.duration_minutes ? formatDuration(booking.duration_minutes) : "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Payment</dt>
+              <dd className="mt-1 text-ink-800">{parentPaymentLineLabel(booking)}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">
+                {bookingChildCount(booking) > 1 ? "Children" : "Child"}
+              </dt>
+              <dd className="mt-1 text-ink-800">
+                {booking.student_first_names && booking.student_first_names.length > 1 ? (
+                  <ul className="space-y-0.5">
+                    {booking.student_first_names.map((name) => (
+                      <li key={name}>{firstNameOf(name)}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  bookingChildNames(booking)
+                )}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-4 text-xs text-ink-400">Booking reference {booking.public_reference}</p>
+
+          {join.state === "join" ? (
+            <div className="mt-6">
+              <LinkButton href={`/dashboard/session/${booking.id}`} variant="primary" size="lg">
+                Join Study Hall
+              </LinkButton>
+            </div>
+          ) : join.state === "opens_at" && join.label ? (
+            <p className="mt-6 text-sm font-medium text-ink-600">{join.label}</p>
+          ) : null}
+
+          {booking.request_note ? <p className="mt-5 text-sm text-ink-600">{booking.request_note}</p> : null}
+
+          {canCancel || canDispute ? (
+            <div className="mt-6">
+              <CustomerBookingActions
+                bookingId={booking.id}
+                canCancel={canCancel}
+                canDispute={canDispute}
+                scheduledStartISO={booking.scheduled_start}
+              />
+            </div>
+          ) : null}
+        </ParentSurface>
+      )}
     </ParentPage>
   );
 }

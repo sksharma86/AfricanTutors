@@ -258,18 +258,22 @@ export function disputeReceived(ctx) {
 /** Parent notification when a Guide submits the short post-session report. */
 export function sessionReportReady(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/student#reports";
+  const base = (ctx.appUrl || "").replace(/\/+$/, "");
+  const dash = ctx.bookingId
+    ? `${base}/dashboard/student/study-halls/${ctx.bookingId}`
+    : `${base}/dashboard/student#reports`;
   const lines = [
     ctx.studentName || (ctx.studentNames && ctx.studentNames.length)
       ? `${studyHallPhrase(ctx)} report is ready.`
       : "Your Study Hall report is ready.",
     `When: ${when}`,
     "It's a short note from the Guide about focus, what they worked on, and how the session went — not a grade or academic assessment.",
+    "Open your Parent account to read the report.",
   ];
   return {
     subject: "Your Study Hall report is ready",
-    html: layout("Study Hall report ready", lines.map(p).join(""), { href: dash, label: "View session reports" }),
-    text: textJoin([...lines, "", `View: ${dash}`]),
+    html: layout("Study Hall report ready", lines.map(p).join(""), { href: dash, label: "Read report" }),
+    text: textJoin([...lines, "", `Read report: ${dash}`]),
   };
 }
 
