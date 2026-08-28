@@ -37,7 +37,20 @@ export default async function AdminFinancePage() {
       supabase!
         .from("tutor_profiles")
         .select("profile_id, status, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)"),
-      supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, student_first_names, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
+      supabase!
+        .from("bookings")
+        .select("id, subject_name, scheduled_start, public_reference, student_first_name, student_first_names, tutor_id")
+        .order("scheduled_start", { ascending: false, nullsFirst: false })
+        .limit(300)
+        .then((r) =>
+          r.error && /student_first_names/i.test(r.error.message)
+            ? supabase!
+                .from("bookings")
+                .select("id, subject_name, scheduled_start, public_reference, student_first_name, tutor_id")
+                .order("scheduled_start", { ascending: false, nullsFirst: false })
+                .limit(300)
+            : r,
+        ),
     ]);
 
   // Recording metadata for the disputes under review (admin-only RLS).

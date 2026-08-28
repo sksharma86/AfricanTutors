@@ -20,3 +20,5 @@ export function bookingChildNames(
   fallback?: string,
 ): string;
 export function bookingChildCount(booking: { student_first_names?: string[] | null; child_count?: number | null } | null | undefined): number;
+export function missingHouseholdColumns(error: { message?: string } | null | undefined): boolean;
+export function missingStudentIdsRpc(error: { message?: string } | null | undefined): boolean;

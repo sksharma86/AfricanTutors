@@ -27,13 +27,16 @@ export default async function AdminStudyHallDetailPage({
   await requireRole("admin", `/dashboard/admin/study-halls/${bookingId}`);
   const supabase = await createSupabaseServerClient();
 
-  const { data: raw } = await supabase!
-    .from("bookings")
-    .select(
-      "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students(full_name, timezone)",
-    )
-    .eq("id", bookingId)
-    .maybeSingle();
+  const householdSelect =
+    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students(full_name, timezone)";
+  const legacySelect =
+    "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_grade, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, request_note, created_at, students(full_name, timezone)";
+  const first = await supabase!.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
+  const raw =
+    first.data ??
+    (first.error && /student_first_names|child_count/i.test(first.error.message)
+      ? (await supabase!.from("bookings").select(legacySelect).eq("id", bookingId).maybeSingle()).data
+      : null);
   if (!raw) notFound();
 
   const [
@@ -176,7 +179,7 @@ export default async function AdminStudyHallDetailPage({
         <Row label={bookingChildCount(raw as { student_first_names?: string[] | null; child_count?: number | null }) > 1 ? "Children" : "Child"}>
           {Array.isArray((raw as { student_first_names?: string[] }).student_first_names) &&
           ((raw as { student_first_names?: string[] }).student_first_names?.length ?? 0) > 1
-            ? ((raw as { student_first_names: string[] }).student_first_names.map((n) => firstNameOf(n)).join(", "))
+            ? (((raw as { student_first_names?: string[] }).student_first_names ?? []).map((n) => firstNameOf(n)).join(", "))
             : `${students?.full_name ?? raw.student_first_name ?? "—"}${raw.student_grade ? ` · Grade ${raw.student_grade}` : ""}`}
         </Row>
         <Row label="Booking reference">{raw.public_reference}</Row>

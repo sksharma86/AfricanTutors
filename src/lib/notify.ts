@@ -182,13 +182,31 @@ async function resolveFunding(
 }
 
 async function loadBooking(service: SupabaseClient, bookingId: string) {
-  const { data: b } = await service
-    .from("bookings")
-    .select(
-      "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names",
-    )
-    .eq("id", bookingId)
-    .maybeSingle();
+  const householdSelect =
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names";
+  const legacySelect =
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name";
+  const first = await service.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
+  const retry = first.data
+    ? null
+    : await service.from("bookings").select(legacySelect).eq("id", bookingId).maybeSingle();
+  const b = (first.data ?? retry?.data ?? null) as {
+    id: string;
+    account_id: string | null;
+    student_id: string | null;
+    tutor_id: string | null;
+    subject_name: string | null;
+    other_subject_text: string | null;
+    scheduled_start: string | null;
+    scheduled_end: string | null;
+    duration_minutes: number | null;
+    is_free_trial: boolean | null;
+    status: string | null;
+    payment_status: string | null;
+    tutor_display_name: string | null;
+    student_first_name: string | null;
+    student_first_names?: string[] | null;
+  } | null;
   if (!b) return null;
   let studentTz = "UTC";
   if (b.student_id) {

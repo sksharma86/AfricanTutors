@@ -50,7 +50,17 @@ export default async function AdminCustomerDetailPage({
         .select("id, student_first_name, student_first_names, tutor_display_name, scheduled_start, status, public_reference")
         .eq("account_id", accountId)
         .order("scheduled_start", { ascending: false, nullsFirst: false })
-        .limit(40),
+        .limit(40)
+        .then((r) =>
+          r.error && /student_first_names/i.test(r.error.message)
+            ? supabase!
+                .from("bookings")
+                .select("id, student_first_name, tutor_display_name, scheduled_start, status, public_reference")
+                .eq("account_id", accountId)
+                .order("scheduled_start", { ascending: false, nullsFirst: false })
+                .limit(40)
+            : r,
+        ),
       supabase!.rpc("get_customer_balances", { p_account: accountId }),
       supabase!
         .from("payments")

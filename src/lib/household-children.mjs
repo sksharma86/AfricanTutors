@@ -79,3 +79,13 @@ export function bookingChildCount(booking) {
   if (Number.isFinite(booking?.child_count) && booking.child_count > 0) return booking.child_count;
   return 1;
 }
+
+/** True when the live DB has not yet received migration 0031 household columns. */
+export function missingHouseholdColumns(error) {
+  return /student_first_names|child_count/i.test(String(error?.message ?? ""));
+}
+
+/** True when book_session / create_booking do not yet accept p_student_ids. */
+export function missingStudentIdsRpc(error) {
+  return /p_student_ids|could not find the function/i.test(String(error?.message ?? ""));
+}

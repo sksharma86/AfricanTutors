@@ -4,6 +4,7 @@ import {
   collectNeedsAttention as collectNeedsAttentionImpl,
   currentStudyHallIssues as currentStudyHallIssuesImpl,
 } from "@/lib/management-ops.mjs";
+import { missingHouseholdColumns } from "@/lib/household-children.mjs";
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const collectNeedsAttention = collectNeedsAttentionImpl as (input: object) => {
@@ -42,7 +43,18 @@ export async function loadManagementWorkspace(supabase: SB) {
         "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students(full_name, timezone)",
       )
       .order("scheduled_start", { ascending: false, nullsFirst: false })
-      .limit(400),
+      .limit(400)
+      .then((r) =>
+        r.error && missingHouseholdColumns(r.error)
+          ? supabase
+              .from("bookings")
+              .select(
+                "id, public_reference, account_id, student_id, tutor_id, student_first_name, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students(full_name, timezone)",
+              )
+              .order("scheduled_start", { ascending: false, nullsFirst: false })
+              .limit(400)
+          : r,
+      ),
     supabase
       .from("tutor_profiles")
       .select(
@@ -52,13 +64,31 @@ export async function loadManagementWorkspace(supabase: SB) {
       .from("tutor_cancellation_requests")
       .select("id, booking_id, reason, created_at, bookings(student_first_name, student_first_names, tutor_display_name, scheduled_start)")
       .eq("status", "open")
-      .order("created_at", { ascending: true }),
+      .order("created_at", { ascending: true })
+      .then((r) =>
+        r.error && missingHouseholdColumns(r.error)
+          ? supabase
+              .from("tutor_cancellation_requests")
+              .select("id, booking_id, reason, created_at, bookings(student_first_name, tutor_display_name, scheduled_start)")
+              .eq("status", "open")
+              .order("created_at", { ascending: true })
+          : r,
+      ),
     supabase
       .from("parent_escalation_requests")
       .select("id, booking_id, status, outcome, reason, created_at, bookings(student_first_name, student_first_names, scheduled_start)")
       .order("created_at", { ascending: false })
       .limit(40)
-      .then((r) => r, () => ({ data: null, error: null })),
+      .then((r) =>
+        r.error && missingHouseholdColumns(r.error)
+          ? supabase
+              .from("parent_escalation_requests")
+              .select("id, booking_id, status, outcome, reason, created_at, bookings(student_first_name, scheduled_start)")
+              .order("created_at", { ascending: false })
+              .limit(40)
+          : r,
+        () => ({ data: null, error: null }),
+      ),
     supabase
       .from("email_deliveries")
       .select("id, notification_type, to_email, booking_id, status, error, updated_at")

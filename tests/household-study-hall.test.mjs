@@ -7,6 +7,8 @@ import {
   bookingChildNames,
   childCountLabel,
   formatChildNames,
+  missingHouseholdColumns,
+  missingStudentIdsRpc,
   possessiveStudyHall,
   uniqueStudentIds,
   wouldExceedChildLimit,
@@ -57,6 +59,14 @@ describe("Household Study Hall — name helpers", () => {
     assert.equal(childCountLabel(1), "1 child");
     assert.equal(childCountLabel(3), "3 children");
   });
+
+  it("detects missing household schema so portals can fall back before migration 0031", () => {
+    assert.equal(missingHouseholdColumns({ message: "column bookings.student_first_names does not exist" }), true);
+    assert.equal(missingHouseholdColumns({ message: "column child_count does not exist" }), true);
+    assert.equal(missingHouseholdColumns({ message: "permission denied" }), false);
+    assert.equal(missingStudentIdsRpc({ message: "Could not find the function public.book_session(..., p_student_ids)" }), true);
+    assert.equal(missingStudentIdsRpc({ message: "Not authorized to book for this student" }), false);
+  });
 });
 
 describe("Household Study Hall — booking UX & API", () => {
@@ -90,9 +100,11 @@ describe("Household Study Hall — booking UX & API", () => {
   it("book_session and create_booking pass p_student_ids without changing price inputs", () => {
     const checkout = read("src/lib/checkout-service.ts");
     const booking = read("src/lib/booking-service.ts");
-    assert.match(checkout, /p_student_ids: params\.studentIds/);
-    assert.match(booking, /p_student_ids: params\.studentIds/);
+    assert.match(checkout, /p_student_ids: studentIds/);
+    assert.match(booking, /p_student_ids: studentIds/);
     assert.match(checkout, /Price is duration-only/);
+    assert.match(checkout, /missingStudentIdsRpc/);
+    assert.match(booking, /missingStudentIdsRpc/);
   });
 });
 
@@ -214,6 +226,8 @@ describe("Household Study Hall — reports & portals", () => {
     assert.match(list, /bookingChildNames/);
     const detail = read("src/app/dashboard/admin/study-halls/[bookingId]/page.tsx");
     assert.match(detail, /bookingChildNames/);
+    const mgmt = read("src/lib/management-data.ts");
+    assert.match(mgmt, /missingHouseholdColumns/);
   });
 });
 
