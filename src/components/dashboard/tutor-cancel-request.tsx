@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 /**
  * Guide marks themselves unavailable for an upcoming Study Hall.
  * The server records the request and attempts automatic reassignment to another
@@ -57,9 +59,9 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
 
   return (
     <div className="flex flex-col items-end gap-1.5">
-      <button onClick={() => setOpen((o) => !o)} className="text-xs font-medium text-red-600 hover:underline">
-        {open ? "Cancel" : "Unavailable for this session?"}
-      </button>
+      <Button type="button" variant={open ? "ghost" : "destructive"} size="sm" onClick={() => setOpen((o) => !o)}>
+        {open ? "Keep this Study Hall" : "Unavailable for this session?"}
+      </Button>
       {open ? (
         <div className="w-72 rounded-lg border border-ink-200 bg-white p-3 text-left shadow-sm">
           <textarea
@@ -69,13 +71,9 @@ export function TutorCancelRequest({ bookingId, alreadyRequested }: { bookingId:
             placeholder="Reason you can't attend (shared with admin only)"
             className="w-full rounded-lg border border-ink-200 px-2 py-1.5 text-xs"
           />
-          <button
-            onClick={submit}
-            disabled={busy}
-            className="mt-2 w-full rounded-lg bg-ink-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-ink-800 disabled:opacity-50"
-          >
+          <Button type="button" variant="destructive" size="sm" onClick={submit} disabled={busy} className="mt-2 w-full">
             {busy ? "Finding a replacement…" : "I'm unavailable"}
-          </button>
+          </Button>
           <p className="mt-1 text-[11px] text-ink-400">
             We&apos;ll try to assign another Guide automatically. If none is available, admin is notified.
           </p>

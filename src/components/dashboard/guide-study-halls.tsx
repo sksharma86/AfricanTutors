@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request";
+import { LinkButton } from "@/components/ui/button";
+import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
 import {
   guideChildName,
   guideNeedsReport,
@@ -15,7 +16,6 @@ import {
   guideStudyHallLists,
 } from "@/lib/guide-portal.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
-import { cn } from "@/lib/utils";
 import type { GuideBooking } from "@/lib/guide-portal-types";
 
 const VIEWS = [
@@ -54,21 +54,12 @@ export function GuideStudyHalls({
 
   return (
     <GuideSurface>
-      <div className="flex flex-wrap gap-1 border-b border-ink-100">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => setView(v.id)}
-            className={cn(
-              "px-3 py-2 text-sm font-medium",
-              view === v.id ? "border-b-2 border-ink-900 text-ink-900" : "text-ink-500 hover:text-ink-800",
-            )}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
+      <PortalSegmentedControl
+        ariaLabel="Study Hall views"
+        items={VIEWS}
+        value={view}
+        onChange={setView}
+      />
       {rows.length === 0 ? (
         <p className="py-5 text-sm text-ink-500">{view === "completed" ? "None yet." : "No Study Hall scheduled."}</p>
       ) : (
@@ -85,7 +76,9 @@ export function GuideStudyHalls({
                   <p className="text-sm font-medium text-ink-900">{day}</p>
                   {time ? <p className="text-sm text-ink-700">{time}</p> : null}
                   <p className="mt-1 text-sm text-ink-800">{guideChildName(b)}</p>
-                  <p className="text-sm text-ink-500">{guideRowStatus(b, nowMs)}</p>
+                  <p data-kind="status" className="text-sm text-ink-500">
+                    {guideRowStatus(b, nowMs)}
+                  </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                   {view !== "completed" ? (
@@ -98,11 +91,13 @@ export function GuideStudyHalls({
                     />
                   ) : null}
                   {needs ? (
-                    <Link href={guideReportHref(b.id)} className="text-sm font-medium text-gold-700 hover:underline">
+                    <LinkButton href={guideReportHref(b.id)} variant="primary" size="sm">
                       Finish report
-                    </Link>
+                    </LinkButton>
                   ) : reported.has(b.id) ? (
-                    <span className="text-xs font-medium text-forest-700">Report submitted</span>
+                    <span data-kind="status" className="text-sm text-ink-500">
+                      Report submitted
+                    </span>
                   ) : null}
                   {view !== "completed" && (b.status === "confirmed" || b.status === "pending") ? (
                     <TutorCancelRequest bookingId={b.id} alreadyRequested={openReqs.has(b.id)} />

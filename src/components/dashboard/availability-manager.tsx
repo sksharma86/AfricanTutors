@@ -177,9 +177,9 @@ export function AvailabilityManager({
                         <span>
                           {formatClock(b.start_time)} → {formatClock(b.end_time)}
                         </span>
-                        <button onClick={() => removeBlock(b.id)} className="text-xs font-medium text-ink-400 hover:text-red-600">
+                        <Button type="button" variant="destructive" size="sm" onClick={() => removeBlock(b.id)}>
                           Remove
-                        </button>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -221,9 +221,9 @@ export function AvailabilityManager({
                     {formatDayHeading(x.starts_at, tz)} · {formatTime(x.starts_at, tz)}–{formatTime(x.ends_at, tz)} (
                     {tzAbbreviation(x.starts_at, tz)}){x.reason ? ` · ${x.reason}` : ""}
                   </span>
-                  <button onClick={() => removeException(x.id)} className="text-xs font-medium text-red-600 hover:underline">
+                  <Button type="button" variant="destructive" size="sm" onClick={() => removeException(x.id)}>
                     Remove
-                  </button>
+                  </Button>
                 </li>
               ))}
           </ul>

@@ -33,8 +33,11 @@ export function GuideShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive(item.href) ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
+                  "min-h-11 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
+                  isActive(item.href)
+                    ? "border border-ink-900 bg-ink-900 text-white"
+                    : "border border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900",
                 )}
               >
                 {item.label}
@@ -54,8 +57,11 @@ export function GuideShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "shrink-0 snap-start whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium",
-                  isActive(item.href) ? "bg-ink-900 text-white" : "text-ink-600",
+                  "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
+                  isActive(item.href)
+                    ? "border border-ink-900 bg-ink-900 text-white"
+                    : "border border-ink-200 bg-white text-ink-700",
                 )}
               >
                 {item.label}

@@ -1,7 +1,6 @@
-import Link from "next/link";
-
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
+import { LinkButton } from "@/components/ui/button";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import { childFirstName, parentGuideLabel } from "@/lib/parent-portal.mjs";
 import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
@@ -48,21 +47,15 @@ export function ParentRecentActivity({
         {report ? "Report ready" : "No report yet"}
         {recLabel ? ` · ${recLabel}` : ""}
       </p>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {report ? (
-          <Link
-            href={`/dashboard/student/reports#hall-${booking.id}`}
-            className="text-sm font-medium text-gold-700 hover:underline"
-          >
+          <LinkButton href={`/dashboard/student/reports#hall-${booking.id}`} variant="outline" size="sm">
             View report
-          </Link>
+          </LinkButton>
         ) : (
-          <Link
-            href={`/dashboard/student/study-halls/${booking.id}`}
-            className="text-sm font-medium text-ink-500 hover:underline"
-          >
+          <LinkButton href={`/dashboard/student/study-halls/${booking.id}`} variant="outline" size="sm">
             View Study Hall
-          </Link>
+          </LinkButton>
         )}
         {playable && recording ? <WatchRecordingButton recordingId={recording.id} /> : null}
       </div>

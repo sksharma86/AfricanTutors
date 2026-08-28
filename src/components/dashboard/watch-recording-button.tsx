@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 /**
  * Parent "Watch recording" control. Requests a short-lived access link from the
  * server after ownership checks — never embeds permanent Daily URLs.
@@ -34,14 +36,9 @@ export function WatchRecordingButton({ recordingId }: { recordingId: string }) {
 
   return (
     <div className="mt-1">
-      <button
-        type="button"
-        onClick={() => void open()}
-        disabled={busy}
-        className="text-sm font-medium text-gold-800 underline-offset-2 hover:underline disabled:opacity-60"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={() => void open()} disabled={busy}>
         {busy ? "Opening…" : "Watch recording"}
-      </button>
+      </Button>
       {error ? <p className="mt-1 text-xs text-ink-500">{error}</p> : null}
     </div>
   );

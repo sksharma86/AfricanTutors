@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ParentStudyHallRow } from "@/components/dashboard/parent-study-hall-row";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
+import { LinkButton } from "@/components/ui/button";
+import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
 import { parentStudyHallLists } from "@/lib/parent-portal.mjs";
-import { cn } from "@/lib/utils";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 
 const VIEWS = [
@@ -36,29 +36,20 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
 
   return (
     <ParentSurface>
-      <div className="flex flex-wrap gap-1 border-b border-ink-100">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => setView(v.id)}
-            className={cn(
-              "px-3 py-2 text-sm font-medium",
-              view === v.id ? "border-b-2 border-ink-900 text-ink-900" : "text-ink-500 hover:text-ink-800",
-            )}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
+      <PortalSegmentedControl
+        ariaLabel="Study Hall views"
+        items={VIEWS}
+        value={view}
+        onChange={setView}
+      />
       {rows.length === 0 ? (
         <div className="py-5">
           <p className="text-sm text-ink-500">{empty}</p>
           {view === "upcoming" ? (
-            <p className="mt-3">
-              <Link href="/dashboard/student/book" className="text-sm font-medium text-gold-700 hover:underline">
+            <p className="mt-4">
+              <LinkButton href="/dashboard/student/book" variant="primary" size="md">
                 Book a Study Hall
-              </Link>
+              </LinkButton>
             </p>
           ) : null}
         </div>

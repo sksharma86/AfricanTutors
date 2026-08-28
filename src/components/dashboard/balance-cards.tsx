@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { formatPrepaidHoursLabel } from "@/lib/parent-portal.mjs";
 import { formatMoneyCents } from "@/lib/format.mjs";
 
@@ -29,12 +28,9 @@ export function BalanceCards({
           <span className="text-ink-500"> available</span>
         </p>
         {preferFreeSession && minutes === 0 ? null : (
-          <Link
-            href="/dashboard/student/packages#prepaid"
-            className="shrink-0 text-sm font-medium text-ink-500 hover:text-ink-800"
-          >
+          <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0">
             Buy hours &amp; save →
-          </Link>
+          </PortalTextLink>
         )}
       </section>
     );
@@ -54,12 +50,7 @@ export function BalanceCards({
           </p>
         ) : (
           <p className="mt-3">
-            <Link
-              href="/dashboard/student/packages#prepaid"
-              className="text-sm font-semibold text-gold-700 hover:underline"
-            >
-              Buy hours &amp; save
-            </Link>
+            <PortalTextLink href="/dashboard/student/packages#prepaid">Buy hours &amp; save</PortalTextLink>
           </p>
         )}
         <p className="mt-2 text-xs text-ink-400">Prepaid hours never expire.</p>

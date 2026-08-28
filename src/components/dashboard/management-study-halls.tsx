@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
+import { Button, LinkButton } from "@/components/ui/button";
+import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import {
   calendarDateInTz,
@@ -134,38 +135,29 @@ export function ManagementStudyHalls({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-1 border-b border-ink-100">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => setView(v.id)}
-            className={cn(
-              "px-3 py-2 text-sm font-medium",
-              view === v.id ? "border-b-2 border-ink-900 text-ink-900" : "text-ink-500 hover:text-ink-800",
-            )}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
+      <PortalSegmentedControl
+        ariaLabel="Study Hall views"
+        items={VIEWS}
+        value={view}
+        onChange={setView}
+      />
 
       <form onSubmit={applyFilters} className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Child, parent, Guide, or booking reference"
-          className="min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm outline-none focus:border-ink-400"
+          className="min-h-11 min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 text-sm outline-none focus:border-ink-400"
         />
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm outline-none focus:border-ink-400"
+          className="min-h-11 rounded-lg border border-ink-200 bg-white px-3 text-sm outline-none focus:border-ink-400"
         />
-        <button type="submit" className="rounded-lg bg-ink-900 px-3 py-2 text-sm font-medium text-white">
+        <Button type="submit" variant="primary" size="sm">
           Find
-        </button>
+        </Button>
       </form>
 
       {rows.length === 0 ? (
@@ -208,15 +200,14 @@ export function ManagementStudyHalls({
                         </div>
                       )}
                     </div>
-                    <Link
+                    <LinkButton
                       href={`/dashboard/admin/study-halls/${b.id}`}
-                      className={cn(
-                        "text-sm font-semibold hover:underline sm:text-right",
-                        quiet ? "text-ink-400" : "text-gold-700",
-                      )}
+                      variant={needsGuide || action === "Assign Guide" ? "primary" : "outline"}
+                      size="sm"
+                      className="sm:justify-self-end"
                     >
                       {action}
-                    </Link>
+                    </LinkButton>
                   </div>
                 </li>
               );

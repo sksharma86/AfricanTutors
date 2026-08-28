@@ -283,7 +283,7 @@ describe("Management Control Center — routes and authorization", () => {
 
   it("Guides, Customers, and Finance remain authorized and reachable", () => {
     assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /requireRole\("admin"/);
-    assert.match(read("src/app/dashboard/admin/guides/page.tsx"), /GuideWorkforceActions/);
+    assert.match(read("src/components/dashboard/admin-guides-directory.tsx"), /GuideWorkforceActions/);
     assert.match(read("src/app/dashboard/admin/customers/page.tsx"), /requireRole\("admin"/);
     assert.match(read("src/app/dashboard/admin/customers/page.tsx"), /Email search uses notification history/);
     assert.doesNotMatch(read("src/app/dashboard/admin/customers/page.tsx"), /listUsers|getUserByEmail/);

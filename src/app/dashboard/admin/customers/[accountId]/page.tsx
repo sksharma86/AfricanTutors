@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { LinkButton } from "@/components/ui/button";
+import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { lookupEmail } from "@/lib/admin-service";
 import { requireRole } from "@/lib/auth";
 import { bookingChildNames } from "@/lib/household-children.mjs";
@@ -133,9 +134,7 @@ export default async function AdminCustomerDetailPage({
       navItems={ADMIN_PORTAL_NAV}
     >
       <p className="mb-5">
-        <Link href="/dashboard/admin/customers" className="text-sm font-medium text-ink-500 hover:text-ink-800">
-          ← Customers
-        </Link>
+        <PortalTextLink href="/dashboard/admin/customers">← Customers</PortalTextLink>
       </p>
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -186,15 +185,18 @@ export default async function AdminCustomerDetailPage({
             completed.map((b) => {
               const rec = recByBooking.get(b.id);
               return (
-                <li key={b.id} className="py-2">
-                  <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-900 hover:underline">
-                    {bookingChildNames(b, "Child")}
-                  </Link>
-                  <p className="text-xs text-ink-400">
-                    {b.scheduled_start ? <AdminWhen iso={b.scheduled_start} className="inline-block align-baseline" /> : "—"}
-                    {reportByBooking.has(b.id) ? " · Report in" : " · No report"}
-                    {rec ? (rec.deleted_at ? " · Recording deleted" : rec.status === "failed" ? " · Recording unavailable" : " · Recording") : ""}
-                  </p>
+                <li key={b.id} className="flex items-start justify-between gap-3 py-2">
+                  <div>
+                    <p className="font-medium text-ink-900">{bookingChildNames(b, "Child")}</p>
+                    <p className="text-xs text-ink-400">
+                      {b.scheduled_start ? <AdminWhen iso={b.scheduled_start} className="inline-block align-baseline" /> : "—"}
+                      {reportByBooking.has(b.id) ? " · Report in" : " · No report"}
+                      {rec ? (rec.deleted_at ? " · Recording deleted" : rec.status === "failed" ? " · Recording unavailable" : " · Recording") : ""}
+                    </p>
+                  </div>
+                  <LinkButton href={`/dashboard/admin/study-halls/${b.id}`} variant="outline" size="sm">
+                    View
+                  </LinkButton>
                 </li>
               );
             })
@@ -231,10 +233,10 @@ export default async function AdminCustomerDetailPage({
             ))
           )}
         </ul>
-        <p className="mt-3 text-sm">
-          <Link href="/dashboard/admin/finance" className="font-medium text-gold-700 hover:underline">
+        <p className="mt-3">
+          <LinkButton href="/dashboard/admin/finance" variant="outline" size="sm">
             Adjust credit or hours in Finance
-          </Link>
+          </LinkButton>
         </p>
       </section>
 
@@ -271,19 +273,22 @@ function BookingMini({
   return (
     <ul className="mt-2 divide-y divide-ink-100 text-sm">
       {rows.map((b) => (
-        <li key={b.id} className="py-2">
-          <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-900 hover:underline">
-            {bookingChildNames(b, "Child")}
-          </Link>
-          <p className="text-xs text-ink-400">
-            {b.tutor_display_name ?? "No Guide"}
-            {b.scheduled_start ? (
-              <>
-                {" · "}
-                <AdminWhen iso={b.scheduled_start} className="inline-block align-baseline" />
-              </>
-            ) : null}
-          </p>
+        <li key={b.id} className="flex items-start justify-between gap-3 py-2">
+          <div>
+            <p className="font-medium text-ink-900">{bookingChildNames(b, "Child")}</p>
+            <p className="text-xs text-ink-400">
+              {b.tutor_display_name ?? "No Guide"}
+              {b.scheduled_start ? (
+                <>
+                  {" · "}
+                  <AdminWhen iso={b.scheduled_start} className="inline-block align-baseline" />
+                </>
+              ) : null}
+            </p>
+          </div>
+          <LinkButton href={`/dashboard/admin/study-halls/${b.id}`} variant="outline" size="sm">
+            View
+          </LinkButton>
         </li>
       ))}
     </ul>

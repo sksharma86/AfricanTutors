@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { guideChildName, guideRowStatus } from "@/lib/guide-portal.mjs";
 import { formatTime } from "@/lib/timezone";
 import type { GuideBooking } from "@/lib/guide-portal-types";
@@ -27,15 +26,15 @@ export function GuideTodaySchedule({
                 <span className="mx-3 text-ink-400"> </span>
                 <span className="font-medium text-ink-900">{guideChildName(b)}</span>
               </p>
-              <span className="shrink-0 text-sm text-ink-500">{guideRowStatus(b)}</span>
+              <span data-kind="status" className="shrink-0 text-sm text-ink-500">
+                {guideRowStatus(b)}
+              </span>
             </li>
           ))}
         </ul>
       )}
       <p className="mt-3">
-        <Link href="/dashboard/tutor/study-halls" className="text-sm font-medium text-gold-700 hover:underline">
-          Upcoming Study Halls
-        </Link>
+        <PortalTextLink href="/dashboard/tutor/study-halls">Upcoming Study Halls</PortalTextLink>
       </p>
     </section>
   );

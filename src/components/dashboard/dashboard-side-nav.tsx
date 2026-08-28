@@ -104,8 +104,10 @@ export function DashboardSideNav({ items }: { items: DashboardNavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "shrink-0 snap-start whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 sm:px-3 sm:py-2.5 sm:text-sm",
-              active ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+              "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 sm:text-sm",
+              active
+                ? "border border-ink-900 bg-ink-900 text-white"
+                : "border border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900",
             )}
           >
             {item.label}

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
 import { Button } from "@/components/ui/button";
+import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
 import {
   aggregateCompensationByCurrency,
   formatCompensationHourly,
@@ -81,6 +82,13 @@ export interface PaymentRow {
 
 type Tab = "earnings" | "disputes" | "payments" | "customer";
 
+const FINANCE_TABS: { id: Tab; label: string }[] = [
+  { id: "earnings", label: "Guide compensation" },
+  { id: "payments", label: "Customer money" },
+  { id: "customer", label: "Customer balances" },
+  { id: "disputes", label: "Disputes" },
+];
+
 export function AdminFinanceConsole({
   earnings: initialEarnings,
   guides: initialGuides = [],
@@ -105,23 +113,12 @@ export function AdminFinanceConsole({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-1 border-b border-ink-100">
-        {(["earnings", "payments", "customer", "disputes"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-3 py-2 text-sm font-medium ${tab === t ? "border-b-2 border-ink-900 text-ink-900" : "text-ink-500 hover:text-ink-800"}`}
-          >
-            {t === "earnings"
-              ? "Guide compensation"
-              : t === "payments"
-                ? "Customer money"
-                : t === "customer"
-                  ? "Customer balances"
-                  : "Disputes"}
-          </button>
-        ))}
-      </div>
+      <PortalSegmentedControl
+        ariaLabel="Finance views"
+        items={FINANCE_TABS}
+        value={tab}
+        onChange={(id) => setTab(id as Tab)}
+      />
       {msg ? <div className="rounded-lg border border-gold-200 bg-gold-50 p-3 text-sm text-gold-800">{msg}</div> : null}
       {err ? <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div> : null}
 
@@ -286,10 +283,22 @@ function EarningsTab({
                 </td>
                 <td className="py-2 pr-3"><StatusPill s={e.status} /></td>
                 <td className="py-2">
-                  <div className="flex gap-2 text-xs">
-                    {e.status !== "paid" && e.status !== "voided" ? <button onClick={() => markPaid(e.id)} className="font-medium text-gold-700 hover:underline">Pay</button> : null}
-                    {e.status !== "paid" && e.status !== "voided" ? <button onClick={() => adjust(e.id)} className="font-medium text-ink-600 hover:underline">Adjust</button> : null}
-                    {e.status !== "paid" && e.status !== "voided" ? <button onClick={() => voidEarning(e.id)} className="font-medium text-red-600 hover:underline">Void</button> : null}
+                  <div className="flex flex-wrap gap-1.5">
+                    {e.status !== "paid" && e.status !== "voided" ? (
+                      <Button type="button" variant="primary" size="sm" onClick={() => markPaid(e.id)}>
+                        Pay
+                      </Button>
+                    ) : null}
+                    {e.status !== "paid" && e.status !== "voided" ? (
+                      <Button type="button" variant="outline" size="sm" onClick={() => adjust(e.id)}>
+                        Adjust
+                      </Button>
+                    ) : null}
+                    {e.status !== "paid" && e.status !== "voided" ? (
+                      <Button type="button" variant="destructive" size="sm" onClick={() => voidEarning(e.id)}>
+                        Void
+                      </Button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -445,7 +454,13 @@ function PaymentsTab({ rows, onOk, onErr }: { rows: PaymentRow[]; onOk: (m: stri
                   <td className="py-2 pr-3 text-ink-600">{formatCents(p.refunded_cents)}</td>
                   <td className="py-2 pr-3 font-medium text-ink-900">{formatCents(refundable)}</td>
                   <td className="py-2 pr-3"><StatusPill s={p.status} /></td>
-                  <td className="py-2">{refundable > 0 ? <button onClick={() => refund(p)} className="text-xs font-medium text-red-600 hover:underline">Refund</button> : null}</td>
+                  <td className="py-2">
+                    {refundable > 0 ? (
+                      <Button type="button" variant="destructive" size="sm" onClick={() => refund(p)}>
+                        Refund
+                      </Button>
+                    ) : null}
+                  </td>
                 </tr>
               );
             })}
@@ -608,14 +623,16 @@ function RecordingStatus({
             ? ` · until ${new Date(r.retention_until).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
             : "";
           return (
-            <button
+            <Button
               key={r.id}
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => review(r.id)}
               disabled={busy === r.id}
-              className="rounded-full border border-gold-300 bg-gold-50 px-2.5 py-0.5 font-medium text-gold-700 hover:bg-gold-100 disabled:opacity-50"
             >
               {busy === r.id ? "Opening…" : `Review recording${mins}${until}`}
-            </button>
+            </Button>
           );
         }
         return (
@@ -633,5 +650,9 @@ function StatusPill({ s }: { s: string }) {
     : s === "voided" || s === "failed" || s === "canceled" ? "text-red-700"
     : s === "refunded" || s === "partially_refunded" ? "text-ink-700"
     : "text-ink-600";
-  return <span className={`text-xs font-medium ${tone}`}>{s}</span>;
+  return (
+    <span data-kind="status" className={`cursor-default text-xs font-medium ${tone}`}>
+      {s}
+    </span>
+  );
 }

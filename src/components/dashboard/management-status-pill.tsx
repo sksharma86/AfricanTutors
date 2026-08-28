@@ -11,7 +11,10 @@ const TONE: Record<string, string> = {
 
 export function ManagementStatusLabel({ status }: { status: string }) {
   return (
-    <span className={cn("text-sm", TONE[status] ?? TONE.needs_attention)}>
+    <span
+      data-kind="status"
+      className={cn("cursor-default text-sm", TONE[status] ?? TONE.needs_attention)}
+    >
       {(MANAGEMENT_STATUS_LABEL as Record<string, string>)[status] ?? status}
     </span>
   );

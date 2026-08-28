@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "quality", label: "The session wasn’t properly supervised" },
   { value: "unprepared", label: "The Guide seemed unprepared" },
@@ -107,20 +109,18 @@ export function CustomerBookingActions({
     }
   }
 
-  const linkBtn = "text-xs font-medium hover:underline disabled:opacity-50";
-
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {canCancel && !confirmingCancel ? (
-          <button onClick={openCancel} disabled={busy} className={`${linkBtn} text-ink-500`}>
+          <Button type="button" variant="destructive" size="sm" onClick={openCancel} disabled={busy}>
             Cancel session
-          </button>
+          </Button>
         ) : null}
         {canDispute ? (
-          <button onClick={() => setShowDispute((s) => !s)} disabled={busy} className={`${linkBtn} text-ink-600`}>
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowDispute((s) => !s)} disabled={busy}>
             Report an issue
-          </button>
+          </Button>
         ) : null}
       </div>
 
@@ -132,21 +132,13 @@ export function CustomerBookingActions({
               ? "This session starts within 24 hours, so cancelling will forfeit the session value."
               : "Cancelling 24+ hours ahead returns the session value to your account, per our policy."}
           </p>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={cancel}
-              disabled={busy}
-              className="rounded-lg bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink-800 disabled:opacity-50"
-            >
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" variant="destructive" size="sm" onClick={cancel} disabled={busy}>
               {busy ? "Cancelling…" : "Yes, cancel"}
-            </button>
-            <button
-              onClick={() => setConfirmingCancel(false)}
-              disabled={busy}
-              className="rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-ink-50"
-            >
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => setConfirmingCancel(false)} disabled={busy}>
               Keep session
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
@@ -172,13 +164,9 @@ export function CustomerBookingActions({
             placeholder="Add any details (optional)"
             className="mt-2 w-full rounded-lg border border-ink-200 px-2.5 py-2 text-sm"
           />
-          <button
-            onClick={submitDispute}
-            disabled={busy}
-            className="mt-2 w-full rounded-lg bg-ink-900 px-3 py-2 text-xs font-semibold text-white hover:bg-ink-800 disabled:opacity-50"
-          >
+          <Button type="button" variant="primary" size="sm" onClick={submitDispute} disabled={busy} className="mt-2 w-full">
             {busy ? "Sending…" : "Submit report"}
-          </button>
+          </Button>
         </div>
       ) : null}
 

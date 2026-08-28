@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
+import { LinkButton } from "@/components/ui/button";
+import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { formatCompensationTotals } from "@/lib/compensation-currency.mjs";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import {
@@ -106,9 +107,7 @@ export function ManagementOverview({
       <section>
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-lg font-semibold text-ink-900">Coming up</h2>
-          <Link href="/dashboard/admin/study-halls" className="text-sm font-medium text-ink-500 hover:text-ink-800">
-            All Study Halls
-          </Link>
+          <PortalTextLink href="/dashboard/admin/study-halls">All Study Halls</PortalTextLink>
         </div>
         {coming.length === 0 ? (
           <p className="mt-3 text-sm text-ink-500">Nothing coming up right now.</p>
@@ -138,9 +137,9 @@ export function ManagementOverview({
                       <ManagementStatusLabel status={status} />
                     )}
                   </span>
-                  <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-600 hover:underline">
+                  <LinkButton href={`/dashboard/admin/study-halls/${b.id}`} variant="outline" size="sm">
                     View
-                  </Link>
+                  </LinkButton>
                 </li>
               );
             })}
@@ -197,9 +196,14 @@ function AttentionBlock({
                 ) : null}
                 {item.detail ? <p className="mt-0.5 text-sm text-ink-500">{item.detail}</p> : null}
               </div>
-              <Link href={item.href} className="shrink-0 text-sm font-semibold text-gold-700 hover:underline">
+              <LinkButton
+                href={item.href}
+                variant={item.action === "Assign Guide" ? "primary" : "outline"}
+                size="sm"
+                className="shrink-0"
+              >
                 {item.action}
-              </Link>
+              </LinkButton>
             </li>
           ))}
         </ul>
