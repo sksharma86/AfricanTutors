@@ -40,6 +40,7 @@ describe("Visual product story — homepage contracts", () => {
     assert.match(graphic, /tutor-portrait\.jpg/);
     assert.doesNotMatch(graphic, /Jordan|screen share|raise hand|whiteboard|chat panel/i);
     assert.doesNotMatch(graphic, /Pick a time\.|Get the recap\./);
+    assert.match(graphic, /Book\.\s*<br[^/]*\/>\s*Study Hall\.\s*<br[^/]*\/>\s*Done\./);
     assert.equal((graphic.match(/Book\. Study Hall\. Done\./g) || []).length, 1);
   });
 

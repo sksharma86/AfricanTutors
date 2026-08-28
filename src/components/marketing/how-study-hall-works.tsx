@@ -111,8 +111,8 @@ function ShieldIcon() {
         stroke={GOLD}
         strokeWidth="2"
       />
-      <path d="M20 12.5v17" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
-      <path d="M13.5 19.5h13" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 22.2v-3.1a4 4 0 0 1 8 0v3.1" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
+      <rect x="14.5" y="22" width="11" height="8.5" rx="1.6" stroke={GOLD} strokeWidth="2" />
     </svg>
   );
 }
@@ -131,15 +131,17 @@ function FlowItem({
   title,
   body,
   titleClassName = "",
+  matchHeight = false,
 }: {
   iconBg: string;
   icon: ReactNode;
   title: string;
   body: string;
   titleClassName?: string;
+  matchHeight?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-[20px]">
+    <div className={`flex items-start gap-[20px] ${matchHeight ? "lg:min-h-[148px]" : ""}`}>
       <span
         className="inline-flex size-[72px] shrink-0 items-center justify-center rounded-full lg:size-[92px]"
         style={{ backgroundColor: iconBg }}
@@ -156,7 +158,7 @@ function FlowItem({
 
 function TrustFooter() {
   return (
-    <div className="mx-auto mt-8 w-full max-w-[800px] lg:mt-[30px]">
+    <div className="mx-auto mt-8 w-full max-w-[800px] lg:mt-[30px]" data-qa="hshw-trust">
       <div className="flex items-center justify-center gap-3">
         <span className="h-px w-[120px] lg:w-[345px]" style={{ backgroundColor: GOLD }} />
         <ShieldIcon />
@@ -174,12 +176,13 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
   return (
     <section
       id="how-it-works"
+      data-qa="how-study-hall-works"
       aria-labelledby="how-study-hall-works-label"
       className="px-5 py-8 lg:px-0 lg:pb-[30px] lg:pt-8"
       style={{ backgroundColor: CREAM }}
     >
       <div className="mx-auto w-full max-w-[1360px] lg:w-[94%]">
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col items-center text-center" data-qa="hshw-header">
           <div className="flex items-center justify-center gap-2.5">
             <ProductHouseMark />
             <p
@@ -191,8 +194,13 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             </p>
           </div>
           {showHeadline ? (
-            <h2 className="mt-4 max-w-[18ch] text-[42px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:max-w-none lg:mt-[16px] lg:text-[68px] lg:leading-[1.0] lg:whitespace-nowrap">
-              Book. Study Hall. Done.
+            <h2
+              data-phrase="Book. Study Hall. Done."
+              className="mt-4 text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink lg:mt-[16px] lg:text-[68px] lg:leading-[1.0] lg:whitespace-nowrap"
+            >
+              Book.
+              <br className="lg:hidden" /> Study Hall.
+              <br className="lg:hidden" /> Done.
             </h2>
           ) : null}
           <p className="mt-3.5 max-w-[34rem] text-[18px] font-medium leading-[1.45] text-[#444] lg:mt-[14px] lg:max-w-none lg:text-[25px] lg:font-normal">
@@ -201,8 +209,8 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
         </div>
 
         {/* Desktop flowchart */}
-        <div className="mt-9 hidden lg:grid lg:grid-cols-[23%_3%_48%_3%_23%] lg:items-start">
-          <div className="flex flex-col items-center">
+        <div className="mt-9 hidden lg:grid lg:grid-cols-[23%_3%_48%_3%_23%] lg:items-start" data-qa="hshw-desktop">
+          <div className="flex flex-col items-center" data-qa="hshw-book">
             <StepCircle n={1} />
             <div className="mt-3">
               <StageHeading>Book</StageHeading>
@@ -213,6 +221,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 icon={<CalendarClockIcon />}
                 title="Choose your time."
                 body="Choose when you want your child to sit down and focus."
+                matchHeight
               />
               <div className="my-[31px] h-px w-full" style={{ backgroundColor: DIVIDER }} />
               <FlowItem
@@ -230,7 +239,8 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           </div>
 
           <div
-            className="relative mx-auto flex min-h-[560px] w-full flex-col items-center rounded-[20px] border px-2 pb-5 pt-5 xl:px-3"
+            className="relative mx-auto flex min-h-[560px] w-full flex-col items-center rounded-[20px] border px-2 pb-4 pt-4 xl:px-3"
+            data-qa="hshw-study"
             style={{ backgroundColor: CREAM, borderColor: BORDER }}
           >
             <div className="relative flex w-full items-center justify-center">
@@ -306,7 +316,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             <GoldRightArrow />
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" data-qa="hshw-report">
             <StepCircle n={3} />
             <div className="mt-3">
               <StageHeading>Report</StageHeading>
@@ -317,6 +327,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 icon={<DocumentCheckIcon />}
                 title="Session report."
                 body="Get your Guide’s report after Study Hall."
+                matchHeight
               />
               <div className="my-[31px] h-px w-full" style={{ backgroundColor: DIVIDER }} />
               <FlowItem
@@ -330,7 +341,8 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
         </div>
 
         {/* Mobile flowchart */}
-        <div className="mt-8 flex flex-col items-center lg:hidden">
+        <div className="mt-8 flex flex-col items-center lg:hidden" data-qa="hshw-mobile">
+          <div className="flex w-full flex-col items-center" data-qa="hshw-mobile-book">
           <StepCircle n={1} />
           <div className="mt-2.5">
             <StageHeading>Book</StageHeading>
@@ -350,6 +362,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               body="When it’s time, open your Parent Portal and join Study Hall."
             />
           </div>
+          </div>
 
           <div className="my-6" aria-hidden="true">
             <GoldDownArrow />
@@ -357,6 +370,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
 
           <div
             className="w-full rounded-[19px] border px-[21px] py-5"
+            data-qa="hshw-mobile-study"
             style={{ backgroundColor: CREAM, borderColor: BORDER }}
           >
             <div className="flex flex-col items-center">
@@ -421,6 +435,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             <GoldDownArrow />
           </div>
 
+          <div className="flex w-full flex-col items-center" data-qa="hshw-mobile-report">
           <StepCircle n={3} />
           <div className="mt-2.5">
             <StageHeading>Report</StageHeading>
@@ -439,6 +454,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               title="Recording available."
               body="View the full session securely in your Parent Portal."
             />
+          </div>
           </div>
         </div>
 
