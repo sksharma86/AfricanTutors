@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 export default function SignupPage() {
   return (
     <AuthCard
-      title="Create your account"
-      description="Parents book Study Hall. Guides apply separately."
+      title="Create your parent account"
+      description="Your first Study Hall is free. No credit card required."
       footer={
         <>
           Already have an account?{" "}

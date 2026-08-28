@@ -1,81 +1,91 @@
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
+import { PARENT_PORTAL_NAV } from "@/lib/parent-portal.mjs";
 
 /**
- * One parent-command composition built from REAL portal capabilities:
- * next Study Hall, child, time, Guide/matching, Join, hours, report, recording.
+ * Marketing representation of the current Parent Portal Home.
+ * Styling follows CustomerShell / ParentSurface / BalanceCards compact.
  */
 export function ProductShowcase() {
   return (
-    <section id="parent-account" className="scroll-mt-24 bg-[#eef0f3] py-20 sm:py-28">
+    <section id="parent-account" className="scroll-mt-24 bg-[#eef0f3] py-16 sm:py-24">
       <Container size="wide">
         <Reveal>
           <p className="mkt-eyebrow">The parent portal</p>
-          <h2 className="mkt-display mt-3 max-w-[16ch] text-4xl text-ink-900 sm:text-5xl lg:text-[3.4rem]">
+          <h2 className="mkt-display mt-3 max-w-[14ch] text-4xl text-ink-900 sm:text-5xl lg:text-[3.4rem]">
             Your evening, in one place.
           </h2>
-          <p className="mt-4 max-w-xl text-[16px] leading-7 text-ink-500">
-            Book a Study Hall, see what’s next, join when it opens, and review the report and
-            recording afterward.
+          <p className="mt-4 max-w-xl text-[15px] leading-7 text-ink-500 sm:text-[16px]">
+            See what’s next. Book. Join. Manage hours. Read the report. Watch the recording.
           </p>
         </Reveal>
 
         <Reveal delay={80}>
-          <div className="mt-12 overflow-hidden rounded-[20px] border border-ink-200/80 bg-white shadow-[0_30px_80px_-40px_rgba(11,13,16,0.45)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-5 py-4 sm:px-7">
-              <p className="text-sm font-semibold tracking-[-0.02em] text-ink-900">Study Hall (at home)</p>
-              <div className="flex flex-wrap gap-5 text-sm text-ink-500">
-                <span className="font-medium text-ink-900">Dashboard</span>
-                <span>Book</span>
-                <span>Hours</span>
-                <span>Sessions</span>
+          <div className="mt-10 overflow-hidden rounded-[22px] bg-[#f4f5f7] shadow-[0_30px_80px_-40px_rgba(11,13,16,0.42)] ring-1 ring-ink-900/[0.06]">
+            <div className="border-b border-ink-100 bg-white/90">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                <p className="text-[13px] font-semibold tracking-[-0.02em] text-ink-900">
+                  Study Hall <span className="font-medium text-ink-500">(at home)</span>
+                </p>
+                <span className="text-sm font-medium text-ink-600">Book</span>
               </div>
-              <span className="rounded-full bg-ink-900 px-3.5 py-1.5 text-xs font-semibold text-white">
-                Book a Study Hall
-              </span>
+              <div className="flex flex-wrap gap-1.5 px-4 pb-2.5 sm:px-6">
+                {PARENT_PORTAL_NAV.map((item, i) => (
+                  <span
+                    key={item.href}
+                    className={
+                      i === 0
+                        ? "shrink-0 rounded-full bg-ink-900 px-3 py-1.5 text-[13px] font-medium text-white"
+                        : "shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium text-ink-600"
+                    }
+                  >
+                    {item.label}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="border-b border-ink-100 p-5 sm:p-7 lg:border-r lg:border-b-0">
-                <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-400 uppercase">
+            <div className="mx-auto max-w-3xl space-y-4 px-4 py-6 sm:px-6 sm:py-8">
+              <p className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900">
+                Hi Priya
+              </p>
+
+              <div className="relative overflow-hidden rounded-[22px] bg-white px-5 py-6 shadow-[0_24px_60px_-32px_rgba(12,12,11,0.42)] ring-1 ring-ink-900/[0.06] before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-gold-400 sm:px-8 sm:py-8">
+                <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">
                   Next Study Hall
                 </p>
-                <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink-900">Tonight, 6:30 PM</p>
-                <p className="mt-2 text-[15px] text-ink-600">Jordan · 60 minutes · America/Chicago</p>
-                <p className="mt-3 text-sm text-ink-500">Guide: James · Matching complete</p>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <span className="rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white">
+                <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.15rem]">
+                  Tonight · 6:30 PM – 7:30 PM
+                </p>
+                <div className="mt-5">
+                  <p className="text-xl font-medium text-ink-900">Jordan</p>
+                  <p className="mt-1 text-sm text-ink-500">
+                    Guide <span className="font-medium text-ink-800">James</span>
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <span className="inline-flex min-h-12 items-center rounded-[12px] bg-ink-900 px-6 text-[15px] font-semibold tracking-[-0.015em] text-white">
                     Join Study Hall
                   </span>
-                  <span className="text-sm text-ink-400">Ready to join 5 minutes before start</span>
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-1">
-                <div className="border-b border-ink-100 p-5 sm:p-6">
-                  <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-400 uppercase">
-                    Study Hall hours
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink-900">11h 30m</p>
-                  <p className="mt-1 text-sm text-ink-500">Prepaid hours never expire</p>
-                  <p className="mt-3 text-sm font-semibold text-ink-900">Buy hours &amp; save</p>
-                </div>
-                <div className="p-5 sm:p-6">
-                  <p className="text-[11px] font-semibold tracking-[0.08em] text-ink-400 uppercase">
-                    Last report
-                  </p>
-                  <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-ink-900">
-                    Jordan’s Study Hall
-                  </p>
-                  <p className="mt-1 text-sm text-ink-500">Tue · Focus: Strong · Redirection: Light</p>
-                  <p className="mt-3 text-sm leading-6 text-ink-600">
-                    Finished math, then reading. Stayed with the work after one calm redirect.
-                  </p>
-                  <p className="mt-4 text-sm font-semibold text-ink-900">
-                    Recording ready · Watch recording
-                    <span className="ml-2 font-medium text-ink-400">Available for 60 days</span>
-                  </p>
-                </div>
+              <div className="flex items-center justify-between gap-4 rounded-2xl bg-white/75 px-4 py-3 ring-1 ring-ink-900/[0.05]">
+                <p className="text-sm text-ink-700">
+                  <span className="font-semibold text-ink-900">11 hours</span>
+                  <span className="text-ink-500"> available</span>
+                </p>
+                <p className="shrink-0 text-sm font-medium text-ink-500">Buy hours &amp; save →</p>
+              </div>
+
+              <div className="rounded-2xl bg-white/80 px-4 py-4 ring-1 ring-ink-900/[0.05] sm:px-5">
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
+                  Last Study Hall
+                </p>
+                <p className="mt-2 text-sm font-medium text-ink-900">Tue · Jordan</p>
+                <p className="mt-0.5 text-sm text-ink-500">Guide James</p>
+                <p className="mt-2 text-sm text-ink-600">Report ready · Recording ready</p>
+                <p className="mt-3 text-sm font-medium text-gold-700">View report</p>
               </div>
             </div>
           </div>

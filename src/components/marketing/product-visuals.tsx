@@ -209,7 +209,7 @@ export function ProductReportCard({ className = "", bordered = true }: CardProps
 export function ProductHoursCard({ className = "", bordered = true }: CardProps) {
   return (
     <Frame label="Prepaid hours" className={className} bordered={bordered}>
-      <p className="text-[1.75rem] font-semibold tracking-[-0.04em] text-ink-900">11h 30m</p>
+      <p className="text-[1.75rem] font-semibold tracking-[-0.04em] text-ink-900">11 hours</p>
       <p className="mt-1 text-sm text-ink-500">Hours never expire</p>
       <div className="mt-4 h-1 overflow-hidden rounded-full bg-ink-100">
         <div className="h-full w-[72%] rounded-full bg-ink-900" />

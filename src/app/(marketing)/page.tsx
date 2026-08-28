@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 
 import { CtaSection } from "@/components/marketing/cta-section";
 import { Faq } from "@/components/marketing/faq";
-import { LiveStudyHallDemo } from "@/components/marketing/live-studyhall";
+import { HabitBuilding } from "@/components/marketing/habit-building";
+import { HowStudyHallWorks } from "@/components/marketing/how-study-hall-works";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
 import { SiteHero } from "@/components/marketing/site-hero";
-import { Steps } from "@/components/marketing/steps";
-import { TrustRow } from "@/components/marketing/trust-row";
 import { TrustSafety } from "@/components/marketing/trust-safety";
 import { WhyStudyHall } from "@/components/marketing/why-african-tutors";
 import { getCurrentUser } from "@/lib/auth";
@@ -19,7 +18,7 @@ import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
   title: "Live Online Study Hall for Families",
-  description: `Live online homework supervision for families. A highly vetted Guide keeps your child focused while they do their own work. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
+  description: `Live online homework supervision for families. A highly vetted Guide keeps your child focused while they do their own work — and helps reinforce better study habits over time. First 60 minutes free. ${AS_LOW_AS_LABEL}.`,
   alternates: { canonical: "/" },
 };
 
@@ -51,21 +50,21 @@ export default async function HomePage() {
   return (
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
-      <TrustRow />
-      <LiveStudyHallDemo />
-      <Steps />
-      <ProductShowcase />
       <WhyStudyHall />
+      <HowStudyHallWorks />
+      <HabitBuilding />
+      <ProductShowcase />
       <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />
-      <Faq eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
+      <Faq id="faq" eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
       <CtaSection
         title="Try your first hour free."
-        description="Book a real Study Hall. No credit card required."
+        description="No credit card required."
         primaryHref={primary.href}
         primaryLabel={primary.label}
         secondaryHref="/how-it-works"
         secondaryLabel="See how it works"
+        showFinePrint={false}
       />
     </div>
   );

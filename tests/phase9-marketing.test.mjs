@@ -18,6 +18,7 @@ const MARKETING_FILES = [
   "src/app/(marketing)/contact/page.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/live-studyhall.tsx",
+  "src/components/marketing/how-study-hall-works.tsx",
   "src/components/marketing/pricing-section.tsx",
   "src/components/marketing/free-trial-section.tsx",
   "src/components/marketing/why-african-tutors.tsx",

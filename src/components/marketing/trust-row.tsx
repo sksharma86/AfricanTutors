@@ -3,48 +3,37 @@ import Image from "next/image";
 import { Container } from "@/components/ui/container";
 
 /**
- * Visual trust strip — photography, not chips or cards.
+ * Lifestyle context only — what is happening at home.
+ * Product UI (Guide-dominant session) lives in LiveStudyHallDemo.
  */
 export function TrustRow() {
   return (
-    <section aria-label="Why families choose Study Hall" className="bg-white">
-      <Container size="wide" className="grid gap-px bg-ink-100 py-0 sm:grid-cols-3">
-        <figure className="relative min-h-[12rem] overflow-hidden bg-ink-900 sm:min-h-[16rem]">
-          <Image
-            src="/images/marketing/studyhall-focus-close.webp"
-            alt="A student concentrating on homework at home"
-            fill
-            sizes="(max-width: 640px) 100vw, 33vw"
-            className="object-cover"
-          />
-          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4 text-sm font-medium text-white">
-            Child working from home
-          </figcaption>
-        </figure>
-        <figure className="relative min-h-[12rem] overflow-hidden bg-ink-900 sm:min-h-[16rem]">
-          <Image
-            src="/images/tutor-portrait.jpg"
-            alt="A Guide present on a remote video session"
-            fill
-            sizes="(max-width: 640px) 100vw, 33vw"
-            className="object-cover object-[50%_18%]"
-          />
-          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4 text-sm font-medium text-white">
-            Guide present on video
-          </figcaption>
-        </figure>
-        <figure className="relative min-h-[12rem] overflow-hidden bg-ink-900 sm:min-h-[16rem]">
-          <Image
-            src="/images/marketing/studyhall-hero-desk.webp"
-            alt="A home desk set up for a live Study Hall"
-            fill
-            sizes="(max-width: 640px) 100vw, 33vw"
-            className="object-cover"
-          />
-          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4 text-sm font-medium text-white">
-            Sessions recorded for 60 days
-          </figcaption>
-        </figure>
+    <section aria-label="How Study Hall looks" className="bg-[#f7f6f3] py-16 sm:py-24">
+      <Container size="wide">
+        <div className="relative overflow-hidden rounded-[22px] bg-ink-900">
+          <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/9]">
+            <Image
+              src="/images/marketing/studyhall-hero-desk.webp"
+              alt="A home desk set up for homework during Study Hall"
+              fill
+              sizes="100vw"
+              className="object-cover object-[40%_40%]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/20 to-ink-900/10" aria-hidden />
+          </div>
+        </div>
+
+        <ol className="mt-8 grid gap-5 sm:grid-cols-3 sm:gap-8">
+          <li>
+            <p className="text-lg font-semibold tracking-[-0.03em] text-ink-900">Your child works.</p>
+          </li>
+          <li>
+            <p className="text-lg font-semibold tracking-[-0.03em] text-ink-900">Their Guide stays present.</p>
+          </li>
+          <li>
+            <p className="text-lg font-semibold tracking-[-0.03em] text-ink-900">You get your evening back.</p>
+          </li>
+        </ol>
       </Container>
     </section>
   );
