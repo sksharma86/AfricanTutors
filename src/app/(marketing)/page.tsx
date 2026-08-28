@@ -3,12 +3,10 @@ import type { Metadata } from "next";
 import { CtaSection } from "@/components/marketing/cta-section";
 import { Faq } from "@/components/marketing/faq";
 import { HabitBuilding } from "@/components/marketing/habit-building";
-import { LiveStudyHallDemo } from "@/components/marketing/live-studyhall";
+import { HowStudyHallWorks } from "@/components/marketing/how-study-hall-works";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
 import { SiteHero } from "@/components/marketing/site-hero";
-import { Steps } from "@/components/marketing/steps";
-import { TrustRow } from "@/components/marketing/trust-row";
 import { TrustSafety } from "@/components/marketing/trust-safety";
 import { WhyStudyHall } from "@/components/marketing/why-african-tutors";
 import { getCurrentUser } from "@/lib/auth";
@@ -52,11 +50,9 @@ export default async function HomePage() {
   return (
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
-      <TrustRow />
       <WhyStudyHall />
-      <LiveStudyHallDemo />
+      <HowStudyHallWorks />
       <HabitBuilding />
-      <Steps />
       <ProductShowcase />
       <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
       <TrustSafety />

@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CtaSection } from "@/components/marketing/cta-section";
-import { LiveStudyHallDemo } from "@/components/marketing/live-studyhall";
+import { HowStudyHallWorks } from "@/components/marketing/how-study-hall-works";
 import { PageHeader } from "@/components/marketing/page-header";
-import { Steps } from "@/components/marketing/steps";
 import { Container } from "@/components/ui/container";
 import { FREE_TRIAL_CTA } from "@/lib/pricing";
 
@@ -23,8 +22,7 @@ export default function HowItWorksPage() {
         description="We handle matching, scheduling, and the live session. Guides supervise and encourage — they do not tutor. You get reports, recordings, and Call Parent when your child needs you."
       />
 
-      <Steps withHeader={false} />
-      <LiveStudyHallDemo />
+      <HowStudyHallWorks showHeadline={false} />
 
       <Container size="wide" className="pb-10">
         <div className="max-w-2xl border-t border-ink-100 pt-10">

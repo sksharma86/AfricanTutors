@@ -7,10 +7,8 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const home = [
   "src/app/(marketing)/page.tsx",
   "src/components/marketing/site-hero.tsx",
-  "src/components/marketing/trust-row.tsx",
-  "src/components/marketing/live-studyhall.tsx",
+  "src/components/marketing/how-study-hall-works.tsx",
   "src/components/marketing/habit-building.tsx",
-  "src/components/marketing/steps.tsx",
   "src/components/marketing/product-showcase.tsx",
   "src/components/marketing/why-african-tutors.tsx",
   "src/components/marketing/pricing-section.tsx",
@@ -30,30 +28,31 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(hero, /tracking-\[0\.18em\][\s\S]*Study Hall \(at home\)/);
   });
 
-  it("explains the product with one composition, not three stacked photos", () => {
-    const visual = read("src/components/marketing/trust-row.tsx");
-    assert.match(visual, /Your child works/);
-    assert.match(visual, /Their Guide stays present/);
-    assert.match(visual, /You get your evening back/);
-    assert.match(visual, /studyhall-hero-desk\.webp/);
-    assert.doesNotMatch(visual, /60 days/);
-    assert.doesNotMatch(visual, /tutor-portrait|student-tutoring-session/);
-    assert.doesNotMatch(visual, /Present on video/);
+  it("does not restore the rejected under-hero lifestyle photo or fake live room", () => {
+    const page = read("src/app/(marketing)/page.tsx");
+    assert.doesNotMatch(page, /TrustRow|LiveStudyHallDemo|<Steps/);
+    assert.doesNotMatch(home, /Present on video|This is a Study Hall/);
+    assert.doesNotMatch(home, /Ready to join 5 minutes|42:18/);
+    assert.doesNotMatch(home, /Pick a time\.|Get the recap\./);
   });
 
-  it("keeps a simplified live Study Hall without SOP or join-window clutter", () => {
-    const live = read("src/components/marketing/live-studyhall.tsx");
-    assert.match(live, /This is a Study Hall/);
-    assert.match(live, /Present\. Encouraging\. Keeping things moving/);
-    assert.doesNotMatch(live, /Ready to join 5 minutes/);
-    assert.doesNotMatch(live, /Do not teach|homework answers/);
-    assert.doesNotMatch(live, /42:18/);
-  });
-
-  it("how-it-works is three customer-journey steps", () => {
-    const steps = read("src/components/marketing/steps.tsx");
-    assert.equal((steps.match(/n: "0/g) || []).length, 3);
-    assert.doesNotMatch(steps, /n: "04"/);
+  it("how Study Hall works is the BOOK → STUDY HALL → REPORT infographic", () => {
+    const graphic = read("src/components/marketing/how-study-hall-works.tsx");
+    assert.match(graphic, /Book\. Study Hall\. Done\./);
+    assert.match(graphic, /Choose your time\./);
+    assert.match(graphic, /Join from your Parent Portal\./);
+    assert.match(graphic, /LIVE GUIDE PRESENCE/);
+    assert.match(graphic, /YOUR CHILD/);
+    assert.match(graphic, /THEIR GUIDE/);
+    assert.match(graphic, /Focused time\. Real progress\./);
+    assert.match(graphic, /Session report\./);
+    assert.match(graphic, /Recording available\./);
+    assert.match(graphic, /View the full session securely in your Parent Portal\./);
+    assert.match(graphic, /Safe\. Structured\. Reliable\./);
+    assert.doesNotMatch(graphic, /Pick a time\.|Get the recap\./);
+    assert.doesNotMatch(graphic, /emailed|email the recording|public (url|link)/i);
+    assert.doesNotMatch(graphic, /30-minute|30 minute|30m/);
+    assert.doesNotMatch(graphic, /mic|raise hand|whiteboard|webcam frame|Live badge/i);
   });
 
   it("parent portal mock uses current destinations, not the old dashboard tabs", () => {
@@ -92,16 +91,14 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach|do not complete homework/i);
   });
 
-  it("homepage section order stays hero → visual → breathing room → live → habits → steps → portal → pricing → trust → faq → cta", () => {
+  it("homepage section order stays hero → breathing room → infographic → habits → portal → pricing → trust → faq → cta", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
       "SiteHero",
-      "TrustRow",
       "WhyStudyHall",
-      "LiveStudyHallDemo",
+      "HowStudyHallWorks",
       "HabitBuilding",
-      "Steps",
       "ProductShowcase",
       "PricingSection",
       "TrustSafety",
@@ -114,6 +111,7 @@ describe("Mobile homepage polish", () => {
       assert.ok(i > last, `${name} must follow previous section`);
       last = i;
     }
+    assert.ok(!/SiteHero[\s\S]*<(TrustRow|LiveStudyHallDemo|Steps)/.test(jsx));
   });
 });
 
@@ -138,33 +136,35 @@ describe("Homepage long-term value + product accuracy", () => {
 
   it("uses Guide as the normal role name and does not rename the product as the Guide", () => {
     assert.doesNotMatch(home, /Accountability Guide/);
-    assert.match(read("src/components/marketing/steps.tsx"), /Join Study Hall/);
-    assert.doesNotMatch(read("src/components/marketing/steps.tsx"), /They join their Guide/);
+    assert.match(read("src/components/marketing/how-study-hall-works.tsx"), /join Study Hall/);
+    assert.doesNotMatch(read("src/components/marketing/how-study-hall-works.tsx"), /They join their Guide/);
   });
 
-  it("breathing-room section appears before habit-building and How it Works", () => {
+  it("breathing-room sits directly after hero and directly before the infographic", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
+    const hero = jsx.indexOf("SiteHero");
     const why = jsx.indexOf("WhyStudyHall");
+    const graphic = jsx.indexOf("HowStudyHallWorks");
     const habits = jsx.indexOf("HabitBuilding");
-    const steps = jsx.indexOf("<Steps");
-    assert.ok(why > -1 && why < habits && why < steps);
+    assert.ok(hero > -1 && hero < why && why < graphic && graphic < habits);
+    const betweenHeroAndWhy = jsx.slice(hero, why);
+    const betweenWhyAndGraphic = jsx.slice(why, graphic);
+    assert.doesNotMatch(betweenHeroAndWhy, /TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
+    assert.doesNotMatch(betweenWhyAndGraphic, /TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
   });
 
   it("homepage marketing does not make absolute academic promises", () => {
     assert.doesNotMatch(home, /guarantees better grades|GPA|will become independent|guaranteed memory/i);
   });
 
-  it("live Study Hall makes the Guide the dominant tile and the child a PIP", () => {
-    const live = read("src/components/marketing/live-studyhall.tsx");
-    const guide = live.indexOf("tutor-portrait.jpg");
-    const child = live.indexOf("studyhall-focus-close.webp");
-    assert.ok(guide > -1 && child > -1);
-    assert.ok(guide < child, "Guide portrait should render as the main stage before the child PIP");
-    assert.match(live, /max-w-\[7\.5rem\]|max-w-\[9rem\]/);
-    assert.match(live, /tutor-portrait\.jpg/);
-    assert.doesNotMatch(live, /Present on video/);
-    assert.doesNotMatch(live, /sm:grid-cols-\[1\.35fr_0\.85fr\]/);
+  it("infographic uses editorial participant photos, not conferencing chrome", () => {
+    const graphic = read("src/components/marketing/how-study-hall-works.tsx");
+    assert.match(graphic, /studyhall-hero-desk\.webp/);
+    assert.match(graphic, /tutor-portrait\.jpg/);
+    assert.doesNotMatch(graphic, /studyhall-focus-close\.webp/);
+    assert.doesNotMatch(graphic, /Present on video|mute|raise hand|whiteboard/i);
+    assert.doesNotMatch(graphic, /screen share|chat panel|Live badge/i);
   });
 
   it("parent portal mock matches current nav and whole-hour prepaid copy", () => {
