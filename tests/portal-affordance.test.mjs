@@ -86,7 +86,8 @@ describe("Portal affordance — view switchers", () => {
     assert.match(src, /Suspended/);
     assert.match(src, /Rejected/);
     assert.match(src, /Pending applicants/);
-    assert.match(src, /aria-label/);
+    assert.match(src, /Guide workforce views/);
+    assert.match(src, /ariaLabel/);
   });
 
   it("Finance uses Guide compensation / Customer money / Customer balances / Disputes controls", () => {

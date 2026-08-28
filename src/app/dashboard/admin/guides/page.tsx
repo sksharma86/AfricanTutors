@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { AdminGuidesDirectory } from "@/components/dashboard/admin-guides-directory";
+import {
+  AdminGuidesDirectory,
+  type AdminGuideDirectoryRow,
+} from "@/components/dashboard/admin-guides-directory";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
@@ -57,7 +60,7 @@ export default async function AdminGuidesPage() {
     profiles: { display_name: string | null } | null;
   }[]).map((g) => ({
     ...g,
-    label: guideWorkforceLabel(g.status, g.approved_at),
+    label: guideWorkforceLabel(g.status, g.approved_at) as AdminGuideDirectoryRow["label"],
     name: g.profiles?.display_name ?? g.profile_id.slice(0, 8),
     upcoming: upcomingByGuide.get(g.profile_id) ?? 0,
     hasWeeklyHours: weeklyHours.has(g.profile_id),
