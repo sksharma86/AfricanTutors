@@ -65,8 +65,10 @@ export function bookingChildNames(booking, fallback = "Your child") {
   if (Array.isArray(booking?.student_first_names) && booking.student_first_names.length) {
     return formatChildNames(booking.student_first_names, fallback);
   }
+  // student_first_name is already the stored first name — do not re-split it.
+  const stored = String(booking?.student_first_name ?? "").trim();
+  if (stored) return stored;
   if (booking?.students?.full_name) return firstNameOf(booking.students.full_name, fallback);
-  if (booking?.student_first_name) return firstNameOf(booking.student_first_name, fallback);
   return fallback;
 }
 

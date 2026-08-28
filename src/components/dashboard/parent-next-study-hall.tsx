@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { LinkButton } from "@/components/ui/button";
 import { bookingChildNames } from "@/lib/household-children.mjs";
-import { parentGuideLabel, parentJoinHint } from "@/lib/parent-portal.mjs";
+import { childFirstName, parentGuideLabel, parentJoinHint } from "@/lib/parent-portal.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 
@@ -32,7 +32,7 @@ export function ParentNextStudyHall({
 
   const tz = next.students?.timezone || DEFAULT_TZ;
   const join = parentJoinHint(next);
-  const child = bookingChildNames(next, "Your child");
+  const child = bookingChildNames(next, childFirstName(next.students?.full_name, "Your child"));
   const guide = parentGuideLabel(next);
   const when = next.scheduled_start
     ? `${formatDayHeading(next.scheduled_start, tz)} · ${formatTime(next.scheduled_start, tz)}${

@@ -188,7 +188,7 @@ describe("Household Study Hall — reports & portals", () => {
     assert.match(form, /How did Study Hall go for each child\?/);
     assert.match(form, /childReports/);
     assert.match(form, /30–60 seconds/);
-    assert.match(form, /Parent note \(optional\)/);
+    assert.match(form, /Note for parent \(optional\)/);
     const api = read("src/app/api/tutor/session-report/route.ts");
     assert.match(api, /submit_household_session_report/);
     assert.match(api, /submit_session_report/);

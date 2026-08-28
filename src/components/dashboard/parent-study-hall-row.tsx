@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { bookingChildNames } from "@/lib/household-children.mjs";
-import { parentGuideLabel, parentStatusLabel } from "@/lib/parent-portal.mjs";
+import { childFirstName, parentGuideLabel, parentStatusLabel } from "@/lib/parent-portal.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 
@@ -19,7 +19,7 @@ export function ParentStudyHallRow({
   const time = booking.scheduled_start
     ? `${formatTime(booking.scheduled_start, tz)}${booking.scheduled_end ? ` – ${formatTime(booking.scheduled_end, tz)}` : ""}`
     : "";
-  const child = bookingChildNames(booking);
+  const child = bookingChildNames(booking, childFirstName(booking.students?.full_name));
   const guide = parentGuideLabel(booking);
 
   return (

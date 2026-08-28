@@ -255,7 +255,7 @@ function ChildFields({
       </fieldset>
 
       <label className="mt-3 block">
-        <span className="text-[11px] font-medium tracking-wide text-ink-500 uppercase">Work completed</span>
+        <span className="text-[11px] font-medium tracking-wide text-ink-500 uppercase">What did they work on?</span>
         <textarea
           value={draft.work}
           onChange={(e) => onChange({ work: e.target.value.slice(0, WORK_SUMMARY_MAX) })}
@@ -297,7 +297,7 @@ function ChildFields({
 
       <label className="mt-3 block">
         <span className="text-[11px] font-medium tracking-wide text-ink-500 uppercase">
-          Parent note (optional)
+          Note for parent (optional)
         </span>
         <textarea
           value={draft.note}
