@@ -52,8 +52,8 @@ export default async function HomePage() {
   return (
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
-      <HouseholdValue />
       <WhyStudyHall />
+      <HouseholdValue />
       <HowStudyHallWorks />
       <HabitBuilding />
       <ProductShowcase />

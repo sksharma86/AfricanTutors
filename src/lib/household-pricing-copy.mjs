@@ -5,17 +5,18 @@
 
 export const HERO_HOUSEHOLD_CUE = "Up to 3 siblings can join one Study Hall.";
 
-export const HOUSEHOLD_VALUE_EYEBROW = "Same Study Hall. Same price.";
+export const HOUSEHOLD_VALUE_EYEBROW = "One Study Hall. One price.";
 
-export const HOUSEHOLD_VALUE_HEADLINE = "One Study Hall. Up to 3 siblings. One price.";
-export const HOUSEHOLD_VALUE_LINES = Object.freeze([
-  "One Study Hall.",
-  "Up to 3 siblings.",
-  "One price.",
-]);
+export const HOUSEHOLD_VALUE_HEADLINE = "Up to 3 siblings can join together.";
 
 export const HOUSEHOLD_VALUE_BODY =
-  "Have more than one child with homework? Up to three siblings can join the same Study Hall with one Guide. You pay for the Study Hall — not per child.";
+  "Have more than one child with homework? Put them in the same Study Hall with one live Guide. You pay for the Study Hall, not per child.";
+
+export const HOUSEHOLD_VALUE_STEPS = Object.freeze([
+  { count: "1 child", price: "Same Study Hall price" },
+  { count: "2 siblings", price: "Same Study Hall price" },
+  { count: "3 siblings", price: "Same Study Hall price" },
+]);
 
 export const FAMILY_VALUE_EYEBROW = "One price. Up to three siblings.";
 

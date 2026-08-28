@@ -11,8 +11,9 @@ import {
   FREE_STUDY_HALL_HOUSEHOLD,
   HERO_HOUSEHOLD_CUE,
   HOUSEHOLD_VALUE_BODY,
+  HOUSEHOLD_VALUE_EYEBROW,
   HOUSEHOLD_VALUE_HEADLINE,
-  HOUSEHOLD_VALUE_LINES,
+  HOUSEHOLD_VALUE_STEPS,
   HOW_IT_WORKS_HOUSEHOLD,
   INFOGRAPHIC_BOOK_BODY,
   INFOGRAPHIC_REPORT_BODY,
@@ -54,8 +55,8 @@ function dollarThreeContexts(text) {
   return out;
 }
 
-describe("Household marketing — early homepage", () => {
-  it("hero keeps the approved headline and From $9/hour", () => {
+describe("Household marketing — homepage placement and compact value", () => {
+  it("hero keeps the approved headline, From $9/hour, and the restrained sibling cue", () => {
     const hero = read("src/components/marketing/site-hero.tsx");
     const page = read("src/app/(marketing)/page.tsx");
     assert.match(hero, /Homework gets done/);
@@ -67,19 +68,37 @@ describe("Household marketing — early homepage", () => {
     assert.match(page, /<HouseholdValue/);
     assert.match(page, /<SiteHero/);
     const heroIdx = page.indexOf("<SiteHero");
-    const householdIdx = page.indexOf("<HouseholdValue");
     const whyIdx = page.indexOf("<WhyStudyHall");
-    assert.ok(heroIdx < householdIdx && householdIdx < whyIdx, "household value appears immediately after the hero");
+    const householdIdx = page.indexOf("<HouseholdValue");
+    const howIdx = page.indexOf("<HowStudyHallWorks");
+    assert.ok(heroIdx < whyIdx, "Before / After follows the hero");
+    assert.ok(whyIdx < householdIdx, "Household follows Before / After");
+    assert.ok(householdIdx < howIdx, "Household precedes How Study Hall Works");
+    assert.doesNotMatch(page.slice(heroIdx, whyIdx), /<HouseholdValue/);
   });
 
-  it("early household moment uses the core phrase without becoming a card wall", () => {
+  it("household headline emphasizes up to 3 siblings, not a second hero", () => {
     const band = read("src/components/marketing/household-value.tsx");
-    assert.equal(HOUSEHOLD_VALUE_HEADLINE, "One Study Hall. Up to 3 siblings. One price.");
-    assert.deepEqual([...HOUSEHOLD_VALUE_LINES], ["One Study Hall.", "Up to 3 siblings.", "One price."]);
-    assert.match(HOUSEHOLD_VALUE_BODY, /You pay for the Study Hall — not per child/);
-    assert.match(band, /HOUSEHOLD_VALUE_LINES/);
-    assert.doesNotMatch(band, /<Image|grid-cols-3/);
+    assert.equal(HOUSEHOLD_VALUE_EYEBROW, "One Study Hall. One price.");
+    assert.equal(HOUSEHOLD_VALUE_HEADLINE, "Up to 3 siblings can join together.");
+    assert.match(HOUSEHOLD_VALUE_BODY, /You pay for the Study Hall, not per child/);
+    assert.match(HOUSEHOLD_VALUE_BODY, /one live Guide/);
+    assert.match(band, /HOUSEHOLD_VALUE_HEADLINE/);
+    assert.match(band, /HOUSEHOLD_VALUE_STEPS/);
+    assert.match(band, /HOUSEHOLD_VALUE_EYEBROW/);
+    assert.doesNotMatch(band, /<Image|grid-cols-3|rounded-\[22px\]|shadow-/);
+    assert.doesNotMatch(band, /transform:\s*scale|scale-\[/);
+    assert.doesNotMatch(band, /text-3xl|text-4xl|text-5xl|min-h-\[|py-16|py-12/);
+    assert.doesNotMatch(band, /\$3|\$3\/hour|per child\/hour/);
     assert.doesNotMatch(band, /Built for big families|for families with multiple children/i);
+    assert.deepEqual(
+      HOUSEHOLD_VALUE_STEPS.map((s) => s.count),
+      ["1 child", "2 siblings", "3 siblings"],
+    );
+    assert.ok(HOUSEHOLD_VALUE_STEPS.every((s) => s.price === "Same Study Hall price"));
+    assert.match(band, /overflow-x-hidden/);
+    assert.match(band, /sm:flex-row/);
+    assert.match(band, /flex-col/);
   });
 });
 

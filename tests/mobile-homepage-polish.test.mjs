@@ -91,12 +91,13 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach|do not complete homework/i);
   });
 
-  it("homepage section order stays hero → breathing room → infographic → habits → portal → pricing → trust → faq → cta", () => {
+  it("homepage section order stays hero → breathing room → household → infographic → habits → portal → pricing → trust → faq → cta", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
       "SiteHero",
       "WhyStudyHall",
+      "HouseholdValue",
       "HowStudyHallWorks",
       "HabitBuilding",
       "ProductShowcase",
@@ -140,18 +141,21 @@ describe("Homepage long-term value + product accuracy", () => {
     assert.doesNotMatch(read("src/components/marketing/how-study-hall-works.tsx"), /They join their Guide/);
   });
 
-  it("breathing-room sits directly after hero and directly before the infographic", () => {
+  it("breathing-room sits directly after hero; household sits between breathing-room and the infographic", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const hero = jsx.indexOf("SiteHero");
     const why = jsx.indexOf("WhyStudyHall");
+    const household = jsx.indexOf("HouseholdValue");
     const graphic = jsx.indexOf("HowStudyHallWorks");
     const habits = jsx.indexOf("HabitBuilding");
-    assert.ok(hero > -1 && hero < why && why < graphic && graphic < habits);
+    assert.ok(hero > -1 && hero < why && why < household && household < graphic && graphic < habits);
     const betweenHeroAndWhy = jsx.slice(hero, why);
-    const betweenWhyAndGraphic = jsx.slice(why, graphic);
-    assert.doesNotMatch(betweenHeroAndWhy, /TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
-    assert.doesNotMatch(betweenWhyAndGraphic, /TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
+    const betweenWhyAndHousehold = jsx.slice(why, household);
+    const betweenHouseholdAndGraphic = jsx.slice(household, graphic);
+    assert.doesNotMatch(betweenHeroAndWhy, /HouseholdValue|TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
+    assert.doesNotMatch(betweenWhyAndHousehold, /HowStudyHallWorks|TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
+    assert.doesNotMatch(betweenHouseholdAndGraphic, /TrustRow|LiveStudyHallDemo|HabitBuilding|ProductShowcase/);
   });
 
   it("homepage marketing does not make absolute academic promises", () => {

@@ -1,8 +1,8 @@
 export const HERO_HOUSEHOLD_CUE: string;
 export const HOUSEHOLD_VALUE_EYEBROW: string;
 export const HOUSEHOLD_VALUE_HEADLINE: string;
-export const HOUSEHOLD_VALUE_LINES: readonly string[];
 export const HOUSEHOLD_VALUE_BODY: string;
+export const HOUSEHOLD_VALUE_STEPS: readonly { count: string; price: string }[];
 export const FAMILY_VALUE_EYEBROW: string;
 export const FAMILY_VALUE_BODY: string;
 export const FAMILY_VALUE_RATE: string;
