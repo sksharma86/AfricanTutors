@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { CtaSection } from "@/components/marketing/cta-section";
 import { Faq } from "@/components/marketing/faq";
 import { HabitBuilding } from "@/components/marketing/habit-building";
+import { HouseholdValue } from "@/components/marketing/household-value";
 import { HowStudyHallWorks } from "@/components/marketing/how-study-hall-works";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
@@ -30,6 +31,7 @@ const HOME_FAQ = FAQ_ITEMS.filter((f) =>
     "Who are the Guides?",
     "Are sessions recorded?",
     "What if my child needs me during Study Hall?",
+    "Can siblings join the same Study Hall?",
     "Do prepaid hours expire?",
     "How does the free first session work?",
   ].includes(f.q),
@@ -50,6 +52,7 @@ export default async function HomePage() {
   return (
     <div className="mkt-atmosphere">
       <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
+      <HouseholdValue />
       <WhyStudyHall />
       <HowStudyHallWorks />
       <HabitBuilding />

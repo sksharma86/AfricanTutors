@@ -52,8 +52,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     a: "Recordings stay available for 60 days after the session. They are not stored permanently.",
   },
   {
-    q: "Can siblings participate?",
-    a: "Yes. Up to three children from the same household can join one Study Hall — one time, one Guide, one room — at no extra cost. The price is based on session length, not the number of children. The free first Study Hall is one per account and may include up to three children.",
+    q: "Can siblings join the same Study Hall?",
+    a: "Yes. Up to three children from the same household can join one Study Hall together at no additional cost per child. All participating children should remain visible on camera during the session. You receive a short report with feedback for each child.",
   },
   {
     q: "Can I cancel?",
@@ -81,7 +81,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Can I book for more than one child?",
-    a: "Yes. One parent account can book for multiple children. The free session is one per household (one per account), not one per child.",
+    a: "Yes. One parent account can book for one, two, or three children. The free first Study Hall is one per account, not one per child — and up to three siblings can join that one Study Hall.",
   },
   {
     q: "Do prepaid hours expire?",

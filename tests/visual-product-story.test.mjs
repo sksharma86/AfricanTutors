@@ -27,11 +27,14 @@ describe("Visual product story — homepage contracts", () => {
     assert.match(graphic, />Study Hall</);
     assert.match(graphic, />Report</);
     assert.match(graphic, /Choose your time\./);
+    assert.match(graphic, /One child or up to three siblings can join\./);
     assert.match(graphic, /Join from your Parent Portal\./);
     assert.match(graphic, /LIVE GUIDE PRESENCE/);
     assert.match(graphic, /YOUR CHILD/);
     assert.match(graphic, /THEIR GUIDE/);
     assert.match(graphic, /Focused time\. Real progress\./);
+    assert.match(graphic, /One live Guide keeps the Study Hall focused\./);
+    assert.match(graphic, /Useful feedback for each child who attended\./);
     assert.match(graphic, /Session report\./);
     assert.match(graphic, /Recording available\./);
     assert.match(graphic, /Parent Portal/);

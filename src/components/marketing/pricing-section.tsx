@@ -7,7 +7,9 @@ import { packageBadge } from "@/lib/packages.mjs";
 import {
   FAMILY_VALUE_BODY,
   FAMILY_VALUE_EYEBROW,
+  FAMILY_VALUE_MATH,
   FAMILY_VALUE_RATE,
+  FREE_STUDY_HALL_HOUSEHOLD,
 } from "@/lib/household-pricing-copy.mjs";
 import {
   AS_LOW_AS_LABEL,
@@ -54,7 +56,7 @@ export function PricingSection({
             <p className="mt-3 font-display text-[1.85rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-4xl">
               Your first Study Hall is on us.
             </p>
-            <p className="mt-3 text-[15px] leading-7 text-ink-500">60 minutes. No credit card required.</p>
+            <p className="mt-3 text-[15px] leading-7 text-ink-500">{FREE_STUDY_HALL_HOUSEHOLD}</p>
             <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
               <p className="font-display text-5xl font-semibold tracking-[-0.04em] text-ink-900">$0</p>
               <TrackCta href={ctaHref} cta={ctaLabel} location="pricing" variant="primary" size="lg">
@@ -126,7 +128,12 @@ export function PricingSection({
             {FAMILY_VALUE_EYEBROW}
           </p>
           <p className="mt-3 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_BODY}</p>
-          <p className="mt-2 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_RATE}</p>
+          <ul className="mt-4 space-y-1.5 text-sm leading-6 text-ink-600">
+            {FAMILY_VALUE_MATH.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="mt-4 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_RATE}</p>
         </div>
 
         <p className="mt-8 text-sm text-ink-500">

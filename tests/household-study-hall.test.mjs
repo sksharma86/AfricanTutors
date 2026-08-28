@@ -114,14 +114,15 @@ describe("Household Study Hall — marketing & FAQ", () => {
     assert.match(pricing, /FAMILY_VALUE_EYEBROW/);
     assert.match(pricing, /FAMILY_VALUE_BODY/);
     assert.match(pricing, /FAMILY_VALUE_RATE/);
-    assert.equal(FAMILY_VALUE_EYEBROW, "HAVE MORE THAN ONE CHILD?");
-    assert.match(FAMILY_VALUE_BODY, /Up to three children in your household can join the same Study Hall at no extra cost/);
+    assert.equal(FAMILY_VALUE_EYEBROW, "One price. Up to three siblings.");
+    assert.match(FAMILY_VALUE_BODY, /no additional cost per child/);
+    assert.match(FAMILY_VALUE_BODY, /You pay for the Study Hall, not per child/);
     assert.equal(
       FAMILY_VALUE_RATE,
-      "As little as $3 per child, per hour when three siblings attend together with our 28-hour package.",
+      "With three siblings in the same Study Hall, our 28-hour package works out to $3 per child/hour.",
     );
     assert.doesNotMatch(pricing, /\$3\/hour(?! when)/);
-    assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /three children|\$3 per child/i);
+    assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /\$3 per child|From \$3/i);
   });
 
   it("FAQ no longer says siblings book separate Study Halls", () => {

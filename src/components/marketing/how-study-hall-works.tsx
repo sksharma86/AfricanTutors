@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 
+import {
+  INFOGRAPHIC_BOOK_BODY,
+  INFOGRAPHIC_REPORT_BODY,
+  INFOGRAPHIC_STUDY_BODY,
+} from "@/lib/household-pricing-copy.mjs";
+
 const GOLD = "#C99125";
 const CREAM = "#FCFAF6";
 const DIVIDER = "#E6E0D7";
@@ -222,7 +228,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 iconBg="#FBF3E3"
                 icon={<CalendarClockIcon />}
                 title="Choose your time."
-                body="Choose when you want your child to sit down and focus."
+                body={INFOGRAPHIC_BOOK_BODY}
                 matchHeight
               />
               <div className="my-4 h-px w-full" style={{ backgroundColor: DIVIDER }} />
@@ -311,9 +317,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               </span>
               <div className="text-left">
                 <p className="text-[18px] font-bold leading-tight text-ink">Focused time. Real progress.</p>
-                <p className="mt-0.5 text-[15px] leading-snug text-[#333]">
-                  Your child works. The Guide keeps things on track.
-                </p>
+                <p className="mt-0.5 text-[15px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
               </div>
             </div>
           </div>
@@ -332,7 +336,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 iconBg="#EAF4F8"
                 icon={<DocumentCheckIcon />}
                 title="Session report."
-                body="Get your Guide’s report after Study Hall."
+                body={INFOGRAPHIC_REPORT_BODY}
                 matchHeight
               />
               <div className="my-4 h-px w-full" style={{ backgroundColor: DIVIDER }} />
@@ -358,7 +362,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               iconBg="#FBF3E3"
               icon={<CalendarClockIcon />}
               title="Choose your time."
-              body="Choose when you want your child to sit down and focus."
+              body={INFOGRAPHIC_BOOK_BODY}
             />
             <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
             <FlowItem
@@ -430,9 +434,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               <div className="mt-5 flex flex-col items-center text-center">
                 <PeopleIcon />
                 <p className="mt-2 text-[19px] font-bold text-ink">Focused time. Real progress.</p>
-                <p className="mt-1 text-[16px] leading-snug text-[#333]">
-                  Your child works. The Guide keeps things on track.
-                </p>
+                <p className="mt-1 text-[16px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
               </div>
             </div>
           </div>
@@ -451,7 +453,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               iconBg="#EAF4F8"
               icon={<DocumentCheckIcon />}
               title="Session report."
-              body="Get your Guide’s report after Study Hall."
+              body={INFOGRAPHIC_REPORT_BODY}
             />
             <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
             <FlowItem
