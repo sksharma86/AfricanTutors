@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 const GOLD = "#C99125";
 const CREAM = "#FCFAF6";
@@ -248,15 +249,19 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
 
             <div className="mt-6 grid w-full grid-cols-2 gap-x-8 xl:mt-7 xl:gap-x-[64px]">
               <div className="relative col-span-2 grid grid-cols-2 gap-x-8 xl:gap-x-[64px]">
-                <img
+                <Image
                   src="/images/marketing/studyhall-hero-desk.webp"
                   alt="A school-age child seated at a desk, focused on homework"
-                  className="aspect-[278/228] w-full justify-self-end rounded-[16px] object-cover xl:h-[228px] xl:w-[278px]"
+                  width={278}
+                  height={228}
+                  className="aspect-[278/228] h-auto w-full justify-self-end rounded-[16px] object-cover xl:h-[228px] xl:w-[278px]"
                 />
-                <img
+                <Image
                   src="/images/tutor-portrait.jpg"
                   alt="A friendly adult Guide at a computer, present and engaged"
-                  className="aspect-[278/228] w-full justify-self-start rounded-[16px] object-cover object-[50%_18%] xl:h-[228px] xl:w-[278px]"
+                  width={278}
+                  height={228}
+                  className="aspect-[278/228] h-auto w-full justify-self-start rounded-[16px] object-cover object-[50%_18%] xl:h-[228px] xl:w-[278px]"
                 />
                 <span
                   className="pointer-events-none absolute inset-0 flex items-center justify-center text-[42px] font-medium leading-none text-ink xl:text-[45px]"
@@ -366,10 +371,12 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 </p>
                 <span className="h-px w-10" style={{ backgroundColor: GOLD }} />
               </div>
-              <img
+              <Image
                 src="/images/marketing/studyhall-hero-desk.webp"
                 alt="A school-age child seated at a desk, focused on homework"
-                className="mt-5 aspect-[4/3] w-full rounded-[16px] object-cover"
+                width={350}
+                height={263}
+                className="mt-5 aspect-[4/3] h-auto w-full rounded-[16px] object-cover"
               />
               <p
                 className="mt-2.5 flex h-[38px] w-[152px] items-center justify-center rounded-full text-[16px] font-semibold text-ink"
@@ -383,10 +390,12 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               <p className="my-4 text-[42px] font-medium leading-none text-ink" aria-hidden="true">
                 +
               </p>
-              <img
+              <Image
                 src="/images/tutor-portrait.jpg"
                 alt="A friendly adult Guide at a computer, present and engaged"
-                className="aspect-[4/3] w-full rounded-[16px] object-cover object-[50%_18%]"
+                width={350}
+                height={263}
+                className="aspect-[4/3] h-auto w-full rounded-[16px] object-cover object-[50%_18%]"
               />
               <p
                 className="mt-2.5 flex h-[38px] w-[152px] items-center justify-center rounded-full text-[16px] font-semibold text-ink"
