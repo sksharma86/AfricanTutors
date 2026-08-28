@@ -183,6 +183,11 @@ async function leftoverBlockers(admin, userId) {
  * on_auth_user_created trigger runs, creating the matching profile rows.
  */
 export async function createUser({ requestedRole = "student", displayName = "Test User" } = {}) {
+  if (isCanonicalDemoProject() && process.env.ALLOW_DEMO_DB_WRITES !== "1") {
+    throw new Error(
+      "createUser refused: this is the canonical shared demo project. Point tests at a dedicated Supabase project, or set ALLOW_DEMO_DB_WRITES=1 for one isolated throwaway probe. DEMO_DB_LOCK=1 is also honored.",
+    );
+  }
   if (process.env.DEMO_DB_LOCK === "1" && isCanonicalDemoProject()) {
     throw new Error(
       "createUser refused: DEMO_DB_LOCK=1 is set on the canonical demo project. Use a dedicated test Supabase project.",

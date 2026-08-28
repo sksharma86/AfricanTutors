@@ -126,8 +126,11 @@ if (unexpected.length) {
 for (const [role, spec] of Object.entries(PROTECTED)) {
   const u = beforeUsers.find((x) => x.id === spec.id);
   if (!u) fail(`Protected ${role} ${spec.id} is missing.`);
-  if ((u.email || "").toLowerCase() !== spec.email.toLowerCase()) {
-    fail(`Protected ${role} email mismatch: expected ${spec.email}, found ${u.email}`);
+  const email = (u.email || "").toLowerCase();
+  const allowed = new Set([spec.email.toLowerCase()]);
+  if (role === "admin") allowed.add(NEW_ADMIN_EMAIL.toLowerCase());
+  if (!allowed.has(email)) {
+    fail(`Protected ${role} email mismatch: expected ${[...allowed].join(" or ")}, found ${u.email}`);
   }
 }
 
@@ -187,7 +190,7 @@ const wipeOrder = [
   ["tutor_cancellation_requests", "id"],
   ["parent_escalation_requests", "id"],
   ["email_deliveries", "id"],
-  ["booking_children", "id"],
+  ["booking_children", "booking_id"],
   ["bookings", "id"],
   ["students", "id"],
   ["refunds", "id"],
