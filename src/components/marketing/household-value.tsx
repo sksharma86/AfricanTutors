@@ -6,7 +6,7 @@ import {
 } from "@/lib/household-pricing-copy.mjs";
 
 /**
- * Early homepage household cue. Typography only — no photography, no card wall.
+ * Early homepage household cue. Typography only.
  */
 export function HouseholdValue() {
   const [one, two, three] = HOUSEHOLD_VALUE_LINES;

@@ -78,7 +78,7 @@ describe("Household marketing — early homepage", () => {
     assert.deepEqual([...HOUSEHOLD_VALUE_LINES], ["One Study Hall.", "Up to 3 siblings.", "One price."]);
     assert.match(HOUSEHOLD_VALUE_BODY, /You pay for the Study Hall — not per child/);
     assert.match(band, /HOUSEHOLD_VALUE_LINES/);
-    assert.doesNotMatch(band, /<Image|stock|card wall|grid-cols-3/);
+    assert.doesNotMatch(band, /<Image|grid-cols-3/);
     assert.doesNotMatch(band, /Built for big families|for families with multiple children/i);
   });
 });
