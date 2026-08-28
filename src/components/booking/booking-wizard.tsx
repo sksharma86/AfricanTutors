@@ -15,6 +15,13 @@ import {
   prepaidCoversDuration,
   remainingBalanceMinutes,
 } from "@/lib/booking-prepaid-display.mjs";
+import {
+  MAX_CHILDREN_PER_STUDY_HALL,
+  firstNameOf,
+  formatChildNames,
+  uniqueStudentIds,
+  wouldExceedChildLimit,
+} from "@/lib/household-children.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -73,7 +80,10 @@ export function BookingWizard({
   const [busy, setBusy] = useState(false);
   const submittingRef = useRef(false);
 
-  const [studentId, setStudentId] = useState<string>(initialStudents[0]?.id ?? "");
+  const [studentIds, setStudentIds] = useState<string[]>(
+    initialStudents[0]?.id ? [initialStudents[0].id] : [],
+  );
+  const [childLimitMessage, setChildLimitMessage] = useState<string | null>(null);
   const [freeTrialUsed, setFreeTrialUsed] = useState<boolean | null>(null);
 
   const [note, setNote] = useState("");
@@ -107,8 +117,12 @@ export function BookingWizard({
   const [newGrade, setNewGrade] = useState("9");
   const [newTz, setNewTz] = useState("America/Chicago");
 
-  const student = students.find((s) => s.id === studentId) ?? null;
+  const selectedStudents = students.filter((s) => studentIds.includes(s.id));
+  const student = selectedStudents[0] ?? null;
   const studentTz = student?.timezone || browserTimezone();
+  const joiningNames = selectedStudents.map((s) => firstNameOf(s.full_name)).filter(Boolean);
+  const joiningLabel = formatChildNames(joiningNames, "Your child");
+  const multiChild = selectedStudents.length >= 2;
 
   // Free trial is ONE PER ACCOUNT (not per student), so eligibility keys on the
   // signed-in account, not the selected student. Server remains authoritative.
@@ -185,7 +199,11 @@ export function BookingWizard({
         return;
       }
       setStudents((prev) => [...prev, data as StudentRow]);
-      setStudentId(data.id);
+      setStudentIds((prev) => {
+        if (wouldExceedChildLimit(prev, data.id)) return prev;
+        return uniqueStudentIds([...prev, data.id]);
+      });
+      setChildLimitMessage(null);
       setNewName("");
     } finally {
       setBusy(false);
@@ -216,8 +234,24 @@ export function BookingWizard({
     setSlots((data ?? []).map((r: { slot_start: string }) => r.slot_start));
   }
 
+  function toggleChild(id: string) {
+    setError(null);
+    if (studentIds.includes(id)) {
+      if (studentIds.length === 1) return;
+      setStudentIds(studentIds.filter((x) => x !== id));
+      setChildLimitMessage(null);
+      return;
+    }
+    if (wouldExceedChildLimit(studentIds, id)) {
+      setChildLimitMessage("Up to 3 children can join the same Study Hall.");
+      return;
+    }
+    setStudentIds([...studentIds, id]);
+    setChildLimitMessage(null);
+  }
+
   async function submitBooking() {
-    if (!supabase || !selectedSlot || submittingRef.current) return;
+    if (!supabase || !selectedSlot || !studentIds.length || submittingRef.current) return;
     submittingRef.current = true;
     setBusy(true);
     setError(null);
@@ -230,7 +264,8 @@ export function BookingWizard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentId,
+          studentId: studentIds[0],
+          studentIds,
           subjectId: null,
           otherSubject: null,
           note: note.trim() || null,
@@ -398,7 +433,7 @@ export function BookingWizard({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Booking steps">
-        {stepPill(1, "Child", step === "student", ["duration", "time", "confirm"].includes(step))}
+        {stepPill(1, "Who", step === "student", ["duration", "time", "confirm"].includes(step))}
         {stepPill(2, "Session", step === "duration", ["time", "confirm"].includes(step))}
         {stepPill(3, "Date & time", step === "time", ["confirm"].includes(step))}
         {stepPill(4, "Confirm", step === "confirm", false)}
@@ -411,35 +446,54 @@ export function BookingWizard({
       {/* STEP 1: child */}
       {step === "student" ? (
         <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">Who is this Study Hall for?</h2>
-          {students.length > 0 ? (
+          <h2 className="font-display text-xl font-semibold text-ink-900">Who is joining Study Hall?</h2>
+          {students.length === 1 ? (
+            <p className="mt-3 text-sm text-ink-600">
+              <span className="font-medium text-ink-900">{students[0].full_name}</span>
+              {students[0].grade_level ? (
+                <span className="text-ink-400"> · Grade {students[0].grade_level}</span>
+              ) : null}
+            </p>
+          ) : students.length > 1 ? (
             <div className="mt-4 space-y-3">
-              {students.map((s) => (
-                <label
-                  key={s.id}
-                  className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 ${
-                    studentId === s.id ? "border-ink-900 bg-ink-50" : "border-ink-200 hover:border-ink-300"
-                  }`}
-                >
-                  <span>
-                    <span className="font-medium text-ink-900">{s.full_name}</span>
-                    <span className="ml-2 text-sm text-ink-400">
-                      {s.grade_level ? `Grade ${s.grade_level}` : ""}
+              <p className="text-sm text-ink-500">Select up to {MAX_CHILDREN_PER_STUDY_HALL} children.</p>
+              {students.map((s) => {
+                const checked = studentIds.includes(s.id);
+                return (
+                  <label
+                    key={s.id}
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 ${
+                      checked ? "border-ink-900 bg-ink-50" : "border-ink-200 hover:border-ink-300"
+                    }`}
+                  >
+                    <span>
+                      <span className="font-medium text-ink-900">{s.full_name}</span>
+                      <span className="ml-2 text-sm text-ink-400">
+                        {s.grade_level ? `Grade ${s.grade_level}` : ""}
+                      </span>
                     </span>
-                  </span>
-                  <input
-                    type="radio"
-                    name="student"
-                    checked={studentId === s.id}
-                    onChange={() => setStudentId(s.id)}
-                    className="h-4 w-4"
-                  />
-                </label>
-              ))}
+                    <input
+                      type="checkbox"
+                      name="joining"
+                      checked={checked}
+                      onChange={() => toggleChild(s.id)}
+                      className="h-4 w-4"
+                    />
+                  </label>
+                );
+              })}
             </div>
           ) : (
             <p className="mt-2 text-sm text-ink-500">Add the child you&apos;re booking for to get started.</p>
           )}
+          {childLimitMessage ? (
+            <p className="mt-3 text-sm font-medium text-ink-800">{childLimitMessage}</p>
+          ) : null}
+          {multiChild ? (
+            <p className="mt-3 text-sm text-ink-600">
+              All children joining the Study Hall should remain visible on camera during the session.
+            </p>
+          ) : null}
 
           <details className="mt-5 rounded-xl border border-dashed border-ink-200 p-4" open={students.length === 0}>
             <summary className="cursor-pointer text-sm font-medium text-ink-700">Add a child</summary>
@@ -479,7 +533,7 @@ export function BookingWizard({
           </details>
 
           <div className="mt-6">
-            <Button onClick={() => setStep("duration")} disabled={!studentId}>
+            <Button onClick={() => setStep("duration")} disabled={!studentIds.length}>
               Continue
             </Button>
           </div>
@@ -577,8 +631,7 @@ export function BookingWizard({
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a date &amp; time</h2>
           <p className="mt-1 text-sm text-ink-500">
-            Times shown in {student?.full_name}&apos;s timezone ({tzAbbreviation(new Date().toISOString(), studentTz)}
-            ).
+            Times shown in {tzAbbreviation(new Date().toISOString(), studentTz)}.
           </p>
           {slotsLoading ? (
             <p className="mt-6 text-sm text-ink-400">Finding available Study Hall times…</p>
@@ -688,8 +741,12 @@ export function BookingWizard({
           </p>
           <dl className="mt-4 divide-y divide-ink-100 text-sm">
             <Row
-              label="Child"
-              value={`${student?.full_name}${student?.grade_level ? ` · Grade ${student.grade_level}` : ""}`}
+              label={selectedStudents.length > 1 ? "Children" : "Child"}
+              value={
+                selectedStudents.length > 1
+                  ? joiningLabel
+                  : `${student?.full_name ?? joiningLabel}${student?.grade_level ? ` · Grade ${student.grade_level}` : ""}`
+              }
             />
             {selectedSlot ? (
               <Row
@@ -727,6 +784,11 @@ export function BookingWizard({
               </>
             ) : null}
           </dl>
+          {multiChild ? (
+            <p className="mt-3 text-sm text-ink-600">
+              All children joining the Study Hall should remain visible on camera during the session.
+            </p>
+          ) : null}
           <div className="mt-4">
             <label className="text-sm font-medium text-ink-800">
               Anything we should know? <span className="text-ink-400">(optional)</span>

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
+import { missingHouseholdColumns, missingStudentIdsRpc } from "@/lib/household-children.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -98,6 +99,7 @@ export async function getAvailableSlots(params: {
  */
 export async function requestBooking(params: {
   studentId: string;
+  studentIds?: string[];
   subjectId: string | null;
   otherSubject?: string | null;
   note?: string | null;
@@ -106,7 +108,8 @@ export async function requestBooking(params: {
   isFreeTrial: boolean;
 }): Promise<string> {
   const supabase = await client();
-  const { data, error } = await supabase.rpc("create_booking", {
+  const studentIds = params.studentIds ?? [params.studentId];
+  const bookingArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
     p_other_subject: params.subjectId ? null : (params.otherSubject ?? null),
@@ -114,7 +117,17 @@ export async function requestBooking(params: {
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+  };
+  let { data, error } = await supabase.rpc("create_booking", {
+    ...bookingArgs,
+    p_student_ids: studentIds,
   });
+  if (error && missingStudentIdsRpc(error)) {
+    if (studentIds.length > 1) {
+      throw new Error("Up to 3 children can join the same Study Hall.");
+    }
+    ({ data, error } = await supabase.rpc("create_booking", bookingArgs));
+  }
   if (error) throw new Error(error.message);
   return data as string;
 }
@@ -129,13 +142,14 @@ export async function cancelBooking(bookingId: string): Promise<void> {
 /** Confirmation/detail data for a booking the caller is allowed to read (RLS). */
 export async function getBookingConfirmation(bookingId: string) {
   const supabase = await client();
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(
-      "id, public_reference, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, price_cents, is_free_trial, status, payment_status, tutor_display_name, student_first_name",
-    )
-    .eq("id", bookingId)
-    .maybeSingle();
+  const householdSelect =
+    "id, public_reference, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, price_cents, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names, child_count";
+  const legacySelect =
+    "id, public_reference, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, price_cents, is_free_trial, status, payment_status, tutor_display_name, student_first_name";
+  let { data, error } = await supabase.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
+  if (error && missingHouseholdColumns(error)) {
+    ({ data, error } = await supabase.from("bookings").select(legacySelect).eq("id", bookingId).maybeSingle());
+  }
   if (error) throw new Error(error.message);
   return data;
 }

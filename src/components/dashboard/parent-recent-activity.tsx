@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 import { childFirstName, parentGuideLabel } from "@/lib/parent-portal.mjs";
 import { recordingAvailabilityLabel } from "@/lib/recording-retention.mjs";
 import { formatDayHeading } from "@/lib/timezone";
@@ -22,7 +23,7 @@ export function ParentRecentActivity({
 
   const tz = booking.students?.timezone || DEFAULT_TZ;
   const when = booking.scheduled_start ? formatDayHeading(booking.scheduled_start, tz) : "Recently";
-  const child = childFirstName(booking.students?.full_name);
+  const child = bookingChildNames(booking, childFirstName(booking.students?.full_name));
   const guide = parentGuideLabel(booking);
   const playable = recording?.status === "completed" && !recording.deleted_at;
   const recLabel = !recording

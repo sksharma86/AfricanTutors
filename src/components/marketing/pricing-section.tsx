@@ -5,6 +5,11 @@ import { Container } from "@/components/ui/container";
 import type { PublicPackage } from "@/lib/marketing";
 import { packageBadge } from "@/lib/packages.mjs";
 import {
+  FAMILY_VALUE_BODY,
+  FAMILY_VALUE_EYEBROW,
+  FAMILY_VALUE_RATE,
+} from "@/lib/household-pricing-copy.mjs";
+import {
   AS_LOW_AS_LABEL,
   FREE_TRIAL_CTA,
   PAYG_PRICE_USD,
@@ -114,6 +119,14 @@ export function PricingSection({
               );
             })}
           </div>
+        </div>
+
+        <div className="mt-6 rounded-[22px] bg-white px-5 py-6 ring-1 ring-ink-900/[0.06] sm:px-8">
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-gold-700 uppercase">
+            {FAMILY_VALUE_EYEBROW}
+          </p>
+          <p className="mt-3 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_BODY}</p>
+          <p className="mt-2 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_RATE}</p>
         </div>
 
         <p className="mt-8 text-sm text-ink-500">

@@ -6,6 +6,7 @@ import { AdminWhen } from "@/components/dashboard/admin-when";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { lookupEmail } from "@/lib/admin-service";
 import { requireRole } from "@/lib/auth";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 import { formatCents } from "@/lib/pricing";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -46,10 +47,20 @@ export default async function AdminCustomerDetailPage({
       supabase!.from("students").select("id, full_name, grade_level").eq("account_id", accountId),
       supabase!
         .from("bookings")
-        .select("id, student_first_name, tutor_display_name, scheduled_start, status, public_reference")
+        .select("id, student_first_name, student_first_names, tutor_display_name, scheduled_start, status, public_reference")
         .eq("account_id", accountId)
         .order("scheduled_start", { ascending: false, nullsFirst: false })
-        .limit(40),
+        .limit(40)
+        .then((r) =>
+          r.error && /student_first_names/i.test(r.error.message)
+            ? supabase!
+                .from("bookings")
+                .select("id, student_first_name, tutor_display_name, scheduled_start, status, public_reference")
+                .eq("account_id", accountId)
+                .order("scheduled_start", { ascending: false, nullsFirst: false })
+                .limit(40)
+            : r,
+        ),
       supabase!.rpc("get_customer_balances", { p_account: accountId }),
       supabase!
         .from("payments")
@@ -177,7 +188,7 @@ export default async function AdminCustomerDetailPage({
               return (
                 <li key={b.id} className="py-2">
                   <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-900 hover:underline">
-                    {b.student_first_name ?? "Child"}
+                    {bookingChildNames(b, "Child")}
                   </Link>
                   <p className="text-xs text-ink-400">
                     {b.scheduled_start ? <AdminWhen iso={b.scheduled_start} className="inline-block align-baseline" /> : "—"}
@@ -254,7 +265,7 @@ export default async function AdminCustomerDetailPage({
 function BookingMini({
   rows,
 }: {
-  rows: { id: string; student_first_name: string | null; tutor_display_name: string | null; scheduled_start: string | null }[];
+  rows: { id: string; student_first_name: string | null; student_first_names?: string[] | null; tutor_display_name: string | null; scheduled_start: string | null }[];
 }) {
   if (rows.length === 0) return <p className="mt-2 text-sm text-ink-500">None.</p>;
   return (
@@ -262,7 +273,7 @@ function BookingMini({
       {rows.map((b) => (
         <li key={b.id} className="py-2">
           <Link href={`/dashboard/admin/study-halls/${b.id}`} className="font-medium text-ink-900 hover:underline">
-            {b.student_first_name ?? "Child"}
+            {bookingChildNames(b, "Child")}
           </Link>
           <p className="text-xs text-ink-400">
             {b.tutor_display_name ?? "No Guide"}

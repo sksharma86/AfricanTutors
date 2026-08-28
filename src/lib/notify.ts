@@ -11,6 +11,7 @@ import {
   parentCancellationSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
+import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { sendParentAttentionSms } from "@/lib/telephony/client";
 
@@ -181,13 +182,31 @@ async function resolveFunding(
 }
 
 async function loadBooking(service: SupabaseClient, bookingId: string) {
-  const { data: b } = await service
-    .from("bookings")
-    .select(
-      "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name",
-    )
-    .eq("id", bookingId)
-    .maybeSingle();
+  const householdSelect =
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names";
+  const legacySelect =
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name";
+  const first = await service.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
+  const retry = first.data
+    ? null
+    : await service.from("bookings").select(legacySelect).eq("id", bookingId).maybeSingle();
+  const b = (first.data ?? retry?.data ?? null) as {
+    id: string;
+    account_id: string | null;
+    student_id: string | null;
+    tutor_id: string | null;
+    subject_name: string | null;
+    other_subject_text: string | null;
+    scheduled_start: string | null;
+    scheduled_end: string | null;
+    duration_minutes: number | null;
+    is_free_trial: boolean | null;
+    status: string | null;
+    payment_status: string | null;
+    tutor_display_name: string | null;
+    student_first_name: string | null;
+    student_first_names?: string[] | null;
+  } | null;
   if (!b) return null;
   let studentTz = "UTC";
   if (b.student_id) {
@@ -199,13 +218,21 @@ async function loadBooking(service: SupabaseClient, bookingId: string) {
     const { data: tp } = await service.from("tutor_profiles").select("timezone").eq("profile_id", b.tutor_id).maybeSingle();
     tutorTz = tp?.timezone || "UTC";
   }
+  const studentNames =
+    Array.isArray(b.student_first_names) && b.student_first_names.length
+      ? b.student_first_names
+      : b.student_first_name
+        ? [b.student_first_name]
+        : [];
   return {
     ...b,
     subject: b.subject_name ?? (b.other_subject_text ? `Other — ${b.other_subject_text}` : "Study Hall"),
     studentTz,
     tutorTz,
     tutorFirst: firstName(b.tutor_display_name),
-    studentFirst: b.student_first_name ?? null,
+    studentNames,
+    studentFirst: formatChildNames(studentNames, b.student_first_name ?? "your child"),
+    studyHallPossessive: possessiveStudyHall(studentNames),
   };
 }
 
@@ -238,6 +265,7 @@ export async function notifyBookingConfirmed(bookingId: string) {
       durationMinutes: b.duration_minutes,
       tutorName: b.tutorFirst,
       studentName: b.studentFirst,
+      studentNames: b.studentNames,
       funding,
       appUrl: APP_URL,
       bookingId,
@@ -257,6 +285,7 @@ export async function notifyBookingConfirmed(bookingId: string) {
         tz: b.tutorTz,
         durationMinutes: b.duration_minutes,
         studentName: b.studentFirst,
+        studentNames: b.studentNames,
         appUrl: APP_URL,
         bookingId,
       }),
@@ -360,6 +389,7 @@ export async function notifyCancellation(
       bookingId,
       body: parentCancellationSms({
         studentName: b.studentFirst,
+        studentNames: b.studentNames,
         whenISO: b.scheduled_start,
         tz: b.studentTz,
       }),
@@ -418,6 +448,7 @@ export async function notifyReassignment(
           tz: b.tutorTz,
           durationMinutes: b.duration_minutes,
           studentName: b.studentFirst,
+          studentNames: b.studentNames,
           appUrl: APP_URL,
           bookingId,
         }),
@@ -512,6 +543,7 @@ export async function notifySessionReportReady(bookingId: string, reportId: stri
     bookingId,
     rendered: T.sessionReportReady({
       studentName: b.studentFirst,
+      studentNames: b.studentNames,
       whenISO: b.scheduled_start,
       tz: b.studentTz,
       appUrl: APP_URL,
@@ -604,6 +636,7 @@ export async function notifyReminder(bookingId: string, role: "customer" | "tuto
       durationMinutes: b.duration_minutes,
       tutorName: b.tutorFirst,
       studentName: b.studentFirst,
+      studentNames: b.studentNames,
       appUrl: APP_URL,
       bookingId,
     }),
@@ -618,6 +651,7 @@ export async function notifyReminder(bookingId: string, role: "customer" | "tuto
       bookingId,
       body: parentSessionReminderSms({
         studentName: b.studentFirst,
+        studentNames: b.studentNames,
         whenISO: b.scheduled_start,
         tz: b.studentTz,
       }),
@@ -639,6 +673,7 @@ export async function notifyGuideReportRequired(bookingId: string) {
     bookingId,
     rendered: T.guideReportRequired({
       studentName: b.studentFirst,
+      studentNames: b.studentNames,
       whenISO: b.scheduled_start,
       tz: b.tutorTz,
       appUrl: APP_URL,
@@ -658,6 +693,7 @@ export async function notifyGuideReportOverdue(bookingId: string) {
     bookingId,
     rendered: T.guideReportOverdue({
       studentName: b.studentFirst,
+      studentNames: b.studentNames,
       whenISO: b.scheduled_start,
       tz: b.tutorTz,
       appUrl: APP_URL,

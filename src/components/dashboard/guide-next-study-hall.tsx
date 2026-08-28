@@ -3,7 +3,7 @@ import Link from "next/link";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { LinkButton } from "@/components/ui/button";
-import { guideChildName, guideStartsInLabel } from "@/lib/guide-portal.mjs";
+import { guideChildName, guideChildrenCaption, guideStartsInLabel } from "@/lib/guide-portal.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import { guideJoinUiState } from "@/lib/tutor-schedule.mjs";
@@ -44,6 +44,9 @@ export function GuideNextStudyHall({
         {when}
       </p>
       <p className="mt-4 text-xl font-medium text-ink-900">{child}</p>
+      {guideChildrenCaption(next) ? (
+        <p className="mt-1 text-sm text-ink-500">{guideChildrenCaption(next)}</p>
+      ) : null}
       {next.duration_minutes ? (
         <p className="mt-1 text-sm text-ink-500">{formatStudyHallDuration(next.duration_minutes)}</p>
       ) : null}

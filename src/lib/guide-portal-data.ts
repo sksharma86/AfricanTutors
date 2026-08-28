@@ -21,9 +21,19 @@ export async function loadGuideWorkspace(supabase: SB, tutorId: string) {
       supabase
         .from("bookings")
         .select(
-          "id, subject_name, other_subject_text, student_first_name, student_grade, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial",
+          "id, subject_name, other_subject_text, student_first_name, student_first_names, child_count, student_grade, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial",
         )
-        .order("scheduled_start", { ascending: true, nullsFirst: false }),
+        .order("scheduled_start", { ascending: true, nullsFirst: false })
+        .then((r) =>
+          r.error && /student_first_names|child_count/i.test(r.error.message)
+            ? supabase
+                .from("bookings")
+                .select(
+                  "id, subject_name, other_subject_text, student_first_name, student_grade, request_note, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial",
+                )
+                .order("scheduled_start", { ascending: true, nullsFirst: false })
+            : r,
+        ),
       supabase.from("tutor_availability").select("id, day_of_week, start_time, end_time"),
       supabase.from("tutor_availability_exceptions").select("id, starts_at, ends_at, reason"),
       supabase

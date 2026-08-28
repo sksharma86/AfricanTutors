@@ -3,6 +3,7 @@
  * Does not change booking, Daily, matching, compensation, or Call Parent.
  */
 
+import { bookingChildCount, bookingChildNames, childCountLabel } from "./household-children.mjs";
 import { partitionBookings } from "./bookings.mjs";
 import { guideJoinUiState } from "./tutor-schedule.mjs";
 
@@ -14,8 +15,13 @@ export const GUIDE_PORTAL_NAV = [
 ];
 
 export function guideChildName(booking, fallback = "Child") {
-  const n = String(booking?.student_first_name ?? "").trim();
-  return n || fallback;
+  return bookingChildNames(booking, fallback);
+}
+
+export function guideChildrenCaption(booking) {
+  const n = bookingChildCount(booking);
+  if (n <= 1) return null;
+  return childCountLabel(n);
 }
 
 function calendarDayKey(ms, tz) {

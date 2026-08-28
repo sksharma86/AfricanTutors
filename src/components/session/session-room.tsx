@@ -166,8 +166,16 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
           <p className="mt-1 text-sm text-ink-300">
-            {isGuide ? "Supervising" : "Guide"}: {info.counterpart ?? "—"}
+            {isGuide
+              ? Array.isArray(info.child_names) && info.child_names.length > 1
+                ? "Children"
+                : "Child"
+              : "Guide"}
+            : {info.counterpart ?? "—"}
           </p>
+          {isGuide && Array.isArray(info.child_names) && info.child_names.length > 1 ? (
+            <p className="mt-0.5 text-sm text-ink-400">{info.child_names.length} children</p>
+          ) : null}
           <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

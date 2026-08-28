@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 
 export interface AdminTutor {
   profile_id: string;
@@ -15,6 +16,7 @@ export interface AdminBooking {
   subject_name: string | null;
   other_subject_text: string | null;
   student_first_name: string | null;
+  student_first_names?: string[] | null;
   /** Child / family IANA timezone for secondary display. */
   student_timezone: string | null;
   tutor_display_name: string | null;
@@ -194,7 +196,7 @@ export function AdminConsole({
               ) : (
                 filteredBookings.map((b) => (
                   <tr key={b.id}>
-                    <td className="py-2.5 pr-4 text-ink-800">{b.student_first_name ?? "—"}</td>
+                    <td className="py-2.5 pr-4 text-ink-800">{bookingChildNames(b, "—")}</td>
                     <td className="py-2.5 pr-4 text-ink-800">Study Hall</td>
                     <td className="py-2.5 pr-4 text-ink-600">{b.tutor_display_name ?? "unassigned"}</td>
                     <td className="py-2.5 pr-4">

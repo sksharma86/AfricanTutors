@@ -4,27 +4,40 @@
  */
 
 import { formatWhen } from "../email/templates.mjs";
+import { possessiveStudyHall } from "../household-children.mjs";
+
+function namesOf(ctx) {
+  if (Array.isArray(ctx.studentNames) && ctx.studentNames.length) return ctx.studentNames;
+  const name = (ctx.studentName || "your child").trim() || "your child";
+  return [name];
+}
 
 /**
  * Parent ~1h session reminder (product-preferred direction).
  *
- * @param {{ studentName?: string|null, whenISO?: string|null, tz?: string|null }} ctx
+ * @param {{ studentName?: string|null, studentNames?: string[]|null, whenISO?: string|null, tz?: string|null }} ctx
  */
 export function parentSessionReminderSms(ctx) {
-  const name = (ctx.studentName || "your child").trim() || "your child";
+  const names = namesOf(ctx);
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  // Prefer a short local time if formatWhen is long — keep full when for clarity.
-  return `Study Hall (at home) reminder: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
+  if (names.length === 1) {
+    const name = names[0];
+    return `Study Hall (at home) reminder: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
+  }
+  return `Study Hall (at home) reminder: ${possessiveStudyHall(names)} starts at ${when}. Please have them ready at their workspace. The room opens 5 minutes before.`;
 }
 
 /**
  * Parent cancellation SMS (immediate / important).
- * @param {{ studentName?: string|null, whenISO?: string|null, tz?: string|null }} ctx
+ * @param {{ studentName?: string|null, studentNames?: string[]|null, whenISO?: string|null, tz?: string|null }} ctx
  */
 export function parentCancellationSms(ctx) {
-  const name = (ctx.studentName || "your child").trim() || "your child";
+  const names = namesOf(ctx);
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  return `Study Hall (at home): ${name}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
+  if (names.length === 1) {
+    return `Study Hall (at home): ${names[0]}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
+  }
+  return `Study Hall (at home): ${possessiveStudyHall(names)} (${when}) was cancelled. Check your email or dashboard for details.`;
 }
 
 /**
@@ -33,7 +46,10 @@ export function parentCancellationSms(ctx) {
  * Kept for future session-impact paths; PR8 successful reassignment never sends it.
  */
 export function parentReassignmentSms(ctx) {
-  const name = (ctx.studentName || "your child").trim() || "your child";
+  const names = namesOf(ctx);
   const when = formatWhen(ctx.whenISO, ctx.tz);
-  return `Study Hall (at home): ${name}'s session at ${when} was updated. Check your email or dashboard for details.`;
+  if (names.length === 1) {
+    return `Study Hall (at home): ${names[0]}'s session at ${when} was updated. Check your email or dashboard for details.`;
+  }
+  return `Study Hall (at home): ${possessiveStudyHall(names)} at ${when} was updated. Check your email or dashboard for details.`;
 }

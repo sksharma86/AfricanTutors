@@ -20,14 +20,25 @@ type FutureBooking = {
 
 async function loadFutureAssignments(tutorId: string): Promise<FutureBooking[]> {
   const service = getServiceSupabase();
-  const { data, error } = await service
+  const first = await service
     .from("bookings")
-    .select("id, public_reference, student_first_name, scheduled_start, status")
+    .select("id, public_reference, student_first_name, student_first_names, scheduled_start, status")
     .eq("tutor_id", tutorId)
     .in("status", ["pending", "confirmed"])
     .not("scheduled_start", "is", null)
     .gt("scheduled_start", new Date().toISOString())
     .order("scheduled_start", { ascending: true });
+  const { data, error } =
+    first.error && /student_first_names/i.test(first.error.message)
+      ? await service
+          .from("bookings")
+          .select("id, public_reference, student_first_name, scheduled_start, status")
+          .eq("tutor_id", tutorId)
+          .in("status", ["pending", "confirmed"])
+          .not("scheduled_start", "is", null)
+          .gt("scheduled_start", new Date().toISOString())
+          .order("scheduled_start", { ascending: true })
+      : first;
   if (error) throw new Error(error.message);
   return (data ?? []) as FutureBooking[];
 }
