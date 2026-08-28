@@ -1,0 +1,689 @@
+{
+  "generated_at": "2026-08-28T21:51:51.392Z",
+  "mutation": "none \u2014 SELECT / listUsers / listBuckets only",
+  "totals": {
+    "auth_users": 273,
+    "profiles": 273,
+    "student_profiles": 253,
+    "tutor_profiles": 20,
+    "admins": 19,
+    "parent_role_student": 242,
+    "guide_role_tutor": 12,
+    "pending_guides": 4,
+    "approved_guides": 12,
+    "suspended_guides": 2,
+    "rejected_guides_derived": 2,
+    "children": 81,
+    "bookings": 124,
+    "orphan_auth_without_profile": 0,
+    "orphan_profile_without_auth": 0,
+    "orphan_tutor_without_profile": 0
+  },
+  "table_counts": {
+    "profiles": {
+      "table": "profiles",
+      "count": 273,
+      "error": null
+    },
+    "student_profiles": {
+      "table": "student_profiles",
+      "count": 253,
+      "error": null
+    },
+    "tutor_profiles": {
+      "table": "tutor_profiles",
+      "count": 20,
+      "error": null
+    },
+    "students": {
+      "table": "students",
+      "count": 81,
+      "error": null
+    },
+    "subjects": {
+      "table": "subjects",
+      "count": 19,
+      "error": null
+    },
+    "tutor_subjects": {
+      "table": "tutor_subjects",
+      "count": 8,
+      "error": null
+    },
+    "tutor_availability": {
+      "table": "tutor_availability",
+      "count": 65,
+      "error": null
+    },
+    "tutor_availability_exceptions": {
+      "table": "tutor_availability_exceptions",
+      "count": 5,
+      "error": null
+    },
+    "bookings": {
+      "table": "bookings",
+      "count": 124,
+      "error": null
+    },
+    "booking_children": {
+      "table": "booking_children",
+      "count": 134,
+      "error": null
+    },
+    "payments": {
+      "table": "payments",
+      "count": 23,
+      "error": null
+    },
+    "package_products": {
+      "table": "package_products",
+      "count": 5,
+      "error": null
+    },
+    "package_minute_ledger": {
+      "table": "package_minute_ledger",
+      "count": 8,
+      "error": null
+    },
+    "dollar_credit_ledger": {
+      "table": "dollar_credit_ledger",
+      "count": 0,
+      "error": null
+    },
+    "tutor_earnings": {
+      "table": "tutor_earnings",
+      "count": 11,
+      "error": null
+    },
+    "stripe_events": {
+      "table": "stripe_events",
+      "count": 2,
+      "error": null
+    },
+    "financial_audit_log": {
+      "table": "financial_audit_log",
+      "count": 213,
+      "error": null
+    },
+    "refunds": {
+      "table": "refunds",
+      "count": 0,
+      "error": null
+    },
+    "disputes": {
+      "table": "disputes",
+      "count": 1,
+      "error": null
+    },
+    "session_presence": {
+      "table": "session_presence",
+      "count": 1,
+      "error": null
+    },
+    "session_recordings": {
+      "table": "session_recordings",
+      "count": 6,
+      "error": null
+    },
+    "session_reports": {
+      "table": "session_reports",
+      "count": 18,
+      "error": null
+    },
+    "session_report_children": {
+      "table": "session_report_children",
+      "count": 16,
+      "error": null
+    },
+    "email_deliveries": {
+      "table": "email_deliveries",
+      "count": 228,
+      "error": null
+    },
+    "parent_escalation_requests": {
+      "table": "parent_escalation_requests",
+      "count": 0,
+      "error": null
+    },
+    "tutor_cancellation_requests": {
+      "table": "tutor_cancellation_requests",
+      "count": 2,
+      "error": null
+    },
+    "compensation_currencies": {
+      "table": "compensation_currencies",
+      "count": 5,
+      "error": null
+    }
+  },
+  "protected": {
+    "admin": {
+      "email": "1800sumeet@gmail.com",
+      "auth_uuid": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+      "profile_id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+      "role": "admin",
+      "display_name": "Sumeet Sharma",
+      "phone_e164": null,
+      "stripe_customer_id": null,
+      "tutor": null,
+      "auth": {
+        "id": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "email": "1800sumeet@gmail.com",
+        "email_confirmed": true,
+        "created_at": "2026-08-20T07:23:27.197865Z",
+        "last_sign_in_at": "2026-08-28T17:13:50.741278Z",
+        "banned_until": null,
+        "deleted_at": null,
+        "requested_role": null,
+        "meta_display_name": null,
+        "providers": [],
+        "classification": "protected"
+      }
+    },
+    "parent": {
+      "email": "sksharma86@gmail.com",
+      "auth_uuid": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+      "profile_id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+      "role": "student",
+      "display_name": "Test Student 2",
+      "phone_e164": null,
+      "stripe_customer_id": "cus_V6qbjS0UCeC97j",
+      "tutor": null,
+      "auth": {
+        "id": "a60dfd6f-3705-457d-8ccc-799fbd010099",
+        "email": "sksharma86@gmail.com",
+        "email_confirmed": true,
+        "created_at": "2026-08-20T07:01:21.983791Z",
+        "last_sign_in_at": "2026-08-28T17:51:47.21167Z",
+        "banned_until": null,
+        "deleted_at": null,
+        "requested_role": "student",
+        "meta_display_name": "Test Student 2",
+        "providers": [],
+        "classification": "protected"
+      }
+    },
+    "guide": {
+      "email": "halfoffwebhosting@gmail.com",
+      "auth_uuid": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+      "profile_id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+      "role": "tutor",
+      "display_name": "Test Tutor 1",
+      "phone_e164": null,
+      "stripe_customer_id": null,
+      "tutor": {
+        "profile_id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "status": "approved",
+        "approved_at": "2026-08-21T07:43:56.223709+00:00",
+        "approved_by": "ba9ce5a6-c8c4-403d-87ac-333710dee27b",
+        "bio": null,
+        "credentials": null,
+        "comp_rate_cents_per_hour": 30000,
+        "comp_currency": "KES",
+        "timezone": "Africa/Lagos",
+        "derived_status": "approved"
+      },
+      "auth": {
+        "id": "a99ec117-3f1d-4c37-8a88-19ff7a057edd",
+        "email": "halfoffwebhosting@gmail.com",
+        "email_confirmed": true,
+        "created_at": "2026-08-21T07:21:14.681831Z",
+        "last_sign_in_at": "2026-08-28T17:06:29.428136Z",
+        "banned_until": null,
+        "deleted_at": null,
+        "requested_role": "tutor",
+        "meta_display_name": "Test Tutor 1",
+        "providers": [],
+        "classification": "protected"
+      }
+    }
+  },
+  "protected_links": {
+    "admin": {
+      "children": {
+        "rows": 0,
+        "names": []
+      },
+      "bookings_as_parent": {
+        "rows": 0,
+        "by_status": {},
+        "free_trial": 0
+      },
+      "bookings_as_guide": {
+        "rows": 0,
+        "by_status": {},
+        "free_trial": 0
+      },
+      "bookings_as_student_primary": {
+        "rows": 0
+      },
+      "payments": {
+        "rows": 0
+      },
+      "minute_ledger": {
+        "rows": 0,
+        "net_minutes": 0,
+        "reasons": []
+      },
+      "credit_ledger": {
+        "rows": 0,
+        "net_cents": 0,
+        "reasons": []
+      },
+      "earnings": {
+        "rows": 0,
+        "by_status": {},
+        "sum_cents": 0
+      },
+      "reports_as_guide": {
+        "rows": 0
+      },
+      "reports_as_parent": {
+        "rows": 0
+      },
+      "emails": {
+        "rows": 17,
+        "by_status": {
+          "skipped": 3,
+          "pending": 1,
+          "sent": 13
+        }
+      },
+      "escalations_as_parent": {
+        "rows": 0
+      },
+      "escalations_as_guide": {
+        "rows": 0
+      },
+      "cancels": {
+        "rows": 0
+      },
+      "disputes": {
+        "rows": 0
+      },
+      "refunds": {
+        "rows": 0
+      },
+      "availability": {
+        "rows": 0
+      },
+      "availability_exceptions": {
+        "rows": 0
+      },
+      "tutor_subjects": {
+        "rows": 0
+      },
+      "audit_as_actor": {
+        "rows": 8
+      },
+      "approved_guides": {
+        "rows": 2
+      }
+    },
+    "parent": {
+      "children": {
+        "rows": 2,
+        "names": [
+          "Newer Test",
+          "Sam"
+        ]
+      },
+      "bookings_as_parent": {
+        "rows": 31,
+        "by_status": {
+          "confirmed": 18,
+          "cancelled": 5,
+          "expired": 6,
+          "completed": 2
+        },
+        "free_trial": 1
+      },
+      "bookings_as_guide": {
+        "rows": 0,
+        "by_status": {},
+        "free_trial": 0
+      },
+      "bookings_as_student_primary": {
+        "rows": 0
+      },
+      "payments": {
+        "rows": 4
+      },
+      "minute_ledger": {
+        "rows": 4,
+        "net_minutes": 1260,
+        "reasons": [
+          "booking paid with package minutes",
+          "package purchase (Stripe)"
+        ]
+      },
+      "credit_ledger": {
+        "rows": 0,
+        "net_cents": 0,
+        "reasons": []
+      },
+      "earnings": {
+        "rows": 0,
+        "by_status": {},
+        "sum_cents": 0
+      },
+      "reports_as_guide": {
+        "rows": 0
+      },
+      "reports_as_parent": {
+        "rows": 2
+      },
+      "emails": {
+        "rows": 43,
+        "by_status": {
+          "skipped": 28,
+          "sent": 15
+        }
+      },
+      "escalations_as_parent": {
+        "rows": 0
+      },
+      "escalations_as_guide": {
+        "rows": 0
+      },
+      "cancels": {
+        "rows": 0
+      },
+      "disputes": {
+        "rows": 0
+      },
+      "refunds": {
+        "rows": 0
+      },
+      "availability": {
+        "rows": 0
+      },
+      "availability_exceptions": {
+        "rows": 0
+      },
+      "tutor_subjects": {
+        "rows": 0
+      },
+      "audit_as_actor": {
+        "rows": 0
+      },
+      "approved_guides": {
+        "rows": 0
+      }
+    },
+    "guide": {
+      "children": {
+        "rows": 0,
+        "names": []
+      },
+      "bookings_as_parent": {
+        "rows": 0,
+        "by_status": {},
+        "free_trial": 0
+      },
+      "bookings_as_guide": {
+        "rows": 14,
+        "by_status": {
+          "cancelled": 2,
+          "confirmed": 10,
+          "completed": 2
+        },
+        "free_trial": 0
+      },
+      "bookings_as_student_primary": {
+        "rows": 0
+      },
+      "payments": {
+        "rows": 0
+      },
+      "minute_ledger": {
+        "rows": 0,
+        "net_minutes": 0,
+        "reasons": []
+      },
+      "credit_ledger": {
+        "rows": 0,
+        "net_cents": 0,
+        "reasons": []
+      },
+      "earnings": {
+        "rows": 1,
+        "by_status": {
+          "earned": 1
+        },
+        "sum_cents": 30000
+      },
+      "reports_as_guide": {
+        "rows": 3
+      },
+      "reports_as_parent": {
+        "rows": 0
+      },
+      "emails": {
+        "rows": 15,
+        "by_status": {
+          "skipped": 4,
+          "sent": 11
+        }
+      },
+      "escalations_as_parent": {
+        "rows": 0
+      },
+      "escalations_as_guide": {
+        "rows": 0
+      },
+      "cancels": {
+        "rows": 2
+      },
+      "disputes": {
+        "rows": 0
+      },
+      "refunds": {
+        "rows": 0
+      },
+      "availability": {
+        "rows": 7
+      },
+      "availability_exceptions": {
+        "rows": 1
+      },
+      "tutor_subjects": {
+        "rows": 4
+      },
+      "audit_as_actor": {
+        "rows": 0
+      },
+      "approved_guides": {
+        "rows": 0
+      }
+    },
+    "parent_minute_balance": 1260,
+    "parent_credit_cents": 0,
+    "parent_free_trial_used": true
+  },
+  "operational": {
+    "bookings_by_combo": {
+      "confirmed|paid|free=false": 47,
+      "completed|paid|free=false": 41,
+      "confirmed|not_required|free=true": 2,
+      "completed|free_trial|free=true": 5,
+      "cancelled|paid|free=false": 17,
+      "no_show|paid|free=false": 1,
+      "cancelled|refunded|free=false": 2,
+      "confirmed|paid|free=true": 1,
+      "expired|awaiting_payment|free=false": 6,
+      "cancelled|canceled|free=false": 1,
+      "completed|not_required|free=true": 1
+    },
+    "bookings_by_owner_account": {
+      "test/fake": 86,
+      "protected:parent": 31,
+      "unknown": 7
+    },
+    "bookings_by_owner_guide": {
+      "test/fake": 56,
+      "unknown": 20,
+      "unlinked": 34,
+      "protected:guide": 14
+    },
+    "bookings_involving_protected": 32,
+    "booking_children": 134,
+    "payments": 23,
+    "payments_by_owner": {
+      "test/fake": 19,
+      "protected:parent": 4
+    },
+    "payments_with_stripe_pi": 0,
+    "refunds": 0,
+    "disputes": 1,
+    "open_disputes": 1,
+    "reports": 18,
+    "report_children": 16,
+    "recordings": 6,
+    "recordings_by_status": {
+      "completed": 5,
+      "processing": 1
+    },
+    "presence": 1,
+    "emails": 228,
+    "email_status": {
+      "skipped": 106,
+      "failed": 66,
+      "pending": 1,
+      "sent": 55
+    },
+    "failed_email_types": {
+      "tutor_removed": 4,
+      "guide_report_overdue": 13,
+      "booking_confirmed": 1,
+      "reminder_1h": 37,
+      "tutor_new_session": 9,
+      "session_report_ready": 1,
+      "guide_report_required": 1
+    },
+    "escalations": 0,
+    "escalations_by_outcome": {},
+    "cancel_requests": 2,
+    "open_cancels": 0,
+    "earnings": 11,
+    "earnings_by_status": {
+      "earned": 8,
+      "paid": 3
+    },
+    "earnings_sum_cents": 930000,
+    "availability": 65,
+    "availability_exceptions": 5,
+    "stripe_events": 0,
+    "financial_audit": 213,
+    "subjects": 19,
+    "package_products": 5,
+    "currencies": 5
+  },
+  "needs_attention": {
+    "total_items": 46,
+    "by_kind": {
+      "notify": 26,
+      "report": 14,
+      "needs_guide": 1,
+      "dispute": 1,
+      "applicant": 4
+    },
+    "pending_applicants": 4,
+    "missing_reports_in_window": 14,
+    "failed_emails_raw": 66,
+    "failed_recordings_raw": 0,
+    "open_cancels": 0,
+    "open_disputes": 1
+  },
+  "other_user_class_counts": {
+    "test/fake": 266,
+    "unknown": 4
+  },
+  "other_user_deletion_counts": {
+    "REQUIRES DEPENDENT CLEANUP FIRST": 266,
+    "REVIEW BEFORE DELETE": 4
+  },
+  "unknown_users": [
+    {
+      "id": "37fde2c0-00cb-4948-9beb-b336f1cd9bb0",
+      "email": "demo.tutor.17871839018309n6c@africantutors.dev",
+      "classification": "unknown",
+      "deletion": "REVIEW BEFORE DELETE",
+      "role": "student",
+      "display_name": "Mr. Chidi Okeke",
+      "has_profile": true,
+      "has_student_profile": false,
+      "tutor_derived_status": "suspended",
+      "children": 0,
+      "bookings_as_parent": 0,
+      "bookings_as_guide": 20,
+      "payments": 0,
+      "earnings": 0,
+      "emails": 40,
+      "last_sign_in_at": "2026-08-20T01:05:47.234523Z",
+      "created_at": "2026-08-19T23:58:22.418006Z",
+      "requested_role": "tutor"
+    },
+    {
+      "id": "0b6bed74-9a95-4b83-994a-5a8c72a23e89",
+      "email": "demo.student.17871839018309n6c@africantutors.dev",
+      "classification": "unknown",
+      "deletion": "REVIEW BEFORE DELETE",
+      "role": "student",
+      "display_name": "Amara's Parent",
+      "has_profile": true,
+      "has_student_profile": true,
+      "tutor_derived_status": null,
+      "children": 1,
+      "bookings_as_parent": 7,
+      "bookings_as_guide": 0,
+      "payments": 0,
+      "earnings": 0,
+      "emails": 6,
+      "last_sign_in_at": "2026-08-20T02:06:22.090245Z",
+      "created_at": "2026-08-19T23:58:22.256562Z",
+      "requested_role": "student"
+    },
+    {
+      "id": "952140d5-2d2f-497b-9dac-94a2925d4034",
+      "email": "pr10c.parent.1787690659499@example.test",
+      "classification": "unknown",
+      "deletion": "REVIEW BEFORE DELETE",
+      "role": "student",
+      "display_name": "Priya Parent",
+      "has_profile": true,
+      "has_student_profile": true,
+      "tutor_derived_status": null,
+      "children": 1,
+      "bookings_as_parent": 0,
+      "bookings_as_guide": 0,
+      "payments": 0,
+      "earnings": 0,
+      "emails": 0,
+      "last_sign_in_at": "2026-08-25T20:48:18.085338Z",
+      "created_at": "2026-08-25T20:44:19.671636Z",
+      "requested_role": null
+    },
+    {
+      "id": "0723ccbc-14fb-4f60-8eb4-7e099fb16f2a",
+      "email": "demo.admin.17871839018309n6c@africantutors.dev",
+      "classification": "unknown",
+      "deletion": "REVIEW BEFORE DELETE",
+      "role": "admin",
+      "display_name": "African Tutors Admin",
+      "has_profile": true,
+      "has_student_profile": true,
+      "tutor_derived_status": null,
+      "children": 0,
+      "bookings_as_parent": 0,
+      "bookings_as_guide": 0,
+      "payments": 0,
+      "earnings": 0,
+      "emails": 0,
+      "last_sign_in_at": "2026-08-20T01:08:53.042845Z",
+      "created_at": "2026-08-19T23:58:22.543662Z",
+      "requested_role": "student"
+    }
+  ],
+  "storage": []
+}
