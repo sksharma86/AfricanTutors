@@ -22,7 +22,7 @@ async function loadFutureAssignments(tutorId: string): Promise<FutureBooking[]> 
   const service = getServiceSupabase();
   const { data, error } = await service
     .from("bookings")
-    .select("id, public_reference, student_first_name, scheduled_start, status")
+    .select("id, public_reference, student_first_name, student_first_names, scheduled_start, status")
     .eq("tutor_id", tutorId)
     .in("status", ["pending", "confirmed"])
     .not("scheduled_start", "is", null)

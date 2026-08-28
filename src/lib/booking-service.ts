@@ -98,6 +98,7 @@ export async function getAvailableSlots(params: {
  */
 export async function requestBooking(params: {
   studentId: string;
+  studentIds?: string[];
   subjectId: string | null;
   otherSubject?: string | null;
   note?: string | null;
@@ -114,6 +115,7 @@ export async function requestBooking(params: {
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+    p_student_ids: params.studentIds ?? [params.studentId],
   });
   if (error) throw new Error(error.message);
   return data as string;
@@ -132,7 +134,7 @@ export async function getBookingConfirmation(bookingId: string) {
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id, public_reference, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, price_cents, is_free_trial, status, payment_status, tutor_display_name, student_first_name",
+      "id, public_reference, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, price_cents, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names, child_count",
     )
     .eq("id", bookingId)
     .maybeSingle();

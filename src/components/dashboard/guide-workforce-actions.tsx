@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { bookingChildNames } from "@/lib/household-children.mjs";
 
 type Action = "reject" | "suspend" | "reactivate";
 
@@ -11,6 +12,7 @@ type FutureRow = {
   id: string;
   public_reference: string | null;
   student_first_name: string | null;
+  student_first_names?: string[] | null;
   scheduled_start: string | null;
 };
 
@@ -152,7 +154,7 @@ export function GuideWorkforceActions({
                       <ul className="mt-2 space-y-1 text-xs text-ink-500">
                         {futureAssignments.slice(0, 6).map((b) => (
                           <li key={b.id}>
-                            {b.student_first_name ?? "Child"}
+                            {bookingChildNames(b, "Child")}
                             {b.public_reference ? ` · ${b.public_reference}` : ""} · {formatWhen(b.scheduled_start)}
                           </li>
                         ))}

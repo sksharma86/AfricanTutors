@@ -3,6 +3,7 @@
  * Does not change booking, pay, matching, Daily, or compensation math.
  */
 
+import { bookingChildNames } from "./household-children.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
 export const MANAGEMENT_STATUSES = ["ready", "live", "needs_attention", "completed", "cancelled"];
@@ -318,6 +319,8 @@ export function matchesStudyHallSearch(booking, query) {
   if (!q) return true;
   const hay = [
     booking.student_first_name,
+    bookingChildNames(booking, ""),
+    Array.isArray(booking.student_first_names) ? booking.student_first_names.join(" ") : null,
     booking.student_full_name,
     booking.parent_name,
     booking.tutor_display_name,
@@ -369,7 +372,7 @@ function attentionFromIssue(booking, issue) {
     kind: issue.kind,
     title: issue.title,
     summary: issue.summary,
-    detail: [booking.student_first_name ?? "Child", booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    detail: [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
     bookingId: booking.id,
     href: `/dashboard/admin/study-halls/${booking.id}`,
     action: issue.action,
@@ -424,7 +427,10 @@ export function collectNeedsAttention({
         kind: "coverage",
         title: "Guide replacement failed",
         summary: "We couldn't automatically find another Guide.",
-        detail: [r.student_first_name ?? r.bookings?.student_first_name ?? "Child", startsInLabel(start, nowMs)]
+        detail: [
+          bookingChildNames(r.bookings ?? r, r.student_first_name ?? r.bookings?.student_first_name ?? "Child"),
+          startsInLabel(start, nowMs),
+        ]
           .filter(Boolean)
           .join(" · "),
         bookingId: r.booking_id ?? null,

@@ -73,6 +73,7 @@ async function rollbackReservation(
 export async function createBookingCheckout(
   params: {
     studentId: string;
+    studentIds?: string[];
     subjectId: string | null;
     otherSubject?: string | null;
     note?: string | null;
@@ -87,6 +88,7 @@ export async function createBookingCheckout(
 
   // Study Hall (null subject) always schedules with p_start. Legacy unscheduled
   // "Other" requests only occur when both subject and start are null.
+  // Price is duration-only; p_student_ids does not change hours or Stripe amount.
   const { data, error } = await supabase.rpc("book_session", {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
@@ -95,6 +97,7 @@ export async function createBookingCheckout(
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+    p_student_ids: params.studentIds ?? [params.studentId],
   });
   if (error) throw new Error(error.message);
 

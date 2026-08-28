@@ -5,6 +5,8 @@ export interface GuideBooking {
   subject_name: string | null;
   other_subject_text: string | null;
   student_first_name: string | null;
+  student_first_names?: string[] | null;
+  child_count?: number | null;
   student_grade: string | null;
   request_note: string | null;
   scheduled_start: string | null;

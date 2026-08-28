@@ -39,7 +39,7 @@ export async function loadManagementWorkspace(supabase: SB) {
     supabase
       .from("bookings")
       .select(
-        "id, public_reference, account_id, student_id, tutor_id, student_first_name, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students(full_name, timezone)",
+        "id, public_reference, account_id, student_id, tutor_id, student_first_name, student_first_names, child_count, tutor_display_name, scheduled_start, scheduled_end, duration_minutes, status, is_free_trial, price_cents, payment_status, students(full_name, timezone)",
       )
       .order("scheduled_start", { ascending: false, nullsFirst: false })
       .limit(400),
@@ -50,12 +50,12 @@ export async function loadManagementWorkspace(supabase: SB) {
       ),
     supabase
       .from("tutor_cancellation_requests")
-      .select("id, booking_id, reason, created_at, bookings(student_first_name, tutor_display_name, scheduled_start)")
+      .select("id, booking_id, reason, created_at, bookings(student_first_name, student_first_names, tutor_display_name, scheduled_start)")
       .eq("status", "open")
       .order("created_at", { ascending: true }),
     supabase
       .from("parent_escalation_requests")
-      .select("id, booking_id, status, outcome, reason, created_at, bookings(student_first_name, scheduled_start)")
+      .select("id, booking_id, status, outcome, reason, created_at, bookings(student_first_name, student_first_names, scheduled_start)")
       .order("created_at", { ascending: false })
       .limit(40)
       .then((r) => r, () => ({ data: null, error: null })),

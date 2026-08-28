@@ -1,3 +1,5 @@
+import { formatChildNames, possessiveStudyHall } from "../household-children.mjs";
+
 /**
  * Pure email templates for Study Hall (at home) transactional email. No provider, no
  * DB, no secrets — each builder returns { subject, html, text } from already-
@@ -64,6 +66,28 @@ function layout(heading, paragraphsHtml, cta) {
 const p = (t) => `<p style="margin:0 0 12px;line-height:1.5">${esc(t)}</p>`;
 const textJoin = (lines) => lines.filter(Boolean).join("\n");
 
+function childPhrase(ctx) {
+  if (Array.isArray(ctx.studentNames) && ctx.studentNames.length) {
+    return formatChildNames(ctx.studentNames, ctx.studentName || "your child");
+  }
+  return ctx.studentName || "your child";
+}
+
+function studyHallPhrase(ctx) {
+  if (Array.isArray(ctx.studentNames) && ctx.studentNames.length) {
+    return possessiveStudyHall(ctx.studentNames);
+  }
+  if (ctx.studentName) return `${ctx.studentName}'s Study Hall`;
+  return "Study Hall";
+}
+
+function childrenLine(ctx) {
+  const names = childPhrase(ctx);
+  if (!ctx.studentName && !(ctx.studentNames && ctx.studentNames.length)) return null;
+  const count = Array.isArray(ctx.studentNames) ? ctx.studentNames.length : 1;
+  return count > 1 ? `Children: ${names}` : `Child: ${names}`;
+}
+
 // ---------------------------------------------------------------------------
 
 export function welcome(ctx) {
@@ -78,7 +102,7 @@ export function bookingConfirmed(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
   const free = ctx.isFreeTrial;
-  const child = ctx.studentName || "your child";
+  const hall = studyHallPhrase(ctx);
   const hours =
     ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
   const fundingLine = free
@@ -90,8 +114,8 @@ export function bookingConfirmed(ctx) {
         : null;
   const lines = [
     free
-      ? `${child}'s free 1-hour Study Hall is confirmed. No payment method was required.`
-      : `${child}'s Study Hall session is confirmed.`,
+      ? `${hall} (free 1-hour) is confirmed. No payment method was required.`
+      : `${hall} is confirmed.`,
     `When: ${when}`,
     `Duration: ${hours}`,
     ctx.tutorName ? `Guide: ${ctx.tutorName}` : "An approved Guide is matched.",
@@ -136,7 +160,7 @@ export function packagePurchased(ctx) {
 export function reminder(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
-  const child = ctx.studentName || "your child";
+  const hall = studyHallPhrase(ctx);
   const hours =
     ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
 
@@ -152,20 +176,20 @@ export function reminder(ctx) {
   if (ctx.role === "tutor") {
     const lines = [
       "Reminder: you have a Study Hall session in about an hour.",
-      `Child: ${child}`,
+      childrenLine(ctx),
       `When: ${when}`,
       `Duration: ${hours}`,
       "Join opens 5 minutes before the start — join from your Guide dashboard.",
     ];
     return {
       subject: "Study Hall starts in about an hour",
-      html: layout("Upcoming Study Hall", lines.map(p).join(""), { href: url, label: "Open session" }),
+      html: layout("Upcoming Study Hall", lines.filter(Boolean).map(p).join(""), { href: url, label: "Open session" }),
       text: textJoin([...lines, "", `Join: ${url}`]),
     };
   }
 
   const lines = [
-    `${BRAND} reminder: ${child}'s Study Hall starts at ${when}.`,
+    `${BRAND} reminder: ${hall} starts at ${when}.`,
     "Please have them ready at their workspace.",
     `Duration: ${hours}`,
     "The room opens 5 minutes before — join from your dashboard when it's time.",
@@ -236,7 +260,9 @@ export function sessionReportReady(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/student#reports";
   const lines = [
-    ctx.studentName ? `${ctx.studentName}'s Study Hall report is ready.` : "Your Study Hall report is ready.",
+    ctx.studentName || (ctx.studentNames && ctx.studentNames.length)
+      ? `${studyHallPhrase(ctx)} report is ready.`
+      : "Your Study Hall report is ready.",
     `When: ${when}`,
     "It's a short note from the Guide about focus, what they worked on, and how the session went — not a grade or academic assessment.",
   ];
@@ -272,7 +298,7 @@ export function tutorNewSession(ctx) {
     "You've been assigned a new Study Hall session.",
     `When: ${when}`,
     `Duration: ${hours}`,
-    ctx.studentName ? `Child: ${ctx.studentName}` : null,
+    childrenLine(ctx),
     "Join from your Guide dashboard — the room opens 5 minutes before start.",
   ];
   return { subject: "New Study Hall assigned", html: layout("New Study Hall assigned", lines.filter(Boolean).map(p).join(""), { href: url, label: "View session" }), text: textJoin([...lines.filter(Boolean), "", `Join: ${url}`]) };
@@ -306,7 +332,7 @@ export function guideReportRequired(ctx) {
   const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
   const lines = [
     "Please submit the short post-session Study Hall report.",
-    ctx.studentName ? `Child: ${ctx.studentName}` : null,
+    childrenLine(ctx),
     `When: ${when}`,
     "Parents rely on this note — it only takes a minute.",
   ];
@@ -323,7 +349,7 @@ export function guideReportOverdue(ctx) {
   const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
   const lines = [
     "Your post-session Study Hall report is overdue.",
-    ctx.studentName ? `Child: ${ctx.studentName}` : null,
+    childrenLine(ctx),
     `When: ${when}`,
     "Please submit it from your Guide dashboard as soon as you can.",
   ];

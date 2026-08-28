@@ -37,7 +37,7 @@ export default async function AdminFinancePage() {
       supabase!
         .from("tutor_profiles")
         .select("profile_id, status, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)"),
-      supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
+      supabase!.from("bookings").select("id, subject_name, scheduled_start, public_reference, student_first_name, student_first_names, tutor_id").order("scheduled_start", { ascending: false, nullsFirst: false }).limit(300),
     ]);
 
   // Recording metadata for the disputes under review (admin-only RLS).
@@ -99,8 +99,15 @@ export default async function AdminFinancePage() {
     });
   }
   const bookingMap = new Map<string, { subject: string | null; when: string | null; ref: string | null; student: string | null }>();
-  for (const b of (bookings ?? []) as { id: string; subject_name: string | null; scheduled_start: string | null; public_reference: string | null; student_first_name: string | null }[]) {
-    bookingMap.set(b.id, { subject: b.subject_name, when: b.scheduled_start, ref: b.public_reference, student: b.student_first_name });
+  for (const b of (bookings ?? []) as { id: string; subject_name: string | null; scheduled_start: string | null; public_reference: string | null; student_first_name: string | null; student_first_names?: string[] | null }[]) {
+    bookingMap.set(b.id, {
+      subject: b.subject_name,
+      when: b.scheduled_start,
+      ref: b.public_reference,
+      student: Array.isArray(b.student_first_names) && b.student_first_names.length
+        ? b.student_first_names.join(" & ")
+        : b.student_first_name,
+    });
   }
 
   const earningRows: EarningRow[] = ((earnings ?? []) as EarningRow[]).map((e) => ({
