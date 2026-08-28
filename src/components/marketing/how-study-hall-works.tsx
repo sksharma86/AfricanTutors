@@ -22,7 +22,8 @@ function ProductHouseMark() {
 function StepCircle({ n }: { n: 1 | 2 | 3 }) {
   return (
     <span
-      className="inline-flex size-[44px] shrink-0 items-center justify-center rounded-full text-[24px] font-bold text-white"
+      data-qa="hshw-step-circle"
+      className="inline-flex size-[44px] shrink-0 items-center justify-center rounded-full text-[24px] font-bold text-white lg:size-[42px] lg:text-[22px]"
       style={{ backgroundColor: GOLD }}
       aria-hidden="true"
     >
@@ -119,7 +120,7 @@ function ShieldIcon() {
 
 function StageHeading({ children }: { children: string }) {
   return (
-    <h3 className="text-center text-[30px] font-bold uppercase tracking-[-0.02em] text-ink lg:text-[31px]">
+    <h3 className="text-center text-[30px] font-bold uppercase tracking-[-0.02em] text-ink lg:text-[27px]">
       {children}
     </h3>
   );
@@ -141,16 +142,17 @@ function FlowItem({
   matchHeight?: boolean;
 }) {
   return (
-    <div className={`flex items-start gap-[20px] ${matchHeight ? "lg:min-h-[148px]" : ""}`}>
+    <div className={`flex items-start gap-[16px] lg:gap-[14px] ${matchHeight ? "lg:min-h-[118px]" : ""}`}>
       <span
-        className="inline-flex size-[72px] shrink-0 items-center justify-center rounded-full lg:size-[92px]"
+        data-qa="hshw-icon-circle"
+        className="inline-flex size-[72px] shrink-0 items-center justify-center rounded-full lg:size-[72px] [&>svg]:size-[52px] lg:[&>svg]:size-[38px]"
         style={{ backgroundColor: iconBg }}
       >
         {icon}
       </span>
       <div className="min-w-0 pt-0.5">
-        <p className={`text-[20px] font-bold leading-[1.2] text-ink lg:text-[21px] ${titleClassName}`}>{title}</p>
-        <p className="mt-[8px] text-[17px] leading-[1.5] text-[#333] lg:text-[19px] lg:leading-[1.5]">{body}</p>
+        <p className={`text-[20px] font-bold leading-[1.2] text-ink lg:text-[18px] ${titleClassName}`}>{title}</p>
+        <p className="mt-[8px] text-[17px] leading-[1.5] text-[#333] lg:mt-1.5 lg:text-[16px] lg:leading-[1.45]">{body}</p>
       </div>
     </div>
   );
@@ -158,13 +160,13 @@ function FlowItem({
 
 function TrustFooter() {
   return (
-    <div className="mx-auto mt-8 w-full max-w-[800px] lg:mt-[30px]" data-qa="hshw-trust">
+    <div className="mx-auto mt-8 w-full max-w-[800px] lg:mt-4" data-qa="hshw-trust">
       <div className="flex items-center justify-center gap-3">
-        <span className="h-px w-[120px] lg:w-[345px]" style={{ backgroundColor: GOLD }} />
+        <span className="h-px w-[120px] lg:w-[300px]" style={{ backgroundColor: GOLD }} />
         <ShieldIcon />
-        <span className="h-px w-[120px] lg:w-[345px]" style={{ backgroundColor: GOLD }} />
+        <span className="h-px w-[120px] lg:w-[300px]" style={{ backgroundColor: GOLD }} />
       </div>
-      <p className="mt-3 text-center text-[16px] leading-[1.45] text-[#222] lg:mt-3.5 lg:text-[18px] lg:whitespace-nowrap">
+      <p className="mt-3 text-center text-[16px] leading-[1.45] text-[#222] lg:mt-2 lg:text-[16px] lg:whitespace-nowrap">
         <strong className="font-bold text-ink">Safe. Structured. Reliable.</strong>{" "}
         Vetted Guides, recorded sessions, and parent contact when needed.
       </p>
@@ -178,7 +180,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
       id="how-it-works"
       data-qa="how-study-hall-works"
       aria-labelledby="how-study-hall-works-label"
-      className="px-5 py-8 lg:px-0 lg:pb-[30px] lg:pt-8"
+      className="px-5 py-8 lg:px-0 lg:pb-5 lg:pt-6"
       style={{ backgroundColor: CREAM }}
     >
       <div className="mx-auto w-full max-w-[1360px] lg:w-[94%]">
@@ -187,7 +189,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             <ProductHouseMark />
             <p
               id="how-study-hall-works-label"
-              className="text-[18px] font-semibold uppercase tracking-[0.04em] lg:text-[19px]"
+              className="text-[18px] font-semibold uppercase tracking-[0.04em] lg:text-[17px]"
               style={{ color: GOLD }}
             >
               How Study Hall Works
@@ -196,26 +198,26 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           {showHeadline ? (
             <h2
               data-phrase="Book. Study Hall. Done."
-              className="mt-4 text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink lg:mt-[16px] lg:text-[68px] lg:leading-[1.0] lg:whitespace-nowrap"
+              className="mt-4 text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink lg:mt-3 lg:text-[56px] lg:leading-[1.02] lg:whitespace-nowrap"
             >
               Book.
               <br className="lg:hidden" /> Study Hall.
               <br className="lg:hidden" /> Done.
             </h2>
           ) : null}
-          <p className="mt-3.5 max-w-[34rem] text-[18px] font-medium leading-[1.45] text-[#444] lg:mt-[14px] lg:max-w-none lg:text-[25px] lg:font-normal">
+          <p className="mt-3.5 max-w-[34rem] text-[18px] font-medium leading-[1.45] text-[#444] lg:mt-2.5 lg:max-w-none lg:text-[21px] lg:font-normal">
             Simple for parents. Focused for kids. Real support from a live Guide.
           </p>
         </div>
 
         {/* Desktop flowchart */}
-        <div className="mt-9 hidden lg:grid lg:grid-cols-[23%_3%_48%_3%_23%] lg:items-start" data-qa="hshw-desktop">
+        <div className="mt-8 hidden lg:mt-6 lg:grid lg:grid-cols-[23%_3%_48%_3%_23%] lg:items-start" data-qa="hshw-desktop">
           <div className="flex flex-col items-center" data-qa="hshw-book">
             <StepCircle n={1} />
-            <div className="mt-3">
+            <div className="mt-2">
               <StageHeading>Book</StageHeading>
             </div>
-            <div className="mt-[46px] w-full">
+            <div className="mt-7 w-full">
               <FlowItem
                 iconBg="#FBF3E3"
                 icon={<CalendarClockIcon />}
@@ -223,7 +225,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 body="Choose when you want your child to sit down and focus."
                 matchHeight
               />
-              <div className="my-[31px] h-px w-full" style={{ backgroundColor: DIVIDER }} />
+              <div className="my-4 h-px w-full" style={{ backgroundColor: DIVIDER }} />
               <FlowItem
                 iconBg="#EAF4F8"
                 icon={<LaptopUserIcon />}
@@ -234,12 +236,12 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             </div>
           </div>
 
-          <div className="flex justify-center pt-[248px]" aria-hidden="true">
+          <div className="flex items-center justify-center self-stretch" aria-hidden="true">
             <GoldRightArrow />
           </div>
 
           <div
-            className="relative mx-auto flex min-h-[560px] w-full flex-col items-center rounded-[20px] border px-2 pb-4 pt-4 xl:px-3"
+            className="relative mx-auto flex w-full flex-col items-center rounded-[20px] border px-2 pb-3 pt-3 xl:px-3"
             data-qa="hshw-study"
             style={{ backgroundColor: CREAM, borderColor: BORDER }}
           >
@@ -249,79 +251,83 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               </span>
               <StageHeading>Study Hall</StageHeading>
             </div>
-            <div className="mt-8 flex items-center justify-center gap-5">
-              <span className="h-px w-[55px]" style={{ backgroundColor: GOLD }} />
-              <p className="text-[18px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <span className="h-px w-[48px]" style={{ backgroundColor: GOLD }} />
+              <p className="text-[16px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
                 LIVE GUIDE PRESENCE
               </p>
-              <span className="h-px w-[55px]" style={{ backgroundColor: GOLD }} />
+              <span className="h-px w-[48px]" style={{ backgroundColor: GOLD }} />
             </div>
 
-            <div className="mt-6 grid w-full grid-cols-2 gap-x-8 xl:mt-7 xl:gap-x-[64px]">
-              <div className="relative col-span-2 grid grid-cols-2 gap-x-8 xl:gap-x-[64px]">
+            <div className="mt-4 grid w-full grid-cols-2 gap-x-8 xl:mt-5 xl:gap-x-12">
+              <div className="relative col-span-2 grid grid-cols-2 gap-x-8 xl:gap-x-12">
                 <Image
                   src="/images/marketing/studyhall-hero-desk.webp"
                   alt="A school-age child seated at a desk, focused on homework"
-                  width={278}
-                  height={228}
-                  className="aspect-[278/228] h-auto w-full justify-self-end rounded-[16px] object-cover xl:h-[228px] xl:w-[278px]"
+                  width={238}
+                  height={192}
+                  data-qa="hshw-child-photo"
+                  className="aspect-[238/192] h-auto w-full justify-self-end rounded-[16px] object-cover xl:h-[192px] xl:w-[238px]"
                 />
                 <Image
                   src="/images/tutor-portrait.jpg"
                   alt="A friendly adult Guide at a computer, present and engaged"
-                  width={278}
-                  height={228}
-                  className="aspect-[278/228] h-auto w-full justify-self-start rounded-[16px] object-cover object-[50%_18%] xl:h-[228px] xl:w-[278px]"
+                  width={238}
+                  height={192}
+                  data-qa="hshw-guide-photo"
+                  className="aspect-[238/192] h-auto w-full justify-self-start rounded-[16px] object-cover object-[50%_18%] xl:h-[192px] xl:w-[238px]"
                 />
                 <span
-                  className="pointer-events-none absolute inset-0 flex items-center justify-center text-[42px] font-medium leading-none text-ink xl:text-[45px]"
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center text-[36px] font-medium leading-none text-ink"
                   aria-hidden="true"
                 >
                   +
                 </span>
               </div>
               <p
-                className="mx-auto mt-2.5 flex h-[38px] w-[min(152px,100%)] items-center justify-center rounded-full text-[16px] font-semibold text-ink"
+                className="mx-auto mt-2 flex h-[34px] w-[min(140px,100%)] items-center justify-center rounded-full text-[15px] font-semibold text-ink"
                 style={{ backgroundColor: "#E7F2F7" }}
               >
                 YOUR CHILD
               </p>
               <p
-                className="mx-auto mt-2.5 flex h-[38px] w-[min(152px,100%)] items-center justify-center rounded-full text-[16px] font-semibold text-ink"
+                className="mx-auto mt-2 flex h-[34px] w-[min(140px,100%)] items-center justify-center rounded-full text-[15px] font-semibold text-ink"
                 style={{ backgroundColor: "#ECF5DE" }}
               >
                 THEIR GUIDE
               </p>
-              <p className="mx-auto mt-3 max-w-[16rem] text-center text-[17px] leading-[1.4] text-[#222] xl:text-[18px]">
+              <p className="mx-auto mt-2 max-w-[16rem] text-center text-[16px] leading-[1.4] text-[#222]">
                 Works independently on homework or studying.
               </p>
-              <p className="mx-auto mt-3 max-w-[17rem] text-center text-[17px] leading-[1.4] text-[#222] xl:text-[18px]">
+              <p className="mx-auto mt-2 max-w-[17rem] text-center text-[16px] leading-[1.4] text-[#222]">
                 Stays present with encouragement and redirection to keep the session focused and moving.
               </p>
             </div>
 
-            <div className="mt-[22px] h-px w-[88%]" style={{ backgroundColor: DIVIDER }} />
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <PeopleIcon />
+            <div className="mt-3.5 h-px w-[88%]" style={{ backgroundColor: DIVIDER }} />
+            <div className="mt-3 flex items-center justify-center gap-2.5">
+              <span className="inline-flex lg:[&>svg]:size-9">
+                <PeopleIcon />
+              </span>
               <div className="text-left">
-                <p className="text-[20px] font-bold leading-tight text-ink">Focused time. Real progress.</p>
-                <p className="mt-0.5 text-[17px] leading-snug text-[#333]">
+                <p className="text-[18px] font-bold leading-tight text-ink">Focused time. Real progress.</p>
+                <p className="mt-0.5 text-[15px] leading-snug text-[#333]">
                   Your child works. The Guide keeps things on track.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center pt-[248px]" aria-hidden="true">
+          <div className="flex items-center justify-center self-stretch" aria-hidden="true">
             <GoldRightArrow />
           </div>
 
           <div className="flex flex-col items-center" data-qa="hshw-report">
             <StepCircle n={3} />
-            <div className="mt-3">
+            <div className="mt-2">
               <StageHeading>Report</StageHeading>
             </div>
-            <div className="mt-[46px] w-full">
+            <div className="mt-7 w-full">
               <FlowItem
                 iconBg="#EAF4F8"
                 icon={<DocumentCheckIcon />}
@@ -329,7 +335,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 body="Get your Guide’s report after Study Hall."
                 matchHeight
               />
-              <div className="my-[31px] h-px w-full" style={{ backgroundColor: DIVIDER }} />
+              <div className="my-4 h-px w-full" style={{ backgroundColor: DIVIDER }} />
               <FlowItem
                 iconBg="#EDF5DF"
                 icon={<VideoPlayerIcon />}
