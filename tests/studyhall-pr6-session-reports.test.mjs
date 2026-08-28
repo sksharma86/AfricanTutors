@@ -440,7 +440,7 @@ describe("Study Hall PR6 — live session_reports (requires migration 0023)", { 
     assert.match(r.error.message, /Not authorized/i);
   });
 
-  it("report requires completed booking (confirmed is rejected)", async (t) => {
+  it("report before scheduled_end is rejected (future confirmed)", async (t) => {
     if (!pr6Applied) {
       t.skip("migration 0023 not applied to this environment yet");
       return;

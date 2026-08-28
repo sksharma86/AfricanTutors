@@ -71,9 +71,11 @@ function reportError(message: string) {
 }
 
 /**
- * Guide submits a short post-session Study Hall report for a completed booking
- * they were assigned to. One-child reports use `submit_session_report`.
- * Multi-child reports use `submit_household_session_report` in one request.
+ * Guide submits a short post-session Study Hall report for a Study Hall they
+ * were assigned to. Allowed after scheduled_end (or once already completed).
+ * One-child reports use `submit_session_report`. Multi-child reports use
+ * `submit_household_session_report` in one request. The RPC completes the
+ * booking on the happy path — the Guide does not wait for Management.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
