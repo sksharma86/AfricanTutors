@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PackageStore, type PackageRow } from "@/components/booking/package-store";
+import { LinkButton } from "@/components/ui/button";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
@@ -102,10 +102,10 @@ export default async function PackagesPage() {
         </section>
       ) : null}
 
-      <p className="mt-8 text-sm text-ink-500">
-        <Link href="/dashboard/student/book" className="font-medium text-gold-700 hover:underline">
+      <p className="mt-8">
+        <LinkButton href="/dashboard/student/book" variant="outline" size="sm">
           Book a Study Hall
-        </Link>
+        </LinkButton>
       </p>
     </ParentPage>
   );

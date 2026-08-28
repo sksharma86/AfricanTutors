@@ -105,12 +105,12 @@ export function GuideWorkforceActions({
   return (
     <div className={compact ? "flex flex-wrap items-center gap-2" : "space-y-3"}>
       {showReject ? (
-        <Button type="button" variant="outline" size="sm" onClick={() => setOpen("reject")}>
+        <Button type="button" variant="destructive" size="sm" onClick={() => setOpen("reject")}>
           Reject Application
         </Button>
       ) : null}
       {showSuspend ? (
-        <Button type="button" variant="outline" size="sm" onClick={() => setOpen("suspend")}>
+        <Button type="button" variant="destructive" size="sm" onClick={() => setOpen("suspend")}>
           Suspend Guide
         </Button>
       ) : null}
@@ -178,7 +178,13 @@ export function GuideWorkforceActions({
               <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => setOpen(null)}>
                 Cancel
               </Button>
-              <Button type="button" size="sm" disabled={busy} onClick={() => void run(open)}>
+              <Button
+                type="button"
+                variant={open === "reactivate" ? "primary" : "destructive"}
+                size="sm"
+                disabled={busy}
+                onClick={() => void run(open)}
+              >
                 {busy ? "Working…" : "Confirm"}
               </Button>
             </div>

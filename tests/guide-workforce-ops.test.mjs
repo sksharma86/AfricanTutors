@@ -54,7 +54,9 @@ describe("Guide workforce ops — source contracts", () => {
   });
 
   it("Management portal surfaces status and confirmations on the Guides destination", () => {
-    const guides = read("src/app/dashboard/admin/guides/page.tsx");
+    const guides =
+      read("src/app/dashboard/admin/guides/page.tsx") +
+      read("src/components/dashboard/admin-guides-directory.tsx");
     const actions = read("src/components/dashboard/guide-workforce-actions.tsx");
     const shell = read("src/components/dashboard/dashboard-shell.tsx");
     assert.match(guides, /Pending applicants|GuideWorkforceActions/);

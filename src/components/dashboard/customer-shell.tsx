@@ -33,18 +33,21 @@ export function CustomerShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive(item.href) ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
+                  "min-h-11 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
+                  isActive(item.href)
+                    ? "border border-ink-900 bg-ink-900 text-white"
+                    : "border border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900",
                 )}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               href="/dashboard/student/book"
-              className="text-sm font-medium text-ink-600 hover:text-ink-900"
+              className="inline-flex min-h-11 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-semibold text-ink-800 hover:border-ink-300 hover:bg-ink-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
             >
               <span className="md:hidden">Book</span>
               <span className="hidden md:inline">Book a Study Hall</span>
@@ -63,8 +66,11 @@ export function CustomerShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "shrink-0 snap-start whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium",
-                  isActive(item.href) ? "bg-ink-900 text-white" : "text-ink-600",
+                  "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
+                  isActive(item.href)
+                    ? "border border-ink-900 bg-ink-900 text-white"
+                    : "border border-ink-200 bg-white text-ink-700",
                 )}
               >
                 {item.label}

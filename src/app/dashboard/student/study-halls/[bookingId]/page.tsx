@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
@@ -7,6 +6,7 @@ import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
 import { LinkButton } from "@/components/ui/button";
+import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { requireRole } from "@/lib/auth";
 import { formatDuration } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
@@ -59,9 +59,7 @@ export default async function ParentStudyHallDetailPage({
   return (
     <ParentPage>
       <p className="mb-5">
-        <Link href="/dashboard/student/study-halls" className="text-sm font-medium text-ink-500 hover:text-ink-800">
-          ← Study Halls
-        </Link>
+        <PortalTextLink href="/dashboard/student/study-halls">← Study Halls</PortalTextLink>
       </p>
 
       <ParentSurface featured={!isPast}>
@@ -69,7 +67,9 @@ export default async function ParentStudyHallDetailPage({
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
           {childFirstName(booking.students?.full_name)}
         </h1>
-        <p className="mt-1 text-sm text-ink-500">{parentStatusLabel(booking)}</p>
+        <p data-kind="status" className="mt-1 text-sm text-ink-500">
+          {parentStatusLabel(booking)}
+        </p>
 
         <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
           <div>

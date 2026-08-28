@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { WatchRecordingButton } from "@/components/dashboard/watch-recording-button";
+import { LinkButton } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { childFirstName, parentGuideLabel, parentStudyHallLists } from "@/lib/parent-portal.mjs";
@@ -70,13 +70,10 @@ export default async function ParentReportsPage() {
                               ? "Recording processing"
                               : recordingAvailabilityLabel(recView.retention_until)}
                     </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <Link
-                        href={`/dashboard/student/study-halls/${b.id}`}
-                        className="text-sm font-medium text-gold-700 hover:underline"
-                      >
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <LinkButton href={`/dashboard/student/study-halls/${b.id}`} variant="outline" size="sm">
                         Read report
-                      </Link>
+                      </LinkButton>
                       {recView?.playable ? <WatchRecordingButton recordingId={recView.id} /> : null}
                     </div>
                   </li>

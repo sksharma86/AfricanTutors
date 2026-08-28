@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 
-import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
+import { AdminGuidesDirectory } from "@/components/dashboard/admin-guides-directory";
 import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth";
-import { formatCompensationHourly } from "@/lib/compensation-currency.mjs";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-import { approveTutorAction } from "../actions";
 
 export const metadata: Metadata = { title: "Guides · Management" };
 export const dynamic = "force-dynamic";
@@ -79,66 +75,14 @@ export default async function AdminGuidesPage() {
       description="Applicants, active Guides, and workforce actions."
       navItems={ADMIN_PORTAL_NAV}
     >
-      <div className="mb-8 flex flex-wrap gap-4 text-sm text-ink-500">
-        <span>{grouped.pending.length} pending</span>
-        <span>{grouped.active.length} active</span>
-        <span>{grouped.suspended.length} suspended</span>
-        <span>{grouped.rejected.length} rejected</span>
-      </div>
-
-      {GROUPS.map((key) => (
-        <section key={key} className="mb-10">
-          <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">
-            {key === "pending"
-              ? "Pending applicants"
-              : key === "active"
-                ? "Active Guides"
-                : key === "suspended"
-                  ? "Suspended Guides"
-                  : "Rejected applicants"}
-          </h2>
-          {grouped[key].length === 0 ? (
-            <p className="mt-3 text-sm text-ink-400">None.</p>
-          ) : (
-            <ul className="mt-3 divide-y divide-ink-100">
-              {grouped[key].map((g) => (
-                <li key={g.profile_id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/dashboard/admin/tutors/${g.profile_id}`}
-                      className="text-sm font-medium text-ink-900 hover:underline"
-                    >
-                      {g.name}
-                    </Link>
-                    <p className="mt-0.5 text-sm text-ink-500">
-                      {typeof g.comp_rate_cents_per_hour === "number"
-                        ? formatCompensationHourly(g.comp_rate_cents_per_hour, g.comp_currency ?? "USD")
-                        : "Rate not set"}
-                      {g.hasWeeklyHours ? " · Weekly hours set" : " · No weekly hours"}
-                      {g.upcoming > 0 ? ` · ${g.upcoming} upcoming` : ""}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {key === "pending" ? (
-                      <form action={approveTutorAction}>
-                        <input type="hidden" name="profileId" value={g.profile_id} />
-                        <Button type="submit" size="sm">
-                          Approve as Guide
-                        </Button>
-                      </form>
-                    ) : null}
-                    <GuideWorkforceActions
-                      profileId={g.profile_id}
-                      label={g.label as "pending" | "active" | "suspended" | "rejected" | "unknown"}
-                      compact
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+      <Suspense fallback={<p className="text-sm text-ink-500">Loading Guides…</p>}>
+        <AdminGuidesDirectory
+          pending={grouped.pending}
+          active={grouped.active}
+          suspended={grouped.suspended}
+          rejected={grouped.rejected}
+        />
+      </Suspense>
     </DashboardShell>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 export function ManagementNotifyRetry({ deliveryId }: { deliveryId: string }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -25,14 +27,9 @@ export function ManagementNotifyRetry({ deliveryId }: { deliveryId: string }) {
 
   return (
     <span className="ml-2 inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={retry}
-        disabled={busy}
-        className="text-xs font-semibold text-gold-700 hover:underline disabled:opacity-50"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={retry} disabled={busy}>
         {busy ? "Retrying…" : "Retry"}
-      </button>
+      </Button>
       {note ? <span className="text-xs text-ink-500">{note}</span> : null}
     </span>
   );

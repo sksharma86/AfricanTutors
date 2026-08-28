@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 /**
  * Parent phone for Call Parent telephony (E.164). Guides never see this value
  * in their UI; it is used only server-side by the platform.
@@ -60,14 +62,9 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
           placeholder="+15551234567"
           className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 sm:max-w-xs"
         />
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy}
-          className="min-h-10 rounded-lg bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 disabled:opacity-50"
-        >
+        <Button type="button" variant="primary" size="sm" onClick={save} disabled={busy}>
           {busy ? "Saving…" : "Save phone"}
-        </button>
+        </Button>
       </div>
       {saved ? <p className="mt-2 text-xs text-forest-700">On file: {saved}</p> : null}
       {note ? <p className="mt-1 text-xs text-ink-500">{note}</p> : null}

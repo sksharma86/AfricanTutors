@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { formatCents, PAYG_PRICE_USD, formatUsd } from "@/lib/pricing";
@@ -88,9 +88,9 @@ export function PackageStore({
           {done.minutes / 60} hours of Study Hall time were added using your credit. They never expire.
         </p>
         <div className="mt-6">
-          <a href="/dashboard/student/book" className="font-medium text-gold-700 hover:underline">
-            Book a Study Hall →
-          </a>
+          <LinkButton href="/dashboard/student/book" variant="primary" size="md">
+            Book a Study Hall
+          </LinkButton>
         </div>
       </Card>
     );

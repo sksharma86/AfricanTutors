@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 export function ManagementRecordingAccess({
   id,
   minutes,
@@ -31,9 +33,9 @@ export function ManagementRecordingAccess({
 
   return (
     <div>
-      <button type="button" onClick={open} disabled={busy} className="font-medium text-gold-700 hover:underline disabled:opacity-50">
+      <Button type="button" variant="outline" size="sm" onClick={open} disabled={busy}>
         {busy ? "Opening…" : `Review recording${minutes != null ? ` · ${minutes} min` : ""}`}
-      </button>
+      </Button>
       {err ? <p className="mt-1 text-xs text-red-600">{err}</p> : null}
     </div>
   );

@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 type Action = "complete" | "no_show" | "release" | "reassign";
 
 interface ReassignCandidate {
@@ -83,38 +85,18 @@ export function ManagementStudyHallActions({
     <div className="space-y-3">
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => run("reassign")}
-          disabled={busy != null}
-          className="rounded-lg border border-ink-200 px-3 py-1.5 text-sm font-medium text-ink-800 hover:bg-ink-50 disabled:opacity-50"
-        >
+        <Button type="button" variant="primary" size="sm" onClick={() => run("reassign")} disabled={busy != null}>
           {busy === "reassign" ? "Working…" : needsGuide ? "Assign Guide" : "Reassign Guide"}
-        </button>
-        <button
-          type="button"
-          onClick={() => run("complete")}
-          disabled={busy != null}
-          className="rounded-lg border border-ink-200 px-3 py-1.5 text-sm font-medium text-ink-800 hover:bg-ink-50 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => run("complete")} disabled={busy != null}>
           Mark complete
-        </button>
-        <button
-          type="button"
-          onClick={() => run("no_show")}
-          disabled={busy != null}
-          className="rounded-lg border border-ink-200 px-3 py-1.5 text-sm font-medium text-ink-800 hover:bg-ink-50 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => run("no_show")} disabled={busy != null}>
           Mark no-show
-        </button>
-        <button
-          type="button"
-          onClick={() => run("release")}
-          disabled={busy != null}
-          className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="button" variant="destructive" size="sm" onClick={() => run("release")} disabled={busy != null}>
           Cancel Study Hall
-        </button>
+        </Button>
       </div>
     </div>
   );

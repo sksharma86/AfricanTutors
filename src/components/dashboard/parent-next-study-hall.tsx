@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { LinkButton } from "@/components/ui/button";
 import { childFirstName, parentGuideLabel, parentJoinHint } from "@/lib/parent-portal.mjs";
@@ -67,9 +65,9 @@ export function ParentNextStudyHall({
         </div>
       ) : null}
       <p className="mt-5">
-        <Link href={`/dashboard/student/study-halls/${next.id}`} className="text-sm font-medium text-ink-500 hover:text-ink-800">
+        <LinkButton href={`/dashboard/student/study-halls/${next.id}`} variant="outline" size="sm">
           View Study Hall
-        </Link>
+        </LinkButton>
       </p>
     </ParentSurface>
   );

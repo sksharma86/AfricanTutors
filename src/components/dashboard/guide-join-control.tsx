@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LinkButton } from "@/components/ui/button";
@@ -64,12 +63,9 @@ export function GuideJoinControl({
       );
     }
     return (
-      <Link
-        href={`/dashboard/session/${bookingId}`}
-        className="rounded-lg bg-gold-400 px-3 py-1.5 text-xs font-semibold text-ink-900 hover:bg-gold-300"
-      >
+      <LinkButton href={`/dashboard/session/${bookingId}`} variant="secondary" size="sm">
         Join Study Hall
-      </Link>
+      </LinkButton>
     );
   }
   if (ui.kind === "opens_at") {

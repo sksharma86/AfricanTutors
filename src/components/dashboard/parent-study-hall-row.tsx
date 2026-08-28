@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { LinkButton } from "@/components/ui/button";
 import { childFirstName, parentGuideLabel, parentStatusLabel } from "@/lib/parent-portal.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
@@ -35,7 +34,7 @@ export function ParentStudyHallRow({
               <p className="mt-1 text-sm text-ink-500">
                 {guide ? `Guide ${guide}` : ""}
                 {guide ? " · " : ""}
-                {parentStatusLabel(booking)}
+                <span data-kind="status">{parentStatusLabel(booking)}</span>
               </p>
             </>
           ) : (
@@ -46,17 +45,19 @@ export function ParentStudyHallRow({
               <p className="text-sm text-ink-500">
                 {guide ? `Guide ${guide}` : ""}
                 {guide ? " · " : ""}
-                {parentStatusLabel(booking)}
+                <span data-kind="status">{parentStatusLabel(booking)}</span>
               </p>
             </>
           )}
         </div>
-        <Link
+        <LinkButton
           href={`/dashboard/student/study-halls/${booking.id}`}
-          className="shrink-0 text-sm font-medium text-gold-700 hover:underline"
+          variant="outline"
+          size="sm"
+          className="shrink-0"
         >
           View
-        </Link>
+        </LinkButton>
       </div>
     </li>
   );
