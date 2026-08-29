@@ -3,8 +3,11 @@
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { halfHourClockOptions, isHalfHourClock } from "@/lib/half-hour-grid.mjs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { COMMON_TIMEZONES, formatDayHeading, formatTime, tzAbbreviation, wallTimeToUtcIso } from "@/lib/timezone";
+
+const HALF_HOUR_OPTIONS = halfHourClockOptions();
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -66,6 +69,10 @@ export function AvailabilityManager({
   async function addBlock() {
     if (!supabase) return;
     setError(null);
+    if (!isHalfHourClock(start) || !isHalfHourClock(end)) {
+      setError("Availability must start and end on the half-hour (:00 or :30).");
+      return;
+    }
     if (end <= start) {
       setError("End time must be after start time.");
       return;
@@ -99,6 +106,10 @@ export function AvailabilityManager({
     setError(null);
     if (!exDate) {
       setError("Choose a date.");
+      return;
+    }
+    if (!isHalfHourClock(exStart) || !isHalfHourClock(exEnd)) {
+      setError("Time off must start and end on the half-hour (:00 or :30).");
       return;
     }
     if (exEnd <= exStart) {
@@ -159,7 +170,7 @@ export function AvailabilityManager({
       <section className="rounded-2xl bg-white/80 px-5 py-5 ring-1 ring-ink-900/[0.05]">
         <h3 className="font-display text-lg font-semibold text-ink-900">Your weekly availability</h3>
         <p className="mt-1 text-sm text-ink-500">
-          Recurring blocks parents can book for Study Hall (your local time). Changes save when you add or remove a time.
+          Recurring blocks parents can book for Study Hall (your local time). Start and end on the half-hour. Changes save when you add or remove a time.
         </p>
 
         <ul className="mt-5 divide-y divide-ink-100">
@@ -197,8 +208,30 @@ export function AvailabilityManager({
               </option>
             ))}
           </select>
-          <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
-          <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
+          <select
+            aria-label="Availability start"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+            className="rounded-lg border border-ink-200 px-3 py-2 text-sm"
+          >
+            {HALF_HOUR_OPTIONS.map((t) => (
+              <option key={`start-${t}`} value={t}>
+                {formatClock(t)}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Availability end"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            className="rounded-lg border border-ink-200 px-3 py-2 text-sm"
+          >
+            {HALF_HOUR_OPTIONS.map((t) => (
+              <option key={`end-${t}`} value={t}>
+                {formatClock(t)}
+              </option>
+            ))}
+          </select>
           <Button onClick={addBlock} disabled={busy} variant="outline" size="sm">
             Add another time
           </Button>
@@ -231,8 +264,30 @@ export function AvailabilityManager({
 
         <div className="mt-5 grid gap-3 sm:grid-cols-5">
           <input type="date" value={exDate} onChange={(e) => setExDate(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm sm:col-span-2" />
-          <input type="time" value={exStart} onChange={(e) => setExStart(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
-          <input type="time" value={exEnd} onChange={(e) => setExEnd(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-2 text-sm" />
+          <select
+            aria-label="Time off start"
+            value={exStart}
+            onChange={(e) => setExStart(e.target.value)}
+            className="rounded-lg border border-ink-200 px-3 py-2 text-sm"
+          >
+            {HALF_HOUR_OPTIONS.map((t) => (
+              <option key={`ex-start-${t}`} value={t}>
+                {formatClock(t)}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Time off end"
+            value={exEnd}
+            onChange={(e) => setExEnd(e.target.value)}
+            className="rounded-lg border border-ink-200 px-3 py-2 text-sm"
+          >
+            {HALF_HOUR_OPTIONS.map((t) => (
+              <option key={`ex-end-${t}`} value={t}>
+                {formatClock(t)}
+              </option>
+            ))}
+          </select>
           <Button onClick={addException} disabled={busy} variant="outline" size="sm">
             Add time off
           </Button>
