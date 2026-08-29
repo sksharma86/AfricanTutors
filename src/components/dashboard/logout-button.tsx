@@ -1,23 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export function LogoutButton({ className }: { className?: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        /* still leave the session UI */
+      }
     }
-    router.push("/");
-    router.refresh();
+    // Full navigation so auth cookies are dropped before the next document load.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- session cookie must be cleared on a new document
+    window.location.assign("/");
   }
 
   return (

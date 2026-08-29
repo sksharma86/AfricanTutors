@@ -30,7 +30,9 @@ export default async function StudentDashboardPage() {
 
   try {
     const { notifyWelcome } = await import("@/lib/notify");
-    await notifyWelcome(user.id, user.displayName ?? user.email ?? null);
+    void notifyWelcome(user.id, user.displayName ?? user.email ?? null).catch(() => {
+      /* best-effort — never block dashboard */
+    });
   } catch {
     /* best-effort — never block dashboard */
   }

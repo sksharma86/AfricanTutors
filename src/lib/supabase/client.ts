@@ -13,10 +13,17 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./config"
  * "not configured" state rather than crashing. Once the owner supplies
  * Supabase credentials (see SETUP.md) this starts working automatically.
  */
+let browserClient: SupabaseClient | null = null;
+
 export function createSupabaseBrowserClient(): SupabaseClient | null {
   if (!isSupabaseConfigured) {
     return null;
   }
 
-  return createBrowserClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
+  // One GoTrue client per browser tab. Creating a new client on every call
+  // races cookie/storage writes and can stall the post-login navigation.
+  if (!browserClient) {
+    browserClient = createBrowserClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
+  }
+  return browserClient;
 }
