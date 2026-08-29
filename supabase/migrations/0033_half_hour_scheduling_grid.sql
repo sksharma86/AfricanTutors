@@ -143,7 +143,11 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if current_setting('request.jwt.claim.role', true) = 'service_role' then
+  -- PostgREST service-role inserts (live tests / admin seed) may still write
+  -- legacy off-grid windows so slot snap-forward can be proven.
+  if coalesce(auth.role(), '') = 'service_role'
+     or coalesce(current_setting('request.jwt.claim.role', true), '') = 'service_role'
+     or coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') = 'service_role' then
     return NEW;
   end if;
   if extract(minute from NEW.start_time) not in (0, 30)

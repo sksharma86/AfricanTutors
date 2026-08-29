@@ -249,8 +249,10 @@ describe("Half-hour scheduling — live slot generation and booking", { skip: !h
 
   it("matching cannot create an off-grid Study Hall", async () => {
     const c = await signIn(parent.email, parent.password);
-    const start = new Date(Date.UTC(slotDay.getUTCFullYear(), slotDay.getUTCMonth(), slotDay.getUTCDate(), 16, 17, 0)).toISOString();
-    const { error } = await book(c, { studentId: childChi, subjectId: subjChi, duration: 60, start });
+    // 14:17 UTC sits inside the legacy 13:44–20:00 window, so availability would
+    // otherwise match. The half-hour trigger must still reject the booking.
+    const start = new Date(Date.UTC(slotDay.getUTCFullYear(), slotDay.getUTCMonth(), slotDay.getUTCDate(), 18, 17, 0)).toISOString();
+    const { error } = await book(c, { studentId: childUtc, subjectId: subjLegacy, duration: 60, start });
     assert.ok(error);
     assert.match(error.message, /half-hour/i);
   });
