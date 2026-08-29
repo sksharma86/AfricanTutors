@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { assertHalfHourStart } from "@/lib/half-hour-grid.mjs";
 import { missingStudentIdsRpc } from "@/lib/household-children.mjs";
 import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { formatCents } from "@/lib/pricing";
@@ -91,6 +92,13 @@ export async function createBookingCheckout(
   // "Other" requests only occur when both subject and start are null.
   // Price is duration-only; p_student_ids does not change hours or Stripe amount.
   const studentIds = params.studentIds ?? [params.studentId];
+  if (params.startISO) {
+    const { data: kids } = await supabase.from("students").select("timezone").in("id", studentIds);
+    assertHalfHourStart(
+      params.startISO,
+      (kids ?? []).map((k) => (k as { timezone?: string }).timezone),
+    );
+  }
   const sessionArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,

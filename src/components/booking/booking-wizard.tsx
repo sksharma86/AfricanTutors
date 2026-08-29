@@ -23,6 +23,7 @@ import {
   wouldExceedChildLimit,
 } from "@/lib/household-children.mjs";
 import { BOOKING_SAME_PRICE_NOTE } from "@/lib/household-pricing-copy.mjs";
+import { isHalfHourInstant } from "@/lib/half-hour-grid.mjs";
 import { COMMON_TIMEZONES, browserTimezone, formatDayHeading, formatTime, tzAbbreviation } from "@/lib/timezone";
 
 export interface StudentRow {
@@ -232,7 +233,12 @@ export function BookingWizard({
       setError(friendlyError(e.message));
       return;
     }
-    setSlots((data ?? []).map((r: { slot_start: string }) => r.slot_start));
+    const tz = student?.timezone || browserTimezone();
+    setSlots(
+      (data ?? [])
+        .map((r: { slot_start: string }) => r.slot_start)
+        .filter((iso: string) => isHalfHourInstant(iso, tz)),
+    );
   }
 
   function toggleChild(id: string) {

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
+import { assertHalfHourStart } from "@/lib/half-hour-grid.mjs";
 import { missingHouseholdColumns, missingStudentIdsRpc } from "@/lib/household-children.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -109,6 +110,13 @@ export async function requestBooking(params: {
 }): Promise<string> {
   const supabase = await client();
   const studentIds = params.studentIds ?? [params.studentId];
+  if (params.startISO) {
+    const { data: kids } = await supabase.from("students").select("timezone").in("id", studentIds);
+    assertHalfHourStart(
+      params.startISO,
+      (kids ?? []).map((k) => (k as { timezone?: string }).timezone),
+    );
+  }
   const bookingArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,

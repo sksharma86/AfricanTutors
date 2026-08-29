@@ -217,6 +217,9 @@ describe("Guide workstation — earnings, availability, privacy", () => {
     assert.match(avail, /Add time off/);
     assert.match(avail, /tutor_availability_exceptions/);
     assert.match(avail, /parents can book for Study Hall/);
+    assert.match(avail, /halfHourClockOptions/);
+    assert.match(avail, /Start and end on the half-hour/);
+    assert.doesNotMatch(avail, /type="time"/);
   });
 
   it("Guide UI never prints a parent phone number", () => {
