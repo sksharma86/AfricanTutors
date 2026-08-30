@@ -62,6 +62,9 @@ create unique index if not exists gaa_one_awaiting_per_booking
 -- ---------------------------------------------------------------------------
 -- open_guide_attendance_assignment — persist a request for the CURRENT Guide.
 -- Idempotent. Service / admin / trigger. Does not notify (app layer does).
+-- PostgreSQL identity is (uuid, text, timestamptz). The default on p_deadline
+-- does NOT create a second (uuid, text) overload. GRANT/REVOKE must use the
+-- three-argument identity.
 -- ---------------------------------------------------------------------------
 create or replace function public.open_guide_attendance_assignment(p_booking uuid, p_source text, p_deadline timestamptz default null)
 returns jsonb
@@ -924,7 +927,7 @@ begin
     else
       v_source := 't30';
     end if;
-    v_new_id := (public.open_guide_attendance_assignment(NEW.id, v_source) ->> 'id')::uuid;
+    v_new_id := (public.open_guide_attendance_assignment(NEW.id, v_source, null) ->> 'id')::uuid;
     if v_new_id is not null and v_old_ids is not null then
       update public.guide_attendance_assignments
          set replaced_by_assignment_id = v_new_id
@@ -953,7 +956,6 @@ create policy gaa_select on public.guide_attendance_assignments
 grant select on public.guide_attendance_assignments to authenticated;
 grant all on public.guide_attendance_assignments to service_role;
 
-revoke all on function public.open_guide_attendance_assignment(uuid, text) from public;
 revoke all on function public.open_guide_attendance_assignment(uuid, text, timestamptz) from public;
 revoke all on function public.confirm_guide_attendance(uuid) from public;
 revoke all on function public.confirm_guide_attendance_block(uuid) from public;

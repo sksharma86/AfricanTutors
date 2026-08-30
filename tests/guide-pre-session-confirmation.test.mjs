@@ -347,3 +347,76 @@ describe("Guide attendance confirmation — architecture contracts", () => {
     assert.match(read("src/lib/management-visual-fixture.mjs"), /scene === "missed"/);
   });
 });
+
+function stripSqlComments(sql) {
+  return sql.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+function identityTypes(argList) {
+  return argList
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const noDefault = part.replace(/\s+default\s+[\s\S]+$/i, "").trim();
+      const tokens = noDefault.split(/\s+/);
+      return tokens[tokens.length - 1].toLowerCase();
+    })
+    .join(", ");
+}
+
+describe("0034 function signature audit", () => {
+  const sql = read("supabase/migrations/0034_guide_pre_session_confirmation.sql");
+  const body = stripSqlComments(sql);
+
+  it("creates open_guide_attendance_assignment as (uuid, text, timestamptz) only", () => {
+    const creates = [...body.matchAll(/create or replace function public\.open_guide_attendance_assignment\s*\(([^)]*)\)/gi)];
+    assert.equal(creates.length, 1);
+    assert.equal(identityTypes(creates[0][1]), "uuid, text, timestamptz");
+  });
+
+  it("GRANT/REVOKE identities match CREATE identities", () => {
+    const created = new Map();
+    for (const m of body.matchAll(/create or replace function public\.([a-z0-9_]+)\s*\(([^)]*)\)/gi)) {
+      created.set(`${m[1]}(${identityTypes(m[2])})`, true);
+    }
+    const privs = [...body.matchAll(/(?:revoke all|grant execute) on function public\.([a-z0-9_]+)\s*\(([^)]*)\)/gi)];
+    assert.ok(privs.length >= 6);
+    const stale = [];
+    for (const m of privs) {
+      const ident = `${m[1]}(${identityTypes(m[2])})`;
+      if (!created.has(ident)) stale.push(ident);
+    }
+    assert.deepEqual(stale, []);
+    assert.equal(created.has("open_guide_attendance_assignment(uuid, text)"), false);
+    assert.equal(created.has("open_guide_attendance_assignment(uuid, text, timestamptz)"), true);
+  });
+
+  it("does not revoke a two-argument open_guide_attendance_assignment", () => {
+    assert.doesNotMatch(
+      body,
+      /revoke all on function public\.open_guide_attendance_assignment\s*\(\s*uuid\s*,\s*text\s*\)/i,
+    );
+    assert.match(
+      body,
+      /revoke all on function public\.open_guide_attendance_assignment\s*\(\s*uuid\s*,\s*text\s*,\s*timestamptz\s*\)/i,
+    );
+    assert.match(
+      body,
+      /grant execute on function public\.open_guide_attendance_assignment\s*\(\s*uuid\s*,\s*text\s*,\s*timestamptz\s*\)/i,
+    );
+  });
+
+  it("internal calls use the created open/confirm/protect signatures", () => {
+    const opens = [...body.matchAll(/public\.open_guide_attendance_assignment\s*\(([^;]+?)\)/gi)];
+    assert.ok(opens.length >= 3);
+    for (const m of opens) {
+      if (/p_booking uuid/.test(m[1])) continue;
+      const args = m[1].split(",").map((s) => s.trim()).filter(Boolean);
+      assert.ok(args.length === 2 || args.length === 3, m[1]);
+    }
+    assert.match(body, /public\.confirm_guide_attendance_at\(\s*v_cur,\s*v_first_start\s*\)/);
+    assert.match(body, /public\.protect_unconfirmed_booking\(p_booking uuid\)/);
+    assert.match(body, /execute function public\.sync_guide_attendance_assignment\(\)/);
+  });
+});
