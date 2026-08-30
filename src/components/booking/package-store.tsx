@@ -130,7 +130,7 @@ export function PackageStore({
               key={pkg.id}
               className={cn(
                 "flex flex-col p-6",
-                featured && "border-forest-400 ring-2 ring-forest-200",
+                featured && "border-[#c9a227]/45 ring-2 ring-[#c9a227]/18",
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -141,7 +141,7 @@ export function PackageStore({
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase",
-                      featured ? "bg-forest-600 text-white" : "bg-forest-50 text-forest-700",
+                      featured ? "bg-[#5c4310] text-[#f3e6c4]" : "bg-[#f3e6c4] text-[#5c4310]",
                     )}
                   >
                     {badge}
@@ -155,7 +155,7 @@ export function PackageStore({
                 {" · never expire"}
               </p>
               {savingsCents > 0 ? (
-                <p className="mt-2 inline-flex w-fit items-center rounded-full bg-forest-50 px-2.5 py-0.5 text-xs font-semibold text-forest-700">
+                <p className="mt-2 inline-flex w-fit items-center rounded-full bg-[#eef3ee] px-2.5 py-0.5 text-xs font-semibold text-[var(--pp-positive,#3d6b4f)]">
                   Save {formatCents(savingsCents)} vs. {formatUsd(PAYG_PRICE_USD)}/hour
                 </p>
               ) : null}
@@ -169,7 +169,10 @@ export function PackageStore({
                   onClick={() => buy(pkg)}
                   disabled={busyId !== null}
                   variant={featured ? "primary" : "outline"}
-                  className="w-full"
+                  className={cn(
+                    "w-full",
+                    featured && "border-transparent bg-[#c9a227] text-[#1c1915] hover:bg-[#b8921f]",
+                  )}
                 >
                   {busyId === pkg.id ? "Starting…" : due > 0 ? "Buy hours" : "Redeem with credit"}
                 </Button>

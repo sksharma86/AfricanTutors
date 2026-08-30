@@ -5,7 +5,14 @@ import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-export function LogoutButton({ className }: { className?: string }) {
+export function LogoutButton({
+  className,
+  quiet = false,
+}: {
+  className?: string;
+  /** Parent Portal: text action, not a white pill. Guide / Management keep the default. */
+  quiet?: boolean;
+}) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
@@ -29,7 +36,10 @@ export function LogoutButton({ className }: { className?: string }) {
       onClick={handleLogout}
       disabled={loading}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-medium text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900 disabled:pointer-events-none disabled:border-ink-200 disabled:bg-ink-100 disabled:text-ink-400",
+        "inline-flex min-h-11 items-center px-3.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none",
+        quiet
+          ? "rounded-[12px] border-transparent bg-transparent text-[#6b655c] hover:bg-[#ebe4d6] hover:text-[#1c1915] focus-visible:outline-[#c9a227] disabled:bg-transparent disabled:text-[#b0aaa0]"
+          : "rounded-full border border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900 focus-visible:outline-ink-900 disabled:border-ink-200 disabled:bg-ink-100 disabled:text-ink-400",
         className,
       )}
     >

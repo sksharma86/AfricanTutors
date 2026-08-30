@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { LogoutButton } from "@/components/dashboard/logout-button";
@@ -15,6 +15,16 @@ import { cn } from "@/lib/utils";
  */
 export function CustomerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const mobileNavRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const active = mobileNavRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard/student") return pathname === "/dashboard/student";
@@ -63,7 +73,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
           >
             Book a Study Hall
           </Link>
-          <LogoutButton className="w-full justify-center rounded-[12px] border-transparent bg-transparent px-2.5 text-[13px] font-medium text-[#6b655c] hover:border-transparent hover:bg-[#ebe4d6] hover:text-[#1c1915]" />
+          <LogoutButton quiet className="w-full justify-center px-2.5 text-[13px]" />
         </div>
       </aside>
 
@@ -84,11 +94,12 @@ export function CustomerShell({ children }: { children: ReactNode }) {
               >
                 Book
               </Link>
-              <LogoutButton className="border-transparent bg-transparent px-2.5 text-[13px] font-medium text-[#6b655c] hover:border-transparent hover:bg-[#ebe4d6] hover:text-[#1c1915]" />
+              <LogoutButton quiet className="px-2.5 text-[13px]" />
             </div>
           </div>
           <div className="relative border-t border-[#1c1915]/[0.05] lg:hidden">
             <nav
+              ref={mobileNavRef}
               aria-label="Parent account"
               className="flex flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
