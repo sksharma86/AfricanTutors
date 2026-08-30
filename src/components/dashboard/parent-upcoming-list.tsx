@@ -38,7 +38,7 @@ export function ParentUpcomingList({
           <p className="text-sm text-[var(--pp-muted)]">Nothing scheduled yet.</p>
           <p className="mt-1.5">
             <Link href="/dashboard/student/book" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
-              Book a Study Hall →
+              Book one →
             </Link>
           </p>
         </div>

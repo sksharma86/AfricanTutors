@@ -63,7 +63,7 @@ export function ParentHabitCard({
   return (
     <ParentSurface className="pp-habit px-4 py-3.5">
       <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">
-        Study Halls this month
+        This month
       </p>
       <div className="pp-habit-top">
         <div>

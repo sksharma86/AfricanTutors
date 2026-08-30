@@ -65,7 +65,8 @@ describe("Parent Portal premium visual system", () => {
     assert.match(css, /grid-template-areas/);
     assert.match(css, /pp-home-grid\.is-empty/);
     assert.match(board, /is-empty/);
-    assert.match(habit, /Study Halls this month/);
+    assert.match(habit, /This month/);
+    assert.doesNotMatch(habit, /Study Halls this month/);
     assert.match(habit, /completedStudyHallsThisMonth/);
     assert.match(habit, /parentHabitCopy/);
     assert.match(habit, /pp-habit-track/);
@@ -111,8 +112,31 @@ describe("Parent Portal premium visual system", () => {
   it("empty Next Study Hall Book action is gold, not black", () => {
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     assert.match(next, /Nothing scheduled yet/);
+    assert.match(next, /Schedule your first one whenever you&apos;re ready/);
+    assert.doesNotMatch(next, /Book your first Study Hall when you/);
+    assert.match(next, /Book a Study Hall/);
+    assert.match(next, /Join Study Hall/);
     assert.match(next, /variant="secondary"/);
     assert.doesNotMatch(next, /variant="primary"/);
+  });
+
+  it("Home copy removes only redundant Study Hall repeats inside small cards", () => {
+    const next = read("src/components/dashboard/parent-next-study-hall.tsx");
+    const habit = read("src/components/dashboard/parent-habit.tsx");
+    const upcoming = read("src/components/dashboard/parent-upcoming-list.tsx");
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    const shell = read("src/components/dashboard/customer-shell.tsx");
+    assert.match(shell, /Study Halls/);
+    assert.match(shell, /Book a Study Hall/);
+    assert.match(next, /Next Study Hall/);
+    assert.match(habit, />\s*This month\s*</);
+    assert.match(habit, /Study Hall\{month\.count === 1 \? "" : "s"\} completed/);
+    assert.equal(parentHabitCopy(0).body, "Regular sessions can help turn homework time into a more predictable routine.");
+    assert.match(upcoming, /Upcoming Study Halls/);
+    assert.match(upcoming, /Nothing scheduled yet/);
+    assert.match(upcoming, /Book one →/);
+    assert.doesNotMatch(upcoming, /Book a Study Hall →/);
+    assert.match(board, /Your first Study Hall is on us — 60 minutes free, no credit card required/);
   });
 
   it("counts completed Study Halls in the current calendar month only", () => {
@@ -148,6 +172,7 @@ describe("Parent Portal premium visual system", () => {
 
   it("maps habit language from completed-session counts without quota language", () => {
     assert.equal(parentHabitCopy(0).title, "Ready when you are.");
+    assert.equal(parentHabitCopy(0).body, "Regular sessions can help turn homework time into a more predictable routine.");
     assert.equal(parentHabitCopy(1).title, "A good start.");
     assert.equal(parentHabitCopy(2).title, "A good start.");
     assert.equal(parentHabitCopy(3).title, "Building momentum.");

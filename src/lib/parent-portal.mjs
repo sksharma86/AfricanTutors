@@ -203,7 +203,7 @@ export function parentHabitCopy(count) {
   if (n <= 0) {
     return {
       title: "Ready when you are.",
-      body: "Regular Study Halls can help turn homework time into a more predictable routine.",
+      body: "Regular sessions can help turn homework time into a more predictable routine.",
     };
   }
   if (n <= 2) {
