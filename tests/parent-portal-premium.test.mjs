@@ -112,7 +112,7 @@ describe("Parent Portal premium visual system", () => {
   it("empty Next Study Hall Book action is gold, not black", () => {
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     assert.match(next, /Nothing scheduled yet/);
-    assert.match(next, /You&apos;re a few clicks away from getting an evening back/);
+    assert.match(next, /A better homework routine starts here/);
     assert.doesNotMatch(next, /Book your first Study Hall when you/);
     assert.match(next, /Book a Study Hall/);
     assert.match(next, /Join Study Hall/);
