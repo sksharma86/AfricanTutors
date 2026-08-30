@@ -338,7 +338,8 @@ body {
 }
 
 @media (max-width: 767px) {
-  .parent-app .pp-home-grid {
+  .parent-app .pp-home-grid,
+  .parent-app .pp-home-grid.is-empty {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "hero"
