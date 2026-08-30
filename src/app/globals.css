@@ -255,10 +255,56 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 70% at 88% 8%, rgba(201, 162, 39, 0.22), transparent 46%),
-    radial-gradient(ellipse 70% 55% at 12% 92%, rgba(232, 196, 110, 0.1), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 72% 78%, rgba(20, 16, 10, 0.45), transparent 70%),
-    linear-gradient(158deg, #121814 0%, #1c261f 46%, #141916 100%);
+    radial-gradient(ellipse 46% 58% at 82% -4%, rgba(243, 210, 122, 0.34) 0%, rgba(201, 162, 39, 0.12) 36%, transparent 62%),
+    radial-gradient(ellipse 28% 22% at 74% 6%, rgba(255, 228, 160, 0.16), transparent 70%),
+    linear-gradient(180deg, rgba(8, 10, 8, 0.2) 0%, transparent 30%),
+    linear-gradient(168deg, #101410 0%, #1a221c 48%, #121613 100%);
+}
+
+.parent-app .pp-home {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.parent-app .pp-home-greeting {
+  max-width: 28rem;
+}
+
+.parent-app .pp-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.68fr) minmax(16.75rem, 0.82fr);
+  grid-template-areas:
+    "hero secondary"
+    "upcoming utility";
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.parent-app .pp-home-hero { grid-area: hero; }
+.parent-app .pp-home-secondary { grid-area: secondary; }
+.parent-app .pp-home-upcoming { grid-area: upcoming; }
+.parent-app .pp-home-utility { grid-area: utility; }
+
+@media (max-width: 1279px) {
+  .parent-app .pp-home-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero hero"
+      "secondary utility"
+      "upcoming upcoming";
+  }
+}
+
+@media (max-width: 767px) {
+  .parent-app .pp-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "secondary"
+      "upcoming"
+      "utility";
+  }
 }
 
 .parent-app .pp-commerce .rounded-2xl {

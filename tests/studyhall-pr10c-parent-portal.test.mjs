@@ -28,7 +28,7 @@ describe("PR10C — parent portal usability (source)", () => {
   });
 
   it("dashboard hierarchy emphasizes Next Study Hall and Book CTA", () => {
-    assert.match(dash, /ParentNextStudyHall/);
+    assert.match(dash, /ParentHomeBoard|ParentNextStudyHall/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /Book a Study Hall/);
     assert.match(balance, /Prepaid Hours/);

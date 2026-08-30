@@ -12,21 +12,42 @@ export function BalanceCards({
   creditCents,
   preferFreeSession = false,
   compact = false,
+  slim = false,
 }: {
   minutes: number;
   creditCents: number;
   /** Soften package CTA for brand-new parents who still have a free session. */
   preferFreeSession?: boolean;
   compact?: boolean;
+  slim?: boolean;
 }) {
   const hours = minutes > 0 ? formatPrepaidHoursLabel(minutes) : "0 hours";
   const wholeHours = Math.max(0, Math.floor((Number(minutes) || 0) / 60));
   const remainder = Math.max(0, Math.round(Number(minutes) || 0) % 60);
   const buy = preferFreeSession && minutes === 0 ? null : (
-    <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0">
+    <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0 text-[13px]">
       Buy hours &amp; save →
     </PortalTextLink>
   );
+
+  if (slim) {
+    return (
+      <section className="flex min-h-11 items-center justify-between gap-3 rounded-[14px] bg-[var(--pp-card)] px-3.5 py-2 ring-1 ring-[#1c1915]/[0.05]">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="inline-flex size-7 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
+            <ParentIconClock className="h-3.5 w-3.5" />
+          </span>
+          <p className="text-sm text-[var(--pp-ink)]">
+            <span className="font-semibold">{wholeHours}</span>
+            {remainder > 0 ? <span className="text-[var(--pp-muted)]">+{remainder}m</span> : null}
+            <span className="text-[var(--pp-muted)]"> hours available</span>
+            <span className="sr-only">{hours}</span>
+          </p>
+        </div>
+        {buy}
+      </section>
+    );
+  }
 
   if (compact) {
     return (

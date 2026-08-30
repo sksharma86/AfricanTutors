@@ -24,7 +24,7 @@ function StatusRow({
   const color =
     tone === "ok" ? "text-[var(--pp-positive)]" : tone === "attention" ? "text-[var(--pp-attention)]" : "text-[var(--pp-muted)]";
   return (
-    <p className={`flex items-center gap-2.5 text-sm ${color}`}>
+    <p className={`flex items-center gap-2 text-[13px] ${color}`}>
       <span className="text-current">{icon}</span>
       {label}
     </p>
@@ -54,28 +54,26 @@ export function ParentRecentActivity({
   const recLabel = parentRecordingHomeLabel(recording);
 
   return (
-    <ParentSurface>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Recent Study Hall</p>
-      <p className="mt-2.5 text-[15px] font-medium text-[var(--pp-ink)]">
-        {when}
-        {child ? ` · ${child}` : ""}
-      </p>
-      {guide ? <p className="mt-0.5 text-sm text-[var(--pp-muted)]">Guide {guide}</p> : null}
-      <div className="mt-3.5 space-y-2">
+    <ParentSurface className="px-4 py-3.5">
+      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Recent Study Hall</p>
+      <p className="mt-2 text-[13px] text-[var(--pp-muted)]">{when}</p>
+      <p className="mt-1 text-[14px] font-medium text-[var(--pp-ink)]">{child}</p>
+      {guide ? <p className="mt-0.5 text-[13px] text-[var(--pp-muted)]">with Guide {guide}</p> : null}
+      <div className="mt-2.5 space-y-1.5">
         <StatusRow
-          icon={<ParentIconReports className="h-4 w-4" />}
+          icon={<ParentIconReports className="h-3.5 w-3.5" />}
           label={report ? "Report ready" : "No report yet"}
           tone={report ? "ok" : "muted"}
         />
         {recLabel ? (
           <StatusRow
-            icon={<ParentIconPlay className="h-4 w-4" />}
+            icon={<ParentIconPlay className="h-3.5 w-3.5" />}
             label={recLabel}
             tone={recLabel === "Recording ready" ? "ok" : recLabel.includes("unavailable") || recLabel.includes("expired") ? "attention" : "muted"}
           />
         ) : null}
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {report ? (
           <LinkButton href={`/dashboard/student/study-halls/${booking.id}`} variant="outline" size="sm">
             Read report

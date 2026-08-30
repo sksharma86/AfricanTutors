@@ -44,7 +44,8 @@ describe("Parent Portal premium visual system", () => {
   it("Home greeting uses local time-of-day without inventing profile data", () => {
     const greet = read("src/components/dashboard/parent-greeting.tsx");
     const home = read("src/app/dashboard/student/page.tsx");
-    assert.match(home, /ParentGreeting/);
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    assert.match(board, /ParentGreeting/);
     assert.match(home, /firstName/);
     assert.match(greet, /Good morning/);
     assert.match(greet, /Good evening/);
@@ -52,20 +53,31 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(greet, /Priya|notification|avatar/);
   });
 
-  it("Home uses a composed desktop grid and a habit indicator that is not a quota", () => {
+  it("Home uses a stable dashboard grid and a habit indicator that is not a quota", () => {
     const home = read("src/app/dashboard/student/page.tsx");
+    const board = read("src/components/dashboard/parent-home-board.tsx");
     const habit = read("src/components/dashboard/parent-habit.tsx");
-    const strip = read("src/components/dashboard/parent-brand-strip.tsx");
-    assert.match(home, /ParentPage compose/);
-    assert.match(home, /xl:grid-cols-/);
-    assert.match(home, /ParentHabitCard/);
-    assert.match(home, /ParentBrandStrip/);
+    const css = read("src/app/globals.css");
+    const shell = read("src/components/dashboard/customer-shell.tsx");
+    assert.match(home, /ParentHomeBoard/);
+    assert.match(board, /pp-home-grid/);
+    assert.match(css, /grid-template-areas/);
     assert.match(habit, /Study Halls this month/);
     assert.match(habit, /completedStudyHallsThisMonth/);
     assert.match(habit, /parentHabitCopy/);
     assert.doesNotMatch(habit, /of 20|Renews|hours remaining|progress ring|monthly quota/i);
-    assert.doesNotMatch(strip, /Better results|Happier at home|Real impact/);
-    assert.match(strip, /A better homework routine/);
+    assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine/);
+    assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
+    assert.doesNotMatch(home, /parent-home-visual-fixture|Priya|Jordan/);
+  });
+
+  it("visual-review fixture is gated and not used by the real Home", () => {
+    const review = read("src/app/dashboard/student/visual-review/page.tsx");
+    const home = read("src/app/dashboard/student/page.tsx");
+    assert.match(review, /PARENT_HOME_VISUAL_REVIEW/);
+    assert.match(review, /notFound/);
+    assert.match(review, /parentHomeVisualFixture/);
+    assert.doesNotMatch(home, /parentHomeVisualFixture|visual-review/);
   });
 
   it("empty Next Study Hall Book action is gold, not black", () => {

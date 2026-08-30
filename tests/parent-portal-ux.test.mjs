@@ -116,17 +116,18 @@ describe("Parent portal UX — routes and authorization", () => {
 describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
   it("Home is a three-second dashboard: next, hours, last activity, book/join", () => {
     const home = read("src/app/dashboard/student/page.tsx");
+    const board = read("src/components/dashboard/parent-home-board.tsx");
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     const recent = read("src/components/dashboard/parent-recent-activity.tsx");
     const surface = read("src/components/dashboard/parent-surface.tsx");
-    assert.match(home, /ParentNextStudyHall/);
-    assert.match(home, /BalanceCards/);
-    assert.match(home, /compact/);
-    assert.match(home, /ParentRecentActivity/);
-    assert.match(home, /ParentUpcomingList/);
-    assert.match(home, /ParentGreeting/);
+    assert.match(home, /ParentHomeBoard/);
+    assert.match(board, /ParentNextStudyHall/);
+    assert.match(board, /BalanceCards/);
+    assert.match(board, /slim/);
+    assert.match(board, /ParentRecentActivity/);
+    assert.match(board, /ParentUpcomingList/);
     assert.match(home, /firstName/);
-    assert.match(read("src/components/dashboard/parent-greeting.tsx"), /sm:text-\[2(?:\.15)?rem\]/);
+    assert.match(read("src/components/dashboard/parent-greeting.tsx"), /sm:text-\[1\.55rem\]/);
     assert.doesNotMatch(home, /Your household|Your Study Hall account/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /Nothing scheduled yet/);
@@ -188,7 +189,8 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(balance, /Buy hours &amp; save|Buy hours & save/);
     assert.match(balance, /packages#prepaid/);
     const home = read("src/app/dashboard/student/page.tsx");
-    assert.match(home, /compact/);
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    assert.match(board, /slim/);
     assert.doesNotMatch(home, /PackageStore|SingleSessionCards/);
   });
 
