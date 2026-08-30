@@ -57,7 +57,7 @@ export function ParentNextStudyHall({
                   Nothing scheduled yet
                 </p>
                 <p className="mt-1 text-sm leading-6 text-white/62">
-                  Schedule your first one whenever you&apos;re ready.
+                  You&apos;re a few clicks away from getting an evening back.
                 </p>
               </div>
             </div>
