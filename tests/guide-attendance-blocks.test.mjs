@@ -246,20 +246,31 @@ describe("Continuous confirmation blocks", () => {
     const obligation = obligationBlockContaining(bookings, "b10");
     assert.deepEqual(obligation.map((b) => b.id), ["b10"]);
     const nowMs = Date.parse(t(21, 34));
+    const assignmentsByBooking = {
+      b6: { status: "confirmed", tutor_id: "guide-a" },
+      b7: { status: "confirmed", tutor_id: "guide-a" },
+      b8: { status: "confirmed", tutor_id: "guide-a" },
+      b9: { status: "confirmed", tutor_id: "guide-a" },
+      b10: { status: "awaiting", tutor_id: "guide-a", deadline_at: t(21, 40) },
+    };
     const r = confirmBlockResult({
       bookings,
       actorId: "guide-a",
       seedId: "b10",
-      assignmentsByBooking: {
-        b6: { status: "confirmed", tutor_id: "guide-a" },
-        b7: { status: "confirmed", tutor_id: "guide-a" },
-        b8: { status: "confirmed", tutor_id: "guide-a" },
-        b9: { status: "confirmed", tutor_id: "guide-a" },
-        b10: { status: "awaiting", tutor_id: "guide-a", deadline_at: t(21, 40) },
-      },
+      assignmentsByBooking,
       nowMs,
     });
     assert.deepEqual(r.confirmed.map((c) => c.id), ["b10"]);
+    const stale = confirmBlockResult({
+      bookings,
+      actorId: "guide-a",
+      seedId: "b6",
+      assignmentsByBooking,
+      nowMs,
+    });
+    assert.deepEqual(stale.confirmed.map((c) => c.id).sort(), ["b6", "b7", "b8", "b9"]);
+    assert.equal(stale.confirmed.every((c) => c.idempotent), true);
+    assert.equal(stale.confirmed.some((c) => c.id === "b10"), false);
   });
 
   it("Confirm All skips cancelled members and stays idempotent", () => {
@@ -440,6 +451,7 @@ describe("Guide WhatsApp channel", () => {
     const sql = read("supabase/migrations/0034_guide_pre_session_confirmation.sql");
     assert.match(sql, /confirm_guide_attendance_block/);
     assert.match(sql, /scheduled_end = cur.scheduled_start|scheduled_start = cur.scheduled_end/);
+    assert.match(sql, /confirmed → unconfirmed|later appended hall is\s+not silently confirmed/);
     assert.match(sql, /role in \('student', 'tutor'\)/);
     assert.doesNotMatch(sql, /whatsapp_number|whatsapp_e164/);
     const review = read("src/app/dashboard/tutor/visual-review/page.tsx");

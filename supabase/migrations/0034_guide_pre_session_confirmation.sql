@@ -439,7 +439,9 @@ begin
 
   select scheduled_start into v_first_start from public.bookings where id = v_cur;
 
-  -- Walk forward collecting the contiguous chain.
+  -- Walk forward collecting this obligation only. Stop at a
+  -- confirmed → unconfirmed boundary so a later appended hall is
+  -- not silently confirmed from a stale earlier booking id.
   loop
     v_chain := v_chain || v_cur;
     select b.id into v_next
@@ -452,6 +454,21 @@ begin
      order by b.scheduled_start
      limit 1;
     exit when v_next is null;
+    if exists (
+      select 1
+        from public.guide_attendance_assignments a
+       where a.booking_id = v_cur
+         and a.tutor_id = v_uid
+         and a.status = 'confirmed'
+    ) and not exists (
+      select 1
+        from public.guide_attendance_assignments a
+       where a.booking_id = v_next
+         and a.tutor_id = v_uid
+         and a.status = 'confirmed'
+    ) then
+      exit;
+    end if;
     v_cur := v_next;
   end loop;
 
