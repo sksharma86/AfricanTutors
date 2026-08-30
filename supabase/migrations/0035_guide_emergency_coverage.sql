@@ -1,4 +1,8 @@
 -- Automatic emergency Guide replacement after a T-20 attendance miss.
+-- Not wrapped in BEGIN/COMMIT. SQL Editor applies each statement independently.
+-- A failed run may have committed objects up to the first stale is_admin()
+-- policy. This file is idempotent (IF EXISTS / CREATE OR REPLACE / DROP IF
+-- EXISTS) so the corrected script can be rerun in full without cleanup.
 -- 0034 is installed and must not be edited. This migration adds:
 --   * source 'emergency' on attendance assignments (distinct from ordinary replacement)
 --   * durable per-Guide open-coverage offers (one per miss cycle)
@@ -161,8 +165,8 @@ create policy guide_open_coverage_offers_admin_all
   on public.guide_open_coverage_offers
   for all
   to authenticated
-  using (public.is_admin())
-  with check (public.is_admin());
+  using (public.is_admin(auth.uid()))
+  with check (public.is_admin(auth.uid()));
 
 grant select on public.guide_open_coverage_offers to authenticated;
 grant all on public.guide_open_coverage_offers to service_role;
@@ -370,7 +374,7 @@ declare
 begin
   if not (
     public.is_financial_actor()
-    or public.is_admin()
+    or public.is_admin(auth.uid())
   ) then
     raise exception 'not authorized';
   end if;
