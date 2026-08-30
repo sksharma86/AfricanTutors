@@ -301,6 +301,14 @@ body {
   gap: 0.8rem;
 }
 
+.parent-app .pp-home-note {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8a8376;
+}
+
 .parent-app .pp-home-greeting {
   max-width: 28rem;
 }

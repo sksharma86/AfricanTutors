@@ -209,10 +209,12 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
 
   it("free-trial copy stays on Home without becoming a wallet", () => {
     const home = read("src/app/dashboard/student/page.tsx");
-    assert.match(home, /Your first Study Hall is on us/);
-    assert.match(home, /Book free session/);
-    assert.match(home, /After your free session/);
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    assert.match(board, /Your first Study Hall is on us/);
+    assert.match(board, /Book free session/);
+    assert.match(board, /After your free session/);
     assert.match(home, /preferFreeSession=\{freeTrialAvailable\}/);
+    assert.doesNotMatch(home, /A better homework routine|Calm, focused evenings/);
   });
 });
 

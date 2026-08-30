@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import { completedStudyHallsThisMonth, parentHabitCopy } from "../src/lib/parent-portal.mjs";
@@ -73,6 +73,26 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
     assert.doesNotMatch(home, /parent-home-visual-fixture|Priya|Jordan/);
+  });
+
+  it("Parent Home mounts one habit surface and one slim hours row, and drops rejected modules", () => {
+    const home = read("src/app/dashboard/student/page.tsx");
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    const shell = read("src/components/dashboard/customer-shell.tsx");
+    const habit = read("src/components/dashboard/parent-habit.tsx");
+    assert.equal((board.match(/<ParentHabitCard /g) || []).length, 2);
+    assert.match(board, /hasRecent \? \(/);
+    assert.doesNotMatch(home, /ParentHabitCard/);
+    assert.equal((board.match(/<BalanceCards /g) || []).length, 2);
+    assert.match(board, /slim/);
+    assert.doesNotMatch(home, /BalanceCards/);
+    assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine|Focused time|Less parent friction/);
+    assert.doesNotMatch(board, /ParentBrandStrip|A better homework routine|Calm, focused evenings/);
+    assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
+    assert.doesNotMatch(habit, /copy\.body/);
+    assert.match(shell, /sticky top-0/);
+    assert.equal(existsSync(new URL("../src/components/dashboard/parent-brand-strip.tsx", import.meta.url)), false);
+    assert.equal(existsSync(new URL("../src/components/dashboard/parent-sidebar-atmosphere.tsx", import.meta.url)), false);
   });
 
   it("visual-review fixture is gated and not used by the real Home", () => {

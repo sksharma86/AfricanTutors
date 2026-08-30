@@ -34,8 +34,8 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="parent-app flex min-h-full">
-      <aside className="hidden w-[15.5rem] shrink-0 flex-col border-r border-[#1c1915]/[0.06] bg-[#f3eee4] px-4 py-5 lg:flex">
+    <div className="parent-app flex min-h-svh">
+      <aside className="sticky top-0 hidden h-svh w-[15.5rem] shrink-0 flex-col border-r border-[#1c1915]/[0.06] bg-[#f3eee4] px-4 py-5 lg:flex">
         <BrandLockup
           href="/dashboard/student"
           variant="product"

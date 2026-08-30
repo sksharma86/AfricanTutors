@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ParentHomeBoard } from "@/components/dashboard/parent-home-board";
@@ -66,6 +65,7 @@ export default async function StudentDashboardPage() {
         minutes={data.minutes}
         creditCents={data.creditCents}
         preferFreeSession={freeTrialAvailable}
+        showPhoneNudge={!data.parentPhone}
       />
 
       {nextStep.kind === "free_convert" || nextStep.kind === "repeat" ? (
@@ -79,26 +79,6 @@ export default async function StudentDashboardPage() {
             showBuyHours={nextStep.showBuyHours}
           />
         </div>
-      ) : null}
-
-      {freeTrialAvailable ? (
-        <p className="mt-5 text-[13px] text-[var(--pp-muted)]">
-          Your first Study Hall is on us — 60 minutes free, no credit card required.{" "}
-          <Link href="/dashboard/student/book" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
-            Book free session
-          </Link>
-          <span className="mt-0.5 block text-[#8a8376]">After your free session, you can book pay-as-you-go or save with prepaid hours.</span>
-        </p>
-      ) : null}
-
-      {!data.parentPhone ? (
-        <p className="mt-3 text-[13px] text-[#8a8376]">
-          Add a number in{" "}
-          <Link href="/dashboard/student/account" className="font-medium text-[var(--pp-muted)] underline-offset-4 hover:underline">
-            Account
-          </Link>
-          .
-        </p>
       ) : null}
     </ParentPage>
   );

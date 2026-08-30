@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentGreeting } from "@/components/dashboard/parent-greeting";
 import { ParentHabitCard } from "@/components/dashboard/parent-habit";
@@ -21,6 +23,7 @@ export function ParentHomeBoard({
   minutes,
   creditCents,
   preferFreeSession,
+  showPhoneNudge = false,
 }: {
   firstName: string;
   next: ParentBooking | null;
@@ -33,6 +36,7 @@ export function ParentHomeBoard({
   minutes: number;
   creditCents: number;
   preferFreeSession: boolean;
+  showPhoneNudge?: boolean;
 }) {
   const hasRecent = Boolean(last);
 
@@ -65,6 +69,26 @@ export function ParentHomeBoard({
 
       {hasRecent ? (
         <BalanceCards minutes={minutes} creditCents={creditCents} preferFreeSession={preferFreeSession} slim />
+      ) : null}
+
+      {preferFreeSession ? (
+        <p className="pp-home-note">
+          Your first Study Hall is on us — 60 minutes free, no credit card required.{" "}
+          <Link href="/dashboard/student/book" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+            Book free session
+          </Link>
+          <span className="mt-0.5 block">After your free session, you can book pay-as-you-go or save with prepaid hours.</span>
+        </p>
+      ) : null}
+
+      {showPhoneNudge ? (
+        <p className="pp-home-note">
+          Add a number in{" "}
+          <Link href="/dashboard/student/account" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+            Account
+          </Link>
+          .
+        </p>
       ) : null}
     </div>
   );

@@ -71,6 +71,7 @@ describe("PR10E — prepaid display + booking copy", () => {
   const wizard = read("src/components/booking/booking-wizard.tsx");
   const packages = read("src/components/booking/package-store.tsx");
   const dash = read("src/app/dashboard/student/page.tsx");
+  const board = read("src/components/dashboard/parent-home-board.tsx");
   const balance = read("src/components/dashboard/balance-cards.tsx");
   const actions = read("src/components/dashboard/customer-booking-actions.tsx");
   const room = read("src/components/session/session-room.tsx");
@@ -101,8 +102,8 @@ describe("PR10E — prepaid display + booking copy", () => {
     assert.match(dash, /preferFreeSession=\{freeTrialAvailable\}/);
     assert.match(balance, /preferFreeSession/);
     assert.match(balance, /Prepaid packages are optional later/);
-    assert.match(dash, /Book free session/);
-    assert.match(dash, /After your free session/);
+    assert.match(board, /Book free session/);
+    assert.match(board, /After your free session/);
   });
 
   it("package empty state and double-submit guard exist", () => {

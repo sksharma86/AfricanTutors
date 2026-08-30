@@ -6,6 +6,7 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 describe("PR10C — parent portal usability (source)", () => {
   const dash = read("src/app/dashboard/student/page.tsx");
+  const board = read("src/components/dashboard/parent-home-board.tsx");
   const next = read("src/components/dashboard/parent-next-study-hall.tsx");
   const helpers = read("src/lib/parent-portal.mjs");
   const shell = read("src/components/dashboard/customer-shell.tsx");
@@ -41,8 +42,8 @@ describe("PR10C — parent portal usability (source)", () => {
 
   it("free session offer only renders when eligible", () => {
     assert.match(dash, /freeTrialAvailable/);
-    assert.match(dash, /Your first Study Hall is on us/);
-    assert.match(dash, /Book free session/);
+    assert.match(board, /Your first Study Hall is on us/);
+    assert.match(board, /Book free session/);
   });
 
   it("Prepaid Hours + Buy hours & save deep-links to prepaid packages", () => {
