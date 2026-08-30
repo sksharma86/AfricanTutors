@@ -31,6 +31,7 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   COVERAGE_FAILURE_PROTECTION: "coverage_failure_protection",
   GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
   GUIDE_ATTENDANCE_CRITICAL: "guide_attendance_critical",
+  GUIDE_OPEN_COVERAGE: "guide_open_coverage",
 });
 
 export const CHANNEL_POLICY = Object.freeze({
@@ -64,6 +65,7 @@ export const CHANNEL_POLICY = Object.freeze({
   whatsapp: [
     "guide_attendance_request",
     "guide_attendance_whatsapp",
+    "guide_open_coverage",
   ],
   sms: [
     "session_reminder_1h",

@@ -53,6 +53,7 @@ declare module "@/lib/guide-attendance.mjs" {
     assignment?: Record<string, unknown> | null;
     nowMs?: number;
     assignmentsLoaded?: boolean;
+    offerCount?: number;
   }): {
     kind: string;
     title: string;

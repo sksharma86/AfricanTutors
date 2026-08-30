@@ -140,6 +140,23 @@ export async function loadManagementWorkspace(supabase: SB) {
       attendanceRows = [];
     }
   }
+  const offerCountByBooking: Record<string, number> = {};
+  if (bookingIds.length) {
+    const offerRes = await supabase
+      .from("guide_open_coverage_offers")
+      .select("booking_id, status")
+      .in("booking_id", bookingIds)
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      );
+    if (!offerRes.error) {
+      for (const row of (offerRes.data ?? []) as { booking_id?: string; status?: string }[]) {
+        if (!row?.booking_id || row.status !== "open") continue;
+        offerCountByBooking[row.booking_id] = (offerCountByBooking[row.booking_id] ?? 0) + 1;
+      }
+    }
+  }
   const { data: presenceRows } = bookingIds.length
     ? await supabase
         .from("session_presence")
@@ -243,6 +260,7 @@ export async function loadManagementWorkspace(supabase: SB) {
       missingReport: missingSet.has(b.id as string),
       attendance: attendanceByBooking[b.id as string] ?? null,
       assignmentsLoaded,
+      offerCount: offerCountByBooking[b.id as string] ?? 0,
       nowMs: now,
     }),
   }));
@@ -263,6 +281,7 @@ export async function loadManagementWorkspace(supabase: SB) {
     pendingApplicants,
     attendanceByBooking,
     assignmentsLoaded,
+    offerCountByBooking,
     nowMs: now,
   });
 

@@ -15,6 +15,7 @@ import { bookingChildCount, bookingChildNames, firstNameOf } from "@/lib/househo
 import { formatCents } from "@/lib/pricing";
 import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
 import { currentStudyHallIssues, managementOperationalStatus } from "@/lib/management-ops.mjs";
+import { attendanceHistoryTitle } from "@/lib/open-coverage.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Study Hall · Management" };
@@ -51,6 +52,7 @@ export default async function AdminStudyHallDetailPage({
     reportRes,
     attRes,
     payRes,
+    offerRes,
   ] = await Promise.all([
     supabase!.from("profiles").select("id, display_name, phone_e164").eq("id", raw.account_id).maybeSingle(),
     supabase!
@@ -94,6 +96,14 @@ export default async function AdminStudyHallDetailPage({
       .from("payments")
       .select("id, purpose, status, gross_cents, stripe_paid_cents, credit_applied_cents, refunded_cents")
       .eq("booking_id", bookingId),
+    supabase!
+      .from("guide_open_coverage_offers")
+      .select("id, tutor_id, status, created_at, claimed_at, closed_at, close_reason")
+      .eq("booking_id", bookingId)
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      ),
   ]);
 
   const students = raw.students as { full_name?: string | null; timezone?: string | null } | null;
@@ -104,6 +114,7 @@ export default async function AdminStudyHallDetailPage({
   const attendance = assignmentsLoaded
     ? currentAssignmentForBooking((attRes.data ?? []) as never, raw as never)
     : null;
+  const openOffers = ((offerRes.data ?? []) as { status?: string }[]).filter((o) => o.status === "open");
   const issues = currentStudyHallIssues(raw as never, {
     presence: presenceRes.data ?? null,
     cancelOpen: openCancel,
@@ -113,6 +124,7 @@ export default async function AdminStudyHallDetailPage({
     missingReport: ((reportRes.data ?? []) as unknown[]).length === 0 && raw.status === "completed",
     attendance,
     assignmentsLoaded,
+    offerCount: openOffers.length,
   });
   const layer = managementOperationalStatus(raw as never, {
     presence: (presenceRes.data ?? null) as never,
@@ -294,6 +306,53 @@ export default async function AdminStudyHallDetailPage({
             title: p.purpose,
             meta: `${p.status} · ${formatCents(p.stripe_paid_cents)}`,
             at: null,
+          }))}
+        />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Guide attendance</h2>
+        <HistoryList
+          empty="No attendance records."
+          rows={((attRes.data ?? []) as {
+            id: string;
+            source: string;
+            status: string;
+            created_at: string;
+            confirmed_at?: string | null;
+            missed_at?: string | null;
+          }[])
+            .slice()
+            .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+            .map((a) => ({
+              id: a.id,
+              title: attendanceHistoryTitle(a) ?? a.status,
+              meta: `${a.source}${a.confirmed_at ? " · confirmed" : a.missed_at ? " · missed" : ""}`,
+              at: a.confirmed_at ?? a.missed_at ?? a.created_at,
+            }))}
+        />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Emergency replacement offers</h2>
+        <HistoryList
+          empty="No emergency replacement search for this Study Hall."
+          rows={((offerRes.data ?? []) as {
+            id: string;
+            status: string;
+            created_at: string;
+            claimed_at?: string | null;
+            close_reason?: string | null;
+          }[]).map((o) => ({
+            id: o.id,
+            title:
+              o.status === "claimed"
+                ? "Emergency offer accepted"
+                : o.status === "open"
+                  ? "Emergency offer open"
+                  : "Emergency offer closed",
+            meta: o.close_reason ?? o.status,
+            at: o.claimed_at ?? o.created_at,
           }))}
         />
       </section>

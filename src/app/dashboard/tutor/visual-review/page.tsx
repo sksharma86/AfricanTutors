@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { GuideHomeBoard } from "@/components/dashboard/guide-home-board";
+import { GuideOpenCoverageCard } from "@/components/dashboard/guide-open-coverage-card";
 import { GuidePage } from "@/components/dashboard/guide-page";
 import { GuideStudyHalls } from "@/components/dashboard/guide-study-halls";
 import { requireRole } from "@/lib/auth";
 import { guideHomeVisualFixture, guideVisualReviewNow } from "@/lib/guide-home-visual-fixture.mjs";
-import { guideAttendanceWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
+import { guideAttendanceWhatsApp, guideOpenCoverageWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
+import { claimResultMessage, openCoveragePath } from "@/lib/open-coverage.mjs";
 import type { GuideAvailabilityBlock, GuideExceptionRow } from "@/lib/guide-portal-data";
 import type { GuideBooking, GuideEarning } from "@/lib/guide-portal-types";
 
@@ -54,8 +56,19 @@ export default async function GuideHomeVisualReviewPage({
   }
 
   const reviewHalls = fixture.bookings as GuideBooking[];
-  const waPreview =
-    params.scene === "required" || params.scene === "block2" || params.scene === "block4" || params.scene === "replace2"
+  const openCoverageScene = params.scene === "opencoverage" || params.scene === "covered" || params.scene === "accepted";
+  const offerStartISO = new Date(fixture.nowMs + 2 * 60 * 60 * 1000).toISOString();
+  const offerEndISO = new Date(fixture.nowMs + 3 * 60 * 60 * 1000).toISOString();
+  const waPreview = openCoverageScene
+    ? guideOpenCoverageWhatsApp({
+        startISO: offerStartISO,
+        endISO: offerEndISO,
+        tz: fixture.timeZone,
+        durationMinutes: 60,
+        appUrl: "https://example.com",
+        acceptPath: openCoveragePath("fixture-open-coverage"),
+      })
+    : params.scene === "required" || params.scene === "block2" || params.scene === "block4" || params.scene === "replace2"
       ? guideAttendanceWhatsApp({
           count: params.scene === "block4" ? 4 : params.scene === "block2" || params.scene === "replace2" ? 2 : 1,
           startISO: reviewHalls[0]?.scheduled_start,
@@ -76,6 +89,23 @@ export default async function GuideHomeVisualReviewPage({
           <p className="text-[10px] font-semibold tracking-[0.14em] text-[#8a8174] uppercase">WhatsApp preview · not sent</p>
           <pre className="mt-2 whitespace-pre-wrap text-[13px] leading-5 text-[#1c1915]">{waPreview.body}</pre>
         </section>
+      ) : null}
+      {openCoverageScene ? (
+        <div id="open-coverage-offer" className="mb-6">
+          <GuideOpenCoverageCard
+            bookingId="fixture-open-coverage"
+            timeLabel="6:00 PM–7:00 PM CT"
+            durationLabel="60 minutes"
+            state={params.scene === "accepted" ? "accepted" : params.scene === "covered" ? "covered" : "open"}
+            message={
+              params.scene === "accepted"
+                ? claimResultMessage("won")
+                : params.scene === "covered"
+                  ? claimResultMessage("already_covered")
+                  : null
+            }
+          />
+        </div>
       ) : null}
       <GuideHomeBoard
         firstName={fixture.firstName}

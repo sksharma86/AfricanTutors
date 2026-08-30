@@ -11,6 +11,7 @@ import { formatTime, tzAbbreviation } from "../timezone-format.mjs";
 export const WA_TEMPLATES = Object.freeze({
   attendance: "guide_attendance_confirmation",
   replacement: "guide_replacement_assignment",
+  openCoverage: "guide_open_coverage_offer",
 });
 
 export function labeledTime(iso, tz) {
@@ -116,6 +117,51 @@ export function guideAttendanceWhatsApp(ctx = {}) {
     url,
   ].join("\n");
   return { template, variables, body, count, start, end, url };
+}
+
+/**
+ * Private emergency open-coverage offer. No parent/family PII.
+ * @param {{
+ *   startISO?: string|null,
+ *   endISO?: string|null,
+ *   tz?: string|null,
+ *   durationMinutes?: number|null,
+ *   appUrl?: string|null,
+ *   acceptPath?: string|null,
+ * }} ctx
+ */
+export function guideOpenCoverageWhatsApp(ctx = {}) {
+  const start = labeledTime(ctx.startISO, ctx.tz);
+  const end = labeledTime(ctx.endISO || ctx.startISO, ctx.tz);
+  const duration = hoursLabel(ctx.durationMinutes);
+  const url = ctx.acceptPath
+    ? `${String(ctx.appUrl || "").replace(/\/+$/, "")}${ctx.acceptPath}`
+    : guidePortalUrl(ctx.appUrl);
+  const body = [
+    "OPEN STUDY HALL",
+    "",
+    `${start}–${end}`,
+    duration,
+    "",
+    "An additional Study Hall is available.",
+    "",
+    "ACCEPT SESSION",
+    url,
+  ].join("\n");
+  return {
+    template: WA_TEMPLATES.openCoverage,
+    variables: {
+      1: start,
+      2: end,
+      3: duration,
+      4: url,
+    },
+    body,
+    start,
+    end,
+    duration,
+    url,
+  };
 }
 
 export function whatsappContainsSensitive(text) {

@@ -10,6 +10,7 @@ export function getWhatsAppConfig() {
     from: process.env.TWILIO_WHATSAPP_FROM || "",
     attendanceContentSid: process.env.TWILIO_WA_CONTENT_SID_ATTENDANCE || "",
     replacementContentSid: process.env.TWILIO_WA_CONTENT_SID_REPLACEMENT || "",
+    openCoverageContentSid: process.env.TWILIO_WA_CONTENT_SID_OPEN_COVERAGE || "",
     disabled: process.env.TWILIO_WHATSAPP_DISABLED === "1",
   };
 }

@@ -17,6 +17,13 @@ export function sanitizeNextPath(raw: string | null | undefined, fallback = "/da
   return next;
 }
 
+/** Deep-link after login for emergency open-coverage offers only. */
+export function isSafeOpenCoveragePath(path: string | null | undefined): boolean {
+  return /^\/dashboard\/tutor\/open-coverage\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    String(path ?? ""),
+  );
+}
+
 /** Browser-safe auth callback URL for emailRedirectTo / recovery. */
 export function authCallbackUrl(origin: string, next = "/dashboard"): string {
   const safeNext = sanitizeNextPath(next, "/dashboard");
