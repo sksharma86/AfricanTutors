@@ -1,5 +1,6 @@
 import "server-only";
 
+import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
 import {
   collectNeedsAttention as collectNeedsAttentionImpl,
   currentStudyHallIssues as currentStudyHallIssuesImpl,
@@ -119,6 +120,26 @@ export async function loadManagementWorkspace(supabase: SB) {
   const parentName = new Map((parents ?? []).map((p) => [p.id as string, (p.display_name as string | null) ?? null]));
 
   const bookingIds = ((bookingsRes.data ?? []) as { id: string }[]).map((b) => b.id);
+  let attendanceRows: Record<string, unknown>[] = [];
+  let assignmentsLoaded = false;
+  if (bookingIds.length) {
+    const attRes = await supabase
+      .from("guide_attendance_assignments")
+      .select(
+        "id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at",
+      )
+      .in("booking_id", bookingIds)
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      );
+    if (!attRes.error) {
+      attendanceRows = (attRes.data ?? []) as Record<string, unknown>[];
+      assignmentsLoaded = true;
+    } else if (!/guide_attendance_assignments|does not exist|schema cache/i.test(attRes.error.message ?? "")) {
+      attendanceRows = [];
+    }
+  }
   const { data: presenceRows } = bookingIds.length
     ? await supabase
         .from("session_presence")
@@ -203,8 +224,16 @@ export async function loadManagementWorkspace(supabase: SB) {
   }
   const missingSet = new Set(missingReports.map((b) => b.id as string));
 
+  const attendanceByBooking: Record<string, Record<string, unknown> | null> = {};
+  if (assignmentsLoaded) {
+    for (const b of bookingsBase) {
+      attendanceByBooking[b.id as string] = currentAssignmentForBooking(attendanceRows, b) as Record<string, unknown> | null;
+    }
+  }
+
   const bookings = bookingsBase.map((b) => ({
     ...b,
+    attendance: attendanceByBooking[b.id as string] ?? null,
     issues: currentStudyHallIssues(b, {
       presence: presenceByBooking[b.id as string],
       cancelOpen: cancelOpen.has(b.id as string),
@@ -212,6 +241,8 @@ export async function loadManagementWorkspace(supabase: SB) {
       emailFailures: emailBy.get(b.id as string) ?? [],
       recordingFailures: recBy.get(b.id as string) ?? [],
       missingReport: missingSet.has(b.id as string),
+      attendance: attendanceByBooking[b.id as string] ?? null,
+      assignmentsLoaded,
       nowMs: now,
     }),
   }));
@@ -230,6 +261,8 @@ export async function loadManagementWorkspace(supabase: SB) {
     disputes: (disputeRes.data ?? []) as object[],
     missingReports,
     pendingApplicants,
+    attendanceByBooking,
+    assignmentsLoaded,
     nowMs: now,
   });
 

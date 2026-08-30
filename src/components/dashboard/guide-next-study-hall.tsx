@@ -1,6 +1,8 @@
+import { GuideConfirmAttendance } from "@/components/dashboard/guide-confirm-attendance";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { LinkButton } from "@/components/ui/button";
+import { activeConfirmationBlock, guideAttendanceState, guideConfirmBlockState } from "@/lib/guide-attendance.mjs";
 import { guideChildName, guideChildrenCaption, guideStartsInLabel } from "@/lib/guide-portal.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
@@ -35,10 +37,12 @@ function HeroAtmosphere() {
 
 export function GuideNextStudyHall({
   next,
+  bookings = [],
   tz,
   nowMs,
 }: {
   next: GuideBooking | null;
+  bookings?: GuideBooking[];
   tz: string;
   nowMs: number;
 }) {
@@ -67,11 +71,23 @@ export function GuideNextStudyHall({
   }
 
   const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, nowMs);
+  const confirmBlock = activeConfirmationBlock(bookings.length ? bookings : [next], { nowMs });
+  const block = confirmBlock.block?.length ? confirmBlock.block : [next];
+  const blockState = guideConfirmBlockState({ bookings: block, nowMs });
+  const attendance = guideAttendanceState({
+    status: next.status,
+    scheduledStart: block[0]?.scheduled_start ?? next.scheduled_start,
+    assignment: next.attendance ?? null,
+    nowMs,
+  });
+  const confirmKind = blockState.kind === "awaiting" || blockState.kind === "confirmed" || blockState.kind === "missed" ? blockState.kind : attendance.kind;
   const starts = guideStartsInLabel(next.scheduled_start, nowMs);
   const child = guideChildName(next);
   const time = next.scheduled_start ? formatTime(next.scheduled_start, tz) : "";
+  const endTime = block.length > 1 && block[block.length - 1]?.scheduled_end ? formatTime(block[block.length - 1].scheduled_end as string, tz) : null;
   const day = next.scheduled_start ? formatDayHeading(next.scheduled_start, tz) : "Time to confirm";
   const minutes = next.duration_minutes;
+  const blockCount = block.length;
 
   return (
     <GuideSurface featured className="min-h-[15.5rem]">
@@ -88,27 +104,70 @@ export function GuideNextStudyHall({
           )}
           <p className="mt-1.5 text-[14px] text-white/68">
             {day}
-            {minutes ? ` · ${formatStudyHallDuration(minutes)}` : ""}
+            {blockCount > 1 && endTime
+              ? ` · ${time}–${endTime}`
+              : minutes
+                ? ` · ${formatStudyHallDuration(minutes)}`
+                : ""}
           </p>
           <div className="mt-4 border-t border-white/12 pt-3.5">
-            <p className="text-[1.15rem] font-medium tracking-[-0.02em] text-white">{child}</p>
-            {guideChildrenCaption(next) ? (
-              <p className="mt-0.5 text-sm text-white/60">{guideChildrenCaption(next)}</p>
-            ) : null}
+            {blockCount > 1 ? (
+              <>
+                <p className="text-[1.15rem] font-medium tracking-[-0.02em] text-white">
+                  {blockCount} consecutive Study Halls
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {block.map((b) => (
+                    <li key={b.id} className="text-sm text-white/70">
+                      {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
+                      {" · "}
+                      {guideChildName(b as GuideBooking)}
+                      {b.duration_minutes ? ` · ${formatStudyHallDuration(b.duration_minutes)}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p className="text-[1.15rem] font-medium tracking-[-0.02em] text-white">{child}</p>
+                {guideChildrenCaption(next) ? (
+                  <p className="mt-0.5 text-sm text-white/60">{guideChildrenCaption(next)}</p>
+                ) : null}
+              </>
+            )}
             {starts && join.kind !== "join" ? (
               <p className="mt-2 text-sm font-medium text-gold-200">{starts}</p>
             ) : null}
-            {join.kind === "opens_at" ? (
+            {join.kind === "opens_at" && confirmKind !== "awaiting" ? (
               <p className="mt-1 text-[13px] text-white/55">Be ready 5 minutes before start time.</p>
+            ) : null}
+            {confirmKind === "awaiting" ? (
+              <p className="mt-3 text-[11px] font-semibold tracking-[0.14em] text-gold-300 uppercase">
+                Attendance confirmation required
+              </p>
+            ) : null}
+            {confirmKind === "confirmed" ? (
+              <p className="mt-3 text-sm font-medium text-gold-200">
+                {blockCount > 1 ? `✓ Attendance confirmed for all ${blockCount}` : "✓ Attendance confirmed"}
+              </p>
+            ) : null}
+            {confirmKind === "missed" ? (
+              <p className="mt-3 text-sm text-white/70">Confirmation missed</p>
+            ) : null}
+            {confirmKind === "awaiting" && blockCount > 1 ? (
+              <p className="mt-2 text-sm text-white/62">Please confirm that you&apos;ll be available for all {blockCount} Study Halls.</p>
             ) : null}
           </div>
         </div>
-        <div className="mt-5">
+        <div className="mt-5 space-y-3">
+          {confirmKind === "awaiting" ? (
+            <GuideConfirmAttendance bookingId={block[0]?.id ?? next.id} prominent count={blockCount} />
+          ) : null}
           {join.kind === "join" ? (
             <LinkButton href={`/dashboard/session/${next.id}`} variant="secondary" size="lg">
               Join Study Hall →
             </LinkButton>
-          ) : (
+          ) : confirmKind === "awaiting" ? null : (
             <GuideJoinControl
               bookingId={next.id}
               status={next.status}
@@ -116,6 +175,7 @@ export function GuideNextStudyHall({
               scheduledEnd={next.scheduled_end}
               timezone={tz}
               prominent
+              nowMs={nowMs}
             />
           )}
         </div>

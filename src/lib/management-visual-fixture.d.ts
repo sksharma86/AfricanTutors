@@ -2,7 +2,7 @@ declare module "@/lib/management-visual-fixture.mjs" {
   export function managementVisualReviewNow(now?: Date, tz?: string, hour?: number, minute?: number): Date;
   export function managementHomeVisualFixture(
     now?: Date,
-    options?: { empty?: boolean },
+    options?: { empty?: boolean; scene?: string | null },
   ): {
     bookings: unknown[];
     presenceByBooking: Record<string, object>;

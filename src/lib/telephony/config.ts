@@ -17,6 +17,8 @@ export function isTwilioConfigured(): boolean {
   return Boolean(c.accountSid && c.authToken && c.phoneNumber);
 }
 
+export { getWhatsAppConfig, isWhatsAppConfigured } from "@/lib/telephony/whatsapp-config.mjs";
+
 /** @deprecated Prefer isTwilioConfigured() — kept as alias for source tests. */
 export const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 export const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;

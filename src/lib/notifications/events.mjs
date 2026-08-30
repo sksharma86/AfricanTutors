@@ -25,6 +25,12 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   CALL_PARENT_FAILURE: "call_parent_failure",
   PAYMENT_FAILURE: "payment_failure",
   RECORDING_FAILURE: "recording_failure",
+  GUIDE_ATTENDANCE_REQUEST: "guide_attendance_request",
+  GUIDE_CONFIRMATION_MISSED: "guide_confirmation_missed",
+  COVERAGE_CANCELLATION: "coverage_cancellation",
+  COVERAGE_FAILURE_PROTECTION: "coverage_failure_protection",
+  GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
+  GUIDE_ATTENDANCE_CRITICAL: "guide_attendance_critical",
 });
 
 export const CHANNEL_POLICY = Object.freeze({
@@ -47,11 +53,24 @@ export const CHANNEL_POLICY = Object.freeze({
     "call_parent_failure",
     "payment_failure",
     "recording_failure",
+    "guide_attendance_request",
+    "guide_confirmation_missed",
+    "coverage_cancellation",
+    "coverage_failure_protection",
+  ],
+  /**
+   * Urgent Guide operational alerts. Not parent SMS. Not inbound confirmation.
+   */
+  whatsapp: [
+    "guide_attendance_request",
+    "guide_attendance_whatsapp",
   ],
   sms: [
     "session_reminder_1h",
     "call_parent_escalation",
     "booking_cancelled",
+    "coverage_cancellation",
+    "coverage_failure_protection",
     // Successful Guide reassignment must NEVER SMS the parent.
   ],
   voice: ["call_parent_escalation"],

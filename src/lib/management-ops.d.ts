@@ -35,6 +35,8 @@ export function currentStudyHallIssues(
     recordingFailures?: object[];
     missingReport?: boolean;
     nowMs?: number;
+    attendance?: Record<string, unknown> | null;
+    assignmentsLoaded?: boolean;
   },
 ): StudyHallIssue[];
 export function managementOperationalStatus(

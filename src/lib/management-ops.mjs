@@ -3,6 +3,7 @@
  * Does not change booking, pay, matching, Daily, or compensation math.
  */
 
+import { groupManagementCoverageIssues, managementAttendanceIssue } from "./guide-attendance.mjs";
 import { bookingChildNames } from "./household-children.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
@@ -156,9 +157,34 @@ export function currentStudyHallIssues(booking, extras = {}) {
     recordingFailures = [],
     missingReport = false,
     nowMs = Date.now(),
+    attendance = null,
+    assignmentsLoaded = extras.attendance !== undefined || extras.assignmentsLoaded === true,
   } = extras;
   if (!booking) return [];
   const issues = [];
+
+  const attendanceIssue = managementAttendanceIssue({
+    booking,
+    assignment: attendance,
+    nowMs,
+    assignmentsLoaded,
+  });
+  if (attendanceIssue) {
+    const startLabel = startsInLabel(booking.scheduled_start, nowMs);
+    issues.push({
+      kind: attendanceIssue.kind,
+      title: attendanceIssue.title,
+      summary: attendanceIssue.summary,
+      detail:
+        attendanceIssue.kind === "guide_confirm_critical"
+          ? [startLabel, "No confirmed Guide"].filter(Boolean).join(" · ")
+          : attendanceIssue.kind === "guide_customer_protected"
+            ? "Booking restored · +1 complimentary hour issued"
+            : (attendanceIssue.detail ?? startLabel),
+      action: attendanceIssue.action,
+      severity: attendanceIssue.severity ?? null,
+    });
+  }
 
   if (isOpenStudyHall(booking.status) && !hasGuide(booking)) {
     issues.push({
@@ -372,10 +398,14 @@ function attentionFromIssue(booking, issue) {
     kind: issue.kind,
     title: issue.title,
     summary: issue.summary,
-    detail: [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    detail:
+      issue.kind === "guide_confirm_critical"
+        ? [bookingChildNames(booking, booking.student_first_name ?? "Child"), issue.detail].filter(Boolean).join(" · ")
+        : [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
     bookingId: booking.id,
     href: `/dashboard/admin/study-halls/${booking.id}`,
     action: issue.action,
+    severity: issue.severity ?? (issue.kind === "guide_confirm_critical" ? "critical" : "attention"),
   });
 }
 
@@ -392,6 +422,8 @@ export function collectNeedsAttention({
   disputes = [],
   missingReports = [],
   pendingApplicants = [],
+  attendanceByBooking = {},
+  assignmentsLoaded = false,
   nowMs = Date.now(),
 } = {}) {
   const items = [];
@@ -406,6 +438,7 @@ export function collectNeedsAttention({
   for (const b of bookings) {
     if (!b?.id) continue;
     seen.add(b.id);
+    const hasAttendanceKey = Object.prototype.hasOwnProperty.call(attendanceByBooking ?? {}, b.id);
     const issues = currentStudyHallIssues(b, {
       presence: presenceByBooking[b.id],
       cancelOpen: cancelOpen.has(b.id),
@@ -413,6 +446,8 @@ export function collectNeedsAttention({
       emailFailures: emailBy.get(b.id) ?? [],
       recordingFailures: recBy.get(b.id) ?? [],
       missingReport: missingSet.has(b.id),
+      attendance: hasAttendanceKey ? attendanceByBooking[b.id] : null,
+      assignmentsLoaded: assignmentsLoaded || hasAttendanceKey,
       nowMs,
     });
     for (const issue of issues) items.push(attentionFromIssue(b, issue));
@@ -470,7 +505,7 @@ export function collectNeedsAttention({
     );
   }
 
-  return items;
+  return groupManagementCoverageIssues(items, bookings);
 }
 
 /**
@@ -492,7 +527,39 @@ export function presentNeedsAttention(items = []) {
         detail: entry.detail ?? "",
         reasons: [entry.title],
         issueCount: 1,
-        urgent: entry.kind === "call_parent" || entry.kind === "no_join" || entry.kind === "coverage",
+        kind: entry.kind,
+        critical: entry.kind === "guide_confirm_critical" || entry.severity === "critical",
+        urgent:
+          entry.kind === "call_parent" ||
+          entry.kind === "no_join" ||
+          entry.kind === "coverage" ||
+          entry.kind === "guide_confirm_missed" ||
+          entry.kind === "guide_confirm_awaiting" ||
+          entry.kind === "guide_confirm_critical",
+      });
+      continue;
+    }
+    if (Array.isArray(entry.bookingIds) && entry.bookingIds.length > 1) {
+      if (entry.bookingIds.some((id) => seenBookings.has(id))) continue;
+      for (const id of entry.bookingIds) seenBookings.add(id);
+      presented.push({
+        id: entry.id,
+        bookingId: entry.bookingId,
+        href: entry.href,
+        action: entry.action,
+        title: entry.title,
+        summary: entry.summary ?? "",
+        detail: entry.detail ?? "",
+        reasons: [entry.title],
+        issueCount: entry.issueCount ?? entry.bookingIds.length,
+        kind: entry.kind,
+        critical: false,
+        urgent:
+          entry.kind === "guide_confirm_missed" ||
+          entry.kind === "guide_confirm_awaiting" ||
+          entry.kind === "coverage" ||
+          entry.kind === "call_parent" ||
+          entry.kind === "no_join",
       });
       continue;
     }
@@ -509,7 +576,11 @@ export function presentNeedsAttention(items = []) {
       detail: group[0].detail ?? "",
       reasons: group.map((i) => i.title),
       issueCount: group.length,
-      urgent: group.some((i) => ["call_parent", "no_join", "coverage", "needs_guide"].includes(i.kind)),
+      kind: group[0].kind,
+      critical: group.some((i) => i.kind === "guide_confirm_critical" || i.severity === "critical"),
+      urgent: group.some((i) =>
+        ["call_parent", "no_join", "coverage", "needs_guide", "guide_confirm_missed", "guide_confirm_awaiting", "guide_confirm_critical"].includes(i.kind),
+      ),
     });
   }
   return presented;

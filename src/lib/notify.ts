@@ -7,13 +7,18 @@ import { sendEmail } from "@/lib/email/transport";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
+import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey } from "@/lib/guide-attendance.mjs";
+import { guideAttendanceWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
+import { getWhatsAppConfig } from "@/lib/telephony/config";
 import {
   parentCancellationSms,
+  parentCoverageCancellationSms,
+  parentCoverageFailureProtectionSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
-import { sendParentAttentionSms } from "@/lib/telephony/client";
+import { sendGuideWhatsApp, sendParentAttentionSms } from "@/lib/telephony/client";
 
 /**
  * Central, idempotent transactional-notification service (Study Hall PR8).
@@ -23,9 +28,10 @@ import { sendParentAttentionSms } from "@/lib/telephony/client";
  * server-side. Nothing here ever throws or blocks the caller's business action.
  *
  * Channel policy (summary):
- *   Email — confirmations, purchases, reports, schedule changes, Guide ops
- *   SMS   — parent 1h reminder; cancel/reassign; Call Parent (elsewhere)
- *   Voice — Call Parent only (PR7; unchanged)
+ *   Email     — confirmations, purchases, reports, schedule changes, Guide backup
+ *   SMS       — parent 1h reminder; cancel; Call Parent (elsewhere). No Guide SMS.
+ *   WhatsApp  — urgent Guide attendance / replacement alerts. Not confirmation.
+ *   Voice     — Call Parent only (PR7; unchanged)
  */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -148,6 +154,73 @@ async function deliverParentSms(opts: {
         p_key: opts.key,
         p_status: "failed",
         p_error: "sms notify exception",
+      });
+    } catch {
+      /* ignore */
+    }
+    return { status: "failed" };
+  }
+}
+
+/**
+ * Idempotent Guide WhatsApp via the same claim table. Attendance state is
+ * never changed here. Missing number or Twilio WhatsApp config → skipped.
+ */
+async function deliverGuideWhatsApp(opts: {
+  key: string;
+  type: string;
+  accountId: string;
+  bookingId?: string | null;
+  body: string;
+  contentSid?: string | null;
+  variables?: Record<string, string> | null;
+}): Promise<{ status: string }> {
+  const service = getServiceSupabase();
+  try {
+    const { data: profile } = await service.from("profiles").select("phone_e164").eq("id", opts.accountId).maybeSingle();
+    const phone = typeof profile?.phone_e164 === "string" ? profile.phone_e164.trim() : "";
+
+    const claim = await service.rpc("claim_email_delivery", {
+      p_key: opts.key,
+      p_type: opts.type,
+      p_account: opts.accountId,
+      p_to: phone ? "whatsapp:guide" : null,
+      p_booking: opts.bookingId ?? null,
+      p_subject: "whatsapp",
+      p_html: null,
+      p_text: opts.body,
+    });
+    if (claim.error) return { status: "error" };
+    if (claim.data !== true) return { status: "duplicate" };
+
+    if (!phone) {
+      await service.rpc("complete_email_delivery", {
+        p_key: opts.key,
+        p_status: "skipped",
+        p_error: "no phone_e164",
+      });
+      return { status: "skipped" };
+    }
+
+    const result = await sendGuideWhatsApp({
+      toE164: phone,
+      body: opts.body,
+      contentSid: opts.contentSid ?? null,
+      variables: opts.variables ?? null,
+    });
+    await service.rpc("complete_email_delivery", {
+      p_key: opts.key,
+      p_status: result.status === "sent" ? "sent" : result.status === "skipped" ? "skipped" : "failed",
+      p_provider_message_id: result.sid ?? null,
+      p_error: result.error ?? null,
+    });
+    return { status: result.status };
+  } catch {
+    try {
+      await getServiceSupabase().rpc("complete_email_delivery", {
+        p_key: opts.key,
+        p_status: "failed",
+        p_error: "whatsapp notify exception",
       });
     } catch {
       /* ignore */
@@ -710,6 +783,227 @@ export async function notifyGuideReportOverdue(bookingId: string) {
     ].filter(Boolean) as string[],
   });
   return guide;
+}
+
+/** Notify the current awaiting assignment, if any. Used after replacement. */
+export async function notifyCurrentAttendanceRequest(bookingId: string) {
+  const service = getServiceSupabase();
+  const { data } = await service
+    .from("guide_attendance_assignments")
+    .select("id, status, source, tutor_id")
+    .eq("booking_id", bookingId)
+    .eq("status", "awaiting")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data?.id) return { status: "skipped" };
+  const { obligationBlockContaining } = await import("@/lib/guide-attendance.mjs");
+  const { data: halls } = await service
+    .from("bookings")
+    .select("id, tutor_id, scheduled_start, scheduled_end, status")
+    .eq("tutor_id", data.tutor_id)
+    .eq("status", "confirmed");
+  const { data: atts } = await service
+    .from("guide_attendance_assignments")
+    .select("booking_id, status, tutor_id")
+    .eq("tutor_id", data.tutor_id)
+    .in("status", ["awaiting", "confirmed", "missed"]);
+  const byBooking: Record<string, { status?: string }> = {};
+  for (const a of atts ?? []) {
+    if (a?.booking_id) byBooking[a.booking_id] = a;
+  }
+  const hallsWithAtt = (halls ?? []).map((h) => ({ ...h, attendance: byBooking[h.id] ?? null }));
+  const block = obligationBlockContaining(hallsWithAtt, bookingId, {
+    tutorId: data.tutor_id,
+    assignmentsByBooking: byBooking,
+  });
+  const first = block[0] ?? { id: bookingId, scheduled_start: null, scheduled_end: null };
+  return notifyGuideAttendanceRequest(first.id, data.id as string, {
+    replacement: data.source === "replacement" || data.source === "short_notice",
+    count: Math.max(block.length, 1),
+    endISO: block[block.length - 1]?.scheduled_end ?? null,
+    firstBookingId: first.id,
+  });
+}
+
+type AttendanceNotifyOpts = {
+  replacement?: boolean;
+  count?: number;
+  endISO?: string | null;
+  memberBookingIds?: string[];
+  firstBookingId?: string;
+};
+
+/** Guide attendance request. Failed delivery does not confirm or cancel. */
+export async function notifyGuideAttendanceRequest(
+  bookingId: string,
+  assignmentId: string,
+  opts: AttendanceNotifyOpts = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.tutor_id || !b.scheduled_start) return { status: "skipped" };
+  const count = Number(opts.count) > 0 ? Number(opts.count) : 1;
+  const firstBookingId = opts.firstBookingId || bookingId;
+  const source = opts.replacement ? "replacement" : "t30";
+  const emailKey = attendanceNotifyKey({ tutorId: b.tutor_id, firstBookingId, source });
+  const waKey = `${emailKey}:wa`;
+
+  const email = await deliver({
+    key: emailKey,
+    type: "guide_attendance_request",
+    accountId: b.tutor_id,
+    bookingId: firstBookingId,
+    rendered: T.guideAttendanceRequest({
+      whenISO: b.scheduled_start,
+      endISO: opts.endISO ?? null,
+      tz: b.tutorTz,
+      durationMinutes: b.duration_minutes,
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      appUrl: APP_URL,
+      count,
+      replacement: Boolean(opts.replacement),
+    }),
+  });
+
+  const wa = guideAttendanceWhatsApp({
+    count,
+    startISO: b.scheduled_start,
+    endISO: opts.endISO ?? b.scheduled_start,
+    tz: b.tutorTz,
+    durationMinutes: b.duration_minutes,
+    studentName: b.studentFirst,
+    appUrl: APP_URL,
+    replacement: Boolean(opts.replacement),
+  });
+  const waCfg = getWhatsAppConfig();
+  const contentSid = opts.replacement ? waCfg.replacementContentSid : waCfg.attendanceContentSid;
+  await deliverGuideWhatsApp({
+    key: waKey,
+    type: "guide_attendance_whatsapp",
+    accountId: b.tutor_id,
+    bookingId: firstBookingId,
+    body: wa.body,
+    contentSid: contentSid || null,
+    variables: wa.variables,
+  });
+
+  return email;
+}
+
+/** Management exception when a confirmation deadline is missed. One alert per block. */
+export async function notifyGuideConfirmationMissed(
+  bookingId: string,
+  assignmentId: string,
+  opts: { count?: number; firstBookingId?: string; tutorId?: string | null } = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  const firstBookingId = opts.firstBookingId || bookingId;
+  const tutorId = opts.tutorId || b?.tutor_id || "unknown";
+  const count = Number(opts.count) > 0 ? Number(opts.count) : 1;
+  return notifyAdminAlert(missedNotifyKey({ tutorId, firstBookingId }), {
+    title: count > 1 ? "Guide coverage unconfirmed" : "Guide confirmation missed",
+    summary:
+      count > 1
+        ? `A Guide did not confirm ${count} consecutive Study Halls before the deadline. Coverage needs a decision.`
+        : "A Guide did not confirm attendance before the deadline. Coverage needs a decision.",
+    lines: [
+      `Booking: ${firstBookingId}`,
+      count > 1 ? `Study Halls affected: ${count}` : null,
+      b?.studentFirst ? `Child: ${b.studentFirst}` : null,
+      b?.scheduled_start ? `When: ${b.scheduled_start}` : null,
+      b?.tutorFirst ? `Assigned Guide: ${b.tutorFirst}` : null,
+      `Assignment: ${assignmentId}`,
+    ].filter(Boolean) as string[],
+  });
+}
+
+/** Parent notice when Study Hall cancels for Guide coverage. Does not name the Guide. */
+export async function notifyCoverageCancellation(
+  bookingId: string,
+  info: {
+    isFreeTrial?: boolean | null;
+    restoredMinutes?: number | null;
+    restoredCreditCents?: number | null;
+    compCreditCents?: number | null;
+  } = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.account_id) return { status: "skipped" };
+  const restorationLine = coverageRestorationLine({
+    isFreeTrial: info.isFreeTrial ?? b.is_free_trial,
+    restoredMinutes: info.restoredMinutes ?? null,
+    restoredCreditCents: info.restoredCreditCents ?? null,
+  });
+  await deliver({
+    key: `coverage-cancel:${bookingId}`,
+    type: "coverage_cancellation",
+    accountId: b.account_id,
+    bookingId,
+    rendered: T.coverageCancellation({
+      restorationLine,
+      compCreditCents: info.compCreditCents ?? null,
+      appUrl: APP_URL,
+    }),
+  });
+  await deliverParentSms({
+    key: `coverage-cancel-sms:${bookingId}`,
+    type: "coverage_cancellation_sms",
+    accountId: b.account_id,
+    bookingId,
+    body: parentCoverageCancellationSms({
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
+    }),
+  });
+  return { status: "ok", parentNotified: true };
+}
+
+/** T-2 automatic protection. Idempotent. Does not name or blame the Guide. */
+export async function notifyCoverageFailureProtection(
+  bookingId: string,
+  info: {
+    isFreeTrial?: boolean | null;
+    restoredMinutes?: number | null;
+    restoredCreditCents?: number | null;
+  } = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.account_id) return { status: "skipped" };
+  const restorationLine = coverageRestorationLine({
+    isFreeTrial: info.isFreeTrial ?? b.is_free_trial,
+    restoredMinutes: info.restoredMinutes ?? null,
+    restoredCreditCents: info.restoredCreditCents ?? null,
+  });
+  await deliver({
+    key: protectNotifyKey(bookingId),
+    type: "coverage_failure_protection",
+    accountId: b.account_id,
+    bookingId,
+    rendered: T.coverageFailureProtection({
+      restorationLine,
+      appUrl: APP_URL,
+    }),
+  });
+  await deliverParentSms({
+    key: `${protectNotifyKey(bookingId)}:sms`,
+    type: "coverage_failure_protection_sms",
+    accountId: b.account_id,
+    bookingId,
+    body: parentCoverageFailureProtectionSms({
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
+    }),
+  });
+  return { status: "ok", parentNotified: true };
 }
 
 export async function notifyAdminAlert(dedupeKey: string, ctx: { title: string; summary: string; lines?: string[] }) {

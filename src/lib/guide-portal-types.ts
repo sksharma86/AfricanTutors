@@ -14,6 +14,22 @@ export interface GuideBooking {
   duration_minutes: number | null;
   status: BookingStatus;
   is_free_trial: boolean;
+  attendance?: GuideAttendanceAssignment | null;
+}
+
+export interface GuideAttendanceAssignment {
+  id?: string;
+  booking_id?: string;
+  tutor_id?: string;
+  source?: string;
+  status?: string;
+  requested_at?: string | null;
+  deadline_at?: string | null;
+  confirmed_at?: string | null;
+  missed_at?: string | null;
+  resolved_at?: string | null;
+  resolution?: string | null;
+  created_at?: string | null;
 }
 
 export interface GuideEarning {

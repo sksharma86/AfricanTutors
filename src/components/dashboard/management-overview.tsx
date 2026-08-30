@@ -360,6 +360,8 @@ function AttentionCard({
     reasons: string[];
     issueCount: number;
     urgent: boolean;
+    critical?: boolean;
+    kind?: string;
   }[];
 }) {
   return (
@@ -383,7 +385,9 @@ function AttentionCard({
             <li key={item.id} className="py-2.5">
               <p
                 className={`text-[13px] font-medium ${
-                  /wasn't notified|Call parent|recording|Payment/i.test(item.title)
+                  item.critical ||
+                  item.kind === "guide_confirm_critical" ||
+                  /CRITICAL COVERAGE|wasn't notified|Call parent|recording|Payment/i.test(item.title)
                     ? "text-[var(--mg-critical)]"
                     : item.urgent
                       ? "text-[var(--mg-attention)]"
@@ -394,7 +398,7 @@ function AttentionCard({
               </p>
               {item.detail ? <p className="mt-0.5 text-[12.5px] text-[var(--mg-muted)]">{item.detail}</p> : null}
               <p className="mt-1.5">
-                <LinkButton href={item.href} variant={item.action === "Assign Guide" ? "primary" : "outline"} size="sm">
+                <LinkButton href={item.href} variant={item.action === "Assign Guide" || item.action === "Reassign now" ? "primary" : "outline"} size="sm">
                   {item.action} →
                 </LinkButton>
               </p>

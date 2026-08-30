@@ -30,6 +30,7 @@ export function GuideJoinControl({
   scheduledEnd,
   timezone,
   prominent = false,
+  nowMs,
 }: {
   bookingId: string;
   status: string;
@@ -37,14 +38,17 @@ export function GuideJoinControl({
   scheduledEnd: string | null;
   timezone?: string;
   prominent?: boolean;
+  nowMs?: number;
 }) {
-  const [now, setNow] = useState(() => Date.now());
+  const [liveNow, setLiveNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    if (nowMs != null) return;
+    const id = window.setInterval(() => setLiveNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [nowMs]);
 
+  const now = nowMs ?? liveNow;
   const ui = guideJoinUiState(status, scheduledStart, scheduledEnd, now);
 
   if (ui.kind === "awaiting") {

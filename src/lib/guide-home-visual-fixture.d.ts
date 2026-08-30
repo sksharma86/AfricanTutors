@@ -2,7 +2,7 @@ declare module "@/lib/guide-home-visual-fixture.mjs" {
   export function guideVisualReviewNow(now?: Date, tz?: string, hour?: number, minute?: number): Date;
   export function guideHomeVisualFixture(
     now?: Date,
-    options?: { reportNeeded?: boolean; empty?: boolean },
+    options?: { reportNeeded?: boolean; empty?: boolean; scene?: string | null },
   ): {
     firstName: string;
     bookings: unknown[];
