@@ -62,9 +62,12 @@ describe("Parent Portal premium visual system", () => {
     assert.match(home, /ParentHomeBoard/);
     assert.match(board, /pp-home-grid/);
     assert.match(css, /grid-template-areas/);
+    assert.match(board, /is-empty/);
     assert.match(habit, /Study Halls this month/);
     assert.match(habit, /completedStudyHallsThisMonth/);
     assert.match(habit, /parentHabitCopy/);
+    assert.match(habit, /pp-habit-day/);
+    assert.match(habit, /is-done/);
     assert.doesNotMatch(habit, /of 20|Renews|hours remaining|progress ring|monthly quota/i);
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);

@@ -34,7 +34,14 @@ export function ParentUpcomingList({
     <ParentSurface className="px-4 py-3.5">
       <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Upcoming Study Halls</p>
       {visible.length === 0 ? (
-        <p className="mt-3 text-sm text-[var(--pp-muted)]">Nothing scheduled yet.</p>
+        <div className="mt-3">
+          <p className="text-sm text-[var(--pp-muted)]">Nothing scheduled yet.</p>
+          <p className="mt-1.5">
+            <Link href="/dashboard/student/book" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+              Book a Study Hall →
+            </Link>
+          </p>
+        </div>
       ) : (
         <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">
           {visible.map((booking) => {

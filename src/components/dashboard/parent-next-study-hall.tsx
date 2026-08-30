@@ -14,16 +14,23 @@ function HeroAtmosphere() {
     <div className="pp-hero-atmosphere" aria-hidden>
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 640 320" preserveAspectRatio="xMaxYMin slice">
         <defs>
-          <radialGradient id="pp-lamp" cx="78%" cy="8%" r="42%">
-            <stop offset="0%" stopColor="#f3d27a" stopOpacity="0.42" />
-            <stop offset="38%" stopColor="#c9a227" stopOpacity="0.16" />
+          <radialGradient id="pp-lamp" cx="50%" cy="0%" r="70%">
+            <stop offset="0%" stopColor="#ffe7a8" stopOpacity="0.55" />
+            <stop offset="22%" stopColor="#f3d27a" stopOpacity="0.28" />
+            <stop offset="58%" stopColor="#c9a227" stopOpacity="0.08" />
             <stop offset="100%" stopColor="#c9a227" stopOpacity="0" />
           </radialGradient>
+          <linearGradient id="pp-desk" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#0a0d0b" stopOpacity="0" />
+            <stop offset="100%" stopColor="#080a08" stopOpacity="0.72" />
+          </linearGradient>
         </defs>
-        <ellipse cx="510" cy="18" rx="170" ry="110" fill="url(#pp-lamp)" />
-        <path d="M470 0c18 38 24 62 18 96" stroke="#e8c56a" strokeOpacity="0.18" strokeWidth="1.2" fill="none" />
-        <path d="M0 286c80-18 150-8 220 6 90 18 170-10 250 4 70 12 120 8 170-8v42H0z" fill="#0c100d" fillOpacity="0.55" />
-        <rect x="430" y="268" width="86" height="8" rx="2" fill="#c9a227" fillOpacity="0.12" />
+        <ellipse cx="528" cy="-6" rx="196" ry="128" fill="url(#pp-lamp)" />
+        <path d="M508 0v38" stroke="#e8c56a" strokeOpacity="0.28" strokeWidth="1.4" />
+        <path d="M488 42c12-16 28-16 40 0" stroke="#f3d27a" strokeOpacity="0.32" strokeWidth="1.3" fill="none" />
+        <path d="M0 248c90-22 168-6 248 10 92 18 176-16 260 2 72 16 90 10 132-6v66H0z" fill="url(#pp-desk)" />
+        <rect x="402" y="274" width="118" height="7" rx="2" fill="#c9a227" fillOpacity="0.16" />
+        <rect x="428" y="262" width="36" height="14" rx="2" fill="#c9a227" fillOpacity="0.08" />
       </svg>
     </div>
   );

@@ -255,10 +255,44 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 46% 58% at 82% -4%, rgba(243, 210, 122, 0.34) 0%, rgba(201, 162, 39, 0.12) 36%, transparent 62%),
-    radial-gradient(ellipse 28% 22% at 74% 6%, rgba(255, 228, 160, 0.16), transparent 70%),
-    linear-gradient(180deg, rgba(8, 10, 8, 0.2) 0%, transparent 30%),
-    linear-gradient(168deg, #101410 0%, #1a221c 48%, #121613 100%);
+    radial-gradient(ellipse 38% 52% at 88% -8%, rgba(255, 226, 150, 0.42) 0%, rgba(232, 188, 86, 0.18) 28%, rgba(201, 162, 39, 0.06) 52%, transparent 68%),
+    radial-gradient(ellipse 18% 16% at 79% 10%, rgba(255, 236, 186, 0.22), transparent 72%),
+    radial-gradient(ellipse 70% 28% at 50% 118%, rgba(8, 10, 8, 0.55), transparent 70%),
+    linear-gradient(180deg, rgba(8, 10, 8, 0.18) 0%, transparent 34%),
+    linear-gradient(162deg, #0d110e 0%, #171e19 46%, #101410 100%);
+}
+
+.parent-app .pp-habit-cal {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.12rem 0.1rem;
+}
+
+.parent-app .pp-habit-cal-wd {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #9a9286;
+}
+
+.parent-app .pp-habit-day {
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: #8a8376;
+}
+
+.parent-app .pp-habit-day.is-done {
+  background: #c9a227;
+  color: #1c1915;
+  font-weight: 700;
 }
 
 .parent-app .pp-home {
@@ -293,6 +327,13 @@ body {
       "hero hero"
       "secondary utility"
       "upcoming upcoming";
+  }
+
+  .parent-app .pp-home-grid.is-empty {
+    grid-template-areas:
+      "hero hero"
+      "secondary upcoming"
+      "utility utility";
   }
 }
 

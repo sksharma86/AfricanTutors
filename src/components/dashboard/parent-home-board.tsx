@@ -40,7 +40,7 @@ export function ParentHomeBoard({
     <div className="pp-home">
       <ParentGreeting firstName={firstName} />
 
-      <div className="pp-home-grid">
+      <div className={`pp-home-grid${hasRecent ? "" : " is-empty"}`}>
         <div className="pp-home-hero">
           <ParentNextStudyHall next={next} />
         </div>

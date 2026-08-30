@@ -41,25 +41,23 @@ export function ParentHabitCard({
         Study Hall{month.count === 1 ? "" : "s"} completed
       </p>
       <p className="mt-2.5 text-[14px] font-medium tracking-[-0.02em] text-[var(--pp-ink)]">{copy.title}</p>
-      <ol className="mt-3 grid grid-cols-7 gap-y-1.5" aria-label="Days with a completed Study Hall this month">
+      <ol className="pp-habit-cal mt-3" aria-label="Days with a completed Study Hall this month">
         {WEEKDAYS.map((day, i) => (
-          <li key={`wd-${i}`} className="text-center text-[9px] font-medium text-[#9a9286]">
+          <li key={`wd-${i}`} className="pp-habit-cal-wd">
             {day}
           </li>
         ))}
         {cells.map((day, i) => (
           <li key={`d-${i}`} className="flex justify-center">
             {day == null ? (
-              <span className="size-1.5" />
+              <span className="size-[1.35rem]" />
             ) : (
               <span
                 title={active.has(day) ? `Study Hall on day ${day}` : undefined}
-                className={
-                  active.has(day)
-                    ? "size-1.5 rounded-full bg-[#c9a227]"
-                    : "size-1.5 rounded-full bg-[#1c1915]/12"
-                }
-              />
+                className={active.has(day) ? "pp-habit-day is-done" : "pp-habit-day"}
+              >
+                {day}
+              </span>
             )}
           </li>
         ))}

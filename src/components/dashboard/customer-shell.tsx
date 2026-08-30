@@ -27,7 +27,9 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   const isActive = (href: string) => {
-    if (href === "/dashboard/student") return pathname === "/dashboard/student";
+    if (href === "/dashboard/student") {
+      return pathname === "/dashboard/student" || pathname.startsWith("/dashboard/student/visual-review");
+    }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
