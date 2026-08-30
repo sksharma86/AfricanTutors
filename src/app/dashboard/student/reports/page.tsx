@@ -38,10 +38,17 @@ export default async function ParentReportsPage() {
       <div id="reports" className="mt-6">
         {past.length === 0 ? (
           <ParentSurface>
-            <p className="font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">None yet.</p>
-            <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
-              Recaps appear here after a Study Hall is completed.
-            </p>
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 inline-flex size-9 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
+                <ParentIconReports />
+              </span>
+              <div>
+                <p className="font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">None yet.</p>
+                <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
+                  Recaps appear here after a Study Hall is completed.
+                </p>
+              </div>
+            </div>
           </ParentSurface>
         ) : (
           <ParentSurface>

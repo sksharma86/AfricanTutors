@@ -69,12 +69,12 @@ export default async function PackagesPage() {
         </div>
       </ParentSurface>
 
-      <div className="mt-10">
+      <div className="pp-commerce mt-10">
         <p className="mb-3 text-sm text-[var(--pp-muted)]">Pay as you go · $12/hour</p>
         <SingleSessionCards />
       </div>
 
-      <div id="prepaid" className="mt-10 scroll-mt-24">
+      <div id="prepaid" className="pp-commerce mt-10 scroll-mt-24">
         <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Save with prepaid hours</h2>
         <p className="mt-1 text-sm text-[var(--pp-muted)]">
           14 hours / $140 · 28 hours / $252 · as low as $9/hour. Hours never expire.

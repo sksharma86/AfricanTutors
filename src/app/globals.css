@@ -250,9 +250,23 @@ body {
   transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 
+.parent-app .pp-commerce .rounded-2xl {
+  background: var(--pp-card);
+  border-color: rgba(28, 25, 21, 0.06);
+  box-shadow: var(--pp-shadow-1);
+}
+
+.parent-app .pp-interact,
+.parent-app a,
+.parent-app button {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .parent-app .pp-nav-link,
-  .parent-app .pp-interact {
+  .parent-app .pp-interact,
+  .parent-app a,
+  .parent-app button {
     transition: none;
   }
 }
