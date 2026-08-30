@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { GuideHomeBoard } from "@/components/dashboard/guide-home-board";
 import { GuidePage } from "@/components/dashboard/guide-page";
 import { requireRole } from "@/lib/auth";
-import { guideHomeVisualFixture } from "@/lib/guide-home-visual-fixture.mjs";
+import { guideHomeVisualFixture, guideVisualReviewNow } from "@/lib/guide-home-visual-fixture.mjs";
 import type { GuideAvailabilityBlock, GuideExceptionRow } from "@/lib/guide-portal-data";
 import type { GuideBooking, GuideEarning } from "@/lib/guide-portal-types";
 
@@ -23,7 +23,8 @@ export default async function GuideHomeVisualReviewPage({
   if (process.env.GUIDE_HOME_VISUAL_REVIEW !== "1") notFound();
   await requireRole("tutor", "/dashboard/tutor");
   const params = await searchParams;
-  const fixture = guideHomeVisualFixture(new Date(), {
+  const reviewNow = guideVisualReviewNow(new Date("2026-08-26T21:00:00Z"), "America/Chicago", 16, 0);
+  const fixture = guideHomeVisualFixture(reviewNow, {
     reportNeeded: params.report === "1",
     empty: params.empty === "1",
   });

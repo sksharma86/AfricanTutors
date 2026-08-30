@@ -4,14 +4,16 @@ import { describe, it } from "node:test";
 
 import {
   guideAvailabilitySummary,
+  guideChildName,
   guideDayPart,
   guideDaySchedule,
   guideEarningsHomeSummary,
   guideNeedsReport,
+  guideStudyHallLists,
   guideWeekSummary,
   unfinishedGuideReport,
 } from "../src/lib/guide-portal.mjs";
-import { guideHomeVisualFixture } from "../src/lib/guide-home-visual-fixture.mjs";
+import { guideHomeVisualFixture, guideVisualReviewNow } from "../src/lib/guide-home-visual-fixture.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
@@ -134,6 +136,21 @@ describe("Guide Portal premium workstation", () => {
     assert.ok(unfinishedGuideReport(report.bookings, report.reportedBookings, report.nowMs));
     const home = read("src/app/dashboard/tutor/page.tsx");
     assert.doesNotMatch(home, /fixture-next|Sarah/);
+  });
+
+  it("review clock pins afternoon composition with real child names and this-week completed", () => {
+    const now = guideVisualReviewNow(new Date("2026-08-26T21:00:00Z"), "America/Chicago", 16, 0);
+    assert.equal(guideDayPart(now.getTime(), "America/Chicago"), "Good afternoon");
+    const pop = guideHomeVisualFixture(now);
+    const today = guideDaySchedule(pop.bookings, pop.nowMs, pop.timeZone);
+    assert.deepEqual(today.map(guideChildName), ["Jordan", "Maya", "Ethan"]);
+    const week = guideWeekSummary(pop.bookings, pop.nowMs, pop.timeZone);
+    assert.ok(week.completed >= 2);
+    assert.ok(week.upcoming >= 3);
+    const lists = guideStudyHallLists(pop.bookings, pop.nowMs, pop.timeZone);
+    const start = Date.parse(lists.next.scheduled_start);
+    assert.ok(start - pop.nowMs < 5 * 60000);
+    assert.equal(guideChildName(lists.next), "Jordan");
   });
 
   it("greeting uses a real first name helper and Guide-local day part", () => {

@@ -4,8 +4,16 @@ import { useMemo } from "react";
 
 import { guideDayPart } from "@/lib/guide-portal.mjs";
 
-export function GuideGreeting({ firstName, timeZone }: { firstName: string; timeZone?: string }) {
-  const greeting = useMemo(() => guideDayPart(Date.now(), timeZone), [timeZone]);
+export function GuideGreeting({
+  firstName,
+  timeZone,
+  nowMs,
+}: {
+  firstName: string;
+  timeZone?: string;
+  nowMs?: number;
+}) {
+  const greeting = useMemo(() => guideDayPart(nowMs ?? Date.now(), timeZone), [nowMs, timeZone]);
   const name = firstName.trim();
 
   return (

@@ -12,10 +12,12 @@ export function GuideTodaySchedule({
   rows,
   nextId,
   tz,
+  nowMs,
 }: {
   rows: GuideBooking[];
   nextId?: string | null;
   tz: string;
+  nowMs?: number;
 }) {
   const visible = rows.slice(0, HOME_LIMIT);
 
@@ -27,7 +29,7 @@ export function GuideTodaySchedule({
       ) : (
         <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">
           {visible.map((booking) => {
-            const status = guideRowStatus(booking);
+            const status = guideRowStatus(booking, nowMs);
             const done = status === "Completed" || status === "Ended" || status === "No-show";
             const next = booking.id === nextId;
             return (

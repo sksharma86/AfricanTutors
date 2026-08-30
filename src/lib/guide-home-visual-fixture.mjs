@@ -3,6 +3,39 @@
  * Used only when GUIDE_HOME_VISUAL_REVIEW=1. Does not write bookings, earnings, or reports.
  */
 
+function weekdayInTz(date, tz) {
+  try {
+    const wd = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(date);
+    const i = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(wd);
+    return i >= 0 ? i : date.getDay();
+  } catch {
+    return date.getDay();
+  }
+}
+
+/** Pin review composition to a stable local clock without writing data. */
+export function guideVisualReviewNow(now = new Date(), tz = "America/Chicago", hour = 16, minute = 0) {
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const utcGuess = Date.parse(`${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`);
+  const shown = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(utcGuess));
+  const shownH = Number(shown.find((p) => p.type === "hour")?.value);
+  const shownM = Number(shown.find((p) => p.type === "minute")?.value);
+  if (!Number.isFinite(shownH) || !Number.isFinite(shownM)) {
+    return new Date(utcGuess);
+  }
+  return new Date(utcGuess - (shownH * 60 + shownM - (hour * 60 + minute)) * 60000);
+}
+
 function later(now, hours, minutes = 0) {
   return new Date(now.getTime() + (hours * 60 + minutes) * 60000).toISOString();
 }
@@ -60,7 +93,7 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
     scheduled_end: later(now, 5),
     student_first_name: "Ethan",
   });
-  const weekDone = [5, 3].map((hoursAgo, i) =>
+  const weekDone = [26, 50].map((hoursAgo, i) =>
     booking({
       id: `fixture-week-${i}`,
       status: "completed",
@@ -91,8 +124,8 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
     firstName: "Sarah",
     bookings,
     availability: [
-      { id: "fix-av-1", day_of_week: now.getDay(), start_time: "17:00:00", end_time: "22:00:00" },
-      { id: "fix-av-2", day_of_week: (now.getDay() + 1) % 7, start_time: "16:00:00", end_time: "21:00:00" },
+      { id: "fix-av-1", day_of_week: weekdayInTz(now, "America/Chicago"), start_time: "17:00:00", end_time: "22:00:00" },
+      { id: "fix-av-2", day_of_week: (weekdayInTz(now, "America/Chicago") + 1) % 7, start_time: "16:00:00", end_time: "21:00:00" },
     ],
     exceptions: [],
     earnings: [

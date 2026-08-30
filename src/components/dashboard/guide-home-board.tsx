@@ -51,7 +51,7 @@ export function GuideHomeBoard({
 
   return (
     <div className="gp-home">
-      <GuideGreeting firstName={firstName} timeZone={timeZone} />
+      <GuideGreeting firstName={firstName} timeZone={timeZone} nowMs={nowMs} />
       {profileStatus && profileStatus !== "approved" ? (
         <p className="text-sm text-[#a15c1a]">
           Your Guide account is {profileStatus}. Study Hall tools stay limited until an admin restores approval.
@@ -59,10 +59,10 @@ export function GuideHomeBoard({
       ) : null}
       <div className="gp-home-grid">
         <div className="gp-home-hero">
-          <GuideNextStudyHall next={lists.next} tz={timeZone} />
+          <GuideNextStudyHall next={lists.next} tz={timeZone} nowMs={nowMs} />
         </div>
         <div className="gp-home-today">
-          <GuideTodaySchedule rows={today} nextId={lists.next?.id} tz={timeZone} />
+          <GuideTodaySchedule rows={today} nextId={lists.next?.id} tz={timeZone} nowMs={nowMs} />
         </div>
         <div className="gp-home-week">
           {unfinished ? (

@@ -36,9 +36,11 @@ function HeroAtmosphere() {
 export function GuideNextStudyHall({
   next,
   tz,
+  nowMs,
 }: {
   next: GuideBooking | null;
   tz: string;
+  nowMs?: number;
 }) {
   if (!next) {
     return (
@@ -64,8 +66,9 @@ export function GuideNextStudyHall({
     );
   }
 
-  const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end);
-  const starts = guideStartsInLabel(next.scheduled_start);
+  const clock = nowMs ?? Date.now();
+  const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, clock);
+  const starts = guideStartsInLabel(next.scheduled_start, clock);
   const child = guideChildName(next);
   const time = next.scheduled_start ? formatTime(next.scheduled_start, tz) : "";
   const day = next.scheduled_start ? formatDayHeading(next.scheduled_start, tz) : "Time to confirm";
