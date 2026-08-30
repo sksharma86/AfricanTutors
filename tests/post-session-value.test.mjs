@@ -94,7 +94,7 @@ describe("Post-session value — parent recap", () => {
 describe("Post-session value — Parent Home", () => {
   it("Last Study Hall shows report ready and recording states with secondary actions", () => {
     const recent = read("src/components/dashboard/parent-recent-activity.tsx");
-    assert.match(recent, /Last Study Hall/);
+    assert.match(recent, /Recent Study Hall|Last Study Hall/);
     assert.match(recent, /Report ready/);
     assert.match(recent, /Read report/);
     assert.match(recent, /WatchRecordingButton/);

@@ -21,7 +21,7 @@ export function ParentNextStep({
   if (!bookLabel || !bookHref) return null;
 
   return (
-    <div className={kind === "free_convert" ? "rounded-2xl bg-white/80 px-4 py-4 ring-1 ring-ink-900/[0.05] sm:px-5" : ""}>
+    <div className={kind === "free_convert" ? "rounded-[18px] bg-[var(--pp-card)] px-4 py-4 shadow-[var(--pp-shadow-1)] ring-1 ring-[#1c1915]/[0.05] sm:px-5" : ""}>
       {kind === "free_convert" ? (
         <>
           <p className="font-display text-xl font-semibold tracking-[-0.03em] text-ink-900">

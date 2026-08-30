@@ -59,24 +59,24 @@ export default async function PackagesPage() {
 
   return (
     <ParentPage wide>
-      <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">Hours</h1>
-      <p className="mt-2 text-sm text-ink-500">Pricing &amp; Study Hall options. Hours never expire.</p>
+      <h1 className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">Hours</h1>
+      <p className="mt-2 text-sm text-[var(--pp-muted)]">Pricing &amp; Study Hall options. Hours never expire.</p>
 
       <ParentSurface className="mt-8">
-        <h2 className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Available hours</h2>
+        <h2 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Available hours</h2>
         <div className="mt-3">
           <BalanceCards minutes={minutes} creditCents={creditCents} />
         </div>
       </ParentSurface>
 
-      <div className="mt-10">
-        <p className="mb-3 text-sm text-ink-600">Pay as you go · $12/hour</p>
+      <div className="pp-commerce mt-10">
+        <p className="mb-3 text-sm text-[var(--pp-muted)]">Pay as you go · $12/hour</p>
         <SingleSessionCards />
       </div>
 
-      <div id="prepaid" className="mt-10 scroll-mt-24">
-        <h2 className="text-lg font-semibold tracking-tight text-ink-900">Save with prepaid hours</h2>
-        <p className="mt-1 text-sm text-ink-500">
+      <div id="prepaid" className="pp-commerce mt-10 scroll-mt-24">
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Save with prepaid hours</h2>
+        <p className="mt-1 text-sm text-[var(--pp-muted)]">
           14 hours / $140 · 28 hours / $252 · as low as $9/hour. Hours never expire.
         </p>
         <div className="mt-4">

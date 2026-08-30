@@ -40,4 +40,15 @@ declare module "@/lib/parent-portal.mjs" {
     payment_status?: string;
     status?: string;
   } | null | undefined): string;
+  export function completedStudyHallsThisMonth(
+    bookings: { status?: string; scheduled_start?: string | null }[] | null | undefined,
+    nowMs?: number,
+    timeZone?: string,
+  ): { count: number; days: number[]; yearMonth: string; daysInMonth: number };
+  export function parentHabitCopy(count: number): { title: string; body: string };
+  export function parentSessionMinutes(booking: {
+    duration_minutes?: number | null;
+    scheduled_start?: string | null;
+    scheduled_end?: string | null;
+  } | null | undefined): number | null;
 }

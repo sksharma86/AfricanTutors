@@ -17,12 +17,15 @@ export function PortalSegmentedControl({
   onChange,
   ariaLabel,
   className,
+  appearance = "ink",
 }: {
   items: readonly PortalSegment[];
   value: string;
   onChange: (id: string) => void;
   ariaLabel: string;
   className?: string;
+  /** Default ink fill keeps Guide / Management unchanged. */
+  appearance?: "ink" | "warm";
 }) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -43,6 +46,7 @@ export function PortalSegmentedControl({
       aria-label={ariaLabel}
       className={cn(
         "inline-flex max-w-full flex-wrap gap-0.5 rounded-[14px] border border-ink-200 bg-ink-50 p-1",
+        appearance === "warm" && "border-[#e6dcc8] bg-[#f3eee4]",
         className,
       )}
     >
@@ -78,7 +82,9 @@ export function PortalSegmentedControl({
               "min-h-11 min-w-[4.5rem] rounded-[10px] px-3.5 text-sm font-medium tracking-[-0.01em] transition-colors duration-150",
               "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
               selected
-                ? "bg-ink-900 text-white shadow-sm"
+                ? appearance === "warm"
+                  ? "bg-[#f3e6c4] text-[#5c4310] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.22)]"
+                  : "bg-ink-900 text-white shadow-sm"
                 : "bg-transparent text-ink-600 hover:bg-white hover:text-ink-900",
             )}
           >

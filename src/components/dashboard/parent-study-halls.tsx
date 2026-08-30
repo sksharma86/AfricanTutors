@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { ParentIconCalendar } from "@/components/dashboard/parent-icons";
 import { ParentStudyHallRow } from "@/components/dashboard/parent-study-hall-row";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { LinkButton } from "@/components/ui/button";
@@ -32,26 +33,43 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
     router.replace(`${pathname}${sp.toString() ? `?${sp}` : ""}`);
   }
 
-  const empty = view === "upcoming" ? "No Study Hall scheduled." : "None yet.";
+  const empty = view === "upcoming" ? "Nothing scheduled yet" : "None yet.";
 
   return (
     <ParentSurface>
       <PortalSegmentedControl
         ariaLabel="Study Hall views"
+        appearance="warm"
         items={VIEWS}
         value={view}
         onChange={setView}
       />
       {rows.length === 0 ? (
-        <div className="py-5">
-          <p className="text-sm text-ink-500">{empty}</p>
-          {view === "upcoming" ? (
-            <p className="mt-4">
-              <LinkButton href="/dashboard/student/book" variant="primary" size="md">
-                Book a Study Hall
-              </LinkButton>
+        <div className="flex items-start gap-3 py-6">
+          <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
+            <ParentIconCalendar />
+          </span>
+          <div>
+            <p className="font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">
+              {view === "upcoming" ? "Nothing scheduled yet" : empty}
             </p>
-          ) : null}
+            {view === "upcoming" ? (
+              <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
+                Book your first Study Hall when you&apos;re ready.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
+                {view === "past" ? "Completed Study Halls will appear here." : "Cancelled Study Halls will appear here."}
+              </p>
+            )}
+            {view === "upcoming" ? (
+              <p className="mt-5">
+                <LinkButton href="/dashboard/student/book" variant="primary" size="md">
+                  Book a Study Hall
+                </LinkButton>
+              </p>
+            ) : null}
+          </div>
         </div>
       ) : (
         <ul className="divide-y divide-ink-100">

@@ -143,3 +143,102 @@ export function parentPaymentLineLabel(booking) {
   if (booking.status === "cancelled" || booking.status === "expired") return "—";
   return "Paid or covered by hours";
 }
+
+const DEFAULT_PARENT_TZ = "America/Chicago";
+
+function formatParts(date, timeZone, options) {
+  try {
+    return new Intl.DateTimeFormat("en-US", { timeZone, ...options }).formatToParts(date);
+  } catch {
+    return new Intl.DateTimeFormat("en-US", { timeZone: DEFAULT_PARENT_TZ, ...options }).formatToParts(date);
+  }
+}
+
+function calendarYearMonth(date, timeZone = DEFAULT_PARENT_TZ) {
+  const parts = formatParts(date, timeZone, { year: "numeric", month: "2-digit" });
+  const year = parts.find((p) => p.type === "year")?.value;
+  const month = parts.find((p) => p.type === "month")?.value;
+  return `${year}-${month}`;
+}
+
+function calendarDay(date, timeZone = DEFAULT_PARENT_TZ) {
+  const parts = formatParts(date, timeZone, { day: "2-digit" });
+  return Number(parts.find((p) => p.type === "day")?.value);
+}
+
+function daysInCalendarMonth(yearMonth) {
+  const [year, month] = String(yearMonth).split("-").map(Number);
+  if (!year || !month) return 31;
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/**
+ * Read-only count of completed Study Halls in the current calendar month.
+ * Not a quota, allowance, or subscription period.
+ */
+export function completedStudyHallsThisMonth(bookings, nowMs = Date.now(), timeZone = DEFAULT_PARENT_TZ) {
+  const now = new Date(nowMs);
+  const yearMonth = calendarYearMonth(now, timeZone);
+  const days = new Set();
+  let count = 0;
+  for (const booking of bookings ?? []) {
+    if (booking?.status !== "completed") continue;
+    if (!booking.scheduled_start) continue;
+    const start = new Date(booking.scheduled_start);
+    if (Number.isNaN(start.getTime())) continue;
+    if (calendarYearMonth(start, timeZone) !== yearMonth) continue;
+    count += 1;
+    days.add(calendarDay(start, timeZone));
+  }
+  return {
+    count,
+    days: [...days].sort((a, b) => a - b),
+    yearMonth,
+    daysInMonth: daysInCalendarMonth(yearMonth),
+  };
+}
+
+export function parentHabitCopy(count) {
+  const n = Math.max(0, Number(count) || 0);
+  if (n <= 0) {
+    return {
+      title: "Ready when you are.",
+      body: "Regular sessions can help turn homework time into a more predictable routine.",
+    };
+  }
+  if (n <= 2) {
+    return {
+      title: "A good start.",
+      body: "You’re beginning to build a more consistent homework rhythm.",
+    };
+  }
+  if (n <= 5) {
+    return {
+      title: "Building momentum.",
+      body: "Repeated Study Halls are helping establish a more predictable routine.",
+    };
+  }
+  if (n <= 9) {
+    return {
+      title: "Strong routine.",
+      body: "Consistency is helping focused homework time become more familiar.",
+    };
+  }
+  if (n <= 14) {
+    return {
+      title: "Consistency is becoming a habit.",
+      body: "Your family is building a dependable Study Hall rhythm.",
+    };
+  }
+  return {
+    title: "Study Hall is part of the routine.",
+    body: "Consistent focused time is becoming part of the household rhythm.",
+  };
+}
+
+export function parentSessionMinutes(booking) {
+  if (booking?.duration_minutes) return booking.duration_minutes;
+  if (!booking?.scheduled_start || !booking?.scheduled_end) return null;
+  const ms = new Date(booking.scheduled_end).getTime() - new Date(booking.scheduled_start).getTime();
+  return ms > 0 ? Math.round(ms / 60000) : null;
+}

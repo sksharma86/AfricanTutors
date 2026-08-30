@@ -43,9 +43,9 @@ export function ParentPhoneForm({ initialPhone }: { initialPhone: string | null 
   }
 
   return (
-    <div className="rounded-2xl bg-white/80 px-4 py-4 ring-1 ring-ink-900/[0.05] sm:px-5">
-      <p className="text-sm font-medium text-ink-900">Contact information</p>
-      <p className="mt-1.5 text-sm leading-6 text-ink-500">
+    <div className="rounded-[18px] bg-[var(--pp-card)] px-4 py-4 shadow-[var(--pp-shadow-1)] ring-1 ring-[#1c1915]/[0.05] sm:px-5">
+      <p className="text-sm font-medium text-[var(--pp-ink)]">Contact information</p>
+      <p className="mt-1.5 text-sm leading-6 text-[var(--pp-muted)]">
         We’ll only use your number for important Study Hall communication. Guides never see your phone number.
       </p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">

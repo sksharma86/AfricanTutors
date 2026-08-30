@@ -227,3 +227,184 @@ body {
     0 0 0 1px rgba(12, 12, 11, 0.06),
     0 8px 24px -16px rgba(12, 12, 11, 0.2);
 }
+
+/* Parent Portal application system — scoped so Guide / Management stay unchanged */
+.parent-app {
+  --pp-canvas: #f6f1e8;
+  --pp-card: #fffdf8;
+  --pp-ink: #1c1915;
+  --pp-muted: #6b655c;
+  --pp-gold: #c9a227;
+  --pp-gold-soft: #f3e6c4;
+  --pp-hero: #161c18;
+  --pp-hero-mid: #1d2620;
+  --pp-positive: #3d6b4f;
+  --pp-attention: #a15c1a;
+  --pp-shadow-1: 0 1px 0 rgba(28, 25, 21, 0.04), 0 10px 28px -20px rgba(28, 25, 21, 0.32);
+  --pp-shadow-2: 0 1px 0 rgba(28, 25, 21, 0.05), 0 18px 40px -22px rgba(28, 25, 21, 0.42);
+  background: var(--pp-canvas);
+  color: var(--pp-ink);
+}
+
+.parent-app .pp-nav-link {
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.parent-app .pp-hero-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 52% at 88% -8%, rgba(255, 226, 150, 0.42) 0%, rgba(232, 188, 86, 0.18) 28%, rgba(201, 162, 39, 0.06) 52%, transparent 68%),
+    radial-gradient(ellipse 18% 16% at 79% 10%, rgba(255, 236, 186, 0.22), transparent 72%),
+    radial-gradient(ellipse 70% 28% at 50% 118%, rgba(8, 10, 8, 0.55), transparent 70%),
+    linear-gradient(180deg, rgba(8, 10, 8, 0.18) 0%, transparent 34%),
+    linear-gradient(162deg, #0d110e 0%, #171e19 46%, #101410 100%);
+}
+
+.parent-app .pp-habit-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.parent-app .pp-habit-track {
+  display: flex;
+  align-items: center;
+  width: 7.25rem;
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
+}
+
+.parent-app .pp-habit-step {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.parent-app .pp-habit-step:first-child {
+  flex: 0 0 auto;
+}
+
+.parent-app .pp-habit-seg {
+  display: block;
+  height: 1px;
+  flex: 1;
+  background: rgba(28, 25, 21, 0.1);
+}
+
+.parent-app .pp-habit-seg.is-lit {
+  background: rgba(201, 162, 39, 0.45);
+}
+
+.parent-app .pp-habit-node {
+  display: block;
+  width: 0.42rem;
+  height: 0.42rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(28, 25, 21, 0.12);
+}
+
+.parent-app .pp-habit-node.is-reached {
+  background: #e4d09a;
+}
+
+.parent-app .pp-habit-node.is-current {
+  width: 0.52rem;
+  height: 0.52rem;
+  background: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.16);
+}
+
+.parent-app .pp-habit-node.is-ready {
+  width: 0.48rem;
+  height: 0.48rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(201, 162, 39, 0.38);
+}
+
+.parent-app .pp-home {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.parent-app .pp-home-note {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8a8376;
+}
+
+.parent-app .pp-home-greeting {
+  max-width: 28rem;
+}
+
+.parent-app .pp-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.68fr) minmax(16.75rem, 0.82fr);
+  grid-template-areas:
+    "hero secondary"
+    "upcoming utility";
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.parent-app .pp-home-hero { grid-area: hero; }
+.parent-app .pp-home-secondary { grid-area: secondary; }
+.parent-app .pp-home-upcoming { grid-area: upcoming; }
+.parent-app .pp-home-utility { grid-area: utility; }
+
+@media (max-width: 1279px) {
+  .parent-app .pp-home-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero hero"
+      "secondary utility"
+      "upcoming upcoming";
+  }
+
+  .parent-app .pp-home-grid.is-empty {
+    grid-template-areas:
+      "hero hero"
+      "secondary upcoming"
+      "utility utility";
+  }
+}
+
+@media (max-width: 767px) {
+  .parent-app .pp-home-grid,
+  .parent-app .pp-home-grid.is-empty {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "secondary"
+      "upcoming"
+      "utility";
+  }
+}
+
+.parent-app .pp-commerce .rounded-2xl {
+  background: var(--pp-card);
+  border-color: rgba(28, 25, 21, 0.06);
+  box-shadow: var(--pp-shadow-1);
+}
+
+.parent-app .pp-interact,
+.parent-app a,
+.parent-app button {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parent-app .pp-nav-link,
+  .parent-app .pp-interact,
+  .parent-app a,
+  .parent-app button {
+    transition: none;
+  }
+}

@@ -1,3 +1,4 @@
+import { ParentIconClock } from "@/components/dashboard/parent-icons";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { formatPrepaidHoursLabel } from "@/lib/parent-portal.mjs";
 import { formatMoneyCents } from "@/lib/format.mjs";
@@ -11,27 +12,61 @@ export function BalanceCards({
   creditCents,
   preferFreeSession = false,
   compact = false,
+  slim = false,
 }: {
   minutes: number;
   creditCents: number;
   /** Soften package CTA for brand-new parents who still have a free session. */
   preferFreeSession?: boolean;
   compact?: boolean;
+  slim?: boolean;
 }) {
   const hours = minutes > 0 ? formatPrepaidHoursLabel(minutes) : "0 hours";
+  const wholeHours = Math.max(0, Math.floor((Number(minutes) || 0) / 60));
+  const remainder = Math.max(0, Math.round(Number(minutes) || 0) % 60);
+  const buy = preferFreeSession && minutes === 0 ? null : (
+    <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0 text-[13px]">
+      Buy hours &amp; save →
+    </PortalTextLink>
+  );
+
+  if (slim) {
+    return (
+      <section className="flex min-h-11 items-center justify-between gap-3 rounded-[14px] bg-[var(--pp-card)] px-3.5 py-2 ring-1 ring-[#1c1915]/[0.05]">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="inline-flex size-7 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
+            <ParentIconClock className="h-3.5 w-3.5" />
+          </span>
+          <p className="text-sm text-[var(--pp-ink)]">
+            <span className="font-semibold">{wholeHours}</span>
+            {remainder > 0 ? <span className="text-[var(--pp-muted)]">+{remainder}m</span> : null}
+            <span className="text-[var(--pp-muted)]"> hours available</span>
+            <span className="sr-only">{hours}</span>
+          </p>
+        </div>
+        {buy}
+      </section>
+    );
+  }
 
   if (compact) {
     return (
-      <section className="flex items-center justify-between gap-4 rounded-2xl bg-white/75 px-4 py-3 ring-1 ring-ink-900/[0.05]">
-        <p className="text-sm text-ink-700">
-          <span className="font-semibold text-ink-900">{hours}</span>
-          <span className="text-ink-500"> available</span>
-        </p>
-        {preferFreeSession && minutes === 0 ? null : (
-          <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0">
-            Buy hours &amp; save →
-          </PortalTextLink>
-        )}
+      <section className="flex items-center justify-between gap-4 rounded-[18px] bg-[var(--pp-card)] px-5 py-4 shadow-[var(--pp-shadow-1)] ring-1 ring-[#1c1915]/[0.05]">
+        <div className="flex items-center gap-3.5">
+          <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
+            <ParentIconClock />
+          </span>
+          <div>
+            <p className="font-display text-[2rem] font-semibold leading-none tracking-[-0.04em] text-[var(--pp-ink)]">
+              {wholeHours}
+              {remainder > 0 ? <span className="ml-1 text-base font-medium text-[var(--pp-muted)]">+{remainder}m</span> : null}
+            </p>
+            <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
+              <span className="sr-only">{hours} </span>hours available
+            </p>
+          </div>
+        </div>
+        {buy}
       </section>
     );
   }
@@ -39,13 +74,15 @@ export function BalanceCards({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-xs font-semibold tracking-wide text-ink-500 uppercase">Prepaid Hours</p>
-        <p className="mt-1 font-display text-3xl font-semibold text-ink-900">
-          {hours}
-          <span className="mt-1 block text-base font-medium text-ink-500">remaining</span>
+        <p className="text-xs font-semibold tracking-wide text-[var(--pp-muted)] uppercase">Prepaid Hours</p>
+        <p className="mt-1 font-display text-4xl font-semibold tracking-[-0.04em] text-[var(--pp-ink)]">
+          {wholeHours}
+          <span className="mt-1 block text-base font-medium text-[var(--pp-muted)]">
+            {hours} remaining
+          </span>
         </p>
         {preferFreeSession && minutes === 0 ? (
-          <p className="mt-3 text-sm text-ink-600">
+          <p className="mt-3 text-sm text-[var(--pp-muted)]">
             Start with your free 60-minute Study Hall — no card needed. Prepaid packages are optional later.
           </p>
         ) : (
@@ -53,12 +90,12 @@ export function BalanceCards({
             <PortalTextLink href="/dashboard/student/packages#prepaid">Buy hours &amp; save</PortalTextLink>
           </p>
         )}
-        <p className="mt-2 text-xs text-ink-400">Prepaid hours never expire.</p>
+        <p className="mt-2 text-xs text-[#8a8376]">Prepaid hours never expire.</p>
       </div>
       {creditCents > 0 ? (
-        <p className="text-sm text-ink-500">
-          Account credit: <span className="font-medium text-ink-800">{formatMoneyCents(creditCents)}</span>
-          <span className="text-ink-400"> · applied at checkout</span>
+        <p className="text-sm text-[var(--pp-muted)]">
+          Account credit: <span className="font-medium text-[var(--pp-ink)]">{formatMoneyCents(creditCents)}</span>
+          <span className="text-[#8a8376]"> · applied at checkout</span>
         </p>
       ) : null}
     </div>

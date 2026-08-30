@@ -133,7 +133,8 @@ describe("Portal affordance — action hierarchy", () => {
     const guideHalls = read("src/components/dashboard/guide-study-halls.tsx");
     const parentHalls = read("src/components/dashboard/parent-study-halls.tsx");
     const actions = read("src/components/dashboard/management-study-hall-actions.tsx");
-    assert.match(parentNext, /variant="primary"/);
+    assert.match(parentNext, /LinkButton/);
+    assert.match(parentNext, /variant="secondary"/);
     assert.match(parentNext, /Join Study Hall|Book a Study Hall/);
     assert.match(join, /LinkButton/);
     assert.match(join, /variant="secondary"/);
@@ -215,7 +216,7 @@ describe("Portal affordance — IA and routes stay the same", () => {
     assert.match(parent, /aria-current=\{isActive\(item\.href\) \? "page"/);
     assert.match(guide, /aria-current=\{isActive\(item\.href\) \? "page"/);
     assert.match(side, /aria-current=\{active \? "page"/);
-    assert.match(parent, /border border-ink-200 bg-white/);
+    assert.match(parent, /hover:bg-\[#ebe4d6\]|bg-white\/60/);
     assert.match(guide, /border border-ink-200 bg-white/);
     assert.match(side, /border border-ink-200 bg-white/);
     assert.match(parent, /overflow-x-auto/);

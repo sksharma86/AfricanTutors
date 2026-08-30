@@ -1,23 +1,21 @@
-import { CardSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="min-h-full bg-ink-50/40">
-      <div className="border-b border-ink-100 bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6 lg:px-8">
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-9 w-32 rounded-full" />
+    <div className="parent-app min-h-full">
+      <div className="flex min-h-full">
+        <div className="hidden w-[15.5rem] shrink-0 border-r border-[#1c1915]/[0.06] bg-[#f3eee4] px-4 py-5 lg:block">
+          <Skeleton className="h-7 w-36" />
+          <div className="mt-8 space-y-2">
+            <Skeleton className="h-11 w-full rounded-[12px]" />
+            <Skeleton className="h-11 w-full rounded-[12px]" />
+            <Skeleton className="h-11 w-full rounded-[12px]" />
+          </div>
         </div>
-      </div>
-      <div className="mx-auto w-full max-w-5xl px-6 py-8 lg:px-8">
-        <Skeleton className="h-40 w-full rounded-3xl" />
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Skeleton className="h-28 rounded-2xl" />
-          <Skeleton className="h-28 rounded-2xl" />
-        </div>
-        <div className="mt-8 space-y-3">
-          <CardSkeleton />
-          <CardSkeleton />
+        <div className="min-w-0 flex-1 px-5 py-6 sm:px-7 sm:py-8">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="mt-6 h-56 w-full max-w-3xl rounded-[22px]" />
+          <Skeleton className="mt-4 h-24 w-full max-w-3xl rounded-[18px]" />
         </div>
       </div>
     </div>
