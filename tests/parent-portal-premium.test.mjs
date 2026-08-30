@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import { completedStudyHallsThisMonth, parentHabitCopy } from "../src/lib/parent-portal.mjs";
+import { parentHomeVisualFixture } from "../src/lib/parent-home-visual-fixture.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
@@ -67,9 +68,10 @@ describe("Parent Portal premium visual system", () => {
     assert.match(habit, /Study Halls this month/);
     assert.match(habit, /completedStudyHallsThisMonth/);
     assert.match(habit, /parentHabitCopy/);
-    assert.match(habit, /pp-habit-day/);
-    assert.match(habit, /is-done/);
-    assert.doesNotMatch(habit, /of 20|Renews|hours remaining|progress ring|monthly quota/i);
+    assert.match(habit, /pp-habit-track/);
+    assert.match(habit, /parentHabitStage/);
+    assert.doesNotMatch(habit, /pp-habit-cal|pp-habit-day|WEEKDAYS|firstWeekdaySunday/);
+    assert.doesNotMatch(habit, /of 20|Renews|hours remaining|progress ring|monthly quota|8 of 10|80%|Monthly target/i);
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
     assert.doesNotMatch(home, /parent-home-visual-fixture|Priya|Jordan/);
@@ -80,6 +82,7 @@ describe("Parent Portal premium visual system", () => {
     const board = read("src/components/dashboard/parent-home-board.tsx");
     const shell = read("src/components/dashboard/customer-shell.tsx");
     const habit = read("src/components/dashboard/parent-habit.tsx");
+    const css = read("src/app/globals.css");
     assert.equal((board.match(/<ParentHabitCard /g) || []).length, 2);
     assert.match(board, /hasRecent \? \(/);
     assert.doesNotMatch(home, /ParentHabitCard/);
@@ -89,7 +92,8 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine|Focused time|Less parent friction/);
     assert.doesNotMatch(board, /ParentBrandStrip|A better homework routine|Calm, focused evenings/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
-    assert.doesNotMatch(habit, /copy\.body/);
+    assert.match(habit, /copy\.body/);
+    assert.doesNotMatch(css, /pp-habit-cal|pp-habit-day/);
     assert.match(shell, /sticky top-0/);
     assert.equal(existsSync(new URL("../src/components/dashboard/parent-brand-strip.tsx", import.meta.url)), false);
     assert.equal(existsSync(new URL("../src/components/dashboard/parent-sidebar-atmosphere.tsx", import.meta.url)), false);
@@ -128,6 +132,18 @@ describe("Parent Portal premium visual system", () => {
     assert.equal(month.count, 2);
     assert.equal(month.yearMonth, "2026-08");
     assert.ok(month.days.length >= 2);
+  });
+
+  it("visual-review fixture has 8 completed Study Halls and Strong routine for late August", () => {
+    const now = new Date("2026-08-30T18:00:00-05:00");
+    const fixture = parentHomeVisualFixture(now);
+    const month = completedStudyHallsThisMonth(fixture.bookings, now.getTime(), fixture.householdTz);
+    assert.equal(month.count, 8);
+    assert.equal(parentHabitCopy(month.count).title, "Strong routine.");
+    assert.equal(fixture.later.length, 2);
+    assert.equal(fixture.last?.id, "fixture-recent");
+    assert.equal(fixture.minutes, 660);
+    assert.doesNotMatch(JSON.stringify(fixture), /of 20|quota|Monthly target/);
   });
 
   it("maps habit language from completed-session counts without quota language", () => {

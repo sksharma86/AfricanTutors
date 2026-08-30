@@ -262,37 +262,68 @@ body {
     linear-gradient(162deg, #0d110e 0%, #171e19 46%, #101410 100%);
 }
 
-.parent-app .pp-habit-cal {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.12rem 0.1rem;
+.parent-app .pp-habit-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.parent-app .pp-habit-cal-wd {
-  text-align: center;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #9a9286;
-}
-
-.parent-app .pp-habit-day {
-  display: inline-flex;
-  width: 1.35rem;
-  height: 1.35rem;
+.parent-app .pp-habit-track {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1;
-  color: #8a8376;
+  width: 7.25rem;
+  flex-shrink: 0;
+  margin-bottom: 0.35rem;
 }
 
-.parent-app .pp-habit-day.is-done {
+.parent-app .pp-habit-step {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.parent-app .pp-habit-step:first-child {
+  flex: 0 0 auto;
+}
+
+.parent-app .pp-habit-seg {
+  display: block;
+  height: 1px;
+  flex: 1;
+  background: rgba(28, 25, 21, 0.1);
+}
+
+.parent-app .pp-habit-seg.is-lit {
+  background: rgba(201, 162, 39, 0.45);
+}
+
+.parent-app .pp-habit-node {
+  display: block;
+  width: 0.42rem;
+  height: 0.42rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(28, 25, 21, 0.12);
+}
+
+.parent-app .pp-habit-node.is-reached {
+  background: #e4d09a;
+}
+
+.parent-app .pp-habit-node.is-current {
+  width: 0.52rem;
+  height: 0.52rem;
   background: #c9a227;
-  color: #1c1915;
-  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.16);
+}
+
+.parent-app .pp-habit-node.is-ready {
+  width: 0.48rem;
+  height: 0.48rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(201, 162, 39, 0.38);
 }
 
 .parent-app .pp-home {

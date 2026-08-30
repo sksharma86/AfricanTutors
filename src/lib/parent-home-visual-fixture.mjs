@@ -3,8 +3,8 @@
  * Used only when PARENT_HOME_VISUAL_REVIEW=1.
  */
 
-function iso(daysFromNow, hour = 18, minute = 30) {
-  const d = new Date();
+function at(now, daysFromNow, hour = 18, minute = 30) {
+  const d = new Date(now);
   d.setDate(d.getDate() + daysFromNow);
   d.setHours(hour, minute, 0, 0);
   return d.toISOString();
@@ -18,8 +18,8 @@ function booking(overrides = {}) {
     subject_name: null,
     other_subject_text: null,
     request_note: null,
-    scheduled_start: iso(0, 18, 30),
-    scheduled_end: iso(0, 19, 30),
+    scheduled_start: at(new Date(), 0, 18, 30),
+    scheduled_end: at(new Date(), 0, 19, 30),
     duration_minutes: 60,
     status: "confirmed",
     is_free_trial: false,
@@ -33,25 +33,26 @@ function booking(overrides = {}) {
 export function parentHomeVisualFixture(now = new Date()) {
   const laterA = booking({
     id: "fixture-up-1",
-    scheduled_start: iso(1, 18, 30),
-    scheduled_end: iso(1, 19, 30),
+    scheduled_start: at(now, 1, 18, 30),
+    scheduled_end: at(now, 1, 19, 30),
     tutor_display_name: "James",
   });
   const laterB = booking({
     id: "fixture-up-2",
-    scheduled_start: iso(2, 16, 0),
-    scheduled_end: iso(2, 17, 0),
+    scheduled_start: at(now, 2, 16, 0),
+    scheduled_end: at(now, 2, 17, 0),
     tutor_display_name: "Sarah",
     students: { full_name: "Jordan", timezone: "America/Chicago" },
   });
   const recent = booking({
     id: "fixture-recent",
     status: "completed",
-    scheduled_start: iso(-2, 18, 30),
-    scheduled_end: iso(-2, 19, 30),
+    scheduled_start: at(now, -2, 18, 30),
+    scheduled_end: at(now, -2, 19, 30),
     tutor_display_name: "Sarah",
   });
-  const completed = [4, 8, 11, 15, 18, 22, 25, 28].map((day, i) => {
+  // Seven earlier completed days + recent = 8 completed this month when `now` is mid/late month.
+  const completed = [4, 8, 11, 15, 18, 22, 25].map((day, i) => {
     const start = new Date(now);
     start.setDate(day);
     start.setHours(18, 30, 0, 0);
@@ -87,7 +88,7 @@ export function parentHomeVisualFixture(now = new Date()) {
       id: "fixture-rec",
       booking_id: recent.id,
       status: "completed",
-      retention_until: iso(60),
+      retention_until: at(now, 60),
       deleted_at: null,
       daily_recording_id: "fixture",
       completed_at: recent.scheduled_end,
