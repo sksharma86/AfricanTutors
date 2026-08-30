@@ -32,21 +32,31 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
     router.replace(`${pathname}${sp.toString() ? `?${sp}` : ""}`);
   }
 
-  const empty = view === "upcoming" ? "No Study Hall scheduled." : "None yet.";
+  const empty = view === "upcoming" ? "Nothing scheduled yet" : "None yet.";
 
   return (
     <ParentSurface>
       <PortalSegmentedControl
         ariaLabel="Study Hall views"
+        appearance="warm"
         items={VIEWS}
         value={view}
         onChange={setView}
       />
       {rows.length === 0 ? (
-        <div className="py-5">
-          <p className="text-sm text-ink-500">{empty}</p>
+        <div className="py-6">
+          <p className="font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">
+            {view === "upcoming" ? "Nothing scheduled yet" : empty}
+          </p>
           {view === "upcoming" ? (
-            <p className="mt-4">
+            <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
+              Book your first Study Hall when you&apos;re ready.
+            </p>
+          ) : (
+            <p className="mt-1.5 text-sm text-[var(--pp-muted)]">{empty}</p>
+          )}
+          {view === "upcoming" ? (
+            <p className="mt-5">
               <LinkButton href="/dashboard/student/book" variant="primary" size="md">
                 Book a Study Hall
               </LinkButton>

@@ -98,18 +98,18 @@ export default async function ParentStudyHallDetailPage({
         </div>
       ) : (
         <ParentSurface featured>
-          <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall</p>
-          <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+          <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Study Hall</p>
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-white">
             {bookingChildNames(booking)}
           </h1>
-          <p data-kind="status" className="mt-1 text-sm text-ink-500">
+          <p data-kind="status" className="mt-1 text-sm text-white/62">
             {parentStatusLabel(booking)}
           </p>
 
           <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">When</dt>
-              <dd className="mt-1 text-ink-800">
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-white/45 uppercase">When</dt>
+              <dd className="mt-1 text-white/88">
                 {booking.scheduled_start
                   ? `${formatDayHeading(booking.scheduled_start, tz)} · ${formatTime(booking.scheduled_start, tz)}${
                       booking.scheduled_end ? ` – ${formatTime(booking.scheduled_end, tz)}` : ""
@@ -118,22 +118,22 @@ export default async function ParentStudyHallDetailPage({
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Guide</dt>
-              <dd className="mt-1 text-ink-800">{parentGuideLabel(booking) ?? "—"}</dd>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-white/45 uppercase">Guide</dt>
+              <dd className="mt-1 text-white/88">{parentGuideLabel(booking) ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Length</dt>
-              <dd className="mt-1 text-ink-800">{booking.duration_minutes ? formatDuration(booking.duration_minutes) : "—"}</dd>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-white/45 uppercase">Length</dt>
+              <dd className="mt-1 text-white/88">{booking.duration_minutes ? formatDuration(booking.duration_minutes) : "—"}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">Payment</dt>
-              <dd className="mt-1 text-ink-800">{parentPaymentLineLabel(booking)}</dd>
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-white/45 uppercase">Payment</dt>
+              <dd className="mt-1 text-white/88">{parentPaymentLineLabel(booking)}</dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-[11px] font-medium tracking-[0.12em] text-ink-400 uppercase">
+              <dt className="text-[11px] font-medium tracking-[0.12em] text-white/45 uppercase">
                 {bookingChildCount(booking) > 1 ? "Children" : "Child"}
               </dt>
-              <dd className="mt-1 text-ink-800">
+              <dd className="mt-1 text-white/88">
                 {booking.student_first_names && booking.student_first_names.length > 1 ? (
                   <ul className="space-y-0.5">
                     {booking.student_first_names.map((name) => (
@@ -146,19 +146,19 @@ export default async function ParentStudyHallDetailPage({
               </dd>
             </div>
           </dl>
-          <p className="mt-4 text-xs text-ink-400">Booking reference {booking.public_reference}</p>
+          <p className="mt-4 text-xs text-white/40">Booking reference {booking.public_reference}</p>
 
           {join.state === "join" ? (
             <div className="mt-6">
-              <LinkButton href={`/dashboard/session/${booking.id}`} variant="primary" size="lg">
+              <LinkButton href={`/dashboard/session/${booking.id}`} variant="secondary" size="lg">
                 Join Study Hall
               </LinkButton>
             </div>
           ) : join.state === "opens_at" && join.label ? (
-            <p className="mt-6 text-sm font-medium text-ink-600">{join.label}</p>
+            <p className="mt-6 text-sm font-medium text-gold-200">{join.label}</p>
           ) : null}
 
-          {booking.request_note ? <p className="mt-5 text-sm text-ink-600">{booking.request_note}</p> : null}
+          {booking.request_note ? <p className="mt-5 text-sm text-white/70">{booking.request_note}</p> : null}
 
           {canCancel || canDispute ? (
             <div className="mt-6">

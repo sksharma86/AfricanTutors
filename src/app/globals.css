@@ -227,3 +227,32 @@ body {
     0 0 0 1px rgba(12, 12, 11, 0.06),
     0 8px 24px -16px rgba(12, 12, 11, 0.2);
 }
+
+/* Parent Portal application system — scoped so Guide / Management stay unchanged */
+.parent-app {
+  --pp-canvas: #f6f1e8;
+  --pp-card: #fffdf8;
+  --pp-ink: #1c1915;
+  --pp-muted: #6b655c;
+  --pp-gold: #c9a227;
+  --pp-gold-soft: #f3e6c4;
+  --pp-hero: #161c18;
+  --pp-hero-mid: #1d2620;
+  --pp-positive: #3d6b4f;
+  --pp-attention: #a15c1a;
+  --pp-shadow-1: 0 1px 0 rgba(28, 25, 21, 0.04), 0 10px 28px -20px rgba(28, 25, 21, 0.32);
+  --pp-shadow-2: 0 1px 0 rgba(28, 25, 21, 0.05), 0 18px 40px -22px rgba(28, 25, 21, 0.42);
+  background: var(--pp-canvas);
+  color: var(--pp-ink);
+}
+
+.parent-app .pp-nav-link {
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parent-app .pp-nav-link,
+  .parent-app .pp-interact {
+    transition: none;
+  }
+}

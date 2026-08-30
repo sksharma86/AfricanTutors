@@ -21,20 +21,20 @@ export default async function ParentAccountPage() {
 
   return (
     <ParentPage>
-      <h1 id="account" className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+      <h1 id="account" className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">
         Account
       </h1>
 
       <ParentSurface className="mt-6">
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Parent information</p>
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Parent information</p>
         <dl className="mt-3 grid gap-4 text-sm">
           <div>
-            <dt className="text-ink-400">Parent name</dt>
-            <dd className="mt-0.5 font-medium text-ink-900">{data.parentName ?? user.displayName ?? "—"}</dd>
+            <dt className="text-[var(--pp-muted)]">Parent name</dt>
+            <dd className="mt-0.5 font-medium text-[var(--pp-ink)]">{data.parentName ?? user.displayName ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-ink-400">Email</dt>
-            <dd className="mt-0.5 font-medium text-ink-900">{user.email ?? "—"}</dd>
+            <dt className="text-[var(--pp-muted)]">Email</dt>
+            <dd className="mt-0.5 font-medium text-[var(--pp-ink)]">{user.email ?? "—"}</dd>
           </div>
         </dl>
       </ParentSurface>
@@ -44,15 +44,15 @@ export default async function ParentAccountPage() {
       </section>
 
       <ParentSurface className="mt-5">
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Children</p>
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Children</p>
         {data.students.length === 0 ? (
-          <p className="mt-2 text-sm text-ink-500">Add a child when you book your first Study Hall.</p>
+          <p className="mt-2 text-sm text-[var(--pp-muted)]">Add a child when you book your first Study Hall.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-ink-100">
+          <ul className="mt-3 divide-y divide-[#1c1915]/[0.06]">
             {data.students.map((s) => (
               <li key={s.id} className="py-2.5 first:pt-0 last:pb-0">
-                <p className="text-sm font-medium text-ink-900">{s.full_name}</p>
-                {s.grade_level ? <p className="text-sm text-ink-500">Grade {s.grade_level}</p> : null}
+                <p className="text-sm font-medium text-[var(--pp-ink)]">{s.full_name}</p>
+                {s.grade_level ? <p className="text-sm text-[var(--pp-muted)]">Grade {s.grade_level}</p> : null}
               </li>
             ))}
           </ul>

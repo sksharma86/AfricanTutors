@@ -12,7 +12,7 @@ export function ParentPage({
 }) {
   return (
     <CustomerShell>
-      <div className={cn("mx-auto w-full px-5 py-6 sm:px-6 sm:py-7", wide ? "max-w-4xl" : "max-w-3xl")}>
+      <div className={cn("mx-auto w-full px-5 py-6 sm:px-7 sm:py-8", wide ? "max-w-4xl" : "max-w-3xl")}>
         {children}
       </div>
     </CustomerShell>

@@ -1,3 +1,4 @@
+import { ParentIconChevron } from "@/components/dashboard/parent-icons";
 import { LinkButton } from "@/components/ui/button";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import { childFirstName, parentGuideLabel, parentStatusLabel } from "@/lib/parent-portal.mjs";
@@ -23,16 +24,16 @@ export function ParentStudyHallRow({
 
   return (
     <li className="py-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           {past ? (
             <>
-              <p className="text-sm font-medium text-ink-900">{child}</p>
-              <p className="mt-0.5 text-sm text-ink-700">
+              <p className="text-sm font-medium text-[var(--pp-ink)]">{child}</p>
+              <p className="mt-0.5 text-sm text-[var(--pp-muted)]">
                 {day}
                 {time ? ` · ${time}` : ""}
               </p>
-              <p className="mt-1 text-sm text-ink-500">
+              <p className="mt-1 text-sm text-[var(--pp-muted)]">
                 {guide ? `Guide ${guide}` : ""}
                 {guide ? " · " : ""}
                 <span data-kind="status">{parentStatusLabel(booking)}</span>
@@ -40,10 +41,10 @@ export function ParentStudyHallRow({
             </>
           ) : (
             <>
-              <p className="text-sm font-medium text-ink-900">{day}</p>
-              {time ? <p className="text-sm text-ink-700">{time}</p> : null}
-              <p className="mt-1 text-sm text-ink-800">{child}</p>
-              <p className="text-sm text-ink-500">
+              <p className="text-[13px] font-semibold text-[var(--pp-ink)]">{day}</p>
+              {time ? <p className="text-sm text-[var(--pp-muted)]">{time}</p> : null}
+              <p className="mt-1 text-sm text-[var(--pp-ink)]">{child}</p>
+              <p className="text-sm text-[var(--pp-muted)]">
                 {guide ? `Guide ${guide}` : ""}
                 {guide ? " · " : ""}
                 <span data-kind="status">{parentStatusLabel(booking)}</span>
@@ -55,9 +56,10 @@ export function ParentStudyHallRow({
           href={`/dashboard/student/study-halls/${booking.id}`}
           variant="outline"
           size="sm"
-          className="shrink-0"
+          className="shrink-0 border-[#e6dcc8] bg-[var(--pp-card)]"
         >
           View
+          <ParentIconChevron className="h-3.5 w-3.5" />
         </LinkButton>
       </div>
     </li>

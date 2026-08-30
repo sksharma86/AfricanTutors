@@ -21,7 +21,7 @@ export default async function ParentStudyHallsPage() {
 
   return (
     <ParentPage>
-      <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">Study Halls</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">Study Halls</h1>
       <div className="mt-6">
         <Suspense fallback={<p className="text-sm text-ink-500">Loading Study Halls…</p>}>
           <ParentStudyHalls bookings={data.bookings} />
