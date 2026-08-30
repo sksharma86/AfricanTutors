@@ -109,6 +109,7 @@ export function GuideStudyHalls({
                       scheduledStart={b.scheduled_start}
                       scheduledEnd={b.scheduled_end}
                       timezone={tz}
+                      nowMs={nowMs}
                     />
                   ) : null}
                   {needs ? (

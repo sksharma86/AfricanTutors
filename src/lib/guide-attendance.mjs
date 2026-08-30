@@ -176,7 +176,10 @@ export function managementAttendanceIssue({
   }
 
   if (state.kind === "missed") {
-    if (!assignmentsLoaded && !assignment) return null;
+    // Only persist-backed misses become Management exceptions. Clock-only
+    // derivation would false-flag every live/historical confirmed session
+    // that never had a confirmation row (including the day this ships).
+    if (!assignment) return null;
     return {
       kind: "guide_confirm_missed",
       title: "Guide confirmation missed",

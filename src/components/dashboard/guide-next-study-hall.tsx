@@ -136,6 +136,7 @@ export function GuideNextStudyHall({
               scheduledEnd={next.scheduled_end}
               timezone={tz}
               prominent
+              nowMs={nowMs}
             />
           )}
         </div>

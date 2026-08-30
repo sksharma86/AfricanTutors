@@ -139,8 +139,7 @@ describe("Guide attendance confirmation — policy", () => {
   });
 
   it("T-20 without confirm becomes a high-priority Management exception", () => {
-    const derived = managementAttendanceIssue({ booking, assignment: null, nowMs: t19, assignmentsLoaded: true });
-    assert.equal(derived.kind, "guide_confirm_missed");
+    assert.equal(managementAttendanceIssue({ booking, assignment: null, nowMs: t19, assignmentsLoaded: true }), null);
     const persisted = managementAttendanceIssue({
       booking,
       assignment: { status: "missed", tutor_id: "guide-a", source: "t30" },
@@ -149,6 +148,13 @@ describe("Guide attendance confirmation — policy", () => {
     });
     assert.equal(persisted.kind, "guide_confirm_missed");
     assert.equal(persisted.title, "Guide confirmation missed");
+    const lateAwaiting = managementAttendanceIssue({
+      booking,
+      assignment: { status: "awaiting", source: "t30", deadline_at: new Date(t20).toISOString() },
+      nowMs: t19,
+      assignmentsLoaded: true,
+    });
+    assert.equal(lateAwaiting.kind, "guide_confirm_missed");
   });
 
   it("does not create a Management exception during the normal T-30 awaiting window", () => {
