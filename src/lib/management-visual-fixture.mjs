@@ -116,8 +116,8 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false } 
       id: `fx-more-${i}`,
       student_first_name: ["Kai", "Nina", "Omar", "Rue"][i],
       tutor_display_name: "Sarah M.",
-      scheduled_start: later(now, 3 + i),
-      scheduled_end: later(now, 4 + i),
+      scheduled_start: later(now, 2.4 + i * 0.35),
+      scheduled_end: later(now, 3.4 + i * 0.35),
     }),
   );
 
@@ -148,7 +148,7 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false } 
     attentionItems,
     guidesActive: 12,
     outstandingTotals: [
-      { currency: "KES", earned: 48600, paid: 30000, outstanding: 18600 },
+      { currency: "KES", earned: 4860000, paid: 3000000, outstanding: 1860000 },
       { currency: "USD", earned: 4000, paid: 0, outstanding: 4000 },
     ],
     guides: [

@@ -381,7 +381,15 @@ function AttentionCard({
         <ul className="mt-2 divide-y divide-[#1c1915]/[0.06]">
           {items.slice(0, 4).map((item) => (
             <li key={item.id} className="py-2.5">
-              <p className={`text-[13px] font-medium ${item.urgent ? "text-[var(--mg-critical)]" : "text-[var(--mg-ink)]"}`}>
+              <p
+                className={`text-[13px] font-medium ${
+                  /wasn't notified|Call parent|recording|Payment/i.test(item.title)
+                    ? "text-[var(--mg-critical)]"
+                    : item.urgent
+                      ? "text-[var(--mg-attention)]"
+                      : "text-[var(--mg-ink)]"
+                }`}
+              >
                 {item.title}
               </p>
               {item.detail ? <p className="mt-0.5 text-[12.5px] text-[var(--mg-muted)]">{item.detail}</p> : null}

@@ -139,6 +139,7 @@ describe("Management Console premium", () => {
     assert.ok(pop.attentionItems.length >= 1);
     assert.ok(pop.outstandingTotals.length >= 2);
     const pulse = managementTodayPulse(pop.bookings, pop.presenceByBooking, pop.timeZone, pop.nowMs);
+    assert.equal(pulse.count, 18);
     assert.equal(pulse.live, 2);
     const home = read("src/app/dashboard/admin/page.tsx");
     assert.doesNotMatch(home, /fx-live-1|Chinedu/);
