@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { obligationBlockContaining } from "@/lib/guide-attendance.mjs";
-import { notifyGuideAttendanceRequest, notifyGuideConfirmationMissed } from "@/lib/notify";
+import { criticalNotifyKey, obligationBlockContaining } from "@/lib/guide-attendance.mjs";
+import {
+  notifyCoverageFailureProtection,
+  notifyGuideAttendanceRequest,
+  notifyGuideConfirmationMissed,
+  notifyAdminAlert,
+} from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
@@ -39,9 +44,17 @@ async function handle(request: NextRequest) {
   const missed = Array.isArray((data as { missed?: unknown[] } | null)?.missed)
     ? (data as { missed: { id?: string; booking_id?: string; tutor_id?: string }[] }).missed
     : [];
+  const critical = Array.isArray((data as { critical?: unknown[] } | null)?.critical)
+    ? (data as { critical: { booking_id?: string; tutor_id?: string; scheduled_start?: string }[] }).critical
+    : [];
+  const protect = Array.isArray((data as { protect?: unknown[] } | null)?.protect)
+    ? (data as { protect: { booking_id?: string; tutor_id?: string }[] }).protect
+    : [];
 
   let requestsSent = 0;
   let alertsSent = 0;
+  let criticalAlerts = 0;
+  let protectedCount = 0;
   const notifiedLeaders = new Set<string>();
   const missedLeaders = new Set<string>();
 
@@ -134,12 +147,66 @@ async function handle(request: NextRequest) {
     }
   }
 
+  const seenCritical = new Set<string>();
+  for (const row of critical) {
+    if (!row?.booking_id || seenCritical.has(row.booking_id)) continue;
+    seenCritical.add(row.booking_id);
+    try {
+      const r = await notifyAdminAlert(criticalNotifyKey(row.booking_id), {
+        title: "Critical coverage failure",
+        summary: "A Study Hall starts within 10 minutes and has no current confirmed Guide.",
+        lines: [
+          `Booking: ${row.booking_id}`,
+          row.scheduled_start ? `Start: ${row.scheduled_start}` : null,
+          row.tutor_id ? `Current Guide: ${row.tutor_id}` : "No confirmed Guide",
+        ].filter(Boolean) as string[],
+      });
+      if (r?.status === "sent") criticalAlerts += 1;
+    } catch {
+      /* Control Tower remains the live surface */
+    }
+  }
+
+  const seenProtect = new Set<string>();
+  for (const row of protect) {
+    if (!row?.booking_id || seenProtect.has(row.booking_id)) continue;
+    seenProtect.add(row.booking_id);
+    try {
+      const { data: result, error } = await service.rpc("protect_unconfirmed_booking", {
+        p_booking: row.booking_id,
+      });
+      if (error) continue;
+      const payload = (result ?? {}) as {
+        status?: string;
+        reason?: string;
+        restored_minutes?: number;
+        restored_credit_cents?: number;
+        complimentary_minutes?: number;
+        is_free_trial?: boolean;
+      };
+      if (payload.status === "cancelled" && payload.reason === "customer_protected") {
+        protectedCount += 1;
+        await notifyCoverageFailureProtection(row.booking_id, {
+          isFreeTrial: Boolean(payload.is_free_trial),
+          restoredMinutes: payload.restored_minutes ?? null,
+          restoredCreditCents: payload.restored_credit_cents ?? null,
+        });
+      }
+    } catch {
+      /* retries are safe; protect RPC is idempotent */
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     opened: opened.length,
     missed: missed.length,
+    critical: critical.length,
+    protect: protect.length,
     requestsSent,
     alertsSent,
+    criticalAlerts,
+    protectedCount,
   });
 }
 

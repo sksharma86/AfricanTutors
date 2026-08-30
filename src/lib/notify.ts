@@ -7,12 +7,13 @@ import { sendEmail } from "@/lib/email/transport";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
-import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey } from "@/lib/guide-attendance.mjs";
+import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey } from "@/lib/guide-attendance.mjs";
 import { guideAttendanceWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
 import { getWhatsAppConfig } from "@/lib/telephony/config";
 import {
   parentCancellationSms,
   parentCoverageCancellationSms,
+  parentCoverageFailureProtectionSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
@@ -954,6 +955,48 @@ export async function notifyCoverageCancellation(
     accountId: b.account_id,
     bookingId,
     body: parentCoverageCancellationSms({
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
+    }),
+  });
+  return { status: "ok", parentNotified: true };
+}
+
+/** T-2 automatic protection. Idempotent. Does not name or blame the Guide. */
+export async function notifyCoverageFailureProtection(
+  bookingId: string,
+  info: {
+    isFreeTrial?: boolean | null;
+    restoredMinutes?: number | null;
+    restoredCreditCents?: number | null;
+  } = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.account_id) return { status: "skipped" };
+  const restorationLine = coverageRestorationLine({
+    isFreeTrial: info.isFreeTrial ?? b.is_free_trial,
+    restoredMinutes: info.restoredMinutes ?? null,
+    restoredCreditCents: info.restoredCreditCents ?? null,
+  });
+  await deliver({
+    key: protectNotifyKey(bookingId),
+    type: "coverage_failure_protection",
+    accountId: b.account_id,
+    bookingId,
+    rendered: T.coverageFailureProtection({
+      restorationLine,
+      appUrl: APP_URL,
+    }),
+  });
+  await deliverParentSms({
+    key: `${protectNotifyKey(bookingId)}:sms`,
+    type: "coverage_failure_protection_sms",
+    accountId: b.account_id,
+    bookingId,
+    body: parentCoverageFailureProtectionSms({
       studentName: b.studentFirst,
       studentNames: b.studentNames,
       whenISO: b.scheduled_start,

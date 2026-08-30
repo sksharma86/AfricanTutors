@@ -33,9 +33,12 @@ create table if not exists public.guide_attendance_assignments (
                       'cancelled_coverage',
                       'booking_cancelled',
                       'booking_completed',
-                      'rescheduled'
+                      'rescheduled',
+                      'customer_protected'
                     )),
   replaced_by_assignment_id uuid references public.guide_attendance_assignments (id) on delete set null,
+  critical_at     timestamptz,
+  customer_protected_at timestamptz,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -523,7 +526,10 @@ declare
   v_deadline timestamptz;
   v_opened jsonb := '[]'::jsonb;
   v_missed jsonb := '[]'::jsonb;
+  v_critical jsonb := '[]'::jsonb;
+  v_protect jsonb := '[]'::jsonb;
   v_independent boolean;
+  v_has_confirm boolean;
 begin
   if not public.is_financial_actor() then
     raise exception 'Not authorized';
@@ -645,7 +651,194 @@ begin
     end if;
   end loop;
 
-  return jsonb_build_object('opened', v_opened, 'missed', v_missed);
+  -- T-10 critical: booking-specific. No block expansion.
+  -- CURRENT confirmed coverage clears the operational state; this only
+  -- stamps critical_at for audit + Management.
+  for v_bk in
+    select id, tutor_id, scheduled_start
+      from public.bookings
+     where status = 'confirmed'
+       and tutor_id is not null
+       and scheduled_start is not null
+       and scheduled_start > now()
+       and scheduled_start <= now() + interval '10 minutes'
+     order by scheduled_start
+     for update skip locked
+  loop
+    select exists (
+      select 1
+        from public.guide_attendance_assignments a
+       where a.booking_id = v_bk.id
+         and a.tutor_id = v_bk.tutor_id
+         and a.status = 'confirmed'
+    ) into v_has_confirm;
+    if v_has_confirm then
+      continue;
+    end if;
+    update public.guide_attendance_assignments
+       set critical_at = coalesce(critical_at, now()),
+           updated_at = now()
+     where booking_id = v_bk.id
+       and tutor_id = v_bk.tutor_id
+       and status in ('awaiting', 'missed')
+       and critical_at is null;
+    if found then
+      perform public.log_admin_action(
+        'guide_attendance_critical',
+        'bookings',
+        v_bk.id,
+        jsonb_build_object('tutor_id', v_bk.tutor_id),
+        jsonb_build_object('critical', true, 'scheduled_start', v_bk.scheduled_start),
+        'T-10 no current confirmed Guide'
+      );
+    end if;
+    v_critical := v_critical || jsonb_build_array(jsonb_build_object(
+      'booking_id', v_bk.id,
+      'tutor_id', v_bk.tutor_id,
+      'scheduled_start', v_bk.scheduled_start
+    ));
+  end loop;
+
+  -- T-2 candidates. Cron calls protect_unconfirmed_booking which re-checks.
+  for v_bk in
+    select id, tutor_id, scheduled_start
+      from public.bookings
+     where status = 'confirmed'
+       and scheduled_start is not null
+       and scheduled_start <= now() + interval '2 minutes'
+       and scheduled_start > now() - interval '1 minute'
+     order by scheduled_start
+  loop
+    select exists (
+      select 1
+        from public.guide_attendance_assignments a
+       where a.booking_id = v_bk.id
+         and a.tutor_id = v_bk.tutor_id
+         and a.status = 'confirmed'
+    ) into v_has_confirm;
+    if v_has_confirm then
+      continue;
+    end if;
+    v_protect := v_protect || jsonb_build_array(jsonb_build_object(
+      'booking_id', v_bk.id,
+      'tutor_id', v_bk.tutor_id,
+      'scheduled_start', v_bk.scheduled_start
+    ));
+  end loop;
+
+  return jsonb_build_object(
+    'opened', v_opened,
+    'missed', v_missed,
+    'critical', v_critical,
+    'protect', v_protect
+  );
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- protect_unconfirmed_booking — T-2 customer protection.
+-- Locks the booking, re-checks CURRENT confirmed coverage, then:
+--   restore original value + cancel + one complimentary hour.
+-- Idempotent. Service / financial actor only. Does not create Guide pay.
+-- ---------------------------------------------------------------------------
+create or replace function public.protect_unconfirmed_booking(p_booking uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_bk record;
+  v_res jsonb;
+  v_comp_rows int := 0;
+  v_assign uuid;
+begin
+  if not public.is_financial_actor() then
+    raise exception 'Not authorized';
+  end if;
+
+  select id, account_id, tutor_id, status, scheduled_start, is_free_trial
+    into v_bk
+    from public.bookings
+   where id = p_booking
+     for update;
+  if v_bk.id is null then
+    raise exception 'Booking not found';
+  end if;
+  if v_bk.status in ('cancelled', 'expired') then
+    return jsonb_build_object('status', 'noop', 'reason', 'already_cancelled', 'idempotent', true);
+  end if;
+  if v_bk.status is distinct from 'confirmed' then
+    return jsonb_build_object('status', 'noop', 'reason', 'ineligible');
+  end if;
+  if exists (
+    select 1
+      from public.guide_attendance_assignments a
+     where a.booking_id = p_booking
+       and a.tutor_id = v_bk.tutor_id
+       and a.status = 'confirmed'
+  ) then
+    return jsonb_build_object('status', 'skipped', 'reason', 'covered');
+  end if;
+  if v_bk.scheduled_start is null or v_bk.scheduled_start > now() + interval '2 minutes' then
+    return jsonb_build_object('status', 'too_early');
+  end if;
+
+  v_res := public.restore_booking_value(p_booking, 'study_hall_guide_coverage — T-2 customer protection');
+
+  insert into public.package_minute_ledger (
+    account_id, minutes_delta, entry_type, booking_id, reason, reference, created_by
+  ) values (
+    v_bk.account_id,
+    60,
+    'admin_adjustment',
+    p_booking,
+    'study_hall_guide_coverage — complimentary service-recovery hour',
+    'comp-hour:' || p_booking::text,
+    null
+  )
+  on conflict (reference) do nothing;
+  get diagnostics v_comp_rows = row_count;
+
+  update public.guide_attendance_assignments
+     set resolution = 'customer_protected',
+         resolved_at = coalesce(resolved_at, now()),
+         customer_protected_at = coalesce(customer_protected_at, now()),
+         updated_at = now()
+   where booking_id = p_booking
+     and tutor_id is not distinct from v_bk.tutor_id
+     and status in ('awaiting', 'missed')
+  returning id into v_assign;
+
+  update public.bookings
+     set status = 'cancelled',
+         cancelled_at = coalesce(cancelled_at, now())
+   where id = p_booking
+     and status = 'confirmed';
+
+  perform public.log_admin_action(
+    'guide_customer_protected',
+    'bookings',
+    p_booking,
+    jsonb_build_object('status', 'confirmed', 'tutor_id', v_bk.tutor_id),
+    jsonb_build_object(
+      'status', 'cancelled',
+      'complimentary_minutes', 60,
+      'assignment_id', v_assign,
+      'is_free_trial', v_bk.is_free_trial
+    ) || coalesce(v_res, '{}'::jsonb),
+    'T-2 no current confirmed Guide — customer protected'
+  );
+
+  return jsonb_build_object(
+    'status', 'cancelled',
+    'reason', 'customer_protected',
+    'complimentary_minutes', 60,
+    'complimentary_applied', v_comp_rows > 0,
+    'is_free_trial', v_bk.is_free_trial,
+    'tutor_id', v_bk.tutor_id,
+    'assignment_id', v_assign
+  ) || coalesce(v_res, '{}'::jsonb);
 end;
 $$;
 
@@ -766,6 +959,7 @@ revoke all on function public.confirm_guide_attendance(uuid) from public;
 revoke all on function public.confirm_guide_attendance_block(uuid) from public;
 revoke all on function public.confirm_guide_attendance_at(uuid, timestamptz) from public;
 revoke all on function public.sweep_guide_attendance() from public;
+revoke all on function public.protect_unconfirmed_booking(uuid) from public;
 -- Open/sweep are cron + trigger + service only. Guides confirm via confirm RPCs.
 grant execute on function public.open_guide_attendance_assignment(uuid, text, timestamptz) to service_role;
 grant execute on function public.confirm_guide_attendance(uuid) to authenticated, service_role;
@@ -773,6 +967,7 @@ grant execute on function public.confirm_guide_attendance_block(uuid) to authent
 -- Window-start confirm is internal to Confirm All (security definer). Not a Guide RPC.
 grant execute on function public.confirm_guide_attendance_at(uuid, timestamptz) to service_role;
 grant execute on function public.sweep_guide_attendance() to service_role;
+grant execute on function public.protect_unconfirmed_booking(uuid) to service_role;
 
 -- Guides may store an operational WhatsApp number on the existing
 -- profiles.phone_e164 field (international E.164). No second phone column.

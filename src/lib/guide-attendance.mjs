@@ -10,6 +10,10 @@ export const CONFIRM_OPEN_LEAD_MIN = 30;
 export const CONFIRM_DEADLINE_LEAD_MIN = 20;
 export const CONFIRM_WINDOW_MIN = 10;
 export const REPLACEMENT_CONFIRM_MIN = 10;
+export const CRITICAL_LEAD_MIN = 10;
+export const PROTECT_LEAD_MIN = 2;
+export const COMPLIMENTARY_RECOVERY_MINUTES = 60;
+export const COMP_HOUR_REFERENCE_PREFIX = "comp-hour:";
 
 export const ASSIGNMENT_STATUSES = Object.freeze([
   "awaiting",
@@ -151,10 +155,35 @@ export function managementAttendanceIssue({
   assignment = null,
   nowMs = Date.now(),
 } = {}) {
+  if (booking?.status === "cancelled" && isCustomerProtectedAssignment(assignment)) {
+    return {
+      kind: "guide_customer_protected",
+      title: "Customer protected",
+      summary: "Study Hall cancelled before start. Booking restored. +1 complimentary hour issued.",
+      detail: booking.tutor_display_name ?? null,
+      action: "View",
+      severity: "resolved",
+    };
+  }
+
   if (!booking || (booking.status !== "confirmed" && booking.status !== "pending")) return null;
   if (booking.status === "pending") return null;
   if (!booking.tutor_id && !booking.tutor_display_name) return null;
   if (!booking.scheduled_start) return null;
+
+  if (hasCurrentConfirmedCoverage(booking, assignment)) return null;
+
+  const persistBacked = Boolean(assignment);
+  if (persistBacked && isAtCriticalWindow(booking.scheduled_start, nowMs)) {
+    return {
+      kind: "guide_confirm_critical",
+      title: "Critical coverage failure",
+      summary: "No confirmed Guide.",
+      detail: booking.tutor_display_name ?? null,
+      action: "Reassign now",
+      severity: "critical",
+    };
+  }
 
   const state = guideAttendanceState({
     status: booking.status,
@@ -208,6 +237,66 @@ export function currentAssignmentForBooking(assignments, booking) {
 
 export function isCoverageCancellationReason(reason) {
   return String(reason ?? "").includes(COVERAGE_CANCEL_REASON);
+}
+
+export function complimentaryHourReference(bookingId) {
+  return `${COMP_HOUR_REFERENCE_PREFIX}${bookingId}`;
+}
+
+/** CURRENT Guide has a valid confirmation. Historical confirms do not count. */
+export function hasCurrentConfirmedCoverage(booking, assignment = null) {
+  if (!booking || booking.status !== "confirmed") return false;
+  if (!booking.tutor_id) return false;
+  return assignment?.status === "confirmed" && assignment.tutor_id === booking.tutor_id;
+}
+
+export function isCustomerProtectedAssignment(assignment) {
+  return Boolean(
+    assignment &&
+      (assignment.resolution === "customer_protected" || assignment.customer_protected_at),
+  );
+}
+
+export function criticalAtMs(scheduledStart) {
+  const start = Date.parse(scheduledStart);
+  return Number.isFinite(start) ? start - CRITICAL_LEAD_MIN * 60_000 : NaN;
+}
+
+export function protectAtMs(scheduledStart) {
+  const start = Date.parse(scheduledStart);
+  return Number.isFinite(start) ? start - PROTECT_LEAD_MIN * 60_000 : NaN;
+}
+
+export function isAtCriticalWindow(scheduledStart, nowMs = Date.now()) {
+  const at = criticalAtMs(scheduledStart);
+  return Number.isFinite(at) && nowMs >= at;
+}
+
+export function isAtProtectWindow(scheduledStart, nowMs = Date.now()) {
+  const at = protectAtMs(scheduledStart);
+  return Number.isFinite(at) && nowMs >= at;
+}
+
+/**
+ * Final T-2 gate. Server must re-check CURRENT coverage immediately before cancel.
+ */
+export function shouldProtectCustomer({ booking, assignment = null, nowMs = Date.now() } = {}) {
+  if (!booking) return { ok: false, reason: "ineligible" };
+  if (booking.status === "cancelled" || booking.status === "expired") {
+    return { ok: false, reason: "already_cancelled", idempotent: true };
+  }
+  if (booking.status !== "confirmed") return { ok: false, reason: "ineligible" };
+  if (hasCurrentConfirmedCoverage(booking, assignment)) return { ok: false, reason: "covered" };
+  if (!isAtProtectWindow(booking.scheduled_start, nowMs)) return { ok: false, reason: "too_early" };
+  return { ok: true };
+}
+
+export function criticalNotifyKey(bookingId) {
+  return `guide-critical-coverage:${bookingId}`;
+}
+
+export function protectNotifyKey(bookingId) {
+  return `coverage-protect:${bookingId}`;
 }
 
 export function coverageRestorationLine({ isFreeTrial, restoredMinutes, restoredCreditCents }) {

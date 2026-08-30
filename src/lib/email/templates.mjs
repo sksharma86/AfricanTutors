@@ -363,6 +363,21 @@ export function guideAttendanceRequest(ctx) {
   };
 }
 
+/** T-2 automatic protection. Do not name the Guide. Do not blame the Guide. */
+export function coverageFailureProtection(ctx) {
+  const lines = [
+    "We're sorry. We weren't able to confirm Guide coverage for your upcoming Study Hall, so we've cancelled it rather than leave you waiting.",
+    ctx.restorationLine || "Your booking has been fully restored.",
+    "We've added a complimentary Study Hall hour to your account for the inconvenience.",
+    "You can book another time whenever you're ready.",
+  ];
+  return {
+    subject: "We couldn't provide your Guide tonight",
+    html: layout("We couldn't provide your Guide tonight", lines.filter(Boolean).map(p).join(""), ctx.appUrl ? { href: `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student`, label: "Open your account" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}
+
 /** Parent: Study Hall could not provide Guide coverage. Do not name the Guide. */
 export function coverageCancellation(ctx) {
   const lines = [

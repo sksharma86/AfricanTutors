@@ -279,12 +279,14 @@ describe("Guide attendance confirmation — architecture contracts", () => {
     assert.match(sql, /for update/i);
     assert.match(sql, /idempotent|already/);
     assert.doesNotMatch(sql, /admin_release_booking\(/);
-    assert.doesNotMatch(sql, /update public\.bookings[\s\S]*cancelled/i);
+    const sweep = sql.slice(sql.indexOf("create or replace function public.sweep_guide_attendance"), sql.indexOf("protect_unconfirmed_booking"));
+    assert.doesNotMatch(sweep, /set status = 'cancelled'/);
     const cron = read("src/app/api/cron/guide-attendance/route.ts");
     assert.match(cron, /sweep_guide_attendance/);
     assert.match(cron, /notifyGuideConfirmationMissed/);
     assert.doesNotMatch(cron, /admin_release_booking/);
     assert.doesNotMatch(cron, /rpc\("admin_release_booking"/);
+    assert.match(cron, /protect_unconfirmed_booking/);
   });
 
   it("Guide Portal surfaces confirmation without redesigning Home", () => {

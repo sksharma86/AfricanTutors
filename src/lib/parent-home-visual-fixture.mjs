@@ -30,7 +30,7 @@ function booking(overrides = {}) {
   };
 }
 
-export function parentHomeVisualFixture(now = new Date()) {
+export function parentHomeVisualFixture(now = new Date(), { scene = null } = {}) {
   const laterA = booking({
     id: "fixture-up-1",
     scheduled_start: at(now, 1, 18, 30),
@@ -70,6 +70,45 @@ export function parentHomeVisualFixture(now = new Date()) {
     scheduled_start: new Date(now.getTime() + 2 * 60000).toISOString(),
     scheduled_end: new Date(now.getTime() + 62 * 60000).toISOString(),
   });
+  const cancelled = booking({
+    id: "fixture-protected",
+    status: "cancelled",
+    scheduled_start: new Date(now.getTime() + 2 * 60000).toISOString(),
+    scheduled_end: new Date(now.getTime() + 62 * 60000).toISOString(),
+    tutor_display_name: "Sarah",
+  });
+
+  if (scene === "protected") {
+    return {
+      firstName: "Priya",
+      next: null,
+      last: recent,
+      lastReport: {
+        id: "fixture-report",
+        booking_id: recent.id,
+        submitted_at: recent.scheduled_end,
+        focus_rating: "good_focus",
+        work_summary: "Homework stayed on track.",
+        redirection_level: "a_little",
+        guide_note: null,
+      },
+      lastRecording: {
+        id: "fixture-rec",
+        booking_id: recent.id,
+        status: "completed",
+        retention_until: at(now, 60),
+        deleted_at: null,
+        daily_recording_id: "fixture",
+        completed_at: recent.scheduled_end,
+      },
+      later: [laterA, laterB],
+      bookings: [cancelled, laterA, laterB, recent, ...completed],
+      householdTz: "America/Chicago",
+      minutes: 720,
+      creditCents: 0,
+      preferFreeSession: false,
+    };
+  }
 
   return {
     firstName: "Priya",

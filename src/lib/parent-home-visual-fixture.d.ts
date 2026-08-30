@@ -1,7 +1,7 @@
 declare module "@/lib/parent-home-visual-fixture.mjs" {
-  export function parentHomeVisualFixture(now?: Date): {
+  export function parentHomeVisualFixture(now?: Date, opts?: { scene?: string | null }): {
     firstName: string;
-    next: import("@/lib/parent-portal-types").ParentBooking;
+    next: import("@/lib/parent-portal-types").ParentBooking | null;
     last: import("@/lib/parent-portal-types").ParentBooking;
     lastReport: import("@/lib/parent-portal-types").ParentReport;
     lastRecording: import("@/lib/parent-portal-types").ParentRecording;

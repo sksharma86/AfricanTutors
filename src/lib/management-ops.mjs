@@ -170,12 +170,19 @@ export function currentStudyHallIssues(booking, extras = {}) {
     assignmentsLoaded,
   });
   if (attendanceIssue) {
+    const startLabel = startsInLabel(booking.scheduled_start, nowMs);
     issues.push({
       kind: attendanceIssue.kind,
       title: attendanceIssue.title,
       summary: attendanceIssue.summary,
-      detail: attendanceIssue.detail ?? startsInLabel(booking.scheduled_start, nowMs),
+      detail:
+        attendanceIssue.kind === "guide_confirm_critical"
+          ? [startLabel, "No confirmed Guide"].filter(Boolean).join(" · ")
+          : attendanceIssue.kind === "guide_customer_protected"
+            ? "Booking restored · +1 complimentary hour issued"
+            : (attendanceIssue.detail ?? startLabel),
       action: attendanceIssue.action,
+      severity: attendanceIssue.severity ?? null,
     });
   }
 
@@ -391,10 +398,14 @@ function attentionFromIssue(booking, issue) {
     kind: issue.kind,
     title: issue.title,
     summary: issue.summary,
-    detail: [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    detail:
+      issue.kind === "guide_confirm_critical"
+        ? [bookingChildNames(booking, booking.student_first_name ?? "Child"), issue.detail].filter(Boolean).join(" · ")
+        : [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
     bookingId: booking.id,
     href: `/dashboard/admin/study-halls/${booking.id}`,
     action: issue.action,
+    severity: issue.severity ?? (issue.kind === "guide_confirm_critical" ? "critical" : "attention"),
   });
 }
 
@@ -516,12 +527,15 @@ export function presentNeedsAttention(items = []) {
         detail: entry.detail ?? "",
         reasons: [entry.title],
         issueCount: 1,
+        kind: entry.kind,
+        critical: entry.kind === "guide_confirm_critical" || entry.severity === "critical",
         urgent:
           entry.kind === "call_parent" ||
           entry.kind === "no_join" ||
           entry.kind === "coverage" ||
           entry.kind === "guide_confirm_missed" ||
-          entry.kind === "guide_confirm_awaiting",
+          entry.kind === "guide_confirm_awaiting" ||
+          entry.kind === "guide_confirm_critical",
       });
       continue;
     }
@@ -538,6 +552,8 @@ export function presentNeedsAttention(items = []) {
         detail: entry.detail ?? "",
         reasons: [entry.title],
         issueCount: entry.issueCount ?? entry.bookingIds.length,
+        kind: entry.kind,
+        critical: false,
         urgent:
           entry.kind === "guide_confirm_missed" ||
           entry.kind === "guide_confirm_awaiting" ||
@@ -560,8 +576,10 @@ export function presentNeedsAttention(items = []) {
       detail: group[0].detail ?? "",
       reasons: group.map((i) => i.title),
       issueCount: group.length,
+      kind: group[0].kind,
+      critical: group.some((i) => i.kind === "guide_confirm_critical" || i.severity === "critical"),
       urgent: group.some((i) =>
-        ["call_parent", "no_join", "coverage", "needs_guide", "guide_confirm_missed", "guide_confirm_awaiting"].includes(i.kind),
+        ["call_parent", "no_join", "coverage", "needs_guide", "guide_confirm_missed", "guide_confirm_awaiting", "guide_confirm_critical"].includes(i.kind),
       ),
     });
   }

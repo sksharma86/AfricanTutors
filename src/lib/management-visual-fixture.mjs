@@ -121,16 +121,19 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
     }),
   );
 
+  const confirmLeadMin = scene === "critical" || scene === "criticalresolved" ? 8 : scene === "protected" || scene === "firstprotect" ? 1 : 18;
   const confirmHall = booking(now, {
     id: "fx-confirm",
     student_first_name: "Jordan",
-    tutor_display_name: scene === "replacement" || scene === "resolved" || scene === "replace2" ? "Grace K." : "Sarah M.",
-    tutor_id: scene === "replacement" || scene === "resolved" || scene === "replace2" ? "g-grace" : "g-sarah",
-    scheduled_start: later(now, 0, 18),
-    scheduled_end: later(now, 1, 18),
+    tutor_display_name: scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved" ? "Grace K." : "Sarah M.",
+    tutor_id: scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved" ? "g-grace" : "g-sarah",
+    scheduled_start: later(now, 0, confirmLeadMin),
+    scheduled_end: later(now, 1, confirmLeadMin),
+    status: scene === "protected" || scene === "firstprotect" ? "cancelled" : "confirmed",
   });
   const blockKids = ["Jordan", "Maya", "Ethan", "Ava"];
-  const blockCount = scene === "block4missed" || scene === "split" ? 4 : scene === "replace2" ? 2 : 0;
+  const blockCount =
+    scene === "block4missed" || scene === "split" || scene === "mixedblock" || scene === "firstprotect" ? 4 : scene === "replace2" ? 2 : 0;
   const blockGuide = scene === "replace2" || scene === "split" ? { name: "Grace K.", id: "g-grace" } : { name: "Sarah M.", id: "g-sarah" };
   const blockHalls = blockCount
     ? Array.from({ length: blockCount }, (_, i) =>
@@ -139,8 +142,9 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
           student_first_name: blockKids[i],
           tutor_display_name: scene === "split" && i >= 2 ? "James O." : blockGuide.name,
           tutor_id: scene === "split" && i >= 2 ? "g-james" : blockGuide.id,
-          scheduled_start: later(now, 0, 18 + i * 60),
-          scheduled_end: later(now, 0, 78 + i * 60),
+          scheduled_start: later(now, 0, (scene === "mixedblock" || scene === "firstprotect" ? 8 : 18) + i * 60),
+          scheduled_end: later(now, 0, (scene === "mixedblock" || scene === "firstprotect" ? 68 : 78) + i * 60),
+          status: scene === "firstprotect" && i === 0 ? "cancelled" : "confirmed",
         }),
       )
     : [];
@@ -174,17 +178,60 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
       status: "confirmed",
       confirmed_at: later(now, 0, -0.2),
     };
-  } else if (scene === "block4missed" || scene === "replace2" || scene === "split") {
+  } else if (scene === "critical") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-crit",
+      booking_id: "fx-confirm",
+      tutor_id: "g-sarah",
+      source: "t30",
+      status: "missed",
+      deadline_at: later(now, 0, -12),
+      missed_at: later(now, 0, -12),
+      critical_at: later(now, 0, -1),
+    };
+  } else if (scene === "criticalresolved") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-crit-ok",
+      booking_id: "fx-confirm",
+      tutor_id: "g-grace",
+      source: "replacement",
+      status: "confirmed",
+      confirmed_at: later(now, 0, -0.2),
+    };
+  } else if (scene === "protected") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-prot",
+      booking_id: "fx-confirm",
+      tutor_id: "g-sarah",
+      source: "t30",
+      status: "missed",
+      resolution: "customer_protected",
+      customer_protected_at: later(now, 0, -0.1),
+      missed_at: later(now, 0, -12),
+    };
+  } else if (scene === "block4missed" || scene === "replace2" || scene === "split" || scene === "mixedblock" || scene === "firstprotect") {
     for (const hall of blockHalls) {
+      const first = hall.id === "fx-confirm";
       attendanceByBooking[hall.id] = {
         id: `fx-att-${hall.id}`,
         booking_id: hall.id,
         tutor_id: hall.tutor_id,
         source: scene === "replace2" || scene === "split" ? "replacement" : "t30",
-        status: scene === "block4missed" ? "missed" : scene === "split" && hall.tutor_id === "g-james" ? "confirmed" : "awaiting",
-        deadline_at: later(now, 0, scene === "block4missed" ? -2 : 9),
-        missed_at: scene === "block4missed" ? later(now, 0, -2) : null,
-        confirmed_at: scene === "split" && hall.tutor_id === "g-james" ? later(now, 0, -0.2) : null,
+        status:
+          scene === "firstprotect" && first
+            ? "missed"
+            : scene === "firstprotect"
+              ? "confirmed"
+              : scene === "block4missed" || scene === "mixedblock"
+                ? "missed"
+                : scene === "split" && hall.tutor_id === "g-james"
+                  ? "confirmed"
+                  : "awaiting",
+        deadline_at: later(now, 0, scene === "block4missed" || scene === "mixedblock" || scene === "firstprotect" ? -2 : 9),
+        missed_at: scene === "block4missed" || scene === "mixedblock" || (scene === "firstprotect" && first) ? later(now, 0, -2) : null,
+        confirmed_at: scene === "split" && hall.tutor_id === "g-james" ? later(now, 0, -0.2) : scene === "firstprotect" && !first ? later(now, 0, -0.2) : null,
+        resolution: scene === "firstprotect" && first ? "customer_protected" : null,
+        customer_protected_at: scene === "firstprotect" && first ? later(now, 0, -0.1) : null,
       };
     }
   }

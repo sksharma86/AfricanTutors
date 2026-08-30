@@ -19,6 +19,13 @@ export function parentCoverageCancellationSms(ctx?: {
   tz?: string | null;
 }): string;
 
+export function parentCoverageFailureProtectionSms(ctx?: {
+  studentName?: string | null;
+  studentNames?: string[] | null;
+  whenISO?: string | null;
+  tz?: string | null;
+}): string;
+
 export function parentReassignmentSms(ctx: {
   studentName?: string | null;
   studentNames?: string[] | null;

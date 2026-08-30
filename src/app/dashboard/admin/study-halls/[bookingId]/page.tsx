@@ -168,14 +168,15 @@ export default async function AdminStudyHallDetailPage({
                 {(issue.kind === "needs_guide" ||
                   issue.kind === "coverage" ||
                   issue.kind === "guide_confirm_missed" ||
-                  issue.kind === "guide_confirm_awaiting") &&
+                  issue.kind === "guide_confirm_awaiting" ||
+                  issue.kind === "guide_confirm_critical") &&
                 canAct ? (
                   <div className="mt-3">
                     <ManagementStudyHallActions
                       bookingId={bookingId}
                       canAct={canAct}
-                      needsGuide={!raw.tutor_id || issue.kind === "coverage" || issue.kind === "guide_confirm_missed"}
-                      coverageCancel={issue.kind === "guide_confirm_missed" || issue.kind === "guide_confirm_awaiting"}
+                      needsGuide={!raw.tutor_id || issue.kind === "coverage" || issue.kind === "guide_confirm_missed" || issue.kind === "guide_confirm_critical"}
+                      coverageCancel={issue.kind === "guide_confirm_missed" || issue.kind === "guide_confirm_awaiting" || issue.kind === "guide_confirm_critical"}
                     />
                   </div>
                 ) : null}

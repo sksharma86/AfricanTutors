@@ -13,10 +13,15 @@ export const dynamic = "force-dynamic";
  * Isolated composition review. 404 unless PARENT_HOME_VISUAL_REVIEW=1.
  * Does not write to the database. Not linked from Parent navigation.
  */
-export default async function ParentHomeVisualReviewPage() {
+export default async function ParentHomeVisualReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scene?: string }>;
+}) {
   if (process.env.PARENT_HOME_VISUAL_REVIEW !== "1") notFound();
   await requireRole("student", "/dashboard/student");
-  const fixture = parentHomeVisualFixture();
+  const params = await searchParams;
+  const fixture = parentHomeVisualFixture(new Date(), { scene: params.scene ?? null });
 
   return (
     <ParentPage compose>

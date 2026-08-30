@@ -3,6 +3,10 @@ declare module "@/lib/guide-attendance.mjs" {
   export const CONFIRM_DEADLINE_LEAD_MIN: number;
   export const CONFIRM_WINDOW_MIN: number;
   export const REPLACEMENT_CONFIRM_MIN: number;
+  export const CRITICAL_LEAD_MIN: number;
+  export const PROTECT_LEAD_MIN: number;
+  export const COMPLIMENTARY_RECOVERY_MINUTES: number;
+  export const COMP_HOUR_REFERENCE_PREFIX: string;
   export const ASSIGNMENT_STATUSES: readonly string[];
   export const ASSIGNMENT_SOURCES: readonly string[];
   export const COVERAGE_CANCEL_REASON: string;
@@ -63,6 +67,23 @@ declare module "@/lib/guide-attendance.mjs" {
     booking: { id?: string; tutor_id?: string | null } | null | undefined,
   ): Record<string, unknown> | null;
 
+  export function complimentaryHourReference(bookingId: string): string;
+  export function hasCurrentConfirmedCoverage(
+    booking: { status?: string; tutor_id?: string | null } | null | undefined,
+    assignment?: { status?: string; tutor_id?: string | null } | null,
+  ): boolean;
+  export function isCustomerProtectedAssignment(assignment: { resolution?: string | null; customer_protected_at?: string | null } | null | undefined): boolean;
+  export function criticalAtMs(scheduledStart: string | null | undefined): number;
+  export function protectAtMs(scheduledStart: string | null | undefined): number;
+  export function isAtCriticalWindow(scheduledStart: string | null | undefined, nowMs?: number): boolean;
+  export function isAtProtectWindow(scheduledStart: string | null | undefined, nowMs?: number): boolean;
+  export function shouldProtectCustomer(opts?: {
+    booking?: { status?: string; tutor_id?: string | null; scheduled_start?: string | null } | null;
+    assignment?: { status?: string; tutor_id?: string | null } | null;
+    nowMs?: number;
+  }): { ok: boolean; reason?: string; idempotent?: boolean };
+  export function criticalNotifyKey(bookingId: string): string;
+  export function protectNotifyKey(bookingId: string): string;
   export function isCoverageCancellationReason(reason: string | null | undefined): boolean;
   export function coverageRestorationLine(opts: {
     isFreeTrial?: boolean | null;

@@ -94,6 +94,10 @@ export function guideAttendanceRequest(ctx: {
   count?: number;
   replacement?: boolean;
 }): RenderedEmail;
+export function coverageFailureProtection(ctx: {
+  restorationLine?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
 export function coverageCancellation(ctx: {
   restorationLine?: string | null;
   compCreditCents?: number | null;
