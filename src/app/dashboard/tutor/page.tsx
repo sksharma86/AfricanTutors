@@ -17,6 +17,7 @@ export default async function GuideHomePage() {
   const data = await loadGuideWorkspace(supabase!, user.id);
   const tz = tutorTimezone(data.profile?.timezone);
   const firstName = (user.displayName ?? "").split(" ")[0];
+  const nowMs = new Date().getTime();
 
   return (
     <GuidePage compose>
@@ -30,6 +31,7 @@ export default async function GuideHomePage() {
         reportedBookings={data.reportedBookings}
         reportsReady={data.reportsReady}
         timeZone={tz}
+        nowMs={nowMs}
         currency={data.profile?.comp_currency ?? "USD"}
         profileStatus={data.profile?.status}
       />

@@ -38,7 +38,7 @@ export function GuideHomeBoard({
   reportedBookings: Set<string> | string[];
   reportsReady: boolean;
   timeZone: string;
-  nowMs?: number;
+  nowMs: number;
   currency?: string;
   profileStatus?: string | null;
 }) {

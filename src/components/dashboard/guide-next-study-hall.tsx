@@ -40,7 +40,7 @@ export function GuideNextStudyHall({
 }: {
   next: GuideBooking | null;
   tz: string;
-  nowMs?: number;
+  nowMs: number;
 }) {
   if (!next) {
     return (
@@ -66,9 +66,8 @@ export function GuideNextStudyHall({
     );
   }
 
-  const clock = nowMs ?? Date.now();
-  const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, clock);
-  const starts = guideStartsInLabel(next.scheduled_start, clock);
+  const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, nowMs);
+  const starts = guideStartsInLabel(next.scheduled_start, nowMs);
   const child = guideChildName(next);
   const time = next.scheduled_start ? formatTime(next.scheduled_start, tz) : "";
   const day = next.scheduled_start ? formatDayHeading(next.scheduled_start, tz) : "Time to confirm";

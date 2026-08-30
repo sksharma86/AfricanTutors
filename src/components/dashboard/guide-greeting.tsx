@@ -11,9 +11,9 @@ export function GuideGreeting({
 }: {
   firstName: string;
   timeZone?: string;
-  nowMs?: number;
+  nowMs: number;
 }) {
-  const greeting = useMemo(() => guideDayPart(nowMs ?? Date.now(), timeZone), [nowMs, timeZone]);
+  const greeting = useMemo(() => guideDayPart(nowMs, timeZone), [nowMs, timeZone]);
   const name = firstName.trim();
 
   return (
