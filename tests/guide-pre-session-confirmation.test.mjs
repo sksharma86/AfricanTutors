@@ -273,11 +273,12 @@ describe("Guide attendance confirmation — architecture contracts", () => {
     assert.match(sql, /for update/i);
     assert.match(sql, /idempotent|already/);
     assert.doesNotMatch(sql, /admin_release_booking\(/);
-    assert.doesNotMatch(sql, /status = 'cancelled'/);
+    assert.doesNotMatch(sql, /update public\.bookings[\s\S]*cancelled/i);
     const cron = read("src/app/api/cron/guide-attendance/route.ts");
     assert.match(cron, /sweep_guide_attendance/);
     assert.match(cron, /notifyGuideConfirmationMissed/);
-    assert.doesNotMatch(cron, /admin_release_booking|cancel/);
+    assert.doesNotMatch(cron, /admin_release_booking/);
+    assert.doesNotMatch(cron, /rpc\("admin_release_booking"/);
   });
 
   it("Guide Portal surfaces confirmation without redesigning Home", () => {

@@ -30,7 +30,7 @@ declare module "@/lib/guide-attendance.mjs" {
   export function guideAttendanceState(opts: {
     status: string | null | undefined;
     scheduledStart: string | null | undefined;
-    assignment?: Record<string, unknown> | null;
+    assignment?: object | null;
     nowMs?: number;
   }): { kind: GuideAttendanceKind; deadlineAt?: string; confirmedAt?: string | null; missedAt?: string | null; assignment?: unknown };
   export function guideAttendanceRowLabel(state: { kind: string } | null | undefined): string | null;
@@ -40,7 +40,7 @@ declare module "@/lib/guide-attendance.mjs" {
     assignedTutorId: string | null | undefined;
     actorId: string | null | undefined;
     scheduledStart: string | null | undefined;
-    assignment?: { status?: string; tutor_id?: string | null; deadline_at?: string | null } | null;
+    assignment?: object | null;
     nowMs?: number;
   }): { ok: boolean; reason?: string; idempotent?: boolean };
 
@@ -59,7 +59,7 @@ declare module "@/lib/guide-attendance.mjs" {
   } | null;
 
   export function currentAssignmentForBooking(
-    assignments: Array<{ booking_id?: string; tutor_id?: string; status?: string; created_at?: string }> | null | undefined,
+    assignments: object[] | null | undefined,
     booking: { id?: string; tutor_id?: string | null } | null | undefined,
   ): Record<string, unknown> | null;
 

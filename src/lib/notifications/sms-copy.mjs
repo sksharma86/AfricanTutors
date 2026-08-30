@@ -49,7 +49,8 @@ export function parentCancellationSms(ctx) {
  * Parent SMS when Study Hall cancels because it cannot provide a Guide.
  * Do not name or blame the Guide.
  */
-export function parentCoverageCancellationSms(ctx) {
+export function parentCoverageCancellationSms(ctx = {}) {
+  void ctx;
   return "Study Hall (at home): we're unable to provide a Guide for today's Study Hall. Your session value has been restored. We apologize for the disruption.";
 }
 

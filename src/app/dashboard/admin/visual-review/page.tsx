@@ -4,6 +4,8 @@ import { Suspense } from "react";
 
 import { ManagementOverview } from "@/components/dashboard/management-overview";
 import { ManagementStudyHalls } from "@/components/dashboard/management-study-halls";
+import { ManagementStudyHallActions } from "@/components/dashboard/management-study-hall-actions";
+import { ManagementSurface } from "@/components/dashboard/management-surface";
 import { ManagementPage } from "@/components/dashboard/management-page";
 import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
@@ -57,6 +59,37 @@ export default async function ManagementVisualReviewPage({
           timeZone={fixture.timeZone}
         />
       )}
+      {scene === "missed" || scene === "replacement" || scene === "resolved" ? (
+        <section id="confirm-exception" className="mt-6 max-w-xl">
+          <ManagementSurface>
+            <p className="text-[10px] font-semibold tracking-[0.16em] text-[#8a8174] uppercase">
+              {scene === "resolved" ? "Resolved" : "Guide confirmation missed"}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-[var(--mg-ink)]">
+              {scene === "replacement"
+                ? "Replacement Guide awaiting confirmation"
+                : scene === "resolved"
+                  ? "Coverage restored"
+                  : "Guide confirmation missed"}
+            </p>
+            <p className="mt-1 text-sm text-[var(--mg-muted)]">Today · 6:30 PM · Jordan · 60 min</p>
+            <p className="mt-1 text-sm text-[var(--mg-muted)]">
+              {scene === "replacement"
+                ? "Assigned Guide: Grace K. Confirmation requested."
+                : scene === "resolved"
+                  ? "Assigned Guide: Grace K. Attendance confirmed."
+                  : "Assigned Guide: Sarah M. Confirmation deadline missed."}
+            </p>
+            {scene !== "resolved" ? (
+              <div className="mt-4">
+                <ManagementStudyHallActions bookingId="visual-review-only" canAct needsGuide={scene === "missed"} coverageCancel />
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-[var(--mg-muted)]">No further action required.</p>
+            )}
+          </ManagementSurface>
+        </section>
+      ) : null}
     </ManagementPage>
   );
 }
