@@ -90,7 +90,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
           <div className="relative border-t border-[#1c1915]/[0.05] lg:hidden">
             <nav
               aria-label="Parent account"
-              className="flex gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {PARENT_PORTAL_NAV.map((item) => (
                 <Link
