@@ -6,13 +6,20 @@ import { cn } from "@/lib/utils";
 export function ParentPage({
   children,
   wide = false,
+  compose = false,
 }: {
   children: ReactNode;
   wide?: boolean;
+  compose?: boolean;
 }) {
   return (
     <CustomerShell>
-      <div className={cn("mx-auto w-full px-5 py-6 sm:px-7 sm:py-8", wide ? "max-w-4xl" : "max-w-3xl")}>
+      <div
+        className={cn(
+          "mx-auto w-full px-5 py-6 sm:px-7 sm:py-8",
+          compose ? "max-w-[70rem]" : wide ? "max-w-4xl" : "max-w-3xl",
+        )}
+      >
         {children}
       </div>
     </CustomerShell>

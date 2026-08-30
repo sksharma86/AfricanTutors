@@ -250,6 +250,17 @@ body {
   transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 
+.parent-app .pp-hero-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 70% at 88% 8%, rgba(201, 162, 39, 0.22), transparent 46%),
+    radial-gradient(ellipse 70% 55% at 12% 92%, rgba(232, 196, 110, 0.1), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 72% 78%, rgba(20, 16, 10, 0.45), transparent 70%),
+    linear-gradient(158deg, #121814 0%, #1c261f 46%, #141916 100%);
+}
+
 .parent-app .pp-commerce .rounded-2xl {
   background: var(--pp-card);
   border-color: rgba(28, 25, 21, 0.06);

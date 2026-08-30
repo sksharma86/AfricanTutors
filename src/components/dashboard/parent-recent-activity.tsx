@@ -55,7 +55,7 @@ export function ParentRecentActivity({
 
   return (
     <ParentSurface>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Last Study Hall</p>
+      <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Recent Study Hall</p>
       <p className="mt-2.5 text-[15px] font-medium text-[var(--pp-ink)]">
         {when}
         {child ? ` · ${child}` : ""}

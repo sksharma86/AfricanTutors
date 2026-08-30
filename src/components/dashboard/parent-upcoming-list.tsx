@@ -1,7 +1,8 @@
 import { ParentIconChevron } from "@/components/dashboard/parent-icons";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
+import { formatDuration } from "@/lib/format.mjs";
 import { bookingChildNames } from "@/lib/household-children.mjs";
-import { childFirstName, parentGuideLabel, parentStatusLabel } from "@/lib/parent-portal.mjs";
+import { childFirstName, parentGuideLabel, parentSessionMinutes, parentStatusLabel } from "@/lib/parent-portal.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 import Link from "next/link";
@@ -13,16 +14,13 @@ export function ParentUpcomingList({ bookings }: { bookings: ParentBooking[] }) 
 
   return (
     <ParentSurface>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Upcoming</p>
-      <ul className="mt-2 divide-y divide-[#1c1915]/[0.06]">
+      <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Upcoming Study Halls</p>
+      <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">
         {bookings.map((booking) => {
           const tz = booking.students?.timezone || DEFAULT_TZ;
           const day = booking.scheduled_start ? formatDayHeading(booking.scheduled_start, tz) : "Time to confirm";
-          const time = booking.scheduled_start
-            ? `${formatTime(booking.scheduled_start, tz)}${
-                booking.scheduled_end ? ` – ${formatTime(booking.scheduled_end, tz)}` : ""
-              }`
-            : "";
+          const time = booking.scheduled_start ? formatTime(booking.scheduled_start, tz) : "";
+          const minutes = parentSessionMinutes(booking);
           const child = bookingChildNames(booking, childFirstName(booking.students?.full_name));
           const guide = parentGuideLabel(booking);
           return (
@@ -33,7 +31,11 @@ export function ParentUpcomingList({ bookings }: { bookings: ParentBooking[] }) 
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-semibold text-[var(--pp-ink)]">{day}</p>
-                  {time ? <p className="mt-0.5 text-sm text-[var(--pp-muted)]">{time}</p> : null}
+                  <p className="mt-0.5 text-sm text-[var(--pp-muted)]">
+                    {time}
+                    {time && minutes ? " · " : ""}
+                    {minutes ? formatDuration(minutes) : ""}
+                  </p>
                   <p className="mt-1 text-sm text-[var(--pp-ink)]">{child}</p>
                   <p className="text-sm text-[var(--pp-muted)]">
                     {guide ? `Guide ${guide}` : ""}

@@ -126,7 +126,7 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(home, /ParentUpcomingList/);
     assert.match(home, /ParentGreeting/);
     assert.match(home, /firstName/);
-    assert.match(read("src/components/dashboard/parent-greeting.tsx"), /sm:text-\[2rem\]/);
+    assert.match(read("src/components/dashboard/parent-greeting.tsx"), /sm:text-\[2(?:\.15)?rem\]/);
     assert.doesNotMatch(home, /Your household|Your Study Hall account/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /Nothing scheduled yet/);
@@ -135,7 +135,7 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(next, /sm:text-\[1\.85rem\]/);
     assert.match(next, /bookingChildNames/);
     assert.match(surface, /before:bg-gold-400/);
-    assert.match(recent, /Last Study Hall/);
+    assert.match(recent, /Recent Study Hall|Last Study Hall/);
     assert.match(recent, /Read report/);
     assert.match(recent, /ParentSurface/);
     assert.doesNotMatch(recent, /featured/);

@@ -7,6 +7,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { PARENT_NAV_ICONS } from "@/components/dashboard/parent-icons";
+import { ParentSidebarAtmosphere } from "@/components/dashboard/parent-sidebar-atmosphere";
 import { PARENT_PORTAL_NAV } from "@/lib/parent-portal.mjs";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +67,8 @@ export function CustomerShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="mt-auto space-y-2 pt-8">
+        <div className="mt-auto space-y-2 pt-10">
+          <ParentSidebarAtmosphere />
           <Link
             href="/dashboard/student/book"
             className="pp-interact inline-flex min-h-11 w-full items-center justify-center rounded-[12px] bg-[#c9a227] px-3 text-[13px] font-semibold text-[#1c1915] hover:bg-[#b8921f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"

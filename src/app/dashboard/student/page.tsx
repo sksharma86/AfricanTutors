@@ -3,7 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BalanceCards } from "@/components/dashboard/balance-cards";
-import { ParentGreeting } from "@/components/dashboard/parent-greeting";
+import { ParentBrandStrip } from "@/components/dashboard/parent-brand-strip";
+import { ParentGreeting, ParentGreetingSupport } from "@/components/dashboard/parent-greeting";
+import { ParentHabitCard } from "@/components/dashboard/parent-habit";
 import { ParentHashRedirect } from "@/components/dashboard/parent-hash-redirect";
 import { ParentNextStep } from "@/components/dashboard/parent-next-step";
 import { ParentNextStudyHall } from "@/components/dashboard/parent-next-study-hall";
@@ -52,33 +54,33 @@ export default async function StudentDashboardPage() {
     minutes: data.minutes,
   });
   const firstName = (user.displayName ?? "").split(" ")[0];
+  const householdTz =
+    data.bookings.find((booking) => booking.students?.timezone)?.students?.timezone || "America/Chicago";
 
   return (
-    <ParentPage>
+    <ParentPage compose>
       <ParentHashRedirect />
       <ParentGreeting firstName={firstName} />
+      <ParentGreetingSupport />
 
-      <div className="mt-6">
-        <ParentNextStudyHall next={next} />
+      <div className="mt-7 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20.5rem]">
+        <div className="space-y-5">
+          <ParentNextStudyHall next={next} />
+          {later.length > 0 ? <ParentUpcomingList bookings={later} /> : null}
+        </div>
+        <div className="space-y-5">
+          {last ? (
+            <ParentRecentActivity
+              booking={last}
+              report={lastReport}
+              recording={data.recordingByBooking.get(last.id) ?? null}
+            />
+          ) : null}
+          <ParentHabitCard bookings={data.bookings} timeZone={householdTz} />
+        </div>
       </div>
 
-      {last ? (
-        <div className="mt-4">
-          <ParentRecentActivity
-            booking={last}
-            report={lastReport}
-            recording={data.recordingByBooking.get(last.id) ?? null}
-          />
-        </div>
-      ) : null}
-
-      {later.length > 0 ? (
-        <div className="mt-4">
-          <ParentUpcomingList bookings={later} />
-        </div>
-      ) : null}
-
-      <div className="mt-4">
+      <div className="mt-5">
         <BalanceCards minutes={data.minutes} creditCents={data.creditCents} preferFreeSession={freeTrialAvailable} compact />
       </div>
 
@@ -94,6 +96,8 @@ export default async function StudentDashboardPage() {
           />
         </div>
       ) : null}
+
+      <ParentBrandStrip />
 
       {freeTrialAvailable ? (
         <p className="mt-8 text-sm text-[var(--pp-muted)]">
