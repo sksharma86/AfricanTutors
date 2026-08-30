@@ -82,7 +82,7 @@ export default async function ManagementVisualReviewPage({
             </p>
             {scene !== "resolved" ? (
               <div className="mt-4">
-                <ManagementStudyHallActions bookingId="visual-review-only" canAct needsGuide={scene === "missed"} coverageCancel />
+                <ManagementStudyHallActions bookingId="visual-review-only" canAct needsGuide={false} coverageCancel />
               </div>
             ) : (
               <p className="mt-3 text-sm text-[var(--mg-muted)]">No further action required.</p>
