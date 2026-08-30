@@ -150,7 +150,6 @@ export function managementAttendanceIssue({
   booking,
   assignment = null,
   nowMs = Date.now(),
-  assignmentsLoaded = true,
 } = {}) {
   if (!booking || (booking.status !== "confirmed" && booking.status !== "pending")) return null;
   if (booking.status === "pending") return null;

@@ -40,17 +40,15 @@ export function GuideJoinControl({
   prominent?: boolean;
   nowMs?: number;
 }) {
-  const [now, setNow] = useState(() => nowMs ?? Date.now());
+  const [liveNow, setLiveNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (nowMs != null) {
-      setNow(nowMs);
-      return;
-    }
-    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    if (nowMs != null) return;
+    const id = window.setInterval(() => setLiveNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, [nowMs]);
 
+  const now = nowMs ?? liveNow;
   const ui = guideJoinUiState(status, scheduledStart, scheduledEnd, now);
 
   if (ui.kind === "awaiting") {
