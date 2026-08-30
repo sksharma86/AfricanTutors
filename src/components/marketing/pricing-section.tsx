@@ -26,18 +26,28 @@ import {
 export function PricingSection({
   packages,
   withHeader = true,
+  compact = false,
   ctaHref = "/signup",
   ctaLabel = FREE_TRIAL_CTA,
 }: {
   packages: PublicPackage[];
   withHeader?: boolean;
+  /** Homepage-only: tighten dead space into adjacent sections. */
+  compact?: boolean;
   ctaHref?: string;
   ctaLabel?: string;
 }) {
   const sorted = [...packages].sort((a, b) => a.minutes - b.minutes);
 
   return (
-    <section id="pricing" className="scroll-mt-24 bg-[#f7f6f3] py-16 sm:py-24">
+    <section
+      id="pricing"
+      className={
+        compact
+          ? "scroll-mt-24 bg-[#f7f6f3] pb-10 pt-8 sm:pb-12 sm:pt-10"
+          : "scroll-mt-24 bg-[#f7f6f3] py-16 sm:py-24"
+      }
+    >
       <Container size="wide">
         {withHeader ? (
           <div className="max-w-2xl">

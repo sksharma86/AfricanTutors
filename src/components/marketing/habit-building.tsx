@@ -21,7 +21,7 @@ const ARC = [
  */
 export function HabitBuilding() {
   return (
-    <section id="habits" className="scroll-mt-24 bg-[#f7f6f3] py-16 sm:py-24">
+    <section id="habits" className="scroll-mt-24 bg-[#f7f6f3] pb-10 pt-14 sm:pb-12 sm:pt-16">
       <Container size="wide">
         <Reveal>
           <p className="mkt-eyebrow">More than homework supervision</p>

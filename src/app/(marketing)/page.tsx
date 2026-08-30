@@ -57,7 +57,12 @@ export default async function HomePage() {
       <HowStudyHallWorks />
       <HabitBuilding />
       <ProductShowcase />
-      <PricingSection packages={packages} ctaHref={primary.href} ctaLabel={primary.label} />
+      <PricingSection
+        packages={packages}
+        compact
+        ctaHref={primary.href}
+        ctaLabel={primary.label}
+      />
       <TrustSafety />
       <Faq id="faq" eyebrow="FAQ" title="What parents usually ask." items={HOME_FAQ} />
       <CtaSection
