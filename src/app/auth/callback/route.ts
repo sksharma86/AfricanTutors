@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { resolvePostAuthHome } from "@/lib/auth-home";
 import { sanitizeNextPath } from "@/lib/auth-redirect";
+import { getUserBounded } from "@/lib/auth-user.mjs";
 import type { Role } from "@/lib/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getUserBounded(() => supabase.auth.getUser(), { label: "callback.getUser" });
 
   if (!user) {
     // Link worked but session cookie was not established — polished recovery.

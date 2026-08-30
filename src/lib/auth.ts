@@ -1,5 +1,7 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 
+import { getUserBounded } from "@/lib/auth-user.mjs";
 import { DASHBOARD_PATH_BY_ROLE, type Role } from "@/lib/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -15,13 +17,13 @@ export interface CurrentUser {
  * role from the `profiles` table (never from client-supplied data). Returns
  * `null` when Supabase is not configured or no user is signed in.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getUserBounded(() => supabase.auth.getUser(), { label: "server.getUser" });
   if (!user) return null;
 
   const { data: profile } = await supabase
@@ -36,7 +38,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     role: (profile?.role ?? "student") as Role,
     displayName: profile?.display_name ?? null,
   };
-}
+});
 
 /** Redirects to login when there is no authenticated user. */
 export async function requireUser(currentPath: string): Promise<CurrentUser> {

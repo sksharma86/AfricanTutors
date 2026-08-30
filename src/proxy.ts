@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getUserBounded } from "@/lib/auth-user.mjs";
 import { DASHBOARD_PATH_BY_ROLE, type Role } from "@/lib/roles";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -46,7 +47,7 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getUserBounded(() => supabase.auth.getUser(), { label: "proxy.getUser" });
 
   if (!isProtectedRoute) {
     return response;

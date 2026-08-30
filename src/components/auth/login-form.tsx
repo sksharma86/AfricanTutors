@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 
 import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-notice";
@@ -27,7 +27,6 @@ function friendlyLoginError(message: string): { text: string; needsConfirm?: boo
 }
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const submittingRef = useRef(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -52,7 +51,23 @@ export function LoginForm() {
     const password = String(formData.get("password") ?? "");
     setEmailForResend(email);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    let data: { user: unknown } | null = null;
+    let error: { message: string } | null = null;
+    try {
+      const result = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error("sign-in timed out")), 20_000);
+        }),
+      ]);
+      data = result.data;
+      error = result.error;
+    } catch {
+      submittingRef.current = false;
+      setStatus("error");
+      setErrorMessage("We couldn’t sign you in right now. Please try again.");
+      return;
+    }
 
     if (error) {
       submittingRef.current = false;
@@ -64,11 +79,14 @@ export function LoginForm() {
     }
 
     // Prefer dashboard index so role/applicant routing stays authoritative.
+    // Full navigation (not a client router refresh) so the session cookie is
+    // sent on the first portal request and this form cannot stay on
+    // "Logging in..." if the destination is slow.
     const requested = sanitizeNextPath(searchParams.get("redirectTo"), "/dashboard");
     const dest = requested.startsWith("/dashboard") ? "/dashboard" : requested;
     void data;
-    router.push(dest);
-    router.refresh();
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- session cookie must be sent on a new document
+    window.location.assign(dest);
   }
 
   return (
