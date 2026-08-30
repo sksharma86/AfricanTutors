@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes?.user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
-  const { data, error } = await supabase.rpc("confirm_guide_attendance", { p_booking: body.bookingId });
+  const { data, error } = await supabase.rpc("confirm_guide_attendance_block", { p_booking: body.bookingId });
   if (error) {
     const msg = error.message.replace(/^.*:\s*/, "");
     if (/Not authorized|not eligible|deadline|not open|not found/i.test(msg)) {

@@ -69,4 +69,60 @@ declare module "@/lib/guide-attendance.mjs" {
     restoredMinutes?: number | null;
     restoredCreditCents?: number | null;
   }): string;
+
+  export const E164_RE: RegExp;
+  export function isE164(value: string | null | undefined): boolean;
+  export type AttendanceBooking = {
+    id: string;
+    status?: string;
+    tutor_id?: string | null;
+    scheduled_start?: string | null;
+    scheduled_end?: string | null;
+    duration_minutes?: number | null;
+    student_first_name?: string | null;
+    student_first_names?: string[] | null;
+    child_count?: number | null;
+    attendance?: object | null;
+    [key: string]: unknown;
+  };
+  export function sessionEndMs(booking: { scheduled_end?: string | null; scheduled_start?: string | null; duration_minutes?: number | null }): number;
+  export function isContiguous(prev: object | null | undefined, next: object | null | undefined): boolean;
+  export function confirmationBlocks(bookings: object[], opts?: { tutorId?: string | null }): AttendanceBooking[][];
+  export function contiguousBlockContaining(bookings: object[], seedId: string, opts?: { tutorId?: string | null }): AttendanceBooking[];
+  export function blockWindow(block: object[]): { startAt: number; openAt: number; deadlineAt: number } | null;
+  export function shouldOpenIndependently(
+    booking: object,
+    previous: object | null,
+    prevAssignment?: object | null,
+    ownAssignment?: object | null,
+  ): boolean;
+  export function splitObligationRuns(block: object[], assignmentsByBooking?: Record<string, object | null>): AttendanceBooking[][];
+  export function obligationBlockContaining(
+    bookings: object[],
+    seedId: string,
+    opts?: { tutorId?: string | null; assignmentsByBooking?: Record<string, object | null> },
+  ): AttendanceBooking[];
+  export function expandOpenMembers(leader: object, bookings: object[], assignmentsByBooking?: Record<string, object | null>): AttendanceBooking[];
+  export function attendanceNotifyKey(opts: { tutorId: string; firstBookingId: string; source?: string }): string;
+  export function missedNotifyKey(opts: { tutorId: string; firstBookingId: string }): string;
+  export function canConfirmAttendanceInBlock(opts: {
+    booking: { status?: string; tutor_id?: string; scheduled_start?: string };
+    actorId: string;
+    assignment?: object | null;
+    firstScheduledStart?: string | null;
+    nowMs?: number;
+  }): { ok: boolean; reason?: string; idempotent?: boolean };
+  export function confirmBlockResult(opts: {
+    bookings: object[];
+    actorId: string;
+    assignmentsByBooking?: Record<string, object | null>;
+    nowMs?: number;
+    seedId?: string | null;
+  }): { confirmed: { id: string; idempotent: boolean }[]; skipped: { id: string; reason?: string }[] };
+  export function guideConfirmBlockState(opts: { bookings: object[]; nowMs?: number }): { kind: string; block: AttendanceBooking[] };
+  export function activeConfirmationBlock(
+    bookings: object[],
+    opts?: { nowMs?: number; tutorId?: string | null },
+  ): { kind: string; block: AttendanceBooking[] };
+  export function groupManagementCoverageIssues(items: object[], bookings?: object[]): object[];
 }

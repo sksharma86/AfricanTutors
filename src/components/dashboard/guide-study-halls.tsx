@@ -8,7 +8,7 @@ import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request";
 import { LinkButton } from "@/components/ui/button";
 import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
-import { guideAttendanceRowLabel, guideAttendanceState } from "@/lib/guide-attendance.mjs";
+import { guideAttendanceRowLabel, guideAttendanceState, obligationBlockContaining } from "@/lib/guide-attendance.mjs";
 import {
   guideChildName,
   guideNeedsReport,
@@ -85,14 +85,14 @@ export function GuideStudyHalls({
                   </p>
                   {view !== "completed"
                     ? (() => {
-                        const label = guideAttendanceRowLabel(
-                          guideAttendanceState({
-                            status: b.status,
-                            scheduledStart: b.scheduled_start,
-                            assignment: b.attendance ?? null,
-                            nowMs,
-                          }),
-                        );
+                        const block = obligationBlockContaining(bookings, b.id);
+                        const own = guideAttendanceState({
+                          status: b.status,
+                          scheduledStart: block[0]?.scheduled_start ?? b.scheduled_start,
+                          assignment: b.attendance ?? null,
+                          nowMs,
+                        });
+                        const label = guideAttendanceRowLabel(own);
                         return label ? (
                           <p data-kind="attendance" className="text-[12.5px] text-ink-500">
                             {label}

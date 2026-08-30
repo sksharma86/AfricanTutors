@@ -325,21 +325,39 @@ export function tutorRemoved(ctx) {
   return { subject: "You've been removed from a session", html: layout("Session reassigned", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
-/** Guide: confirm you will attend. Does not confirm for them. */
+/** Guide: confirm you will attend. Does not confirm for them. Email is secondary to WhatsApp. */
 export function guideAttendanceRequest(ctx) {
+  const count = Number(ctx.count) > 0 ? Number(ctx.count) : 1;
   const when = formatWhen(ctx.whenISO, ctx.tz);
+  const end = ctx.endISO ? formatWhen(ctx.endISO, ctx.tz) : null;
   const hours =
     ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
   const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
+  const replacement = Boolean(ctx.replacement);
+  if (count > 1) {
+    const lines = [
+      replacement
+        ? `You've been assigned ${count} consecutive Study Halls from ${when} to ${end || when}.`
+        : `You're scheduled for ${count} consecutive Study Halls from ${when} to ${end || when}.`,
+      "Please confirm that you'll be available for the full block from your Guide dashboard.",
+    ];
+    return {
+      subject: replacement
+        ? `Please confirm ${count} new Study Hall assignments`
+        : `Please confirm ${count} consecutive Study Halls`,
+      html: layout("Please confirm your Study Halls", lines.filter(Boolean).map(p).join(""), { href: dash, label: `Confirm all ${count}` }),
+      text: textJoin([...lines.filter(Boolean), "", `Confirm: ${dash}`]),
+    };
+  }
   const lines = [
-    "Your Study Hall starts in 30 minutes.",
+    replacement ? "You've been assigned a Study Hall. Please confirm your availability." : "Your Study Hall starts in 30 minutes.",
     `When: ${when}`,
     `Duration: ${hours}`,
     childrenLine(ctx),
     "Please confirm that you'll be there from your Guide dashboard.",
   ];
   return {
-    subject: "Your Study Hall starts in 30 minutes — please confirm",
+    subject: replacement ? "New Study Hall assignment — please confirm" : "Your Study Hall starts in 30 minutes — please confirm",
     html: layout("Please confirm you'll be there", lines.filter(Boolean).map(p).join(""), { href: dash, label: "I'll be there" }),
     text: textJoin([...lines.filter(Boolean), "", `Confirm: ${dash}`]),
   };

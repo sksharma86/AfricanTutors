@@ -124,11 +124,26 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
   const confirmHall = booking(now, {
     id: "fx-confirm",
     student_first_name: "Jordan",
-    tutor_display_name: scene === "replacement" || scene === "resolved" ? "Grace K." : "Sarah M.",
-    tutor_id: scene === "replacement" || scene === "resolved" ? "g-grace" : "g-sarah",
+    tutor_display_name: scene === "replacement" || scene === "resolved" || scene === "replace2" ? "Grace K." : "Sarah M.",
+    tutor_id: scene === "replacement" || scene === "resolved" || scene === "replace2" ? "g-grace" : "g-sarah",
     scheduled_start: later(now, 0, 18),
     scheduled_end: later(now, 1, 18),
   });
+  const blockKids = ["Jordan", "Maya", "Ethan", "Ava"];
+  const blockCount = scene === "block4missed" || scene === "split" ? 4 : scene === "replace2" ? 2 : 0;
+  const blockGuide = scene === "replace2" || scene === "split" ? { name: "Grace K.", id: "g-grace" } : { name: "Sarah M.", id: "g-sarah" };
+  const blockHalls = blockCount
+    ? Array.from({ length: blockCount }, (_, i) =>
+        booking(now, {
+          id: i === 0 ? "fx-confirm" : `fx-confirm-${i}`,
+          student_first_name: blockKids[i],
+          tutor_display_name: scene === "split" && i >= 2 ? "James O." : blockGuide.name,
+          tutor_id: scene === "split" && i >= 2 ? "g-james" : blockGuide.id,
+          scheduled_start: later(now, 0, 18 + i * 60),
+          scheduled_end: later(now, 0, 78 + i * 60),
+        }),
+      )
+    : [];
   const attendanceByBooking = {};
   if (scene === "missed") {
     attendanceByBooking["fx-confirm"] = {
@@ -159,10 +174,23 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
       status: "confirmed",
       confirmed_at: later(now, 0, -0.2),
     };
+  } else if (scene === "block4missed" || scene === "replace2" || scene === "split") {
+    for (const hall of blockHalls) {
+      attendanceByBooking[hall.id] = {
+        id: `fx-att-${hall.id}`,
+        booking_id: hall.id,
+        tutor_id: hall.tutor_id,
+        source: scene === "replace2" || scene === "split" ? "replacement" : "t30",
+        status: scene === "block4missed" ? "missed" : scene === "split" && hall.tutor_id === "g-james" ? "confirmed" : "awaiting",
+        deadline_at: later(now, 0, scene === "block4missed" ? -2 : 9),
+        missed_at: scene === "block4missed" ? later(now, 0, -2) : null,
+        confirmed_at: scene === "split" && hall.tutor_id === "g-james" ? later(now, 0, -0.2) : null,
+      };
+    }
   }
 
   const bookings = scene
-    ? [confirmHall, liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler]
+    ? [...(blockHalls.length ? blockHalls : [confirmHall]), liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler]
     : [liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler];
   const presenceByBooking = {
     "fx-live-1": { tutor_first_joined_at: later(now, -0.35), tutor_last_seen_at: later(now, -0.1) },

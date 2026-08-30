@@ -59,7 +59,7 @@ export function GuideHomeBoard({
       ) : null}
       <div className="gp-home-grid">
         <div className="gp-home-hero">
-          <GuideNextStudyHall next={lists.next} tz={timeZone} nowMs={nowMs} />
+          <GuideNextStudyHall next={lists.next} bookings={bookings} tz={timeZone} nowMs={nowMs} />
         </div>
         <div className="gp-home-today">
           <GuideTodaySchedule rows={today} nextId={lists.next?.id} tz={timeZone} nowMs={nowMs} />

@@ -27,7 +27,7 @@ export default async function ManagementVisualReviewPage({
   await requireRole("admin", "/dashboard/admin");
   const params = await searchParams;
   const reviewNow = managementVisualReviewNow(new Date("2026-08-26T23:05:00Z"), "America/Chicago", 18, 5);
-  const scene = params.scene === "attention" ? "missed" : params.scene ?? null;
+  const scene = params.scene === "attention" ? (params.view === "block4" ? "block4missed" : "missed") : params.scene ?? null;
   const fixture = managementHomeVisualFixture(reviewNow, { empty: params.empty === "1", scene });
   const attentionList = params.view === "attention" || params.scene === "attention";
 
@@ -59,28 +59,42 @@ export default async function ManagementVisualReviewPage({
           timeZone={fixture.timeZone}
         />
       )}
-      {scene === "missed" || scene === "replacement" || scene === "resolved" ? (
+      {scene === "missed" || scene === "replacement" || scene === "resolved" || scene === "block4missed" || scene === "replace2" || scene === "split" ? (
         <section id="confirm-exception" className="mt-6 max-w-xl">
           <ManagementSurface>
             <p className="text-[10px] font-semibold tracking-[0.16em] text-[#8a8174] uppercase">
-              {scene === "resolved" ? "Resolved" : "Guide confirmation missed"}
+              {scene === "resolved" || scene === "split" ? "Resolved" : scene === "block4missed" ? "Guide coverage unconfirmed" : "Guide confirmation missed"}
             </p>
             <p className="mt-2 text-sm font-semibold text-[var(--mg-ink)]">
-              {scene === "replacement"
+              {scene === "replacement" || scene === "replace2"
                 ? "Replacement Guide awaiting confirmation"
-                : scene === "resolved"
+                : scene === "resolved" || scene === "split"
                   ? "Coverage restored"
-                  : "Guide confirmation missed"}
+                  : scene === "block4missed"
+                    ? "Guide coverage unconfirmed"
+                    : "Guide confirmation missed"}
             </p>
-            <p className="mt-1 text-sm text-[var(--mg-muted)]">Today · 6:30 PM · Jordan · 60 min</p>
             <p className="mt-1 text-sm text-[var(--mg-muted)]">
-              {scene === "replacement"
+              {scene === "block4missed"
+                ? "Today · 6:23 PM–10:23 PM · 4 Study Halls affected"
+                : scene === "replace2"
+                  ? "Today · 6:23 PM–8:23 PM · 2 consecutive Study Halls"
+                  : scene === "split"
+                    ? "Grace K. 6:23–8:23 · James O. 8:23–10:23"
+                    : "Today · 6:30 PM · Jordan · 60 min"}
+            </p>
+            <p className="mt-1 text-sm text-[var(--mg-muted)]">
+              {scene === "replacement" || scene === "replace2"
                 ? "Assigned Guide: Grace K. Confirmation requested."
                 : scene === "resolved"
                   ? "Assigned Guide: Grace K. Attendance confirmed."
-                  : "Assigned Guide: Sarah M. Confirmation deadline missed."}
+                  : scene === "split"
+                    ? "Coverage split. Confirmations recorded per assignment."
+                    : scene === "block4missed"
+                      ? "Assigned Guide: Sarah M. Confirmation deadline missed."
+                      : "Assigned Guide: Sarah M. Confirmation deadline missed."}
             </p>
-            {scene !== "resolved" ? (
+            {scene !== "resolved" && scene !== "split" ? (
               <div className="mt-4">
                 <ManagementStudyHallActions bookingId="visual-review-only" canAct needsGuide={false} coverageCancel />
               </div>

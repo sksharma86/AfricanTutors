@@ -28,6 +28,7 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   GUIDE_ATTENDANCE_REQUEST: "guide_attendance_request",
   GUIDE_CONFIRMATION_MISSED: "guide_confirmation_missed",
   COVERAGE_CANCELLATION: "coverage_cancellation",
+  GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
 });
 
 export const CHANNEL_POLICY = Object.freeze({
@@ -53,6 +54,13 @@ export const CHANNEL_POLICY = Object.freeze({
     "guide_attendance_request",
     "guide_confirmation_missed",
     "coverage_cancellation",
+  ],
+  /**
+   * Urgent Guide operational alerts. Not parent SMS. Not inbound confirmation.
+   */
+  whatsapp: [
+    "guide_attendance_request",
+    "guide_attendance_whatsapp",
   ],
   sms: [
     "session_reminder_1h",

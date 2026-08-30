@@ -3,7 +3,7 @@
  * Does not change booking, pay, matching, Daily, or compensation math.
  */
 
-import { managementAttendanceIssue } from "./guide-attendance.mjs";
+import { groupManagementCoverageIssues, managementAttendanceIssue } from "./guide-attendance.mjs";
 import { bookingChildNames } from "./household-children.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
@@ -494,7 +494,7 @@ export function collectNeedsAttention({
     );
   }
 
-  return items;
+  return groupManagementCoverageIssues(items, bookings);
 }
 
 /**
@@ -522,6 +522,28 @@ export function presentNeedsAttention(items = []) {
           entry.kind === "coverage" ||
           entry.kind === "guide_confirm_missed" ||
           entry.kind === "guide_confirm_awaiting",
+      });
+      continue;
+    }
+    if (Array.isArray(entry.bookingIds) && entry.bookingIds.length > 1) {
+      if (entry.bookingIds.some((id) => seenBookings.has(id))) continue;
+      for (const id of entry.bookingIds) seenBookings.add(id);
+      presented.push({
+        id: entry.id,
+        bookingId: entry.bookingId,
+        href: entry.href,
+        action: entry.action,
+        title: entry.title,
+        summary: entry.summary ?? "",
+        detail: entry.detail ?? "",
+        reasons: [entry.title],
+        issueCount: entry.issueCount ?? entry.bookingIds.length,
+        urgent:
+          entry.kind === "guide_confirm_missed" ||
+          entry.kind === "guide_confirm_awaiting" ||
+          entry.kind === "coverage" ||
+          entry.kind === "call_parent" ||
+          entry.kind === "no_join",
       });
       continue;
     }

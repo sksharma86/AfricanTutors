@@ -8,14 +8,16 @@ import { Button } from "@/components/ui/button";
 export function GuideConfirmAttendance({
   bookingId,
   prominent = false,
+  count = 1,
 }: {
   bookingId: string;
   prominent?: boolean;
+  count?: number;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  const [doneCount, setDoneCount] = useState<number | null>(null);
 
   async function confirm() {
     setError(null);
@@ -31,19 +33,22 @@ export function GuideConfirmAttendance({
       setError(data?.error ?? "Unable to confirm attendance.");
       return;
     }
-    setDone(true);
+    const confirmed = Array.isArray(data?.confirmed) ? data.confirmed.length : count;
+    setDoneCount(confirmed > 0 ? confirmed : count);
     router.refresh();
   }
 
-  if (done) {
-    return <p className={prominent ? "text-sm font-medium text-gold-200" : "text-sm font-medium text-ink-800"}>✓ Attendance confirmed</p>;
+  if (doneCount != null) {
+    const label = doneCount > 1 ? `✓ Attendance confirmed for all ${doneCount}` : "✓ Attendance confirmed";
+    return <p className={prominent ? "text-sm font-medium text-gold-200" : "text-sm font-medium text-ink-800"}>{label}</p>;
   }
 
+  const action = count > 1 ? `Confirm all ${count}` : "I'll be there";
   return (
     <div className="space-y-2">
       {error ? <p className="text-sm text-red-200">{error}</p> : null}
       <Button type="button" variant="secondary" size={prominent ? "lg" : "sm"} onClick={confirm} disabled={busy}>
-        {busy ? "Confirming…" : "I'll be there"}
+        {busy ? "Confirming…" : action}
       </Button>
     </div>
   );

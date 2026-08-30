@@ -276,7 +276,7 @@ export default async function AdminStudyHallDetailPage({
           empty="No messages recorded for this Study Hall."
           rows={((notifyRes.data ?? []) as { id: string; notification_type: string; status: string; error: string | null; updated_at: string }[]).map((n) => ({
             id: n.id,
-            title: n.status === "failed" ? "Parent wasn't notified" : n.notification_type.replace(/_/g, " "),
+            title: deliveryHistoryTitle(n.notification_type, n.status),
             meta: n.error ?? n.status,
             at: n.updated_at,
             retryId: n.status === "failed" ? n.id : null,
@@ -317,6 +317,17 @@ export default async function AdminStudyHallDetailPage({
       </details>
     </ManagementPage>
   );
+}
+
+function deliveryHistoryTitle(type: string, status: string) {
+  if (type === "guide_attendance_whatsapp") {
+    return status === "failed" ? "Guide WhatsApp alert failed" : "Guide WhatsApp alert";
+  }
+  if (type === "guide_attendance_request") {
+    return status === "failed" ? "Guide attendance email failed" : "Guide attendance email";
+  }
+  if (status === "failed") return "Parent wasn't notified";
+  return type.replace(/_/g, " ");
 }
 
 function Row({ label, children }: { label: string; children: import("react").ReactNode }) {

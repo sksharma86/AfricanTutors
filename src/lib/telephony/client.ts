@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getTwilioConfig, isTwilioConfigured } from "@/lib/telephony/config";
+import { getTwilioConfig, getWhatsAppConfig, isTwilioConfigured, isWhatsAppConfigured } from "@/lib/telephony/config";
 
 /**
  * Telephony provider abstraction (Twilio Voice + SMS).
@@ -127,6 +127,58 @@ export async function sendParentAttentionSms(opts: {
     return { status: "sent", sid: data.sid ?? null };
   } catch (e) {
     return { status: "failed", error: e instanceof Error ? e.message : "sms error" };
+  }
+}
+
+/**
+ * Guide WhatsApp via Twilio. Does not use the parent SMS From number.
+ * Delivery never throws. Missing config / number / disable flag → skipped.
+ * Does not mark attendance confirmed or missed.
+ */
+export async function sendGuideWhatsApp(opts: {
+  toE164: string;
+  body: string;
+  contentSid?: string | null;
+  variables?: Record<string, string> | null;
+}): Promise<SmsResult> {
+  if (!opts.toE164) return { status: "skipped", error: "no destination" };
+  if (!isWhatsAppConfigured()) {
+    return { status: "skipped", error: "whatsapp not configured" };
+  }
+
+  const { accountSid, authToken, from } = getWhatsAppConfig();
+  const to = opts.toE164.startsWith("whatsapp:") ? opts.toE164 : `whatsapp:${opts.toE164}`;
+  const fromAddr = from.startsWith("whatsapp:") ? from : `whatsapp:${from}`;
+  const form = new URLSearchParams({
+    To: to,
+    From: fromAddr,
+  });
+  if (opts.contentSid) {
+    form.set("ContentSid", opts.contentSid);
+    if (opts.variables) form.set("ContentVariables", JSON.stringify(opts.variables));
+  } else {
+    form.set("Body", opts.body);
+  }
+
+  try {
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: basicAuthHeader(accountSid, authToken),
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: form,
+    });
+    const data = (await res.json().catch(() => ({}))) as { sid?: string; message?: string };
+    if (!res.ok) {
+      return {
+        status: "failed",
+        error: data.message || `twilio whatsapp ${res.status}`,
+      };
+    }
+    return { status: "sent", sid: data.sid ?? null };
+  } catch (e) {
+    return { status: "failed", error: e instanceof Error ? e.message : "whatsapp error" };
   }
 }
 

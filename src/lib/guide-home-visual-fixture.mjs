@@ -75,7 +75,8 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
       profileStatus: "approved",
     };
   }
-  const nextOffsetMin = scene === "before" ? 120 : scene === "required" || scene === "confirmed" || scene === "missed" ? 27 : 2;
+  const blockScenes = scene === "block2" || scene === "block4" || scene === "block4confirmed" || scene === "replace2";
+  const nextOffsetMin = scene === "before" ? 120 : scene === "required" || scene === "confirmed" || scene === "missed" || blockScenes ? 27 : 2;
   const next = booking({
     id: "fixture-next",
     scheduled_start: new Date(now.getTime() + nextOffsetMin * 60000).toISOString(),
@@ -125,6 +126,37 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
                   confirmed_at: new Date(now.getTime() - 20 * 60000).toISOString(),
                 },
   });
+  const blockNames = ["Jordan", "Maya", "Ethan", "Ava"];
+  const blockCount = scene === "block2" || scene === "replace2" ? 2 : scene === "block4" || scene === "block4confirmed" ? 4 : 0;
+  const blockHalls = blockCount
+    ? Array.from({ length: blockCount }, (_, i) =>
+        booking({
+          id: i === 0 ? "fixture-next" : `fixture-block-${i}`,
+          scheduled_start: new Date(now.getTime() + (nextOffsetMin + i * 60) * 60000).toISOString(),
+          scheduled_end: new Date(now.getTime() + (nextOffsetMin + (i + 1) * 60) * 60000).toISOString(),
+          student_first_name: blockNames[i],
+          attendance:
+            scene === "block4confirmed"
+              ? {
+                  id: `fx-att-block-${i}`,
+                  booking_id: i === 0 ? "fixture-next" : `fixture-block-${i}`,
+                  tutor_id: "g-sarah",
+                  source: scene === "replace2" ? "replacement" : "t30",
+                  status: "confirmed",
+                  confirmed_at: new Date(now.getTime() - 60_000).toISOString(),
+                }
+              : {
+                  id: `fx-att-block-${i}`,
+                  booking_id: i === 0 ? "fixture-next" : `fixture-block-${i}`,
+                  tutor_id: scene === "replace2" ? "g-grace" : "g-sarah",
+                  source: scene === "replace2" ? "replacement" : "t30",
+                  status: "awaiting",
+                  requested_at: new Date(now.getTime() - 3 * 60000).toISOString(),
+                  deadline_at: new Date(now.getTime() + 7 * 60000).toISOString(),
+                },
+        }),
+      )
+    : [];
   const todayB = booking({
     id: "fixture-today-2",
     scheduled_start: later(now, 2),
@@ -162,7 +194,9 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
 
   const bookings = reportNeeded
     ? [missingReport, next, todayB, todayC, laterRow, ...weekDone]
-    : [next, todayB, todayC, laterRow, ...weekDone];
+    : blockHalls.length
+      ? [...blockHalls, laterRow, ...weekDone]
+      : [next, todayB, todayC, laterRow, ...weekDone];
 
   return {
     firstName: "Sarah",

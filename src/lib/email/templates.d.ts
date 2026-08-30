@@ -85,11 +85,14 @@ export function tutorCancelled(ctx: {
 export function tutorRemoved(ctx: { subject?: string | null; whenISO?: string | null; tz?: string | null }): RenderedEmail;
 export function guideAttendanceRequest(ctx: {
   whenISO?: string | null;
+  endISO?: string | null;
   tz?: string | null;
   durationMinutes?: number | null;
   studentName?: string | null;
   studentNames?: string[] | null;
   appUrl?: string | null;
+  count?: number;
+  replacement?: boolean;
 }): RenderedEmail;
 export function coverageCancellation(ctx: {
   restorationLine?: string | null;

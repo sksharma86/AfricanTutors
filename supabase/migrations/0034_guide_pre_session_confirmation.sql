@@ -60,7 +60,7 @@ create unique index if not exists gaa_one_awaiting_per_booking
 -- open_guide_attendance_assignment — persist a request for the CURRENT Guide.
 -- Idempotent. Service / admin / trigger. Does not notify (app layer does).
 -- ---------------------------------------------------------------------------
-create or replace function public.open_guide_attendance_assignment(p_booking uuid, p_source text)
+create or replace function public.open_guide_attendance_assignment(p_booking uuid, p_source text, p_deadline timestamptz default null)
 returns jsonb
 language plpgsql
 security definer
@@ -111,7 +111,14 @@ begin
   end if;
 
   v_source := p_source;
-  if v_source = 't30' then
+  if p_deadline is not null then
+    v_deadline := p_deadline;
+    if v_source = 't30' and now() > v_deadline then
+      v_status := 'missed';
+    else
+      v_status := 'awaiting';
+    end if;
+  elsif v_source = 't30' then
     v_deadline := v_bk.scheduled_start - interval '20 minutes';
     if now() > v_deadline then
       -- Cron / trigger arrived after T-20: persist the miss instead of a dead window.
@@ -260,7 +267,227 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Internal: confirm one booking using an explicit window start (block leader).
+create or replace function public.confirm_guide_attendance_at(p_booking uuid, p_window_start timestamptz)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_bk record;
+  v_row record;
+  v_open timestamptz;
+  v_deadline timestamptz;
+  v_id uuid;
+begin
+  if v_uid is null then
+    raise exception 'Not authorized';
+  end if;
+
+  select id, tutor_id, status, scheduled_start
+    into v_bk
+    from public.bookings
+   where id = p_booking
+     for update;
+  if v_bk.id is null then
+    raise exception 'Booking not found';
+  end if;
+  if v_bk.status is distinct from 'confirmed' then
+    raise exception 'Booking is not eligible for attendance confirmation';
+  end if;
+  if v_bk.tutor_id is null or v_bk.tutor_id is distinct from v_uid then
+    raise exception 'Not authorized to confirm this Study Hall';
+  end if;
+
+  select * into v_row
+    from public.guide_attendance_assignments
+   where booking_id = p_booking
+     and tutor_id = v_uid
+     and status in ('awaiting', 'confirmed', 'missed')
+   order by created_at desc
+   limit 1
+   for update;
+
+  if v_row.id is not null then
+    if v_row.status = 'confirmed' then
+      return jsonb_build_object('status', 'confirmed', 'id', v_row.id, 'idempotent', true);
+    end if;
+    if v_row.status = 'missed' or now() > v_row.deadline_at then
+      raise exception 'Confirmation deadline has passed';
+    end if;
+
+    update public.guide_attendance_assignments
+       set status = 'confirmed',
+           confirmed_at = now(),
+           updated_at = now()
+     where id = v_row.id
+       and status = 'awaiting';
+
+    perform public.log_admin_action(
+      'guide_attendance_confirmed',
+      'guide_attendance_assignments',
+      v_row.id,
+      jsonb_build_object('status', 'awaiting'),
+      jsonb_build_object('status', 'confirmed', 'tutor_id', v_uid),
+      'guide confirmed attendance'
+    );
+    return jsonb_build_object('status', 'confirmed', 'id', v_row.id, 'idempotent', false);
+  end if;
+
+  if coalesce(p_window_start, v_bk.scheduled_start) is null then
+    raise exception 'Booking is not eligible for attendance confirmation';
+  end if;
+  v_open := coalesce(p_window_start, v_bk.scheduled_start) - interval '30 minutes';
+  v_deadline := coalesce(p_window_start, v_bk.scheduled_start) - interval '20 minutes';
+  if now() < v_open then
+    raise exception 'Confirmation is not open yet';
+  end if;
+  if now() > v_deadline then
+    raise exception 'Confirmation deadline has passed';
+  end if;
+
+  insert into public.guide_attendance_assignments (
+    booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at
+  ) values (
+    p_booking, v_uid, 't30', 'confirmed', now(), v_deadline, now()
+  )
+  returning id into v_id;
+
+  perform public.log_admin_action(
+    'guide_attendance_confirmed',
+    'guide_attendance_assignments',
+    v_id,
+    null,
+    jsonb_build_object('status', 'confirmed', 'tutor_id', v_uid, 'opened_on_confirm', true),
+    'guide confirmed attendance'
+  );
+  return jsonb_build_object('status', 'confirmed', 'id', v_id, 'idempotent', false);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+
+-- confirm_guide_attendance_block — Confirm All for a contiguous block.
+-- Re-evaluates CURRENT ownership. Stale/reassigned/cancelled members are
+-- skipped. Later members inherit the FIRST session's T-30/T-20 window.
+-- ---------------------------------------------------------------------------
+create or replace function public.confirm_guide_attendance_block(p_booking uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_seed record;
+  v_member record;
+  v_chain uuid[] := '{}';
+  v_cur uuid;
+  v_next uuid;
+  v_first_start timestamptz;
+  v_one jsonb;
+  v_confirmed jsonb := '[]'::jsonb;
+  v_skipped jsonb := '[]'::jsonb;
+begin
+  if v_uid is null then
+    raise exception 'Not authorized';
+  end if;
+
+  select id, tutor_id, status, scheduled_start, scheduled_end
+    into v_seed
+    from public.bookings
+   where id = p_booking
+     for update;
+  if v_seed.id is null then
+    raise exception 'Booking not found';
+  end if;
+  if v_seed.tutor_id is null or v_seed.tutor_id is distinct from v_uid then
+    raise exception 'Not authorized to confirm this Study Hall';
+  end if;
+  if v_seed.status is distinct from 'confirmed' then
+    raise exception 'Booking is not eligible for attendance confirmation';
+  end if;
+
+  -- Walk backward to the obligation leader. Stop before a previously
+  -- confirmed assignment so a newly appended hall is not folded into
+  -- an earlier commitment.
+  v_cur := v_seed.id;
+  loop
+    select b.id into v_next
+      from public.bookings b
+      join public.bookings cur on cur.id = v_cur
+     where b.tutor_id = v_uid
+       and b.status = 'confirmed'
+       and b.scheduled_end is not null
+       and b.scheduled_end = cur.scheduled_start
+     order by b.scheduled_start desc
+     limit 1;
+    exit when v_next is null;
+    if exists (
+      select 1
+        from public.guide_attendance_assignments a
+       where a.booking_id = v_next
+         and a.tutor_id = v_uid
+         and a.status = 'confirmed'
+    ) then
+      exit;
+    end if;
+    v_cur := v_next;
+  end loop;
+
+  select scheduled_start into v_first_start from public.bookings where id = v_cur;
+
+  -- Walk forward collecting the contiguous chain.
+  loop
+    v_chain := v_chain || v_cur;
+    select b.id into v_next
+      from public.bookings b
+      join public.bookings cur on cur.id = v_cur
+     where b.tutor_id = v_uid
+       and b.status = 'confirmed'
+       and cur.scheduled_end is not null
+       and b.scheduled_start = cur.scheduled_end
+     order by b.scheduled_start
+     limit 1;
+    exit when v_next is null;
+    v_cur := v_next;
+  end loop;
+
+  foreach v_cur in array v_chain loop
+    select id, tutor_id, status, scheduled_start into v_member
+      from public.bookings
+     where id = v_cur
+       for update;
+    if v_member.tutor_id is distinct from v_uid or v_member.status is distinct from 'confirmed' then
+      v_skipped := v_skipped || jsonb_build_array(jsonb_build_object('id', v_cur, 'reason', 'stale'));
+      continue;
+    end if;
+    begin
+      -- Confirm against the FIRST session window so later members are eligible.
+      v_one := public.confirm_guide_attendance_at(v_cur, v_first_start);
+      v_confirmed := v_confirmed || jsonb_build_array(v_one || jsonb_build_object('booking_id', v_cur));
+    exception when others then
+      v_skipped := v_skipped || jsonb_build_array(jsonb_build_object(
+        'id', v_cur,
+        'reason', sqlerrm
+      ));
+    end;
+  end loop;
+
+  return jsonb_build_object(
+    'status', 'ok',
+    'confirmed', v_confirmed,
+    'skipped', v_skipped,
+    'count', jsonb_array_length(v_confirmed)
+  );
+end;
+$$;
+
 -- sweep_guide_attendance — open due T-30 windows + persist T-20 misses.
+-- Opens contiguous followers with the FIRST session's deadline so a 4-hall
+-- block is requested once at the leader's T-30, not at each later T-30.
 -- Idempotent. Service role / financial actor only.
 -- ---------------------------------------------------------------------------
 create or replace function public.sweep_guide_attendance()
@@ -271,28 +498,103 @@ set search_path = public
 as $$
 declare
   v_bk record;
+  v_prev record;
+  v_prev_att record;
+  v_follow record;
   v_row record;
   v_open jsonb;
+  v_deadline timestamptz;
   v_opened jsonb := '[]'::jsonb;
   v_missed jsonb := '[]'::jsonb;
+  v_independent boolean;
 begin
   if not public.is_financial_actor() then
     raise exception 'Not authorized';
   end if;
 
   for v_bk in
-    select id
+    select id, tutor_id, scheduled_start, scheduled_end
       from public.bookings
      where status = 'confirmed'
        and tutor_id is not null
        and scheduled_start is not null
        and scheduled_start > now()
        and scheduled_start <= now() + interval '30 minutes'
+     order by scheduled_start
   loop
-    v_open := public.open_guide_attendance_assignment(v_bk.id, 't30');
-    if (v_open ->> 'created') = 'true' then
-      v_opened := v_opened || jsonb_build_array(v_open);
+    v_independent := true;
+    select id, tutor_id, scheduled_start, scheduled_end, status
+      into v_prev
+      from public.bookings
+     where tutor_id = v_bk.tutor_id
+       and status = 'confirmed'
+       and scheduled_end is not null
+       and scheduled_end = v_bk.scheduled_start
+     order by scheduled_start desc
+     limit 1;
+    if v_prev.id is not null then
+      select * into v_prev_att
+        from public.guide_attendance_assignments
+       where booking_id = v_prev.id
+         and tutor_id = v_bk.tutor_id
+         and status in ('awaiting', 'confirmed', 'missed')
+       order by created_at desc
+       limit 1;
+      if v_prev_att.status is null then
+        v_independent := false;
+      elsif v_prev_att.status = 'awaiting' then
+        v_independent := false;
+      elsif v_prev_att.status = 'missed' and v_prev_att.resolved_at is null then
+        v_independent := false;
+        -- Newly appended hall after a miss still needs its own window.
+        if not exists (
+          select 1
+            from public.guide_attendance_assignments a
+           where a.booking_id = v_bk.id
+             and a.tutor_id = v_bk.tutor_id
+             and a.status in ('awaiting', 'confirmed', 'missed')
+        ) then
+          v_independent := true;
+        end if;
+      elsif v_prev_att.status = 'confirmed' then
+        v_independent := true;
+      end if;
     end if;
+
+    if not v_independent then
+      continue;
+    end if;
+
+    v_deadline := v_bk.scheduled_start - interval '20 minutes';
+    v_open := public.open_guide_attendance_assignment(v_bk.id, 't30', v_deadline);
+    if (v_open ->> 'created') = 'true' then
+      v_opened := v_opened || jsonb_build_array(v_open || jsonb_build_object('booking_id', v_bk.id, 'tutor_id', v_bk.tutor_id));
+    end if;
+
+    -- Expand forward: unopened contiguous followers share the leader deadline.
+    for v_follow in
+      with recursive chain as (
+        select b.id, b.tutor_id, b.scheduled_start, b.scheduled_end
+          from public.bookings b
+         where b.tutor_id = v_bk.tutor_id
+           and b.status = 'confirmed'
+           and v_bk.scheduled_end is not null
+           and b.scheduled_start = v_bk.scheduled_end
+        union all
+        select b.id, b.tutor_id, b.scheduled_start, b.scheduled_end
+          from public.bookings b
+          join chain c on b.tutor_id = c.tutor_id
+           and b.status = 'confirmed'
+           and c.scheduled_end is not null
+           and b.scheduled_start = c.scheduled_end
+      )
+      select id from chain
+    loop
+      v_open := public.open_guide_attendance_assignment(v_follow.id, 't30', v_deadline);
+      if (v_open ->> 'created') = 'true' then
+        v_opened := v_opened || jsonb_build_array(v_open || jsonb_build_object('booking_id', v_follow.id, 'tutor_id', v_bk.tutor_id));
+      end if;
+    end loop;
   end loop;
 
   for v_row in
@@ -442,11 +744,48 @@ grant select on public.guide_attendance_assignments to authenticated;
 grant all on public.guide_attendance_assignments to service_role;
 
 revoke all on function public.open_guide_attendance_assignment(uuid, text) from public;
+revoke all on function public.open_guide_attendance_assignment(uuid, text, timestamptz) from public;
 revoke all on function public.confirm_guide_attendance(uuid) from public;
+revoke all on function public.confirm_guide_attendance_block(uuid) from public;
+revoke all on function public.confirm_guide_attendance_at(uuid, timestamptz) from public;
 revoke all on function public.sweep_guide_attendance() from public;
--- Open/sweep are cron + trigger + service only. Guides confirm via confirm_guide_attendance.
-grant execute on function public.open_guide_attendance_assignment(uuid, text) to service_role;
+-- Open/sweep are cron + trigger + service only. Guides confirm via confirm RPCs.
+grant execute on function public.open_guide_attendance_assignment(uuid, text, timestamptz) to service_role;
 grant execute on function public.confirm_guide_attendance(uuid) to authenticated, service_role;
+grant execute on function public.confirm_guide_attendance_block(uuid) to authenticated, service_role;
+-- Window-start confirm is internal to Confirm All (security definer). Not a Guide RPC.
+grant execute on function public.confirm_guide_attendance_at(uuid, timestamptz) to service_role;
 grant execute on function public.sweep_guide_attendance() to service_role;
+
+-- Guides may store an operational WhatsApp number on the existing
+-- profiles.phone_e164 field (international E.164). No second phone column.
+create or replace function public.set_my_phone(p_phone text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_phone text := nullif(btrim(coalesce(p_phone, '')), '');
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated';
+  end if;
+  if v_phone is not null and v_phone !~ '^\+[1-9][0-9]{7,14}$' then
+    raise exception 'Phone must be in E.164 form (e.g. +254700000000)';
+  end if;
+  if not public.is_admin(v_uid) and not exists (
+    select 1 from public.profiles where id = v_uid and role in ('student', 'tutor')
+  ) then
+    raise exception 'Not authorized';
+  end if;
+  update public.profiles
+     set phone_e164 = v_phone,
+         phone_updated_at = case when v_phone is distinct from phone_e164 then now() else phone_updated_at end
+   where id = v_uid;
+  return v_phone;
+end;
+$$;
 
 notify pgrst, 'reload schema';

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { obligationBlockContaining } from "@/lib/guide-attendance.mjs";
 import { notifyGuideAttendanceRequest, notifyGuideConfirmationMissed } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Open T-30 confirmation windows and persist T-20 misses.
- * Idempotent via assignment rows + claim_email_delivery keys.
+ * One WhatsApp + one email per contiguous block. Idempotent.
  * Does not cancel, reassign, or refund.
  */
 async function handle(request: NextRequest) {
@@ -33,25 +34,80 @@ async function handle(request: NextRequest) {
   }
 
   const opened = Array.isArray((data as { opened?: unknown[] } | null)?.opened)
-    ? (data as { opened: { id?: string; booking_id?: string; status?: string }[] }).opened
+    ? (data as { opened: { id?: string; booking_id?: string; tutor_id?: string; status?: string; source?: string }[] }).opened
     : [];
   const missed = Array.isArray((data as { missed?: unknown[] } | null)?.missed)
-    ? (data as { missed: { id?: string; booking_id?: string }[] }).missed
+    ? (data as { missed: { id?: string; booking_id?: string; tutor_id?: string }[] }).missed
     : [];
 
   let requestsSent = 0;
   let alertsSent = 0;
+  const notifiedLeaders = new Set<string>();
+  const missedLeaders = new Set<string>();
+
+  async function hallsForTutor(tutorId: string) {
+    const { data: halls } = await service
+      .from("bookings")
+      .select("id, tutor_id, scheduled_start, scheduled_end, status")
+      .eq("tutor_id", tutorId)
+      .eq("status", "confirmed");
+    const { data: atts } = await service
+      .from("guide_attendance_assignments")
+      .select("booking_id, status, tutor_id")
+      .eq("tutor_id", tutorId)
+      .in("status", ["awaiting", "confirmed", "missed"]);
+    const byBooking: Record<string, { status?: string }> = {};
+    for (const a of atts ?? []) {
+      if (a?.booking_id) byBooking[a.booking_id] = a;
+    }
+    return {
+      halls: (halls ?? []).map((h) => ({ ...h, attendance: byBooking[h.id] ?? null })),
+      assignmentsByBooking: byBooking,
+    };
+  }
+
+  function blockFor(
+    halls: { id: string; scheduled_end?: string | null }[],
+    bookingId: string,
+    tutorId: string | undefined,
+    assignmentsByBooking: Record<string, { status?: string }>,
+  ) {
+    return obligationBlockContaining(halls, bookingId, { tutorId, assignmentsByBooking });
+  }
 
   for (const row of opened) {
     if (!row?.id || !row.booking_id) continue;
     try {
       if (row.status === "missed") {
-        const r = await notifyGuideConfirmationMissed(row.booking_id, row.id);
+        const { halls, assignmentsByBooking } = row.tutor_id
+          ? await hallsForTutor(row.tutor_id)
+          : { halls: [], assignmentsByBooking: {} };
+        const block = blockFor(halls, row.booking_id, row.tutor_id, assignmentsByBooking);
+        const first = block[0] ?? { id: row.booking_id };
+        if (missedLeaders.has(first.id)) continue;
+        missedLeaders.add(first.id);
+        const r = await notifyGuideConfirmationMissed(first.id, row.id, {
+          count: Math.max(block.length, 1),
+          firstBookingId: first.id,
+          tutorId: row.tutor_id,
+        });
         if (r?.status === "sent") alertsSent += 1;
-      } else {
-        const r = await notifyGuideAttendanceRequest(row.booking_id, row.id);
-        if (r?.status === "sent") requestsSent += 1;
+        continue;
       }
+      const { halls, assignmentsByBooking } = row.tutor_id
+        ? await hallsForTutor(row.tutor_id)
+        : { halls: [], assignmentsByBooking: {} };
+      const block = blockFor(halls, row.booking_id, row.tutor_id, assignmentsByBooking);
+      const first = block[0] ?? { id: row.booking_id, scheduled_end: null };
+      if (notifiedLeaders.has(first.id)) continue;
+      notifiedLeaders.add(first.id);
+      const r = await notifyGuideAttendanceRequest(first.id, row.id, {
+        count: Math.max(block.length, 1),
+        endISO: block[block.length - 1]?.scheduled_end ?? null,
+        firstBookingId: first.id,
+        replacement: row.source === "replacement" || row.source === "short_notice",
+      });
+      if (r?.status === "sent") requestsSent += 1;
     } catch {
       /* delivery failure must not change attendance state */
     }
@@ -60,7 +116,18 @@ async function handle(request: NextRequest) {
   for (const row of missed) {
     if (!row?.id || !row.booking_id) continue;
     try {
-      const r = await notifyGuideConfirmationMissed(row.booking_id, row.id);
+      const { halls, assignmentsByBooking } = row.tutor_id
+        ? await hallsForTutor(row.tutor_id)
+        : { halls: [], assignmentsByBooking: {} };
+      const block = blockFor(halls, row.booking_id, row.tutor_id, assignmentsByBooking);
+      const first = block[0] ?? { id: row.booking_id };
+      if (missedLeaders.has(first.id)) continue;
+      missedLeaders.add(first.id);
+      const r = await notifyGuideConfirmationMissed(first.id, row.id, {
+        count: Math.max(block.length, 1),
+        firstBookingId: first.id,
+        tutorId: row.tutor_id,
+      });
       if (r?.status === "sent") alertsSent += 1;
     } catch {
       /* delivery failure must not change attendance state */
