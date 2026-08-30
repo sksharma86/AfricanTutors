@@ -92,13 +92,14 @@ describe("Portal affordance — view switchers", () => {
 
   it("Finance uses Guide compensation / Customer money / Customer balances / Disputes controls", () => {
     const src = read("src/components/dashboard/admin-finance-console.tsx");
-    assert.match(src, /PortalSegmentedControl/);
+    assert.match(src, /ManagementSubnav/);
     assert.match(src, /Finance views/);
     assert.match(src, /Guide compensation/);
     assert.match(src, /Customer money/);
     assert.match(src, /Customer balances/);
     assert.match(src, /Disputes/);
     assert.doesNotMatch(src, /border-b-2 border-ink-900/);
+    assert.doesNotMatch(src, /PortalSegmentedControl/);
   });
 });
 

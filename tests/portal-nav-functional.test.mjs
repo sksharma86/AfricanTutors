@@ -28,6 +28,7 @@ describe("Portal navigation — Management (admin)", () => {
   it("each Management destination is its own authorized page", () => {
     assert.match(admin, /navItems=\{ADMIN_PORTAL_NAV\}/);
     assert.match(admin, /requireRole\("admin"/);
+    assert.match(admin, /ManagementPage/);
     assert.match(studyHalls, /requireRole\("admin"/);
     assert.match(guides, /requireRole\("admin"/);
     assert.match(customers, /requireRole\("admin"/);
@@ -37,7 +38,7 @@ describe("Portal navigation — Management (admin)", () => {
   it("finance console shares Management nav and stays requireRole admin", () => {
     assert.match(finance, /navItems=\{ADMIN_PORTAL_NAV\}/);
     assert.match(finance, /requireRole\("admin"/);
-    assert.match(finance, /DashboardShell/);
+    assert.match(finance, /ManagementPage/);
   });
 
   it("side nav uses Link semantics with aria-current and no inert Soon badges", () => {
