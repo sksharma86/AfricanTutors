@@ -59,7 +59,7 @@ function booking(overrides = {}) {
   };
 }
 
-export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false, empty = false } = {}) {
+export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false, empty = false, scene = null } = {}) {
   if (empty) {
     return {
       firstName: "Sarah",
@@ -75,11 +75,55 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
       profileStatus: "approved",
     };
   }
+  const nextOffsetMin = scene === "before" ? 120 : scene === "required" || scene === "confirmed" || scene === "missed" ? 27 : 2;
   const next = booking({
     id: "fixture-next",
-    scheduled_start: new Date(now.getTime() + 2 * 60000).toISOString(),
-    scheduled_end: new Date(now.getTime() + 62 * 60000).toISOString(),
+    scheduled_start: new Date(now.getTime() + nextOffsetMin * 60000).toISOString(),
+    scheduled_end: new Date(now.getTime() + (nextOffsetMin + 60) * 60000).toISOString(),
     student_first_name: "Jordan",
+    attendance:
+      scene === "required"
+        ? {
+            id: "fx-att-req",
+            booking_id: "fixture-next",
+            tutor_id: "g-sarah",
+            source: "t30",
+            status: "awaiting",
+            requested_at: new Date(now.getTime() - 3 * 60000).toISOString(),
+            deadline_at: new Date(now.getTime() + 7 * 60000).toISOString(),
+          }
+        : scene === "confirmed"
+          ? {
+              id: "fx-att-ok",
+              booking_id: "fixture-next",
+              tutor_id: "g-sarah",
+              source: "t30",
+              status: "confirmed",
+              requested_at: new Date(now.getTime() - 8 * 60000).toISOString(),
+              deadline_at: new Date(now.getTime() + 2 * 60000).toISOString(),
+              confirmed_at: new Date(now.getTime() - 1 * 60000).toISOString(),
+            }
+          : scene === "missed"
+            ? {
+                id: "fx-att-miss",
+                booking_id: "fixture-next",
+                tutor_id: "g-sarah",
+                source: "t30",
+                status: "missed",
+                requested_at: new Date(now.getTime() - 12 * 60000).toISOString(),
+                deadline_at: new Date(now.getTime() - 2 * 60000).toISOString(),
+                missed_at: new Date(now.getTime() - 2 * 60000).toISOString(),
+              }
+            : scene === "before"
+              ? null
+              : {
+                  id: "fx-att-default",
+                  booking_id: "fixture-next",
+                  tutor_id: "g-sarah",
+                  source: "t30",
+                  status: "confirmed",
+                  confirmed_at: new Date(now.getTime() - 20 * 60000).toISOString(),
+                },
   });
   const todayB = booking({
     id: "fixture-today-2",

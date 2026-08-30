@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { notifyAdminAlert, notifyReassignment } from "@/lib/notify";
+import { notifyAdminAlert, notifyCurrentAttendanceRequest, notifyReassignment } from "@/lib/notify";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         reassigned: true,
         removedTutorId: auto.from_tutor ?? userRes.user.id,
       });
+      await notifyCurrentAttendanceRequest(bookingId);
     } catch {
       /* best-effort */
     }

@@ -3,6 +3,7 @@
  * Does not change booking, pay, matching, Daily, or compensation math.
  */
 
+import { managementAttendanceIssue } from "./guide-attendance.mjs";
 import { bookingChildNames } from "./household-children.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
@@ -156,9 +157,27 @@ export function currentStudyHallIssues(booking, extras = {}) {
     recordingFailures = [],
     missingReport = false,
     nowMs = Date.now(),
+    attendance = null,
+    assignmentsLoaded = extras.attendance !== undefined || extras.assignmentsLoaded === true,
   } = extras;
   if (!booking) return [];
   const issues = [];
+
+  const attendanceIssue = managementAttendanceIssue({
+    booking,
+    assignment: attendance,
+    nowMs,
+    assignmentsLoaded,
+  });
+  if (attendanceIssue) {
+    issues.push({
+      kind: attendanceIssue.kind,
+      title: attendanceIssue.title,
+      summary: attendanceIssue.summary,
+      detail: attendanceIssue.detail ?? startsInLabel(booking.scheduled_start, nowMs),
+      action: attendanceIssue.action,
+    });
+  }
 
   if (isOpenStudyHall(booking.status) && !hasGuide(booking)) {
     issues.push({
@@ -392,6 +411,8 @@ export function collectNeedsAttention({
   disputes = [],
   missingReports = [],
   pendingApplicants = [],
+  attendanceByBooking = {},
+  assignmentsLoaded = false,
   nowMs = Date.now(),
 } = {}) {
   const items = [];
@@ -406,6 +427,7 @@ export function collectNeedsAttention({
   for (const b of bookings) {
     if (!b?.id) continue;
     seen.add(b.id);
+    const hasAttendanceKey = Object.prototype.hasOwnProperty.call(attendanceByBooking ?? {}, b.id);
     const issues = currentStudyHallIssues(b, {
       presence: presenceByBooking[b.id],
       cancelOpen: cancelOpen.has(b.id),
@@ -413,6 +435,8 @@ export function collectNeedsAttention({
       emailFailures: emailBy.get(b.id) ?? [],
       recordingFailures: recBy.get(b.id) ?? [],
       missingReport: missingSet.has(b.id),
+      attendance: hasAttendanceKey ? attendanceByBooking[b.id] : null,
+      assignmentsLoaded: assignmentsLoaded || hasAttendanceKey,
       nowMs,
     });
     for (const issue of issues) items.push(attentionFromIssue(b, issue));
@@ -492,7 +516,12 @@ export function presentNeedsAttention(items = []) {
         detail: entry.detail ?? "",
         reasons: [entry.title],
         issueCount: 1,
-        urgent: entry.kind === "call_parent" || entry.kind === "no_join" || entry.kind === "coverage",
+        urgent:
+          entry.kind === "call_parent" ||
+          entry.kind === "no_join" ||
+          entry.kind === "coverage" ||
+          entry.kind === "guide_confirm_missed" ||
+          entry.kind === "guide_confirm_awaiting",
       });
       continue;
     }
@@ -509,7 +538,9 @@ export function presentNeedsAttention(items = []) {
       detail: group[0].detail ?? "",
       reasons: group.map((i) => i.title),
       issueCount: group.length,
-      urgent: group.some((i) => ["call_parent", "no_join", "coverage", "needs_guide"].includes(i.kind)),
+      urgent: group.some((i) =>
+        ["call_parent", "no_join", "coverage", "needs_guide", "guide_confirm_missed", "guide_confirm_awaiting"].includes(i.kind),
+      ),
     });
   }
   return presented;

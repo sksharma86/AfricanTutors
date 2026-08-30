@@ -325,6 +325,41 @@ export function tutorRemoved(ctx) {
   return { subject: "You've been removed from a session", html: layout("Session reassigned", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
+/** Guide: confirm you will attend. Does not confirm for them. */
+export function guideAttendanceRequest(ctx) {
+  const when = formatWhen(ctx.whenISO, ctx.tz);
+  const hours =
+    ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
+  const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
+  const lines = [
+    "Your Study Hall starts in 30 minutes.",
+    `When: ${when}`,
+    `Duration: ${hours}`,
+    childrenLine(ctx),
+    "Please confirm that you'll be there from your Guide dashboard.",
+  ];
+  return {
+    subject: "Your Study Hall starts in 30 minutes — please confirm",
+    html: layout("Please confirm you'll be there", lines.filter(Boolean).map(p).join(""), { href: dash, label: "I'll be there" }),
+    text: textJoin([...lines.filter(Boolean), "", `Confirm: ${dash}`]),
+  };
+}
+
+/** Parent: Study Hall could not provide Guide coverage. Do not name the Guide. */
+export function coverageCancellation(ctx) {
+  const lines = [
+    "We're sorry, but we're unable to provide a Guide for your scheduled Study Hall today.",
+    ctx.restorationLine || "Your session value has been restored automatically.",
+    ctx.compCreditCents ? `We've also added ${formatMoney(ctx.compCreditCents)} to your account for the inconvenience.` : null,
+    "We apologize for the disruption.",
+  ];
+  return {
+    subject: "Update about your Study Hall today",
+    html: layout("We're sorry — we couldn't provide a Guide", lines.filter(Boolean).map(p).join(""), ctx.appUrl ? { href: ctx.appUrl, label: "Open your account" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}
+
 export function adminAlert(ctx) {
   const lines = [ctx.summary || "An operational event needs attention.", ...(ctx.lines || [])];
   return { subject: `[Ops] ${ctx.title || `${BRAND} alert`}`, html: layout(ctx.title || "Operational alert", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };

@@ -83,6 +83,19 @@ export function tutorCancelled(ctx: {
   tz?: string | null;
 }): RenderedEmail;
 export function tutorRemoved(ctx: { subject?: string | null; whenISO?: string | null; tz?: string | null }): RenderedEmail;
+export function guideAttendanceRequest(ctx: {
+  whenISO?: string | null;
+  tz?: string | null;
+  durationMinutes?: number | null;
+  studentName?: string | null;
+  studentNames?: string[] | null;
+  appUrl?: string | null;
+}): RenderedEmail;
+export function coverageCancellation(ctx: {
+  restorationLine?: string | null;
+  compCreditCents?: number | null;
+  appUrl?: string | null;
+}): RenderedEmail;
 export function adminAlert(ctx: { title?: string; summary?: string; lines?: string[] }): RenderedEmail;
 export function guideReportRequired(ctx: {
   studentName?: string | null;

@@ -5,6 +5,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/guide-attendance",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/recording-retention",
       "schedule": "0 9 * * *"
     },

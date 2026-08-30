@@ -13,6 +13,7 @@ import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { bookingChildCount, bookingChildNames, firstNameOf } from "@/lib/household-children.mjs";
 import { formatCents } from "@/lib/pricing";
+import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
 import { currentStudyHallIssues, managementOperationalStatus } from "@/lib/management-ops.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -48,6 +49,7 @@ export default async function AdminStudyHallDetailPage({
     notifyRes,
     recRes,
     reportRes,
+    attRes,
     payRes,
   ] = await Promise.all([
     supabase!.from("profiles").select("id, display_name, phone_e164").eq("id", raw.account_id).maybeSingle(),
@@ -84,6 +86,11 @@ export default async function AdminStudyHallDetailPage({
       .eq("booking_id", bookingId)
       .then((r) => r, () => ({ data: null, error: null })),
     supabase!
+      .from("guide_attendance_assignments")
+      .select("id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at")
+      .eq("booking_id", bookingId)
+      .then((r) => r, () => ({ data: null, error: { message: "unavailable" } })),
+    supabase!
       .from("payments")
       .select("id, purpose, status, gross_cents, stripe_paid_cents, credit_applied_cents, refunded_cents")
       .eq("booking_id", bookingId),
@@ -93,6 +100,10 @@ export default async function AdminStudyHallDetailPage({
   const openCancel = ((cancelRes.data ?? []) as { status: string }[]).some((r) => r.status === "open");
   const failedEmails = ((notifyRes.data ?? []) as { id: string; status: string }[]).filter((n) => n.status === "failed");
   const failedRecs = ((recRes.data ?? []) as { status: string }[]).filter((r) => r.status === "failed");
+  const assignmentsLoaded = !attRes.error;
+  const attendance = assignmentsLoaded
+    ? currentAssignmentForBooking((attRes.data ?? []) as never, raw as never)
+    : null;
   const issues = currentStudyHallIssues(raw as never, {
     presence: presenceRes.data ?? null,
     cancelOpen: openCancel,
@@ -100,6 +111,8 @@ export default async function AdminStudyHallDetailPage({
     emailFailures: failedEmails,
     recordingFailures: failedRecs,
     missingReport: ((reportRes.data ?? []) as unknown[]).length === 0 && raw.status === "completed",
+    attendance,
+    assignmentsLoaded,
   });
   const layer = managementOperationalStatus(raw as never, {
     presence: (presenceRes.data ?? null) as never,
@@ -152,12 +165,17 @@ export default async function AdminStudyHallDetailPage({
                     <ManagementNotifyRetry deliveryId={failedEmails[0].id} />
                   </div>
                 ) : null}
-                {(issue.kind === "needs_guide" || issue.kind === "coverage") && canAct ? (
+                {(issue.kind === "needs_guide" ||
+                  issue.kind === "coverage" ||
+                  issue.kind === "guide_confirm_missed" ||
+                  issue.kind === "guide_confirm_awaiting") &&
+                canAct ? (
                   <div className="mt-3">
                     <ManagementStudyHallActions
                       bookingId={bookingId}
                       canAct={canAct}
-                      needsGuide={!raw.tutor_id || issue.kind === "coverage"}
+                      needsGuide={!raw.tutor_id || issue.kind === "coverage" || issue.kind === "guide_confirm_missed"}
+                      coverageCancel={issue.kind === "guide_confirm_missed" || issue.kind === "guide_confirm_awaiting"}
                     />
                   </div>
                 ) : null}

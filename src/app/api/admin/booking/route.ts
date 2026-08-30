@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { adminApiContext } from "@/lib/admin-service";
-import { notifyReassignment } from "@/lib/notify";
+import { COVERAGE_CANCEL_REASON, isCoverageCancellationReason } from "@/lib/guide-attendance.mjs";
+import { notifyCoverageCancellation, notifyCurrentAttendanceRequest, notifyReassignment } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
@@ -53,12 +54,32 @@ export async function POST(request: NextRequest) {
     const removedTutorId = (res.data as { from_tutor?: string } | null)?.from_tutor ?? null;
     try {
       await notifyReassignment(body.bookingId, { reassigned: true, removedTutorId });
+      await notifyCurrentAttendanceRequest(body.bookingId);
     } catch {
       /* best-effort */
     }
   } else if (body.action === "release") {
     try {
-      await notifyReassignment(body.bookingId, { reassigned: false, compCreditCents: body.compCreditCents ?? 0 });
+      if (isCoverageCancellationReason(reason) || reason === COVERAGE_CANCEL_REASON) {
+        const released = (res.data ?? {}) as {
+          restored_minutes?: number;
+          restored_credit_cents?: number;
+          restored?: number;
+        };
+        const { data: booking } = await getServiceSupabase()
+          .from("bookings")
+          .select("is_free_trial")
+          .eq("id", body.bookingId)
+          .maybeSingle();
+        await notifyCoverageCancellation(body.bookingId, {
+          isFreeTrial: Boolean(booking?.is_free_trial),
+          restoredMinutes: released.restored_minutes ?? null,
+          restoredCreditCents: released.restored_credit_cents ?? null,
+          compCreditCents: body.compCreditCents ?? 0,
+        });
+      } else {
+        await notifyReassignment(body.bookingId, { reassigned: false, compCreditCents: body.compCreditCents ?? 0 });
+      }
     } catch {
       /* best-effort */
     }

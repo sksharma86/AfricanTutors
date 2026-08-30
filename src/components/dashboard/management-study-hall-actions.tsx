@@ -20,10 +20,12 @@ export function ManagementStudyHallActions({
   bookingId,
   canAct,
   needsGuide,
+  coverageCancel = false,
 }: {
   bookingId: string;
   canAct: boolean;
   needsGuide: boolean;
+  coverageCancel?: boolean;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function ManagementStudyHallActions({
       const comp = window.prompt("Courtesy account credit in dollars (0 for none):", "0");
       if (comp === null) return;
       payload.compCreditCents = Math.max(0, Math.round(parseFloat(comp) * 100) || 0);
-      payload.reason = "admin/Guide cancellation";
+      payload.reason = coverageCancel ? "study_hall_guide_coverage" : "admin/Guide cancellation";
     }
 
     if (action === "reassign") {

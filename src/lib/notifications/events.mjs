@@ -25,6 +25,9 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   CALL_PARENT_FAILURE: "call_parent_failure",
   PAYMENT_FAILURE: "payment_failure",
   RECORDING_FAILURE: "recording_failure",
+  GUIDE_ATTENDANCE_REQUEST: "guide_attendance_request",
+  GUIDE_CONFIRMATION_MISSED: "guide_confirmation_missed",
+  COVERAGE_CANCELLATION: "coverage_cancellation",
 });
 
 export const CHANNEL_POLICY = Object.freeze({
@@ -47,11 +50,15 @@ export const CHANNEL_POLICY = Object.freeze({
     "call_parent_failure",
     "payment_failure",
     "recording_failure",
+    "guide_attendance_request",
+    "guide_confirmation_missed",
+    "coverage_cancellation",
   ],
   sms: [
     "session_reminder_1h",
     "call_parent_escalation",
     "booking_cancelled",
+    "coverage_cancellation",
     // Successful Guide reassignment must NEVER SMS the parent.
   ],
   voice: ["call_parent_escalation"],

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { adminApiContext } from "@/lib/admin-service";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
-import { notifyAdminAlert, notifyReassignment } from "@/lib/notify";
+import { notifyAdminAlert, notifyCurrentAttendanceRequest, notifyReassignment } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
@@ -147,6 +147,7 @@ export async function POST(request: NextRequest) {
           reassigned: true,
           removedTutorId: auto.from_tutor ?? profileId,
         });
+        await notifyCurrentAttendanceRequest(booking.id);
       } catch {
         /* best-effort */
       }

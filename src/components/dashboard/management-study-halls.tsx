@@ -55,6 +55,7 @@ export interface StudyHallListRow {
 export function ManagementStudyHalls({
   bookings,
   presenceByBooking,
+  nowMs: nowMsProp,
 }: {
   bookings: StudyHallListRow[];
   presenceByBooking: Record<
@@ -68,12 +69,14 @@ export function ManagementStudyHalls({
       tutor_last_left_at?: string | null;
     }
   >;
+  nowMs?: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const tz = useMemo(() => browserTimezone(), []);
-  const [nowMs] = useState(() => Date.now());
+  const [clientNow] = useState(() => Date.now());
+  const nowMs = nowMsProp ?? clientNow;
   const view = VIEWS.some((v) => v.id === params.get("view")) ? (params.get("view") as string) : "today";
   const [q, setQ] = useState(params.get("q") ?? "");
   const [date, setDate] = useState(params.get("date") ?? "");

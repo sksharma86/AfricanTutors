@@ -3,7 +3,7 @@
  * Never imported by the real Overview. Does not write bookings, earnings, or reports.
  */
 
-import { collectNeedsAttention } from "./management-ops.mjs";
+import { collectNeedsAttention, currentStudyHallIssues } from "./management-ops.mjs";
 
 function later(now, hours, minutes = 0) {
   return new Date(now.getTime() + (hours * 60 + minutes) * 60000).toISOString();
@@ -48,7 +48,7 @@ export function managementVisualReviewNow(now = new Date(), tz = "America/Chicag
   return new Date(utcGuess - (shownH * 60 + shownM - (hour * 60 + minute)) * 60000);
 }
 
-export function managementHomeVisualFixture(now = new Date(), { empty = false } = {}) {
+export function managementHomeVisualFixture(now = new Date(), { empty = false, scene = null } = {}) {
   const timeZone = "America/Chicago";
   const nowMs = now.getTime();
   if (empty) {
@@ -121,19 +121,73 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false } 
     }),
   );
 
-  const bookings = [liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler];
+  const confirmHall = booking(now, {
+    id: "fx-confirm",
+    student_first_name: "Jordan",
+    tutor_display_name: scene === "replacement" || scene === "resolved" ? "Grace K." : "Sarah M.",
+    tutor_id: scene === "replacement" || scene === "resolved" ? "g-grace" : "g-sarah",
+    scheduled_start: later(now, 0, 18),
+    scheduled_end: later(now, 1, 18),
+  });
+  const attendanceByBooking = {};
+  if (scene === "missed") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-miss",
+      booking_id: "fx-confirm",
+      tutor_id: "g-sarah",
+      source: "t30",
+      status: "missed",
+      deadline_at: later(now, 0, -2),
+      missed_at: later(now, 0, -2),
+    };
+  } else if (scene === "replacement") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-rep",
+      booking_id: "fx-confirm",
+      tutor_id: "g-grace",
+      source: "replacement",
+      status: "awaiting",
+      requested_at: later(now, 0, -1),
+      deadline_at: later(now, 0, 9),
+    };
+  } else if (scene === "resolved") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-res",
+      booking_id: "fx-confirm",
+      tutor_id: "g-grace",
+      source: "replacement",
+      status: "confirmed",
+      confirmed_at: later(now, 0, -0.2),
+    };
+  }
+
+  const bookings = scene
+    ? [confirmHall, liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler]
+    : [liveA, liveB, next, uncovered, ...laterRows, ...completed, ...filler];
   const presenceByBooking = {
     "fx-live-1": { tutor_first_joined_at: later(now, -0.35), tutor_last_seen_at: later(now, -0.1) },
     "fx-live-2": { student_first_joined_at: later(now, -0.25), student_last_seen_at: later(now, -0.05) },
   };
 
+  const bookingsWithIssues = bookings.map((b) => ({
+    ...b,
+    issues: currentStudyHallIssues(b, {
+      presence: presenceByBooking[b.id],
+      attendance: attendanceByBooking[b.id] ?? null,
+      assignmentsLoaded: Boolean(scene),
+      nowMs,
+    }),
+  }));
+
   const attentionItems = collectNeedsAttention({
-    bookings,
+    bookings: bookingsWithIssues,
     presenceByBooking,
     pendingApplicants: [
       { profile_id: "g-app-1", display_name: "Chinedu A." },
       { profile_id: "g-app-2", display_name: "Amara O." },
     ],
+    attendanceByBooking,
+    assignmentsLoaded: Boolean(scene),
     nowMs,
   });
 
@@ -143,7 +197,7 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false } 
   }));
 
   return {
-    bookings,
+    bookings: bookingsWithIssues,
     presenceByBooking,
     attentionItems,
     guidesActive: 12,

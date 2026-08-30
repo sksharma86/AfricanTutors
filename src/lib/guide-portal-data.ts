@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { GuideBooking, GuideEarning } from "@/lib/guide-portal-types";
+import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
+import type { GuideAttendanceAssignment, GuideBooking, GuideEarning } from "@/lib/guide-portal-types";
 
 export type GuideAvailabilityBlock = { id: string; day_of_week: number; start_time: string; end_time: string };
 export type GuideExceptionRow = { id: string; starts_at: string; ends_at: string; reason: string | null };
@@ -52,6 +53,27 @@ export async function loadGuideWorkspace(supabase: SB, tutorId: string) {
     reportsReady ? ((reportsRes.data ?? []) as { booking_id: string }[]).map((r) => r.booking_id) : [],
   );
 
+  const bookings = (bookingsRaw ?? []) as unknown as GuideBooking[];
+  const bookingIds = bookings.map((b) => b.id).filter(Boolean);
+  if (bookingIds.length) {
+    const attRes = await supabase
+      .from("guide_attendance_assignments")
+      .select(
+        "id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at",
+      )
+      .in("booking_id", bookingIds)
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      );
+    if (!attRes.error) {
+      const rows = (attRes.data ?? []) as GuideAttendanceAssignment[];
+      for (const b of bookings) {
+        b.attendance = currentAssignmentForBooking(rows, b) as GuideAttendanceAssignment | null;
+      }
+    }
+  }
+
   return {
     profile: profile as {
       timezone: string | null;
@@ -59,7 +81,7 @@ export async function loadGuideWorkspace(supabase: SB, tutorId: string) {
       comp_currency: string | null;
       status: string | null;
     } | null,
-    bookings: (bookingsRaw ?? []) as unknown as GuideBooking[],
+    bookings,
     availability: (avail ?? []) as GuideAvailabilityBlock[],
     exceptions: (exc ?? []) as GuideExceptionRow[],
     earnings: (earningsRaw ?? []) as GuideEarning[],

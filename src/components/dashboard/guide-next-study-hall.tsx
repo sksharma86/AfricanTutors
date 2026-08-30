@@ -1,6 +1,8 @@
+import { GuideConfirmAttendance } from "@/components/dashboard/guide-confirm-attendance";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { LinkButton } from "@/components/ui/button";
+import { guideAttendanceState } from "@/lib/guide-attendance.mjs";
 import { guideChildName, guideChildrenCaption, guideStartsInLabel } from "@/lib/guide-portal.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
@@ -67,6 +69,12 @@ export function GuideNextStudyHall({
   }
 
   const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, nowMs);
+  const attendance = guideAttendanceState({
+    status: next.status,
+    scheduledStart: next.scheduled_start,
+    assignment: next.attendance ?? null,
+    nowMs,
+  });
   const starts = guideStartsInLabel(next.scheduled_start, nowMs);
   const child = guideChildName(next);
   const time = next.scheduled_start ? formatTime(next.scheduled_start, tz) : "";
@@ -101,14 +109,26 @@ export function GuideNextStudyHall({
             {join.kind === "opens_at" ? (
               <p className="mt-1 text-[13px] text-white/55">Be ready 5 minutes before start time.</p>
             ) : null}
+            {attendance.kind === "awaiting" ? (
+              <p className="mt-3 text-[11px] font-semibold tracking-[0.14em] text-gold-300 uppercase">
+                Attendance confirmation required
+              </p>
+            ) : null}
+            {attendance.kind === "confirmed" ? (
+              <p className="mt-3 text-sm font-medium text-gold-200">✓ Attendance confirmed</p>
+            ) : null}
+            {attendance.kind === "missed" ? (
+              <p className="mt-3 text-sm text-white/70">Confirmation missed</p>
+            ) : null}
           </div>
         </div>
-        <div className="mt-5">
+        <div className="mt-5 space-y-3">
+          {attendance.kind === "awaiting" ? <GuideConfirmAttendance bookingId={next.id} prominent /> : null}
           {join.kind === "join" ? (
             <LinkButton href={`/dashboard/session/${next.id}`} variant="secondary" size="lg">
               Join Study Hall →
             </LinkButton>
-          ) : (
+          ) : attendance.kind === "awaiting" ? null : (
             <GuideJoinControl
               bookingId={next.id}
               status={next.status}

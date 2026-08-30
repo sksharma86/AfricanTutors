@@ -8,6 +8,7 @@ import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { TutorCancelRequest } from "@/components/dashboard/tutor-cancel-request";
 import { LinkButton } from "@/components/ui/button";
 import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
+import { guideAttendanceRowLabel, guideAttendanceState } from "@/lib/guide-attendance.mjs";
 import {
   guideChildName,
   guideNeedsReport,
@@ -29,16 +30,19 @@ export function GuideStudyHalls({
   reportedIds,
   openRequestIds,
   tz,
+  nowMs: nowMsProp,
 }: {
   bookings: GuideBooking[];
   reportedIds: string[];
   openRequestIds: string[];
   tz: string;
+  nowMs?: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const [nowMs] = useState(() => Date.now());
+  const [clientNow] = useState(() => Date.now());
+  const nowMs = nowMsProp ?? clientNow;
   const view = VIEWS.some((v) => v.id === params.get("view")) ? (params.get("view") as string) : "today";
   const lists = useMemo(() => guideStudyHallLists(bookings, nowMs, tz), [bookings, nowMs, tz]);
   const reported = useMemo(() => new Set(reportedIds), [reportedIds]);
@@ -79,6 +83,23 @@ export function GuideStudyHalls({
                   <p data-kind="status" className="text-sm text-ink-500">
                     {guideRowStatus(b, nowMs)}
                   </p>
+                  {view !== "completed"
+                    ? (() => {
+                        const label = guideAttendanceRowLabel(
+                          guideAttendanceState({
+                            status: b.status,
+                            scheduledStart: b.scheduled_start,
+                            assignment: b.attendance ?? null,
+                            nowMs,
+                          }),
+                        );
+                        return label ? (
+                          <p data-kind="attendance" className="text-[12.5px] text-ink-500">
+                            {label}
+                          </p>
+                        ) : null;
+                      })()
+                    : null}
                 </div>
                 <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                   {view !== "completed" ? (

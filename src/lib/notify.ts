@@ -7,8 +7,10 @@ import { sendEmail } from "@/lib/email/transport";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
+import { coverageRestorationLine } from "@/lib/guide-attendance.mjs";
 import {
   parentCancellationSms,
+  parentCoverageCancellationSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
@@ -710,6 +712,102 @@ export async function notifyGuideReportOverdue(bookingId: string) {
     ].filter(Boolean) as string[],
   });
   return guide;
+}
+
+/** Notify the current awaiting assignment, if any. Used after replacement. */
+export async function notifyCurrentAttendanceRequest(bookingId: string) {
+  const service = getServiceSupabase();
+  const { data } = await service
+    .from("guide_attendance_assignments")
+    .select("id, status")
+    .eq("booking_id", bookingId)
+    .eq("status", "awaiting")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data?.id) return { status: "skipped" };
+  return notifyGuideAttendanceRequest(bookingId, data.id as string);
+}
+
+/** Guide attendance request. Failed delivery does not confirm or cancel. */
+export async function notifyGuideAttendanceRequest(bookingId: string, assignmentId: string) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.tutor_id || !b.scheduled_start) return { status: "skipped" };
+  return deliver({
+    key: `guide-attendance-request:${assignmentId}`,
+    type: "guide_attendance_request",
+    accountId: b.tutor_id,
+    bookingId,
+    rendered: T.guideAttendanceRequest({
+      whenISO: b.scheduled_start,
+      tz: b.tutorTz,
+      durationMinutes: b.duration_minutes,
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      appUrl: APP_URL,
+    }),
+  });
+}
+
+/** Management exception when a confirmation deadline is missed. */
+export async function notifyGuideConfirmationMissed(bookingId: string, assignmentId: string) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  return notifyAdminAlert(`guide-confirm-missed:${assignmentId}`, {
+    title: "Guide confirmation missed",
+    summary: "A Guide did not confirm attendance before the deadline. Coverage needs a decision.",
+    lines: [
+      `Booking: ${bookingId}`,
+      b?.studentFirst ? `Child: ${b.studentFirst}` : null,
+      b?.scheduled_start ? `When: ${b.scheduled_start}` : null,
+      b?.tutorFirst ? `Assigned Guide: ${b.tutorFirst}` : null,
+    ].filter(Boolean) as string[],
+  });
+}
+
+/** Parent notice when Study Hall cancels for Guide coverage. Does not name the Guide. */
+export async function notifyCoverageCancellation(
+  bookingId: string,
+  info: {
+    isFreeTrial?: boolean | null;
+    restoredMinutes?: number | null;
+    restoredCreditCents?: number | null;
+    compCreditCents?: number | null;
+  } = {},
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.account_id) return { status: "skipped" };
+  const restorationLine = coverageRestorationLine({
+    isFreeTrial: info.isFreeTrial ?? b.is_free_trial,
+    restoredMinutes: info.restoredMinutes ?? null,
+    restoredCreditCents: info.restoredCreditCents ?? null,
+  });
+  await deliver({
+    key: `coverage-cancel:${bookingId}`,
+    type: "coverage_cancellation",
+    accountId: b.account_id,
+    bookingId,
+    rendered: T.coverageCancellation({
+      restorationLine,
+      compCreditCents: info.compCreditCents ?? null,
+      appUrl: APP_URL,
+    }),
+  });
+  await deliverParentSms({
+    key: `coverage-cancel-sms:${bookingId}`,
+    type: "coverage_cancellation_sms",
+    accountId: b.account_id,
+    bookingId,
+    body: parentCoverageCancellationSms({
+      studentName: b.studentFirst,
+      studentNames: b.studentNames,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
+    }),
+  });
+  return { status: "ok", parentNotified: true };
 }
 
 export async function notifyAdminAlert(dedupeKey: string, ctx: { title: string; summary: string; lines?: string[] }) {
