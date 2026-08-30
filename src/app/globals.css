@@ -408,3 +408,110 @@ body {
     transition: none;
   }
 }
+
+/* Guide Portal workstation — same product DNA as Parent, separate role surface */
+.guide-app {
+  --gp-canvas: #f6f1e8;
+  --gp-card: #fffdf8;
+  --gp-ink: #1c1915;
+  --gp-muted: #6b655c;
+  --gp-gold: #c9a227;
+  --gp-gold-soft: #f3e6c4;
+  --gp-hero: #161c18;
+  --gp-positive: #3d6b4f;
+  --gp-attention: #a15c1a;
+  --gp-shadow-1: 0 1px 0 rgba(28, 25, 21, 0.04), 0 10px 28px -20px rgba(28, 25, 21, 0.32);
+  --gp-shadow-2: 0 1px 0 rgba(28, 25, 21, 0.05), 0 18px 40px -22px rgba(28, 25, 21, 0.42);
+  background: var(--gp-canvas);
+  color: var(--gp-ink);
+}
+
+.guide-app .gp-nav-link {
+  transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.guide-app .gp-hero-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 52% at 88% -8%, rgba(255, 226, 150, 0.42) 0%, rgba(232, 188, 86, 0.18) 28%, rgba(201, 162, 39, 0.06) 52%, transparent 68%),
+    radial-gradient(ellipse 18% 16% at 79% 10%, rgba(255, 236, 186, 0.22), transparent 72%),
+    radial-gradient(ellipse 70% 28% at 50% 118%, rgba(8, 10, 8, 0.55), transparent 70%),
+    linear-gradient(180deg, rgba(8, 10, 8, 0.18) 0%, transparent 34%),
+    linear-gradient(162deg, #0d110e 0%, #171e19 46%, #101410 100%);
+}
+
+.guide-app .gp-home {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.guide-app .gp-home-greeting {
+  max-width: 28rem;
+}
+
+.guide-app .gp-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(16.5rem, 0.78fr);
+  grid-template-areas:
+    "hero hero"
+    "today week"
+    "avail earn"
+    "guide guide";
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.guide-app .gp-home-hero { grid-area: hero; }
+.guide-app .gp-home-today { grid-area: today; }
+.guide-app .gp-home-week { grid-area: week; }
+.guide-app .gp-home-avail { grid-area: avail; }
+.guide-app .gp-home-earn { grid-area: earn; }
+.guide-app .gp-home-guide { grid-area: guide; }
+
+@media (max-width: 1023px) {
+  .guide-app .gp-home-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero hero"
+      "today week"
+      "avail earn"
+      "guide guide";
+  }
+}
+
+@media (max-width: 767px) {
+  .guide-app .gp-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "hero"
+      "today"
+      "week"
+      "avail"
+      "earn"
+      "guide";
+  }
+}
+
+.guide-app .gp-interact,
+.guide-app a,
+.guide-app button {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.guide-app .gp-ops section {
+  background: var(--gp-card);
+  box-shadow: var(--gp-shadow-1);
+  border-color: rgba(28, 25, 21, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-app .gp-nav-link,
+  .guide-app .gp-interact,
+  .guide-app a,
+  .guide-app button {
+    transition: none;
+  }
+}

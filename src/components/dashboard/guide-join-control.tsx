@@ -70,13 +70,13 @@ export function GuideJoinControl({
   }
   if (ui.kind === "opens_at") {
     return (
-      <p className={prominent ? "text-sm font-medium text-ink-600" : "text-xs font-medium text-ink-500"}>
+      <p className={prominent ? "text-sm font-medium text-gold-200" : "text-xs font-medium text-ink-500"}>
         Join opens at {formatOpenAt(ui.openAtISO, timezone)}.
       </p>
     );
   }
   if (ui.kind === "ended") {
-    return <span className="text-xs font-medium text-ink-400">Session window closed</span>;
+    return <span className={prominent ? "text-xs font-medium text-white/50" : "text-xs font-medium text-ink-400"}>Session window closed</span>;
   }
   return null;
 }

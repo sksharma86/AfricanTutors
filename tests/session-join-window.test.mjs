@@ -92,9 +92,11 @@ describe("Session join window — partitionBookings keeps active confirmed sessi
 describe("Session join window — parent dashboard uses partition + join state", () => {
   it("parent Home uses join-window helpers for Next Study Hall + Join CTA", () => {
     const page = read("src/app/dashboard/student/page.tsx");
+    const board = read("src/components/dashboard/parent-home-board.tsx");
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     const helpers = read("src/lib/parent-portal.mjs");
-    assert.match(page, /ParentNextStudyHall/);
+    assert.match(page, /ParentHomeBoard/);
+    assert.match(board, /ParentNextStudyHall/);
     assert.match(next, /parentJoinHint|parentPrimaryAction/);
     assert.match(next, /Join Study Hall/);
     assert.match(helpers, /customerJoinState/);

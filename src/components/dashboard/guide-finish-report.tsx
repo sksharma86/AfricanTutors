@@ -12,23 +12,23 @@ export function GuideFinishReport({
   tz: string;
 }) {
   const when = booking.scheduled_start
-    ? `${formatDayHeading(booking.scheduled_start, tz)}${
-        booking.scheduled_end || booking.scheduled_start
-          ? ` · ${formatTime(booking.scheduled_start, tz)}`
-          : ""
-      }`
+    ? `${formatDayHeading(booking.scheduled_start, tz)} · ${formatTime(booking.scheduled_start, tz)}`
     : "Recently";
 
   return (
-    <GuideSurface>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-gold-700 uppercase">Finish your last Study Hall</p>
-      <p className="mt-2 text-sm font-medium text-ink-900">
-        {when} · {guideChildName(booking)}
+    <GuideSurface attention className="px-4 py-3.5">
+      <p className="text-[10px] font-semibold tracking-[0.14em] text-[#a15c1a] uppercase">Report needed</p>
+      <p className="mt-2 text-[14px] font-medium tracking-[-0.02em] text-[var(--gp-ink)]">
+        {guideChildName(booking)} · {when}
       </p>
-      <p className="mt-1 text-sm text-ink-500">Your Study Hall ended before the report was submitted.</p>
+      <p className="mt-1 text-[13px] leading-5 text-[var(--gp-muted)]">
+        Your Study Hall is complete.
+        <br />
+        Finish the session report.
+      </p>
       <div className="mt-4">
-        <LinkButton href={guideReportHref(booking.id)} variant="primary" size="md">
-          Finish report
+        <LinkButton href={guideReportHref(booking.id)} variant="secondary" size="md">
+          Complete report →
         </LinkButton>
       </div>
     </GuideSurface>

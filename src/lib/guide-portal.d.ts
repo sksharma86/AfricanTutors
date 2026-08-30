@@ -33,4 +33,32 @@ declare module "@/lib/guide-portal.mjs" {
   ): string;
   export function guideReportHref(bookingId: string): string;
   export function guideEarningStatusLabel(status: string | null | undefined): string;
+  export function guideDayPart(nowMs?: number, tz?: string): string;
+  export function guideDaySchedule<T extends { status: string; scheduled_start?: string | null }>(
+    bookings: T[],
+    nowMs?: number,
+    tz?: string,
+  ): T[];
+  export function guideWeekSummary<T extends { status: string; scheduled_start?: string | null; duration_minutes?: number | null }>(
+    bookings: T[],
+    nowMs?: number,
+    tz?: string,
+  ): { count: number; hours: number; completed: number; upcoming: number; startKey: string; endKey: string };
+  export function guideAvailabilitySummary(
+    blocks: { day_of_week: number; start_time: string; end_time: string }[],
+    exceptions: { starts_at: string; ends_at: string }[],
+    nowMs?: number,
+    tz?: string,
+  ): {
+    availableNow: boolean;
+    availableToday: boolean;
+    nextWindow: { when: string; range: string } | null;
+    hasSchedule: boolean;
+  };
+  export function guideEarningsHomeSummary(
+    earnings: { amount_cents: number; status: string; paid_at?: string | null }[],
+    nowMs?: number,
+    tz?: string,
+    currency?: string,
+  ): { outstanding: number; paidMonth: number; currency: string };
 }

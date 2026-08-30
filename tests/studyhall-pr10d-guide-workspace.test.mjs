@@ -105,19 +105,22 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
 
   it("approved Guide workspace stays distinct from parent financial/booking UI", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
+    const board = read("src/components/dashboard/guide-home-board.tsx");
     const earn = read("src/app/dashboard/tutor/earnings/page.tsx");
     const avail = read("src/app/dashboard/tutor/availability/page.tsx");
     const halls = read("src/app/dashboard/tutor/study-halls/page.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
+    const guide = read("src/components/dashboard/guide-guidance.tsx");
+    const next = read("src/components/dashboard/guide-next-study-hall.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(today, /Today'?s Study Halls|Upcoming Study Halls/);
+    assert.match(today, /Today'?s schedule|Upcoming Study Halls/);
     assert.match(earn, /Outstanding|Earned/);
     assert.match(avail, /Availability/);
     assert.match(halls, /Upcoming Study Halls/);
-    assert.match(page, /Call Parent/);
-    assert.doesNotMatch(page, /Buy hours|Prepaid Hours|Book a Study Hall|account credit|free-session offer/i);
+    assert.match(guide, /Call Parent/);
+    assert.doesNotMatch(page + board, /Buy hours|Prepaid Hours|Book a Study Hall|account credit|free-session offer/i);
     assert.doesNotMatch(page, /Parent escalation tools are coming/);
-    assert.match(page, /Ready to join 5 minutes before start/);
+    assert.match(guide + next, /5 minutes before start/);
   });
 
   it("Guide cancellation / unavailability action remains clear", () => {
@@ -168,7 +171,8 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
 
   it("PR10C parent portal markers remain intact", () => {
     const parent = read("src/app/dashboard/student/page.tsx");
-    assert.match(parent, /Prepaid Hours|Buy hours|Book a Study Hall|BalanceCards/);
+    const board = read("src/components/dashboard/parent-home-board.tsx");
+    assert.match(parent + board, /Prepaid Hours|Buy hours|Book a Study Hall|BalanceCards/);
     const pr10c = read("tests/studyhall-pr10c-parent-portal.test.mjs");
     assert.match(pr10c, /Prepaid Hours|Buy hours/);
   });

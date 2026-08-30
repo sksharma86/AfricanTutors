@@ -31,7 +31,7 @@ export default async function GuideEarningsPage() {
 
   return (
     <GuidePage>
-      <h1 id="earnings" className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+      <h1 id="earnings" className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-[var(--gp-ink)]">
         Earnings
       </h1>
 
