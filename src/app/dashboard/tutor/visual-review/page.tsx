@@ -57,10 +57,12 @@ export default async function GuideHomeVisualReviewPage({
 
   const reviewHalls = fixture.bookings as GuideBooking[];
   const openCoverageScene = params.scene === "opencoverage" || params.scene === "covered" || params.scene === "accepted";
+  const offerStartISO = new Date(fixture.nowMs + 2 * 60 * 60 * 1000).toISOString();
+  const offerEndISO = new Date(fixture.nowMs + 3 * 60 * 60 * 1000).toISOString();
   const waPreview = openCoverageScene
     ? guideOpenCoverageWhatsApp({
-        startISO: reviewHalls[0]?.scheduled_start,
-        endISO: reviewHalls[0]?.scheduled_end,
+        startISO: offerStartISO,
+        endISO: offerEndISO,
         tz: fixture.timeZone,
         durationMinutes: 60,
         appUrl: "https://example.com",

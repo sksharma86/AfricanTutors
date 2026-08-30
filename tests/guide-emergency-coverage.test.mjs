@@ -149,9 +149,9 @@ describe("Emergency replacement — policy", () => {
 
   it("stale offers cannot be claimed after cancel, start, or close", () => {
     const offer = { status: "open" };
-    assert.equal(offerIsClaimable(offer, { booking }).ok, true);
-    assert.equal(offerIsClaimable({ status: "closed" }, { booking }).ok, false);
-    assert.equal(offerIsClaimable(offer, { booking: { ...booking, status: "cancelled" } }).reason, "cancelled");
+    assert.equal(offerIsClaimable(offer, { booking, nowMs: t20 }).ok, true);
+    assert.equal(offerIsClaimable({ status: "closed" }, { booking, nowMs: t20 }).ok, false);
+    assert.equal(offerIsClaimable(offer, { booking: { ...booking, status: "cancelled" }, nowMs: t20 }).reason, "cancelled");
     assert.equal(offerIsClaimable(offer, { booking, nowMs: startMs }).reason, "expired");
   });
 
@@ -281,7 +281,12 @@ describe("Emergency replacement — architecture", () => {
     assert.match(sql, /on conflict \(booking_id, tutor_id, search_key\) do nothing/);
     assert.match(notify, /openCoverageNotifyKey/);
     assert.match(notify, /type: "guide_open_coverage"/);
-    assert.doesNotMatch(notify.slice(notify.indexOf("export async function notifyOpenCoverageOffer")), /deliverParentSms|coverage_cancellation/);
+    const offerFn = notify.slice(
+      notify.indexOf("export async function notifyOpenCoverageOffer"),
+      notify.indexOf("/** Management exception when a confirmation deadline is missed"),
+    );
+    assert.match(offerFn, /deliverGuideWhatsApp/);
+    assert.doesNotMatch(offerFn, /deliverParentSms|coverage_cancellation/);
   });
 
   it("claim is atomic, revalidates eligibility, and confirms emergency attendance", () => {
@@ -292,7 +297,8 @@ describe("Emergency replacement — architecture", () => {
     assert.match(sql, /exclusion_violation/);
     assert.match(sql, /already_covered/);
     assert.match(claim, /claim_open_coverage/);
-    assert.match(claim, /This Study Hall has already been covered/);
+    assert.match(claim, /claimResultMessage\("already_covered"\)/);
+    assert.equal(claimResultMessage("already_covered"), "This Study Hall has already been covered.");
     assert.doesNotMatch(claim, /I'll be there/);
     assert.doesNotMatch(page, /I'll be there/);
     assert.match(page, /requireRole\("tutor"/);
