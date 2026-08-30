@@ -3,20 +3,27 @@
 import { useMemo, useState } from "react";
 
 import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
+import { ManagementSurface } from "@/components/dashboard/management-surface";
 import { LinkButton } from "@/components/ui/button";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
+import { formatCents } from "@/lib/pricing";
 import { formatCompensationTotals } from "@/lib/compensation-currency.mjs";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import {
-  comingUpBookings,
-  isStudyHallLive,
+  managementClockLabel,
+  managementCoverageSummary,
+  managementPaymentsTodayCents,
+  managementRecentActivity,
+  managementTodayPulse,
+  managementTodayShort,
+  managementTodayWorkload,
+} from "@/lib/management-console.mjs";
+import {
   managementDateLabel,
-  managementGreeting,
   managementOperationalStatus,
   presentNeedsAttention,
-  todayDateInTz,
-  calendarDateInTz,
 } from "@/lib/management-ops.mjs";
+import { formatDuration } from "@/lib/format.mjs";
 import { browserTimezone, formatTime } from "@/lib/timezone";
 
 export interface OverviewBooking {
@@ -52,6 +59,11 @@ export function ManagementOverview({
   attentionItems,
   guidesActive,
   outstandingTotals,
+  guides = [],
+  reports = [],
+  payments = [],
+  nowMs: nowMsProp,
+  timeZone,
 }: {
   bookings: OverviewBooking[];
   presenceByBooking: Record<
@@ -68,91 +80,275 @@ export function ManagementOverview({
   attentionItems: AttentionItem[];
   guidesActive: number;
   outstandingTotals: { currency: string; earned: number; paid: number; outstanding: number }[];
+  guides?: { status: string; approved_at?: string | null }[];
+  reports?: { booking_id?: string | null; submitted_at?: string | null }[];
+  payments?: { created_at?: string | null; status?: string; stripe_paid_cents?: number }[];
+  nowMs?: number;
+  timeZone?: string;
 }) {
-  const tz = useMemo(() => browserTimezone(), []);
-  const [nowMs] = useState(() => Date.now());
-  const today = todayDateInTz(tz, nowMs);
+  const tz = useMemo(() => timeZone || browserTimezone(), [timeZone]);
+  const [clientNow] = useState(() => new Date().getTime());
+  const nowMs = nowMsProp ?? clientNow;
   const presented = useMemo(() => presentNeedsAttention(attentionItems), [attentionItems]);
-
-  const todayCount = bookings.filter(
-    (b) => b.scheduled_start && calendarDateInTz(b.scheduled_start, tz) === today,
-  ).length;
-  const liveCount = bookings.filter((b) => isStudyHallLive(b, presenceByBooking[b.id], nowMs)).length;
-  const coming = comingUpBookings(bookings, { presenceByBooking, nowMs, limit: 8 });
+  const pulse = managementTodayPulse(bookings, presenceByBooking, tz, nowMs);
+  const coverage = managementCoverageSummary(bookings, guides, tz, nowMs);
+  const workload = managementTodayWorkload(bookings, tz, nowMs);
+  const activity = managementRecentActivity(bookings, reports, nowMs);
+  const paymentsToday = managementPaymentsTodayCents(payments, tz, nowMs);
+  const disputes = attentionItems.filter((i) => i.kind === "dispute").length;
   const hasIssues = presented.length > 0;
 
   return (
-    <div className="space-y-10">
-      <header>
-        <p className="font-display text-2xl font-semibold text-ink-900">{managementGreeting(nowMs, tz)}</p>
-        <p className="mt-1 text-sm text-ink-500">{managementDateLabel(nowMs, tz)}</p>
+    <div className="mg-home">
+      <header className="mg-home-head">
+        <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Operations</h1>
+        <p className="text-[12.5px] text-[var(--mg-muted)]">{managementClockLabel(nowMs, tz) || managementDateLabel(nowMs, tz)}</p>
       </header>
 
-      {hasIssues ? <AttentionBlock items={presented} dominate /> : null}
-
-      <dl className="flex flex-wrap gap-x-8 gap-y-4 border-y border-ink-100 py-5">
-        <Metric label="Study Halls today" value={String(todayCount)} />
-        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
-        <Metric label="Live now" value={String(liveCount)} live={liveCount > 0} />
-        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
-        <Metric label="Guides active" value={String(guidesActive)} />
-        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
-        <Metric label="Need attention" value={String(presented.length)} alert={hasIssues} />
-        <span className="hidden h-10 w-px bg-ink-100 sm:block" aria-hidden />
-        <Metric label="Outstanding Guide pay" value={formatCompensationTotals(outstandingTotals, "outstanding")} />
-      </dl>
-
-      {hasIssues ? null : <AttentionBlock items={presented} dominate={false} />}
-
-      <section>
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold text-ink-900">Coming up</h2>
-          <PortalTextLink href="/dashboard/admin/study-halls">All Study Halls</PortalTextLink>
+      <div className="mg-home-grid">
+        <div className="mg-home-today">
+          <ManagementSurface command>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-gold-300 uppercase">
+                Today · {managementTodayShort(nowMs, tz)}
+              </p>
+              {hasIssues ? (
+                <p className="text-[12.5px] text-[#e8c56a]">
+                  {presented.length} {presented.length === 1 ? "issue requires" : "issues require"} attention
+                </p>
+              ) : (
+                <p className="text-[12.5px] text-white/55">No operational issues require attention.</p>
+              )}
+            </div>
+            <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+              <PulseStat label="Study Halls today" value={pulse.count} />
+              <PulseStat label="Live now" value={pulse.live} live={pulse.live > 0} />
+              <PulseStat label="Upcoming" value={pulse.upcoming} />
+              <PulseStat label="Completed" value={pulse.completed} />
+            </dl>
+            <div className="mt-4 border-t border-white/10 pt-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-white/45 uppercase">Next start</p>
+              {pulse.next ? (
+                <p className="mt-1 text-[15px] font-medium text-white">
+                  {pulse.next.scheduled_start ? formatTime(pulse.next.scheduled_start, tz) : "—"}
+                  <span className="font-normal text-white/62">
+                    {" "}
+                    · {bookingChildNames(pulse.next, "Child")}
+                    {pulse.next.tutor_display_name ? ` · ${pulse.next.tutor_display_name}` : " · No Guide"}
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-white/55">
+                  {pulse.count === 0 ? "No Study Halls scheduled today." : "No more Study Halls scheduled today."}
+                </p>
+              )}
+            </div>
+          </ManagementSurface>
         </div>
-        {coming.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-500">Nothing coming up right now.</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-ink-100">
-            {(coming as (OverviewBooking & { statusLayer?: string; issues?: OverviewBooking["issues"] })[]).map((b) => {
-              const status = String(
-                b.statusLayer ??
-                  managementOperationalStatus(b as never, {
-                    presence: (presenceByBooking[b.id] ?? null) as never,
-                    nowMs,
-                    issues: b.issues as never,
-                  }),
-              );
-              const reasons = (b.issues ?? []).map((i) => i.title);
-              return (
-                <li key={b.id} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1 py-2.5 text-sm sm:grid-cols-[5rem_7rem_7rem_minmax(0,1fr)_auto]">
-                  <span className="font-medium text-ink-900">
-                    {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
-                  </span>
-                  <span className="truncate text-ink-800">{bookingChildNames(b, "Child")}</span>
-                  <span className="hidden truncate text-ink-500 sm:block">{b.tutor_display_name ?? "No Guide"}</span>
-                  <span className="col-span-2 min-w-0 sm:col-span-1">
-                    {reasons.length ? (
-                      <span className="text-ink-700">{reasons.join(" · ")}</span>
-                    ) : (
-                      <ManagementStatusLabel status={status} />
-                    )}
-                  </span>
-                  <LinkButton href={`/dashboard/admin/study-halls/${b.id}`} variant="outline" size="sm">
-                    View
-                  </LinkButton>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+
+        <div className="mg-home-halls">
+          <ManagementSurface>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">Study Halls</p>
+              <PortalTextLink href="/dashboard/admin/study-halls">
+                {pulse.count === 0 ? "View schedule →" : "View all →"}
+              </PortalTextLink>
+            </div>
+            {pulse.count === 0 ? (
+              <p className="mt-3 text-sm text-[var(--mg-muted)]">No Study Halls scheduled today.</p>
+            ) : (
+              <div className="mt-2">
+                {pulse.liveRows.length ? (
+                  <DispatchGroup
+                    title={`Live now · ${pulse.live}`}
+                    rows={pulse.liveRows}
+                    tz={tz}
+                    presenceByBooking={presenceByBooking}
+                    nowMs={nowMs}
+                    live
+                  />
+                ) : null}
+                <DispatchGroup
+                  title={`Starting next · ${pulse.upcoming}`}
+                  rows={pulse.nextRows}
+                  tz={tz}
+                  presenceByBooking={presenceByBooking}
+                  nowMs={nowMs}
+                />
+              </div>
+            )}
+          </ManagementSurface>
+        </div>
+
+        <div className="mg-home-attention">
+          <AttentionCard items={presented} />
+        </div>
+
+        <div className="mg-home-coverage">
+          <ManagementSurface>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">Guide coverage</p>
+              <PortalTextLink href="/dashboard/admin/guides">Manage Guides →</PortalTextLink>
+            </div>
+            <p className="mt-2 font-display text-[1.7rem] font-semibold leading-none tracking-[-0.04em] text-[var(--mg-ink)]">
+              {guidesActive}
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--mg-muted)]">Guides active</p>
+            <p className="mt-3 text-[13px] text-[var(--mg-ink)]">
+              {coverage.todayOpen === 0
+                ? "No open Study Halls today."
+                : coverage.covered
+                  ? `${coverage.assigned} / ${coverage.todayOpen} Study Halls assigned`
+                  : `${coverage.needing} of ${coverage.todayOpen} need a Guide`}
+            </p>
+            {coverage.applications > 0 ? (
+              <p className="mt-2">
+                <PortalTextLink href="/dashboard/admin/guides">{coverage.applications} awaiting review →</PortalTextLink>
+              </p>
+            ) : (
+              <p className="mt-2 text-[12.5px] text-[var(--mg-muted)]">No applications awaiting review.</p>
+            )}
+            {workload.length ? (
+              <ul className="mt-3 divide-y divide-[#1c1915]/[0.06]">
+                {workload.map((row) => (
+                  <li key={row.name} className="flex justify-between gap-3 py-1.5 text-[13px]">
+                    <span className="truncate text-[var(--mg-ink)]">{row.name}</span>
+                    <span className="shrink-0 text-[var(--mg-muted)]">
+                      {row.sessions} Study Hall{row.sessions === 1 ? "" : "s"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </ManagementSurface>
+        </div>
+
+        <div className="mg-home-finance">
+          <ManagementSurface>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">Finance</p>
+              <PortalTextLink href="/dashboard/admin/finance">Open Finance →</PortalTextLink>
+            </div>
+            <p className="mt-2 font-display text-[1.55rem] font-semibold leading-none tracking-[-0.04em] text-[var(--mg-ink)]">
+              {formatCents(paymentsToday)}
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--mg-muted)]">Customer payments today</p>
+            <p className="mt-3 text-[13px] text-[var(--mg-ink)]">
+              <span className="sr-only">Outstanding Guide pay </span>
+              {formatCompensationTotals(outstandingTotals, "outstanding")}
+              <span className="text-[var(--mg-muted)]"> Outstanding Guide pay</span>
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--mg-muted)]">
+              {disputes} pending dispute{disputes === 1 ? "" : "s"}
+            </p>
+          </ManagementSurface>
+        </div>
+
+        <div className="mg-home-activity">
+          <ManagementSurface>
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">Recent activity</p>
+            {activity.length === 0 ? (
+              <p className="mt-3 text-sm text-[var(--mg-muted)]">No recent operational activity.</p>
+            ) : (
+              <div className="mt-2 overflow-x-auto">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Type</th>
+                      <th>Details</th>
+                      <th>By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activity.map((row) => (
+                      <tr key={row.id}>
+                        <td className="whitespace-nowrap tabular-nums">{formatTime(new Date(row.at).toISOString(), tz)}</td>
+                        <td className="whitespace-nowrap">{row.type}</td>
+                        <td>
+                          <a href={row.href} className="underline-offset-4 hover:underline">
+                            {row.details}
+                          </a>
+                        </td>
+                        <td className="whitespace-nowrap text-[var(--mg-muted)]">{row.by}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ManagementSurface>
+        </div>
+      </div>
     </div>
   );
 }
 
-function AttentionBlock({
+function PulseStat({ label, value, live }: { label: string; value: number; live?: boolean }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold tracking-[0.12em] text-white/42 uppercase">{label}</dt>
+      <dd className={`mt-1 font-display text-[1.85rem] font-semibold leading-none tracking-[-0.04em] ${live ? "text-[#9dcbad]" : "text-white"}`}>
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function DispatchGroup({
+  title,
+  rows,
+  tz,
+  presenceByBooking,
+  nowMs,
+  live,
+}: {
+  title: string;
+  rows: OverviewBooking[];
+  tz: string;
+  presenceByBooking: Record<string, object | undefined>;
+  nowMs: number;
+  live?: boolean;
+}) {
+  if (!rows.length) return null;
+  return (
+    <div className={live ? "mb-3" : ""}>
+      <p className="text-[11px] font-medium text-[var(--mg-muted)]">{title}</p>
+      <ul className="mt-0.5 divide-y divide-[#1c1915]/[0.06]">
+        {rows.map((b) => {
+          const status = managementOperationalStatus(b as never, {
+            presence: (presenceByBooking[b.id] ?? null) as never,
+            nowMs,
+            issues: b.issues as never,
+          });
+          return (
+            <li key={b.id} className="grid grid-cols-[4.4rem_minmax(0,1fr)_auto] items-baseline gap-2 py-1.5 text-[13px]">
+              <span className="tabular-nums text-[var(--mg-ink)]">
+                {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
+              </span>
+              <span className="min-w-0 truncate">
+                {bookingChildNames(b, "Child")}
+                <span className="text-[var(--mg-muted)]">
+                  {" "}
+                  · {b.tutor_display_name ?? "No Guide"}
+                  {b.duration_minutes ? ` · ${formatDuration(b.duration_minutes)}` : ""}
+                </span>
+              </span>
+              {live ? (
+                <span className="text-[12px] font-medium text-[var(--mg-positive)]">Live</span>
+              ) : (
+                <ManagementStatusLabel status={String(status)} />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function AttentionCard({
   items,
-  dominate,
 }: {
   items: {
     id: string;
@@ -165,74 +361,39 @@ function AttentionBlock({
     issueCount: number;
     urgent: boolean;
   }[];
-  dominate: boolean;
 }) {
   return (
-    <section>
-      <h2 className={dominate ? "font-display text-2xl font-semibold text-ink-900" : "font-display text-lg font-semibold text-ink-900"}>
+    <ManagementSurface attention={items.length > 0}>
+      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">
         Needs attention
-        {items.length > 0 ? <span className="text-ink-400"> · {items.length}</span> : null}
-      </h2>
+        <span className="text-[var(--mg-ink)]"> · {items.length}</span>
+      </p>
       {items.length === 0 ? (
-        <p className="mt-3 text-sm leading-6 text-ink-600">
-          Everything is running normally.
-          <br />
-          No coverage issues, failed notifications, or unresolved parent requests.
-        </p>
+        <div className="mt-3">
+          <p className="text-[15px] font-medium text-[var(--mg-positive)]">Clear</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--mg-muted)]">
+            Everything is running normally.
+            <br />
+            No coverage issues, failed notifications, or unresolved parent requests.
+          </p>
+        </div>
       ) : (
-        <ul className="mt-4 divide-y divide-ink-100">
-          {items.map((item) => (
-            <li key={item.id} className="grid gap-1 py-3.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-6">
-              <div className="min-w-0">
-                <p className={`text-sm font-semibold ${item.urgent ? "text-red-800" : "text-ink-900"}`}>{item.title}</p>
-                {item.issueCount > 1 ? (
-                  <ul className="mt-1 text-sm text-ink-700">
-                    {item.reasons.map((reason) => (
-                      <li key={reason}>{reason}</li>
-                    ))}
-                  </ul>
-                ) : item.summary ? (
-                  <p className="mt-0.5 text-sm text-ink-600">{item.summary}</p>
-                ) : null}
-                {item.detail ? <p className="mt-0.5 text-sm text-ink-500">{item.detail}</p> : null}
-              </div>
-              <LinkButton
-                href={item.href}
-                variant={item.action === "Assign Guide" ? "primary" : "outline"}
-                size="sm"
-                className="shrink-0"
-              >
-                {item.action}
-              </LinkButton>
+        <ul className="mt-2 divide-y divide-[#1c1915]/[0.06]">
+          {items.slice(0, 4).map((item) => (
+            <li key={item.id} className="py-2.5">
+              <p className={`text-[13px] font-medium ${item.urgent ? "text-[var(--mg-critical)]" : "text-[var(--mg-ink)]"}`}>
+                {item.title}
+              </p>
+              {item.detail ? <p className="mt-0.5 text-[12.5px] text-[var(--mg-muted)]">{item.detail}</p> : null}
+              <p className="mt-1.5">
+                <LinkButton href={item.href} variant={item.action === "Assign Guide" ? "primary" : "outline"} size="sm">
+                  {item.action} →
+                </LinkButton>
+              </p>
             </li>
           ))}
         </ul>
       )}
-    </section>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  live,
-  alert,
-}: {
-  label: string;
-  value: string;
-  live?: boolean;
-  alert?: boolean;
-}) {
-  return (
-    <div className="min-w-[6.5rem]">
-      <dt className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">{label}</dt>
-      <dd
-        className={`mt-1 font-display text-xl font-semibold ${
-          live ? "text-emerald-800" : alert ? "text-red-800" : "text-ink-900"
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
+    </ManagementSurface>
   );
 }

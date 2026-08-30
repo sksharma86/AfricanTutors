@@ -515,3 +515,156 @@ body {
     transition: none;
   }
 }
+
+/* Management Console — same product DNA, denser operations surface */
+.management-app {
+  --mg-canvas: #f6f1e8;
+  --mg-card: #fffdf8;
+  --mg-ink: #1c1915;
+  --mg-muted: #6b655c;
+  --mg-gold: #c9a227;
+  --mg-gold-soft: #f3e6c4;
+  --mg-hero: #161c18;
+  --mg-positive: #3d6b4f;
+  --mg-attention: #a15c1a;
+  --mg-critical: #8f2d2d;
+  background: var(--mg-canvas);
+  color: var(--mg-ink);
+}
+
+.management-app .mg-nav-link {
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.management-app .mg-command {
+  background:
+    radial-gradient(ellipse 42% 70% at 100% 0%, rgba(201, 162, 39, 0.1), transparent 58%),
+    linear-gradient(168deg, #121714 0%, #1a211c 52%, #101410 100%);
+}
+
+.management-app .mg-home {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.management-app .mg-home-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.management-app .mg-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+  grid-template-areas:
+    "today today"
+    "halls attention"
+    "coverage finance"
+    "activity activity";
+  gap: 0.7rem;
+  align-items: start;
+}
+
+.management-app .mg-home-today { grid-area: today; }
+.management-app .mg-home-halls { grid-area: halls; }
+.management-app .mg-home-attention { grid-area: attention; }
+.management-app .mg-home-coverage { grid-area: coverage; }
+.management-app .mg-home-finance { grid-area: finance; }
+.management-app .mg-home-activity { grid-area: activity; }
+
+@media (max-width: 1023px) {
+  .management-app .mg-home-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .management-app .mg-home-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "today"
+      "halls"
+      "attention"
+      "coverage"
+      "finance"
+      "activity";
+  }
+}
+
+.management-app .mg-table-head {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mg-muted);
+}
+
+.management-app table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.management-app th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mg-muted);
+  padding: 0.4rem 0.55rem 0.5rem;
+}
+
+.management-app td {
+  padding: 0.55rem 0.55rem;
+  border-top: 1px solid rgba(28, 25, 21, 0.06);
+  vertical-align: baseline;
+  font-size: 13px;
+}
+
+.management-app tr:hover td {
+  background: rgba(243, 230, 196, 0.22);
+}
+
+.management-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.management-app select,
+.management-app textarea {
+  border-color: rgba(28, 25, 21, 0.12);
+  background: var(--mg-card);
+  color: var(--mg-ink);
+  border-radius: 10px;
+}
+
+.management-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+.management-app select:focus,
+.management-app textarea:focus {
+  outline: none;
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+}
+
+.management-app .mg-list {
+  border-radius: 14px;
+  background: var(--mg-card);
+  box-shadow: inset 0 0 0 1px rgba(28, 25, 21, 0.06);
+}
+
+.management-app .mg-list > li + li,
+.management-app .mg-list-row + .mg-list-row {
+  border-top: 1px solid rgba(28, 25, 21, 0.06);
+}
+
+.management-app .mg-currency-card {
+  border-radius: 14px;
+  background: var(--mg-card);
+  box-shadow: inset 0 0 0 1px rgba(28, 25, 21, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .management-app .mg-nav-link,
+  .management-app a,
+  .management-app button {
+    transition: none;
+  }
+}

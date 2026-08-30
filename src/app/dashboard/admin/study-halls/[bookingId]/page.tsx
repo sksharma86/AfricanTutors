@@ -7,7 +7,8 @@ import { ManagementNotifyRetry } from "@/components/dashboard/management-notify-
 import { ManagementRecordingAccess } from "@/components/dashboard/management-recording-access";
 import { ManagementStatusLabel } from "@/components/dashboard/management-status-pill";
 import { ManagementStudyHallActions } from "@/components/dashboard/management-study-hall-actions";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
 import { requireRole } from "@/lib/auth";
 import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { bookingChildCount, bookingChildNames, firstNameOf } from "@/lib/household-children.mjs";
@@ -115,12 +116,8 @@ export default async function AdminStudyHallDetailPage({
   }[];
 
   return (
-    <DashboardShell
-      role="admin"
-      title="Study Hall"
-      description="Operational detail and every management action for this session."
-      navItems={ADMIN_PORTAL_NAV}
-    >
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Study Hall</h1>
       <p className="mb-5">
         <Link href="/dashboard/admin/study-halls" className="text-sm font-medium text-ink-500 hover:text-ink-800">
           ← Study Halls
@@ -300,7 +297,7 @@ export default async function AdminStudyHallDetailPage({
         {parentRes.data?.phone_e164 ? " · Parent phone on file" : null}
       </p>
       </details>
-    </DashboardShell>
+    </ManagementPage>
   );
 }
 

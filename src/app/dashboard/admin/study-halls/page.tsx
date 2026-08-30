@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { ManagementStudyHalls } from "@/components/dashboard/management-study-halls";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { loadManagementWorkspace } from "@/lib/management-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,18 +17,16 @@ export default async function AdminStudyHallsPage() {
   const data = await loadManagementWorkspace(supabase!);
 
   return (
-    <DashboardShell
-      role="admin"
-      title="Study Halls"
-      description="What you need to care about — today, next, and anything that needs a decision."
-      navItems={ADMIN_PORTAL_NAV}
-    >
-      <Suspense fallback={<p className="text-sm text-ink-500">Loading Study Halls…</p>}>
-        <ManagementStudyHalls
-          bookings={data.bookings as never}
-          presenceByBooking={data.presenceByBooking}
-        />
-      </Suspense>
-    </DashboardShell>
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Study Halls</h1>
+      <div className="mt-4">
+        <Suspense fallback={<p className="text-sm text-ink-500">Loading Study Halls…</p>}>
+          <ManagementStudyHalls
+            bookings={data.bookings as never}
+            presenceByBooking={data.presenceByBooking}
+          />
+        </Suspense>
+      </div>
+    </ManagementPage>
   );
 }

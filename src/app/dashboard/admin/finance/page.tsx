@@ -7,7 +7,8 @@ import {
   type GuideCompRow,
   type PaymentRow,
 } from "@/components/dashboard/admin-finance-console";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
 import { requireRole } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -143,18 +144,19 @@ export default async function AdminFinancePage() {
   }));
 
   return (
-    <DashboardShell
-      role="admin"
-      title="Finance"
-      description="Customer money stays USD. Guide pay is a separate ledger and may use more than one currency."
-      navItems={ADMIN_PORTAL_NAV}
-    >
-      <AdminFinanceConsole
-        earnings={earningRows}
-        guides={guideRows}
-        disputes={disputeRows}
-        payments={paymentRows}
-      />
-    </DashboardShell>
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Finance</h1>
+      <p className="mt-1 text-sm text-[var(--mg-muted)]">
+        Customer money stays USD. Guide pay is a separate ledger and may use more than one currency.
+      </p>
+      <div className="mt-4">
+        <AdminFinanceConsole
+          earnings={earningRows}
+          guides={guideRows}
+          disputes={disputeRows}
+          payments={paymentRows}
+        />
+      </div>
+    </ManagementPage>
   );
 }
