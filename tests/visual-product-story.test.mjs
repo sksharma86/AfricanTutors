@@ -51,10 +51,14 @@ describe("Visual product story — homepage contracts", () => {
     const portal = read("src/components/marketing/product-showcase.tsx");
     assert.match(portal, /Next Study Hall/);
     assert.match(portal, /11 hours/);
-    assert.match(portal, /View report|Recording ready/);
+    assert.match(portal, /View report|Recording ready|Read report/);
     assert.match(portal, /PARENT_PORTAL_NAV|Study Halls/);
+    assert.match(portal, /parent-app/);
+    assert.match(portal, /#161c18|#f6f1e8/);
     assert.doesNotMatch(portal, /Matching complete|America\/Chicago|Dashboard \/ Book/);
     assert.doesNotMatch(portal, /ProductStreakCard|ProductHoursCard|sm:grid-cols-2[\s\S]*ProductReportCard/);
+    assert.doesNotMatch(portal, /bg-\[#f4f5f7\]/);
+    assert.doesNotMatch(portal, /bg-ink-900 px-6/);
     assert.match(portal, /Parent Portal/);
     assert.match(portal, /lg:max-w-\[88%\]/);
     assert.match(portal, /border-\[#D8D0C4\]/);
