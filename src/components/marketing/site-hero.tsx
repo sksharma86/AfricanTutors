@@ -17,7 +17,7 @@ export function SiteHero({
   hourlyHighUsd?: number;
 }) {
   return (
-    <section className="relative min-h-[92vh] overflow-hidden bg-ink-900 text-white">
+    <section className="relative min-h-[80svh] overflow-hidden bg-ink-900 text-white lg:min-h-[84svh]">
       <Image
         src="/images/student-tutoring-session.jpg"
         alt="A student at home working through homework on a laptop"
@@ -32,7 +32,7 @@ export function SiteHero({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-transparent to-ink-900/20" aria-hidden />
 
-      <Container size="wide" className="relative z-10 flex min-h-[92vh] flex-col justify-end pb-12 pt-28 sm:pb-20">
+      <Container size="wide" className="relative z-10 flex min-h-[80svh] flex-col justify-start pb-10 pt-16 sm:pb-14 sm:pt-20 lg:min-h-[84svh] lg:pb-16 lg:pt-20">
         <h1 className="at-fade-in mkt-display max-w-[16ch] text-[3.05rem] leading-[1.05] text-white sm:text-[4.4rem] lg:text-[5.4rem]">
           Homework gets done.
           <span className="mt-2 block text-white/62">You get your evening back.</span>

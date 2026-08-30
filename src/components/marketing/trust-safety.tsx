@@ -22,7 +22,7 @@ const PILLARS = [
 
 export function TrustSafety() {
   return (
-    <section className="scroll-mt-24 bg-white py-16 sm:py-24">
+    <section className="scroll-mt-24 bg-white pb-14 pt-8 sm:pb-20 sm:pt-10">
       <Container size="wide">
         <Reveal>
           <p className="mkt-eyebrow">Trust &amp; safety</p>

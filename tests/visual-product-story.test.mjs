@@ -55,6 +55,9 @@ describe("Visual product story — homepage contracts", () => {
     assert.match(portal, /PARENT_PORTAL_NAV|Study Halls/);
     assert.doesNotMatch(portal, /Matching complete|America\/Chicago|Dashboard \/ Book/);
     assert.doesNotMatch(portal, /ProductStreakCard|ProductHoursCard|sm:grid-cols-2[\s\S]*ProductReportCard/);
+    assert.match(portal, /Parent Portal/);
+    assert.match(portal, /lg:max-w-\[88%\]/);
+    assert.match(portal, /border-\[#D8D0C4\]/);
   });
 
   it("homepage how-it-works page no longer mounts the old steps or fake live room", () => {

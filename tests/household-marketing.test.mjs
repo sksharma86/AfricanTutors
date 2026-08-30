@@ -84,8 +84,11 @@ describe("Household marketing — homepage placement and compact value", () => {
     assert.match(HOUSEHOLD_VALUE_BODY, /You pay for the Study Hall, not per child/);
     assert.match(HOUSEHOLD_VALUE_BODY, /one live Guide/);
     assert.match(band, /HOUSEHOLD_VALUE_HEADLINE/);
-    assert.match(band, /HOUSEHOLD_VALUE_STEPS/);
+    assert.match(band, /HOUSEHOLD_VALUE_BODY/);
     assert.match(band, /HOUSEHOLD_VALUE_EYEBROW/);
+    assert.doesNotMatch(band, /HOUSEHOLD_VALUE_STEPS/);
+    assert.doesNotMatch(band, /ChildMarks|1 child|2 siblings|3 siblings/);
+    assert.doesNotMatch(band, /Same Study Hall price/);
     assert.doesNotMatch(band, /<Image|grid-cols-3|rounded-\[22px\]|shadow-/);
     assert.doesNotMatch(band, /transform:\s*scale|scale-\[/);
     assert.doesNotMatch(band, /text-3xl|text-4xl|text-5xl|min-h-\[|py-16|py-12/);
@@ -97,8 +100,7 @@ describe("Household marketing — homepage placement and compact value", () => {
     );
     assert.ok(HOUSEHOLD_VALUE_STEPS.every((s) => s.price === "Same Study Hall price"));
     assert.match(band, /overflow-x-hidden/);
-    assert.match(band, /sm:flex-row/);
-    assert.match(band, /flex-col/);
+    assert.match(band, /pb-5/);
   });
 });
 
