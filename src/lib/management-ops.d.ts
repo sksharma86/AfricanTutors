@@ -37,6 +37,7 @@ export function currentStudyHallIssues(
     nowMs?: number;
     attendance?: Record<string, unknown> | null;
     assignmentsLoaded?: boolean;
+    offerCount?: number;
   },
 ): StudyHallIssue[];
 export function managementOperationalStatus(

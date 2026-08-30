@@ -60,6 +60,9 @@ export default async function ManagementVisualReviewPage({
         />
       )}
       {scene === "missed" ||
+      scene === "search" ||
+      scene === "restored" ||
+      scene === "history" ||
       scene === "replacement" ||
       scene === "resolved" ||
       scene === "block4missed" ||
@@ -77,9 +80,9 @@ export default async function ManagementVisualReviewPage({
                 ? "Critical coverage failure"
                 : scene === "protected" || scene === "firstprotect"
                   ? "Customer protected"
-                  : scene === "criticalresolved" || scene === "resolved" || scene === "split"
+                  : scene === "criticalresolved" || scene === "resolved" || scene === "split" || scene === "restored" || scene === "history"
                     ? "Resolved"
-                    : scene === "block4missed" || scene === "mixedblock"
+                    : scene === "search" || scene === "block4missed" || scene === "mixedblock"
                       ? "Guide coverage unconfirmed"
                       : "Guide confirmation missed"}
             </p>
@@ -90,9 +93,9 @@ export default async function ManagementVisualReviewPage({
                   ? "Customer protected"
                   : scene === "replacement" || scene === "replace2"
                     ? "Replacement Guide awaiting confirmation"
-                    : scene === "criticalresolved" || scene === "resolved" || scene === "split"
+                    : scene === "criticalresolved" || scene === "resolved" || scene === "split" || scene === "restored" || scene === "history"
                       ? "Coverage restored"
-                      : scene === "block4missed" || scene === "mixedblock"
+                      : scene === "search" || scene === "block4missed" || scene === "mixedblock"
                         ? "Guide coverage unconfirmed"
                         : "Guide confirmation missed"}
             </p>
@@ -105,13 +108,17 @@ export default async function ManagementVisualReviewPage({
                     ? "6:13 PM cancelled · later halls proceed with confirmed coverage"
                     : scene === "mixedblock"
                       ? "6:13 PM critical · 7:13–9:13 PM still T-20 coverage issues"
-                      : scene === "block4missed"
-                        ? "Today · 6:23 PM–10:23 PM · 4 Study Halls affected"
-                        : scene === "replace2"
-                          ? "Today · 6:23 PM–8:23 PM · 2 consecutive Study Halls"
-                          : scene === "split"
-                            ? "Grace K. 6:23–8:23 · James O. 8:23–10:23"
-                            : "Today · 6:30 PM · Jordan · 60 min"}
+                      : scene === "search"
+                        ? "Today · 6:00 PM · Replacement search active"
+                        : scene === "restored" || scene === "history"
+                          ? "James M. · Confirmed"
+                          : scene === "block4missed"
+                            ? "Today · 6:23 PM–10:23 PM · 4 Study Halls affected"
+                            : scene === "replace2"
+                              ? "Today · 6:23 PM–8:23 PM · 2 consecutive Study Halls"
+                              : scene === "split"
+                                ? "Grace K. 6:23–8:23 · James O. 8:23–10:23"
+                                : "Today · 6:30 PM · Jordan · 60 min"}
             </p>
             <p className="mt-1 text-sm text-[var(--mg-muted)]">
               {scene === "critical"
@@ -120,23 +127,55 @@ export default async function ManagementVisualReviewPage({
                   ? "Assigned Guide: Grace K. Attendance confirmed."
                   : scene === "protected" || scene === "firstprotect"
                     ? "Automatic customer protection completed. No further action required."
-                    : scene === "replacement" || scene === "replace2"
-                      ? "Assigned Guide: Grace K. Confirmation requested."
-                      : scene === "resolved"
-                        ? "Assigned Guide: Grace K. Attendance confirmed."
-                        : scene === "split"
-                          ? "Coverage split. Confirmations recorded per assignment."
-                          : scene === "block4missed" || scene === "mixedblock"
-                            ? "Assigned Guide: Sarah M. Confirmation deadline missed."
-                            : "Assigned Guide: Sarah M. Confirmation deadline missed."}
+                    : scene === "search"
+                      ? "8 eligible Guides notified. Management can still reassign."
+                      : scene === "restored" || scene === "history"
+                        ? "Assigned Guide: James M. Attendance confirmed."
+                        : scene === "replacement" || scene === "replace2"
+                          ? "Assigned Guide: Grace K. Confirmation requested."
+                          : scene === "resolved"
+                            ? "Assigned Guide: Grace K. Attendance confirmed."
+                            : scene === "split"
+                              ? "Coverage split. Confirmations recorded per assignment."
+                              : scene === "block4missed" || scene === "mixedblock"
+                                ? "Assigned Guide: Sarah M. Confirmation deadline missed."
+                                : "Assigned Guide: Sarah M. Confirmation deadline missed."}
             </p>
-            {scene !== "resolved" && scene !== "split" && scene !== "criticalresolved" && scene !== "protected" && scene !== "firstprotect" ? (
+            {scene !== "resolved" &&
+            scene !== "split" &&
+            scene !== "criticalresolved" &&
+            scene !== "protected" &&
+            scene !== "firstprotect" &&
+            scene !== "restored" &&
+            scene !== "history" ? (
               <div className="mt-4">
                 <ManagementStudyHallActions bookingId="visual-review-only" canAct needsGuide={false} coverageCancel />
               </div>
             ) : (
               <p className="mt-3 text-sm text-[var(--mg-muted)]">No further action required.</p>
             )}
+          </ManagementSurface>
+        </section>
+      ) : null}
+      {scene === "history" ? (
+        <section id="replacement-history" className="mt-6 max-w-xl">
+          <ManagementSurface>
+            <p className="text-[10px] font-semibold tracking-[0.16em] text-[#8a8174] uppercase">Booking history</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--mg-ink)]">Automatic replacement chain</p>
+            <ul className="mt-3 divide-y divide-[#ece6d8] text-sm">
+              <li className="py-2">
+                <p className="text-[var(--mg-ink)]">Confirmation missed</p>
+                <p className="text-xs text-[var(--mg-muted)]">Sarah M. · T-20 · original assignment</p>
+              </li>
+              <li className="py-2">
+                <p className="text-[var(--mg-ink)]">Replacement search opened</p>
+                <p className="text-xs text-[var(--mg-muted)]">8 eligible Guides notified · private WhatsApp offers</p>
+              </li>
+              <li className="py-2">
+                <p className="text-[var(--mg-ink)]">Emergency replacement accepted</p>
+                <p className="text-xs text-[var(--mg-muted)]">James M. · attendance confirmed · coverage restored</p>
+              </li>
+            </ul>
           </ManagementSurface>
         </section>
       ) : null}

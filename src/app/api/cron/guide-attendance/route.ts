@@ -5,6 +5,7 @@ import {
   notifyCoverageFailureProtection,
   notifyGuideAttendanceRequest,
   notifyGuideConfirmationMissed,
+  notifyOpenCoverageOffer,
   notifyAdminAlert,
 } from "@/lib/notify";
 import { getServiceSupabase } from "@/lib/supabase/service";
@@ -14,8 +15,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * Open T-30 confirmation windows and persist T-20 misses.
- * One WhatsApp + one email per contiguous block. Idempotent.
- * Does not cancel, reassign, or refund.
+ * After a miss, open per-booking emergency replacement offers (first claim wins).
+ * One WhatsApp + one email per contiguous confirmation block. Idempotent.
+ * Does not silently auto-reassign, cancel, or refund.
  */
 async function handle(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -55,6 +57,8 @@ async function handle(request: NextRequest) {
   let alertsSent = 0;
   let criticalAlerts = 0;
   let protectedCount = 0;
+  let offersOpened = 0;
+  let offersNotified = 0;
   const notifiedLeaders = new Set<string>();
   const missedLeaders = new Set<string>();
 
@@ -147,6 +151,47 @@ async function handle(request: NextRequest) {
     }
   }
 
+  const searchSeen = new Set<string>();
+  async function openEmergencySearch(row: { id?: string; booking_id?: string }) {
+    if (!row?.id || !row.booking_id || searchSeen.has(row.booking_id)) return;
+    searchSeen.add(row.booking_id);
+    try {
+      const { data, error } = await service.rpc("open_emergency_coverage_search", {
+        p_booking: row.booking_id,
+        p_search_key: row.id,
+      });
+      if (error) {
+        if (/could not find|does not exist|schema cache/i.test(error.message)) return;
+        return;
+      }
+      const payload = (data ?? {}) as {
+        ok?: boolean;
+        createdCount?: number;
+        candidates?: { tutorId?: string }[];
+        searchKey?: string;
+      };
+      if (!payload.ok) return;
+      offersOpened += Number(payload.createdCount) || 0;
+      for (const cand of payload.candidates ?? []) {
+        if (!cand?.tutorId) continue;
+        const sent = await notifyOpenCoverageOffer(row.booking_id, {
+          tutorId: cand.tutorId,
+          searchKey: payload.searchKey || row.id,
+        });
+        if (sent?.status === "sent") offersNotified += 1;
+      }
+    } catch {
+      /* search/notify failure must not change attendance or T-20 state */
+    }
+  }
+
+  for (const row of opened) {
+    if (row?.status === "missed") await openEmergencySearch(row);
+  }
+  for (const row of missed) {
+    await openEmergencySearch(row);
+  }
+
   const seenCritical = new Set<string>();
   for (const row of critical) {
     if (!row?.booking_id || seenCritical.has(row.booking_id)) continue;
@@ -207,6 +252,8 @@ async function handle(request: NextRequest) {
     alertsSent,
     criticalAlerts,
     protectedCount,
+    offersOpened,
+    offersNotified,
   });
 }
 

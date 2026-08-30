@@ -23,7 +23,7 @@ export const ASSIGNMENT_STATUSES = Object.freeze([
   "voided",
 ]);
 
-export const ASSIGNMENT_SOURCES = Object.freeze(["t30", "replacement", "short_notice"]);
+export const ASSIGNMENT_SOURCES = Object.freeze(["t30", "replacement", "short_notice", "emergency"]);
 
 export const COVERAGE_CANCEL_REASON = "study_hall_guide_coverage";
 
@@ -154,6 +154,7 @@ export function managementAttendanceIssue({
   booking,
   assignment = null,
   nowMs = Date.now(),
+  offerCount = 0,
 } = {}) {
   if (booking?.status === "cancelled" && isCustomerProtectedAssignment(assignment)) {
     return {
@@ -208,6 +209,17 @@ export function managementAttendanceIssue({
     // derivation would false-flag every live/historical confirmed session
     // that never had a confirmation row (including the day this ships).
     if (!assignment) return null;
+    const notified = Number(offerCount) || 0;
+    if (notified > 0) {
+      return {
+        kind: "guide_confirm_missed",
+        title: "Guide coverage unconfirmed",
+        summary: "Replacement search active.",
+        detail: notified === 1 ? "1 eligible Guide notified" : `${notified} eligible Guides notified`,
+        action: "Review coverage",
+        severity: "high",
+      };
+    }
     return {
       kind: "guide_confirm_missed",
       title: "Guide confirmation missed",

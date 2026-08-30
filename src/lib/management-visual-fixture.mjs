@@ -125,8 +125,18 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
   const confirmHall = booking(now, {
     id: "fx-confirm",
     student_first_name: "Jordan",
-    tutor_display_name: scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved" ? "Grace K." : "Sarah M.",
-    tutor_id: scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved" ? "g-grace" : "g-sarah",
+    tutor_display_name:
+      scene === "restored" || scene === "history"
+        ? "James M."
+        : scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved"
+          ? "Grace K."
+          : "Sarah M.",
+    tutor_id:
+      scene === "restored" || scene === "history"
+        ? "g-james"
+        : scene === "replacement" || scene === "resolved" || scene === "replace2" || scene === "criticalresolved"
+          ? "g-grace"
+          : "g-sarah",
     scheduled_start: later(now, 0, confirmLeadMin),
     scheduled_end: later(now, 1, confirmLeadMin),
     status: scene === "protected" || scene === "firstprotect" ? "cancelled" : "confirmed",
@@ -149,7 +159,7 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
       )
     : [];
   const attendanceByBooking = {};
-  if (scene === "missed") {
+  if (scene === "missed" || scene === "search") {
     attendanceByBooking["fx-confirm"] = {
       id: "fx-att-miss",
       booking_id: "fx-confirm",
@@ -168,6 +178,15 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
       status: "awaiting",
       requested_at: later(now, 0, -1),
       deadline_at: later(now, 0, 9),
+    };
+  } else if (scene === "restored" || scene === "history") {
+    attendanceByBooking["fx-confirm"] = {
+      id: "fx-att-emerg",
+      booking_id: "fx-confirm",
+      tutor_id: "g-james",
+      source: "emergency",
+      status: "confirmed",
+      confirmed_at: later(now, 0, -0.2),
     };
   } else if (scene === "resolved") {
     attendanceByBooking["fx-confirm"] = {
@@ -244,12 +263,14 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
     "fx-live-2": { student_first_joined_at: later(now, -0.25), student_last_seen_at: later(now, -0.05) },
   };
 
+  const offerCountByBooking = scene === "search" ? { "fx-confirm": 8 } : {};
   const bookingsWithIssues = bookings.map((b) => ({
     ...b,
     issues: currentStudyHallIssues(b, {
       presence: presenceByBooking[b.id],
       attendance: attendanceByBooking[b.id] ?? null,
       assignmentsLoaded: Boolean(scene),
+      offerCount: offerCountByBooking[b.id] ?? 0,
       nowMs,
     }),
   }));
@@ -263,6 +284,7 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
     ],
     attendanceByBooking,
     assignmentsLoaded: Boolean(scene),
+    offerCountByBooking,
     nowMs,
   });
 

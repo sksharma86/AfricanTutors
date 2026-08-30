@@ -5,6 +5,7 @@ declare module "@/lib/telephony/whatsapp-config.mjs" {
     from: string;
     attendanceContentSid: string;
     replacementContentSid: string;
+    openCoverageContentSid: string;
     disabled: boolean;
   };
   export function isWhatsAppConfigured(): boolean;

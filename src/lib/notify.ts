@@ -8,7 +8,8 @@ import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
 import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey } from "@/lib/guide-attendance.mjs";
-import { guideAttendanceWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
+import { guideAttendanceWhatsApp, guideOpenCoverageWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
+import { openCoverageNotifyKey, openCoveragePath } from "@/lib/open-coverage.mjs";
 import { getWhatsAppConfig } from "@/lib/telephony/config";
 import {
   parentCancellationSms,
@@ -890,6 +891,41 @@ export async function notifyGuideAttendanceRequest(
   });
 
   return email;
+}
+
+/** Private WhatsApp offer for one eligible emergency replacement Guide. No parent notify. */
+export async function notifyOpenCoverageOffer(
+  bookingId: string,
+  opts: { tutorId: string; searchKey: string },
+) {
+  const service = getServiceSupabase();
+  const b = await loadBooking(service, bookingId);
+  if (!b?.scheduled_start || !opts.tutorId || !opts.searchKey) return { status: "skipped" };
+  const { data: guide } = await service.from("profiles").select("timezone").eq("id", opts.tutorId).maybeSingle();
+  const { data: tutor } = await service
+    .from("tutor_profiles")
+    .select("timezone")
+    .eq("profile_id", opts.tutorId)
+    .maybeSingle();
+  const tz = (tutor?.timezone as string | null) || (guide?.timezone as string | null) || b.tutorTz;
+  const wa = guideOpenCoverageWhatsApp({
+    startISO: b.scheduled_start,
+    endISO: b.scheduled_end ?? b.scheduled_start,
+    tz,
+    durationMinutes: b.duration_minutes,
+    appUrl: APP_URL,
+    acceptPath: openCoveragePath(bookingId),
+  });
+  const waCfg = getWhatsAppConfig();
+  return deliverGuideWhatsApp({
+    key: openCoverageNotifyKey({ bookingId, tutorId: opts.tutorId, searchKey: opts.searchKey }),
+    type: "guide_open_coverage",
+    accountId: opts.tutorId,
+    bookingId,
+    body: wa.body,
+    contentSid: waCfg.openCoverageContentSid || null,
+    variables: wa.variables,
+  });
 }
 
 /** Management exception when a confirmation deadline is missed. One alert per block. */

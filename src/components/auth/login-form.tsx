@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-notice";
 import { ResendConfirmationForm } from "@/components/auth/resend-confirmation-form";
 import { Button } from "@/components/ui/button";
-import { sanitizeNextPath } from "@/lib/auth-redirect";
+import { isSafeOpenCoveragePath, sanitizeNextPath } from "@/lib/auth-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -83,7 +83,11 @@ export function LoginForm() {
     // sent on the first portal request and this form cannot stay on
     // "Logging in..." if the destination is slow.
     const requested = sanitizeNextPath(searchParams.get("redirectTo"), "/dashboard");
-    const dest = requested.startsWith("/dashboard") ? "/dashboard" : requested;
+    const dest = isSafeOpenCoveragePath(requested)
+      ? requested
+      : requested.startsWith("/dashboard")
+        ? "/dashboard"
+        : requested;
     void data;
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- session cookie must be sent on a new document
     window.location.assign(dest);

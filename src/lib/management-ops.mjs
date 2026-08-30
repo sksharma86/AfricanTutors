@@ -159,6 +159,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
     nowMs = Date.now(),
     attendance = null,
     assignmentsLoaded = extras.attendance !== undefined || extras.assignmentsLoaded === true,
+    offerCount = extras.offerCount ?? 0,
   } = extras;
   if (!booking) return [];
   const issues = [];
@@ -168,6 +169,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
     assignment: attendance,
     nowMs,
     assignmentsLoaded,
+    offerCount,
   });
   if (attendanceIssue) {
     const startLabel = startsInLabel(booking.scheduled_start, nowMs);
@@ -424,6 +426,7 @@ export function collectNeedsAttention({
   pendingApplicants = [],
   attendanceByBooking = {},
   assignmentsLoaded = false,
+  offerCountByBooking = {},
   nowMs = Date.now(),
 } = {}) {
   const items = [];
@@ -447,6 +450,7 @@ export function collectNeedsAttention({
       recordingFailures: recBy.get(b.id) ?? [],
       missingReport: missingSet.has(b.id),
       attendance: hasAttendanceKey ? attendanceByBooking[b.id] : null,
+      offerCount: offerCountByBooking?.[b.id] ?? 0,
       assignmentsLoaded: assignmentsLoaded || hasAttendanceKey,
       nowMs,
     });
