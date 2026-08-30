@@ -217,7 +217,7 @@ describe("Portal affordance — IA and routes stay the same", () => {
     assert.match(guide, /aria-current=\{isActive\(item\.href\) \? "page"/);
     assert.match(side, /aria-current=\{active \? "page"/);
     assert.match(parent, /hover:bg-\[#ebe4d6\]|bg-white\/60/);
-    assert.match(guide, /border border-ink-200 bg-white/);
+    assert.match(guide, /hover:bg-\[#ebe4d6\]|bg-white\/60/);
     assert.match(side, /border border-ink-200 bg-white/);
     assert.match(parent, /overflow-x-auto/);
     assert.match(guide, /overflow-x-auto/);

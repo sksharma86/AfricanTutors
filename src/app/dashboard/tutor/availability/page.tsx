@@ -18,14 +18,14 @@ export default async function GuideAvailabilityPage() {
 
   return (
     <GuidePage>
-      <h1 id="availability" className="font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+      <h1 id="availability" className="font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-[var(--gp-ink)]">
         Availability
       </h1>
-      <p className="mt-2 text-sm text-ink-500">
+      <p className="mt-2 text-sm text-[var(--gp-muted)]">
         Keep continuous blocks open for the full Study Hall length parents book (1, 2, or 3 hours). A Study Hall is
         never split across multiple Guides.
       </p>
-      <div className="mt-6">
+      <div className="gp-ops mt-6">
         <AvailabilityManager
           tutorId={user.id}
           timezone={tz}

@@ -60,10 +60,12 @@ describe("Guide workstation — routes and authorization", () => {
   it("shell marks the active destination and keeps labels on mobile", () => {
     const shell = read("src/components/dashboard/guide-shell.tsx");
     assert.match(shell, /aria-current=\{isActive\(item\.href\) \? "page"/);
-    assert.match(shell, /hidden items-center gap-1 md:flex/);
-    assert.match(shell, /md:hidden/);
+    assert.match(shell, /<aside/);
+    assert.match(shell, /lg:hidden/);
     assert.match(shell, /overflow-x-auto/);
     assert.match(shell, /GUIDE_PORTAL_NAV/);
+    assert.match(shell, /guide-app/);
+    assert.doesNotMatch(shell, /Book a Study Hall|Prepaid Hours|Reports & Recordings/);
   });
 
   it("legacy hashes redirect to real destinations", () => {
@@ -78,11 +80,14 @@ describe("Guide workstation — routes and authorization", () => {
 describe("Guide workstation — Home, Next, Today, Join", () => {
   it("Home is next assignment + today's schedule + optional report recovery", () => {
     const home = read("src/app/dashboard/tutor/page.tsx");
-    assert.match(home, /GuideNextStudyHall/);
-    assert.match(home, /GuideTodaySchedule/);
-    assert.match(home, /GuideFinishReport/);
-    assert.match(home, /unfinishedGuideReport/);
+    const board = read("src/components/dashboard/guide-home-board.tsx");
+    assert.match(home, /GuideHomeBoard/);
+    assert.match(board, /GuideNextStudyHall/);
+    assert.match(board, /GuideTodaySchedule/);
+    assert.match(board, /GuideFinishReport/);
+    assert.match(board, /unfinishedGuideReport/);
     assert.doesNotMatch(home, /Buy hours|Prepaid Hours|PackageStore/);
+    assert.doesNotMatch(board, /Buy hours|Prepaid Hours|PackageStore/);
   });
 
   it("Next Study Hall join follows T−5 / end+15", () => {
@@ -94,7 +99,7 @@ describe("Guide workstation — Home, Next, Today, Join", () => {
     assert.equal(guideJoinUiState(row.status, row.scheduled_start, row.scheduled_end, END + 15 * 60000).kind, "join");
     assert.equal(guideJoinUiState(row.status, row.scheduled_start, row.scheduled_end, END + 15 * 60000 + 1).kind, "ended");
     const next = read("src/components/dashboard/guide-next-study-hall.tsx");
-    assert.match(next, /Your next Study Hall/);
+    assert.match(next, /Next Study Hall/);
     assert.match(next, /Join Study Hall/);
     const join = read("src/components/dashboard/guide-join-control.tsx");
     assert.match(join, /Join opens at/);
@@ -131,7 +136,7 @@ describe("Guide workstation — Home, Next, Today, Join", () => {
     );
     assert.equal(nairobi.today[0]?.id, "nbo");
     const schedule = read("src/components/dashboard/guide-today-schedule.tsx");
-    assert.match(schedule, /Today'?s Study Halls/);
+    assert.match(schedule, /Today'?s schedule/);
     assert.match(schedule, /guideChildName/);
     assert.doesNotMatch(schedule, /payment_status|Daily room|UUID/);
   });
@@ -165,9 +170,9 @@ describe("Guide workstation — mandatory report", () => {
     const last = unfinishedGuideReport([older, newer], []);
     assert.equal(last?.id, "new");
     const home = read("src/components/dashboard/guide-finish-report.tsx");
-    assert.match(home, /Finish your last Study Hall/);
-    assert.match(home, /Finish report/);
-    assert.doesNotMatch(home, /Reports pending|Reports to complete/i);
+    assert.match(home, /Report needed/);
+    assert.match(home, /Complete report/);
+    assert.doesNotMatch(home, /Reports pending|Reports to complete|Pending Tasks|Action Center/i);
   });
 
   it("session leave after scheduled end sends the Guide to the report", () => {

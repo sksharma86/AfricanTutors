@@ -2,76 +2,120 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
+import { GUIDE_NAV_ICONS } from "@/components/dashboard/guide-icons";
 import { LogoutButton } from "@/components/dashboard/logout-button";
-import { Container } from "@/components/ui/container";
 import { GUIDE_PORTAL_NAV } from "@/lib/guide-portal.mjs";
 import { cn } from "@/lib/utils";
 
 /**
  * Guide workstation shell. Destinations are real routes, not page anchors.
+ * Related to Parent visually. No Parent booking, hours, or reports navigation.
  */
 export function GuideShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const mobileNavRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const active = mobileNavRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }, [pathname]);
 
   const isActive = (href: string) => {
-    if (href === "/dashboard/tutor") return pathname === "/dashboard/tutor";
+    if (href === "/dashboard/tutor") {
+      return pathname === "/dashboard/tutor" || pathname.startsWith("/dashboard/tutor/visual-review");
+    }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   return (
-    <div className="flex min-h-full flex-col bg-[#f4f5f7]">
-      <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur">
-        <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
-          <BrandLockup href="/dashboard/tutor" variant="product" />
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Guide workstation">
-            {GUIDE_PORTAL_NAV.map((item) => (
+    <div className="guide-app flex min-h-svh">
+      <aside className="sticky top-0 hidden h-svh w-[15.5rem] shrink-0 flex-col border-r border-[#1c1915]/[0.06] bg-[#f3eee4] px-4 py-5 lg:flex">
+        <BrandLockup
+          href="/dashboard/tutor"
+          variant="product"
+          size={26}
+          className="shrink-0 px-1.5"
+          textClassName="text-[13.5px]"
+        />
+        <nav className="mt-8 flex min-w-0 flex-col gap-1" aria-label="Guide workstation">
+          {GUIDE_PORTAL_NAV.map((item) => {
+            const Icon = GUIDE_NAV_ICONS[item.label as keyof typeof GUIDE_NAV_ICONS];
+            const active = isActive(item.href);
+            return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "min-h-11 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
-                  isActive(item.href)
-                    ? "border border-ink-900 bg-ink-900 text-white"
-                    : "border border-ink-200 bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50 hover:text-ink-900",
+                  "gp-nav-link inline-flex min-h-11 items-center gap-3 rounded-[12px] px-3 text-[14px] font-medium",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]",
+                  active
+                    ? "bg-[#f3e6c4] text-[#5c4310] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.28)]"
+                    : "text-[#3d3932] hover:bg-[#ebe4d6] hover:text-[#1c1915]",
                 )}
               >
+                {Icon ? <Icon className={active ? "text-[#c9a227]" : "text-[#7a7368]"} /> : null}
                 {item.label}
               </Link>
-            ))}
-          </nav>
-          <LogoutButton />
-        </Container>
-        <div className="relative border-t border-ink-100 md:hidden">
-          <nav
-            aria-label="Guide workstation"
-            className="flex gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {GUIDE_PORTAL_NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                className={cn(
-                  "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900",
-                  isActive(item.href)
-                    ? "border border-ink-900 bg-ink-900 text-white"
-                    : "border border-ink-200 bg-white text-ink-700",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white to-transparent" />
+            );
+          })}
+        </nav>
+        <div className="mt-auto pt-8">
+          <LogoutButton quiet className="w-full justify-center px-2.5 text-[13px]" />
         </div>
-      </header>
-      <main className="flex-1">{children}</main>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 border-b border-[#1c1915]/[0.06] bg-[#f6f1e8]/92 backdrop-blur lg:hidden">
+          <div className="flex h-14 items-center justify-between gap-3 px-4">
+            <BrandLockup
+              href="/dashboard/tutor"
+              variant="product"
+              size={24}
+              className="shrink-0"
+              textClassName="text-[13px] sm:text-[14px]"
+            />
+            <LogoutButton quiet className="px-2.5 text-[13px]" />
+          </div>
+          <div className="relative border-t border-[#1c1915]/[0.05] lg:hidden">
+            <nav
+              ref={mobileNavRef}
+              aria-label="Guide workstation"
+              className="flex flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {GUIDE_PORTAL_NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={cn(
+                    "gp-nav-link inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium",
+                    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]",
+                    isActive(item.href)
+                      ? "bg-[#f3e6c4] text-[#5c4310] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.28)]"
+                      : "bg-white/60 text-[#3d3932]",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#f6f1e8] to-transparent"
+            />
+          </div>
+        </header>
+
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }

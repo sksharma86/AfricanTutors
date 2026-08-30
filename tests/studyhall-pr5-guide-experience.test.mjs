@@ -19,20 +19,22 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
     const next = read("src/components/dashboard/guide-next-study-hall.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
+    const guide = read("src/components/dashboard/guide-guidance.tsx");
     assert.match(page, /Guide workspace/);
-    assert.match(today, /Today'?s Study Halls|Upcoming Study Halls/);
+    assert.match(today, /Today'?s schedule|Upcoming Study Halls/);
     assert.match(next, /Join Study Hall|GuideJoinControl/);
-    assert.match(page, /presence, focus, accountability/i);
+    assert.match(guide, /presence, focus, accountability/i);
     assert.doesNotMatch(page, /Your tutor account|Approved subjects|Tutor Dashboard/i);
     // Role copy may say "not … teach lessons / subject tutor" — that is intentional framing.
-    assert.match(page, /not expected to teach lessons|not tutoring/i);
+    assert.match(guide, /not expected to teach lessons|not tutoring/i);
     assert.doesNotMatch(page, /Book a tutoring|Tutor Dashboard|subject specialty prep/i);
   });
 
   it("Guide dashboard does not introduce subject matching or specialty prep", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
+    const guide = read("src/components/dashboard/guide-guidance.tsx");
     assert.doesNotMatch(page, /tutor_subjects|Approved subjects|specialty/i);
-    assert.match(page, /not tutoring or homework answers/i);
+    assert.match(guide, /not tutoring or homework answers/i);
   });
 
   it("1h/2h/3h duration labels are correct", () => {
