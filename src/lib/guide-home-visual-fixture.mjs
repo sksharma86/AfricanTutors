@@ -13,7 +13,7 @@ function booking(overrides = {}) {
     subject_name: null,
     other_subject_text: null,
     student_first_name: "Jordan",
-    student_first_names: ["Jordan"],
+    student_first_names: null,
     child_count: 1,
     student_grade: null,
     request_note: null,
@@ -60,13 +60,13 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
     scheduled_end: later(now, 5),
     student_first_name: "Ethan",
   });
-  const weekDone = [24, 48, 72].map((hoursAgo, i) =>
+  const weekDone = [5, 3].map((hoursAgo, i) =>
     booking({
       id: `fixture-week-${i}`,
       status: "completed",
       scheduled_start: later(now, -hoursAgo),
       scheduled_end: later(now, -hoursAgo + 1),
-      student_first_name: ["Ava", "Leo", "Nora"][i],
+      student_first_name: ["Ava", "Leo"][i],
     }),
   );
   const laterRow = booking({

@@ -23,9 +23,7 @@ export default async function GuideHomeVisualReviewPage({
   if (process.env.GUIDE_HOME_VISUAL_REVIEW !== "1") notFound();
   await requireRole("tutor", "/dashboard/tutor");
   const params = await searchParams;
-  const now = new Date();
-  now.setHours(14, 0, 0, 0);
-  const fixture = guideHomeVisualFixture(now, {
+  const fixture = guideHomeVisualFixture(new Date(), {
     reportNeeded: params.report === "1",
     empty: params.empty === "1",
   });
