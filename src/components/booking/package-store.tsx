@@ -168,11 +168,8 @@ export function PackageStore({
                 <Button
                   onClick={() => buy(pkg)}
                   disabled={busyId !== null}
-                  variant={featured ? "primary" : "outline"}
-                  className={cn(
-                    "w-full",
-                    featured && "border-transparent bg-[#c9a227] text-[#1c1915] hover:bg-[#b8921f]",
-                  )}
+                  variant={featured ? "secondary" : "outline"}
+                  className="w-full"
                 >
                   {busyId === pkg.id ? "Starting…" : due > 0 ? "Buy hours" : "Redeem with credit"}
                 </Button>
