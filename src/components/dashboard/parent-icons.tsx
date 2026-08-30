@@ -27,6 +27,9 @@ export const ParentIconCheck = strokeIcon("M5.8 12.2 10 16.4 18.2 8");
 export const ParentIconAlert = strokeIcon("M12 8.2v4.6M12 16.6h.01M12 4.8 3.8 19.2h16.4L12 4.8Z");
 export const ParentIconChevron = strokeIcon("M9.2 6.8 14.8 12 9.2 17.2");
 export const ParentIconBook = strokeIcon("M6.2 5.4h8.4A2.2 2.2 0 0 1 16.8 7.6v11H8.4A2.2 2.2 0 0 0 6.2 20.8V5.4Z M6.2 5.4A2.2 2.2 0 0 0 4 7.6v11");
+export const ParentIconShield = strokeIcon(
+  "M12 4.4 5.4 6.8v5.4c0 4.1 2.7 7.2 6.6 8.4 3.9-1.2 6.6-4.3 6.6-8.4V6.8L12 4.4Z M9.4 12.1l1.8 1.8 3.5-3.6",
+);
 
 export const PARENT_NAV_ICONS = {
   Home: ParentIconHome,

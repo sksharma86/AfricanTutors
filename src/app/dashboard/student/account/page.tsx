@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { ParentCommunicationSafety } from "@/components/dashboard/parent-communication-safety";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentPhoneForm } from "@/components/dashboard/parent-phone-form";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
@@ -58,6 +59,10 @@ export default async function ParentAccountPage() {
           </ul>
         )}
       </ParentSurface>
+
+      <section className="mt-5">
+        <ParentCommunicationSafety />
+      </section>
     </ParentPage>
   );
 }
