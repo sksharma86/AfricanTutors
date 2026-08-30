@@ -5,7 +5,8 @@ import {
   AdminGuidesDirectory,
   type AdminGuideDirectoryRow,
 } from "@/components/dashboard/admin-guides-directory";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
 import { requireRole } from "@/lib/auth";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -72,20 +73,18 @@ export default async function AdminGuidesPage() {
   >;
 
   return (
-    <DashboardShell
-      role="admin"
-      title="Guides"
-      description="Applicants, active Guides, and workforce actions."
-      navItems={ADMIN_PORTAL_NAV}
-    >
-      <Suspense fallback={<p className="text-sm text-ink-500">Loading Guides…</p>}>
-        <AdminGuidesDirectory
-          pending={grouped.pending}
-          active={grouped.active}
-          suspended={grouped.suspended}
-          rejected={grouped.rejected}
-        />
-      </Suspense>
-    </DashboardShell>
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Guides</h1>
+      <div className="mt-4">
+        <Suspense fallback={<p className="text-sm text-ink-500">Loading Guides…</p>}>
+          <AdminGuidesDirectory
+            pending={grouped.pending}
+            active={grouped.active}
+            suspended={grouped.suspended}
+            rejected={grouped.rejected}
+          />
+        </Suspense>
+      </div>
+    </ManagementPage>
   );
 }

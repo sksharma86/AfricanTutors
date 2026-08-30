@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    MANAGEMENT_VISUAL_REVIEW: process.env.MANAGEMENT_VISUAL_REVIEW ?? "",
+  },
 };
 
 export default nextConfig;

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
 import { Button } from "@/components/ui/button";
-import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
+import { ManagementSubnav } from "@/components/dashboard/management-subnav";
 import {
   aggregateCompensationByCurrency,
   formatCompensationHourly,
@@ -113,7 +113,7 @@ export function AdminFinanceConsole({
 
   return (
     <div className="space-y-6">
-      <PortalSegmentedControl
+      <ManagementSubnav
         ariaLabel="Finance views"
         items={FINANCE_TABS}
         value={tab}
@@ -199,59 +199,84 @@ function EarningsTab({
 
   return (
     <section>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="font-display text-lg font-semibold text-ink-900">Guide compensation</h3>
-          <p className="mt-1 text-xs text-ink-400">
-            Compensation is recorded in each Guide&apos;s payout currency. Mixed currencies are never added together.
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1 text-sm text-ink-600">
-          <span>Earned {formatCompensationTotals(totals, "earned")}</span>
-          <span>Paid {formatCompensationTotals(totals, "paid")}</span>
-          <span className="font-medium text-gold-800">
-            Outstanding {formatCompensationTotals(totals, "outstanding")}
-          </span>
-        </div>
+      <div>
+        <h3 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Guide compensation</h3>
+        <p className="mt-1 text-[12.5px] text-[var(--mg-muted)]">
+          Compensation is recorded in each Guide&apos;s payout currency. Mixed currencies are never added together.
+        </p>
       </div>
+      {totals.length > 0 ? (
+        <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+          {totals.map((t) => (
+            <div key={t.currency} className="mg-currency-card px-4 py-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">{t.currency}</p>
+              <dl className="mt-2 grid grid-cols-3 gap-2 text-[13px]">
+                <div>
+                  <dt className="text-[var(--mg-muted)]">Earned</dt>
+                  <dd className="mt-0.5 font-medium text-[var(--mg-ink)]">{formatCompensationMinor(t.earned, t.currency)}</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--mg-muted)]">Outstanding</dt>
+                  <dd className="mt-0.5 font-medium text-[var(--mg-ink)]">{formatCompensationMinor(t.outstanding, t.currency)}</dd>
+                </div>
+                <div>
+                  <dt className="text-[var(--mg-muted)]">Paid</dt>
+                  <dd className="mt-0.5 font-medium text-[var(--mg-ink)]">{formatCompensationMinor(t.paid, t.currency)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-[var(--mg-muted)]">
+          Earned {formatCompensationTotals(totals, "earned")} · Outstanding {formatCompensationTotals(totals, "outstanding")}
+        </p>
+      )}
       {guideRows.length > 0 ? (
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-ink-400">
+            <thead>
               <tr>
-                <th className="px-3 py-2">Guide</th>
-                <th className="px-3 py-2">Rate</th>
-                <th className="px-3 py-2">Earned</th>
-                <th className="px-3 py-2">Outstanding</th>
-                <th className="px-3 py-2">Paid</th>
+                <th>Guide</th>
+                <th>Rate</th>
+                <th>Earned</th>
+                <th>Outstanding</th>
+                <th>Paid</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-100">
+            <tbody>
               {guideRows.map((g) => (
                 <tr key={g.profile_id}>
-                  <td className="px-3 py-2 font-medium text-ink-900">{g.name}</td>
-                  <td className="px-3 py-2 text-ink-700">
+                  <td className="font-medium">{g.name}</td>
+                  <td>
                     {typeof g.rate_cents === "number" ? formatCompensationHourly(g.rate_cents, g.currency) : "Not set"}
                   </td>
-                  <td className="px-3 py-2 text-ink-800">{formatCompensationTotals(g.totals, "earned")}</td>
-                  <td className="px-3 py-2 text-gold-800">{formatCompensationTotals(g.totals, "outstanding")}</td>
-                  <td className="px-3 py-2 text-ink-800">{formatCompensationTotals(g.totals, "paid")}</td>
+                  <td>{formatCompensationTotals(g.totals, "earned")}</td>
+                  <td>{formatCompensationTotals(g.totals, "outstanding")}</td>
+                  <td>{formatCompensationTotals(g.totals, "paid")}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : null}
-      <div className="mt-4 flex items-center gap-3">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-ink-200 px-3 py-1.5 text-sm">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-[10px] border border-[#1c1915]/12 px-3 py-1.5 text-sm">
           {["all", "earned", "adjusted", "paid", "voided", "pending"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <Button size="sm" variant="outline" onClick={markPaidBatch} disabled={selected.size === 0}>Mark selected paid ({selected.size})</Button>
+        {selected.size > 0 ? (
+          <div className="inline-flex min-h-10 items-center gap-3 rounded-[10px] bg-[#161c18] px-3 text-[13px] text-[#f6f1e8]">
+            <span>{selected.size} earning{selected.size === 1 ? "" : "s"} selected</span>
+            <Button size="sm" variant="primary" onClick={markPaidBatch}>Mark paid</Button>
+          </div>
+        ) : (
+          <Button size="sm" variant="outline" onClick={markPaidBatch} disabled>Mark selected paid (0)</Button>
+        )}
       </div>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[820px] text-left text-sm">
-          <thead className="text-xs uppercase tracking-wide text-ink-400">
-            <tr><th className="py-2 pr-3"></th><th className="py-2 pr-3">Guide</th><th className="py-2 pr-3">Session</th><th className="py-2 pr-3">Min</th><th className="py-2 pr-3">Rate</th><th className="py-2 pr-3">Amount</th><th className="py-2 pr-3">Status</th><th className="py-2">Actions</th></tr>
+          <thead>
+            <tr><th></th><th>Guide</th><th>Session</th><th>Min</th><th>Rate</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
             {filtered.length === 0 ? (
@@ -317,8 +342,8 @@ function DisputesTab({ rows, payments, onOk, onErr }: { rows: DisputeRow[]; paym
 
   return (
     <section>
-      <h3 className="font-display text-lg font-semibold text-ink-900">Dispute queue</h3>
-      <p className="mt-1 text-sm text-ink-500">{active.length} awaiting review · {disputes.length} total</p>
+      <h3 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Dispute queue</h3>
+      <p className="mt-1 text-sm text-[var(--mg-muted)]">{active.length} awaiting review · {disputes.length} total</p>
       <div className="mt-4 divide-y divide-ink-100">
         {active.length === 0 ? <p className="py-6 text-sm text-ink-400">No open disputes.</p> : null}
         {active.map((d) => (
@@ -435,8 +460,8 @@ function PaymentsTab({ rows, onOk, onErr }: { rows: PaymentRow[]; onOk: (m: stri
   }
   return (
     <section>
-      <h3 className="font-display text-lg font-semibold text-ink-900">Customer money</h3>
-      <p className="mt-1 text-sm text-ink-500">USD through Stripe. Separate from Guide compensation.</p>
+      <h3 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Customer money</h3>
+      <p className="mt-1 text-sm text-[var(--mg-muted)]">USD through Stripe. Separate from Guide compensation.</p>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[820px] text-left text-sm">
           <thead className="text-xs uppercase tracking-wide text-ink-400">
@@ -525,8 +550,8 @@ function CustomerTab({ supabase, onOk, onErr }: { supabase: SB; onOk: (m: string
 
   return (
     <section>
-      <h3 className="font-display text-lg font-semibold text-ink-900">Customer finance</h3>
-      <p className="mt-1 text-sm text-ink-500">Look up an account by its id to view balances and ledgers, and make audited adjustments.</p>
+      <h3 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">Customer balances</h3>
+      <p className="mt-1 text-sm text-[var(--mg-muted)]">Prepaid hours do not expire. Look up an account to view balances and make audited adjustments.</p>
       <div className="mt-4 flex flex-wrap gap-3">
         <input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder="Account id (UUID)" className="min-w-[320px] flex-1 rounded-lg border border-ink-200 px-3 py-2 text-sm" />
         <Button size="sm" variant="outline" onClick={load}>Load</Button>

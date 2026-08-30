@@ -77,29 +77,29 @@ export function AdminGuidesDirectory({
         onChange={setView}
       />
 
-      <p className="flex flex-wrap gap-4 text-sm text-ink-500">
-        <span>{pending.length} pending</span>
-        <span>{active.length} active</span>
+      <p className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[var(--mg-muted)]">
+        <span><strong className="font-semibold text-[var(--mg-ink)]">{active.length}</strong> active</span>
+        <span><strong className="font-semibold text-[var(--mg-ink)]">{pending.length}</strong> applications</span>
         <span>{suspended.length} suspended</span>
         <span>{rejected.length} rejected</span>
       </p>
 
       <section>
-        <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">{HEADING[view]}</h2>
+        <h2 className="text-[10px] font-semibold tracking-[0.14em] text-[var(--mg-muted)] uppercase">{HEADING[view]}</h2>
         {rows.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-400">None.</p>
+          <p className="mt-3 text-sm text-[var(--mg-muted)]">None.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-ink-100">
+          <ul className="mg-list mt-3 overflow-hidden px-3.5">
             {rows.map((g) => (
-              <li key={g.profile_id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <li key={g.profile_id} className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Link
                     href={`/dashboard/admin/tutors/${g.profile_id}`}
-                    className="text-sm font-medium text-ink-900 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-900"
+                    className="text-[13.5px] font-medium text-[var(--mg-ink)] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"
                   >
                     {g.name}
                   </Link>
-                  <p className="mt-0.5 text-sm text-ink-500">
+                  <p className="mt-0.5 text-[13px] text-[var(--mg-muted)]">
                     {typeof g.comp_rate_cents_per_hour === "number"
                       ? formatCompensationHourly(g.comp_rate_cents_per_hour, g.comp_currency ?? "USD")
                       : "Rate not set"}

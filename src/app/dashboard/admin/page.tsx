@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { ManagementOverview } from "@/components/dashboard/management-overview";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
 import { aggregateCompensationByCurrency } from "@/lib/compensation-currency.mjs";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
@@ -21,21 +22,27 @@ export default async function AdminOverviewPage() {
   const outstandingTotals = aggregateCompensationByCurrency(
     data.earnings as { amount_cents: number; status: string; currency?: string | null }[],
   );
+  const nowMs = new Date().getTime();
+  const since = new Date(nowMs - 36 * 60 * 60 * 1000).toISOString();
+  const { data: payments } = await supabase!
+    .from("payments")
+    .select("stripe_paid_cents, status, created_at")
+    .gte("created_at", since)
+    .limit(200);
 
   return (
-    <DashboardShell
-      role="admin"
-      title="Overview"
-      description="What is happening today, and what needs you."
-      navItems={ADMIN_PORTAL_NAV}
-    >
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} compose>
       <ManagementOverview
         bookings={data.bookings as never}
         presenceByBooking={data.presenceByBooking}
         attentionItems={data.attentionItems}
         guidesActive={guidesActive}
         outstandingTotals={outstandingTotals}
+        guides={data.guides as { status: string; approved_at?: string | null }[]}
+        reports={data.reports as { booking_id?: string | null; submitted_at?: string | null }[]}
+        payments={(payments ?? []) as { created_at?: string | null; status?: string; stripe_paid_cents?: number }[]}
+        nowMs={nowMs}
       />
-    </DashboardShell>
+    </ManagementPage>
   );
 }

@@ -106,7 +106,7 @@ export async function loadManagementWorkspace(supabase: SB) {
       .select("id, booking_id, status")
       .in("status", ["open", "under_review"])
       .limit(40),
-    supabase.from("session_reports").select("booking_id").then((r) => r, () => ({ data: null, error: null })),
+    supabase.from("session_reports").select("booking_id, submitted_at").then((r) => r, () => ({ data: null, error: null })),
     supabase.from("tutor_earnings").select("amount_cents, status, currency"),
   ]);
 
@@ -150,7 +150,8 @@ export async function loadManagementWorkspace(supabase: SB) {
     };
   }
 
-  const reported = new Set(((reportRes.data ?? []) as { booking_id: string }[]).map((r) => r.booking_id));
+  const reportRows = (reportRes.data ?? []) as { booking_id: string; submitted_at?: string | null }[];
+  const reported = new Set(reportRows.map((r) => r.booking_id));
   const now = Date.now();
   const dayAgo = now - 24 * 60 * 60 * 1000;
   const reportWindowMs = 14 * 24 * 60 * 60 * 1000;
@@ -238,6 +239,7 @@ export async function loadManagementWorkspace(supabase: SB) {
     presenceByBooking,
     attentionItems,
     earnings: earningsRes.data ?? [],
+    reports: reportRows,
     cancelRequests: cancelRes.data ?? [],
     escalations: escRes.data ?? [],
     emailFailures: failRes.data ?? [],

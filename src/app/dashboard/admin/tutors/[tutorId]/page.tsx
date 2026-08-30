@@ -3,7 +3,8 @@ import Link from "next/link";
 
 import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-actions";
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
 import { requireRole } from "@/lib/auth";
 import {
   aggregateCompensationByCurrency,
@@ -93,12 +94,8 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
   const openRequests = ((reqs ?? []) as { status: string }[]).filter((r) => r.status === "open").length;
 
   return (
-    <DashboardShell
-      role="admin"
-      title={name}
-      description="Workforce actions, rate, and history for this Guide."
-      navItems={ADMIN_PORTAL_NAV}
-    >
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">{name}</h1>
       <Link href="/dashboard/admin/guides" className="text-sm font-medium text-ink-500 hover:text-ink-800">
         ← Guides
       </Link>
@@ -167,6 +164,6 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
         Availability blocks: {availCount} · Operational visibility only (no scoring / automatic action). Guides are
         not assigned by academic subject.
       </p>
-    </DashboardShell>
+    </ManagementPage>
   );
 }

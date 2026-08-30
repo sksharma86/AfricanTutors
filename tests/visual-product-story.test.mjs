@@ -94,7 +94,8 @@ describe("Visual product story — homepage contracts", () => {
     const nav = read("src/components/layout/navbar.tsx");
     const hero = read("src/components/marketing/site-hero.tsx");
     assert.match(nav + read("src/lib/constants.ts"), /Study Hall \(at home\)/);
-    assert.doesNotMatch(css, /#f6f1e8|#fffcf7/);
+    const marketingCss = css.split("/* Parent Portal application system")[0];
+    assert.doesNotMatch(marketingCss, /#f6f1e8|#fffcf7/);
     assert.doesNotMatch(layout, /Fraunces/);
     assert.doesNotMatch(hero, /Study Hall at Home|African Tutors/);
   });

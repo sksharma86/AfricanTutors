@@ -7,6 +7,7 @@ import { ManagementStatusLabel } from "@/components/dashboard/management-status-
 import { Button, LinkButton } from "@/components/ui/button";
 import { PortalSegmentedControl } from "@/components/ui/portal-segmented-control";
 import { bookingChildNames } from "@/lib/household-children.mjs";
+import { formatDuration } from "@/lib/format.mjs";
 import {
   calendarDateInTz,
   managementOperationalStatus,
@@ -147,13 +148,13 @@ export function ManagementStudyHalls({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Child, parent, Guide, or booking reference"
-          className="min-h-11 min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 text-sm outline-none focus:border-ink-400"
+          className="min-h-11 min-w-0 flex-1 rounded-[10px] border border-[#1c1915]/12 bg-[var(--mg-card)] px-3 text-sm outline-none"
         />
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="min-h-11 rounded-lg border border-ink-200 bg-white px-3 text-sm outline-none focus:border-ink-400"
+          className="min-h-11 rounded-[10px] border border-[#1c1915]/12 bg-[var(--mg-card)] px-3 text-sm outline-none"
         />
         <Button type="submit" variant="primary" size="sm">
           Find
@@ -161,42 +162,46 @@ export function ManagementStudyHalls({
       </form>
 
       {rows.length === 0 ? (
-        <p className="py-8 text-sm text-ink-500">No Study Halls in this view.</p>
+        <p className="py-6 text-sm text-[var(--mg-muted)]">No Study Halls in this view.</p>
       ) : (
-        <div>
-          <div className="mb-1 hidden grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-x-4 px-0 text-[11px] font-medium tracking-wide text-ink-400 uppercase sm:grid">
+        <div className="mg-list overflow-hidden px-3.5 py-2">
+          <div className="mb-1 hidden grid-cols-[4.6rem_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_4.2rem_minmax(0,1fr)_auto] gap-x-3 px-1 text-[10px] font-semibold tracking-[0.12em] text-[var(--mg-muted)] uppercase lg:grid">
             <span>Time</span>
             <span>Child</span>
+            <span>Parent</span>
             <span>Guide</span>
+            <span>Duration</span>
             <span>Status</span>
             <span className="text-right">Action</span>
           </div>
-          <ul className="divide-y divide-ink-100">
+          <ul>
             {rows.map(({ booking: b, layer, issues }) => {
               const needsGuide = issues.some((i) => i.kind === "needs_guide" || i.kind === "coverage");
               const quiet = layer === "completed" || layer === "cancelled";
               const action = issues[0]?.action ?? (needsGuide ? "Assign Guide" : "View");
               return (
-                <li key={b.id} className={cn("py-3", quiet && "opacity-70")}>
-                  <div className="grid grid-cols-1 items-baseline gap-x-4 gap-y-1 sm:grid-cols-[5.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
-                    <p className={cn("text-sm font-medium", quiet ? "text-ink-500" : "text-ink-900")}>
+                <li key={b.id} className={cn("mg-list-row py-2.5", quiet && "opacity-70")}>
+                  <div className="grid grid-cols-1 items-baseline gap-x-3 gap-y-1 lg:grid-cols-[4.6rem_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_4.2rem_minmax(0,1fr)_auto]">
+                    <p className={cn("text-[13px] font-medium tabular-nums", quiet ? "text-[var(--mg-muted)]" : "text-[var(--mg-ink)]")}>
                       {b.scheduled_start ? formatTime(b.scheduled_start, tz) : "—"}
                     </p>
-                    <p className={cn("text-sm", quiet ? "text-ink-400" : "text-ink-800")}>
+                    <p className={cn("text-[13px]", quiet ? "text-[var(--mg-muted)]" : "text-[var(--mg-ink)]")}>
                       {bookingChildNames(b, "Child")}
                     </p>
-                    <p className="text-sm text-ink-500">{needsGuide && !b.tutor_display_name ? "No Guide" : b.tutor_display_name ?? "—"}</p>
-                    <div className="min-w-0 text-sm">
+                    <p className="truncate text-[13px] text-[var(--mg-muted)]">{b.parent_name ?? "—"}</p>
+                    <p className="text-[13px] text-[var(--mg-muted)]">{needsGuide && !b.tutor_display_name ? "No Guide" : b.tutor_display_name ?? "—"}</p>
+                    <p className="text-[13px] text-[var(--mg-muted)]">{b.duration_minutes ? formatDuration(b.duration_minutes) : "—"}</p>
+                    <div className="min-w-0 text-[13px]">
                       {issues.length === 0 ? (
                         <ManagementStatusLabel status={layer} />
                       ) : issues.length === 1 ? (
-                        <p className={cn("font-medium", issues[0].kind === "call_parent" || issues[0].kind === "no_join" ? "text-red-800" : "text-ink-800")}>
+                        <p className={cn("font-medium", issues[0].kind === "call_parent" || issues[0].kind === "no_join" ? "text-[var(--mg-critical)]" : "text-[var(--mg-ink)]")}>
                           {issues[0].title}
                         </p>
                       ) : (
                         <div>
-                          <p className="font-medium text-ink-800">{issues.length} issues</p>
-                          <p className="text-ink-500">{issues.map((i) => i.title).join(" · ")}</p>
+                          <p className="font-medium text-[var(--mg-ink)]">{issues.length} issues</p>
+                          <p className="text-[var(--mg-muted)]">{issues.map((i) => i.title).join(" · ")}</p>
                         </div>
                       )}
                     </div>
@@ -204,7 +209,7 @@ export function ManagementStudyHalls({
                       href={`/dashboard/admin/study-halls/${b.id}`}
                       variant={needsGuide || action === "Assign Guide" ? "primary" : "outline"}
                       size="sm"
-                      className="sm:justify-self-end"
+                      className="lg:justify-self-end"
                     >
                       {action}
                     </LinkButton>

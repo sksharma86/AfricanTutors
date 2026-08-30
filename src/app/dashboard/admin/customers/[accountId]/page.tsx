@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
-import { ADMIN_PORTAL_NAV, DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
+import { ManagementPage } from "@/components/dashboard/management-page";
 import { LinkButton } from "@/components/ui/button";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { lookupEmail } from "@/lib/admin-service";
@@ -127,12 +128,10 @@ export default async function AdminCustomerDetailPage({
   ];
 
   return (
-    <DashboardShell
-      role="admin"
-      title={profile.display_name ?? "Parent"}
-      description="Support view of this parent account."
-      navItems={ADMIN_PORTAL_NAV}
-    >
+    <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+      <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">
+        {profile.display_name ?? "Parent"}
+      </h1>
       <p className="mb-5">
         <PortalTextLink href="/dashboard/admin/customers">← Customers</PortalTextLink>
       </p>
@@ -260,7 +259,7 @@ export default async function AdminCustomerDetailPage({
           )}
         </ul>
       </section>
-    </DashboardShell>
+    </ManagementPage>
   );
 }
 
