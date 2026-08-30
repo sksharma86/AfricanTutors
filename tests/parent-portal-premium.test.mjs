@@ -126,7 +126,8 @@ describe("Parent Portal premium visual system", () => {
     const upcoming = read("src/components/dashboard/parent-upcoming-list.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
     const shell = read("src/components/dashboard/customer-shell.tsx");
-    assert.match(shell, /Study Halls/);
+    const portal = read("src/lib/parent-portal.mjs");
+    assert.match(portal, /label: "Study Halls"/);
     assert.match(shell, /Book a Study Hall/);
     assert.match(next, /Next Study Hall/);
     assert.match(habit, />\s*This month\s*</);
