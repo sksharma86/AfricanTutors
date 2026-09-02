@@ -1,4 +1,6 @@
 import { formatChildNames, possessiveStudyHall } from "../household-children.mjs";
+import { t30DeadlineIso } from "../guide-attendance.mjs";
+import { formatTime, tzAbbreviation } from "../timezone-format.mjs";
 
 /**
  * Pure email templates for Study Hall (at home) transactional email. No provider, no
@@ -45,6 +47,59 @@ export function sessionUrl(appUrl, bookingId) {
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+}
+
+/** Operational clock for Guide alerts: "6:00 PM CDT". */
+export function formatOpsClock(iso, tz) {
+  if (!iso) return "a time we'll confirm";
+  const zone = tz || "UTC";
+  try {
+    const time = formatTime(iso, zone);
+    const abbr = tzAbbreviation(iso, zone);
+    return abbr ? `${time} ${abbr}` : time;
+  } catch {
+    return formatWhen(iso, tz);
+  }
+}
+
+function hoursLabel(minutes) {
+  if (minutes === 60) return "1 hour";
+  if (minutes === 120) return "2 hours";
+  if (minutes === 180) return "3 hours";
+  return `${minutes || 60} minutes`;
+}
+
+function opsCta(href, label) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0 10px">
+  <tr><td align="center">
+    <a href="${esc(href)}" style="display:block;width:100%;box-sizing:border-box;background:#111827;color:#ffffff;text-decoration:none;padding:16px 18px;border-radius:12px;font-weight:700;font-size:16px;line-height:1.25;text-align:center;min-height:48px">${esc(label)}</a>
+  </td></tr>
+</table>`;
+}
+
+function opsFact(label, value) {
+  return `<p style="margin:0 0 14px;line-height:1.45"><span style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;font-weight:700">${esc(label)}</span><span style="display:block;margin-top:4px;font-size:22px;line-height:1.25;font-weight:700;color:#111827">${esc(value)}</span></p>`;
+}
+
+/** Professional operations-alert chrome. Large tap target. Not a marketing blast. */
+function opsLayout({ eyebrow, heading, preheader, factsHtml, cta, note, footer }) {
+  const preview = preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(preheader)}</div>`
+    : "";
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>
+<body style="margin:0;background:#f6f6f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937">
+${preview}
+<div style="max-width:560px;margin:0 auto;padding:20px 16px">
+  <div style="font-weight:700;letter-spacing:.02em;color:#111827;font-size:16px;margin-bottom:14px">${BRAND}</div>
+  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:22px 20px">
+    <p style="margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#111827">${esc(eyebrow)}</p>
+    <h1 style="font-size:24px;line-height:1.25;margin:0 0 18px;color:#111827">${esc(heading)}</h1>
+    ${factsHtml}
+    ${cta || ""}
+    ${note ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:#374151">${esc(note)}</p>` : ""}
+  </div>
+  <p style="color:#9ca3af;font-size:12px;margin-top:16px">${esc(footer || `You're receiving this because you Guide with ${BRAND}. Confirm from your authenticated Guide portal.`)}</p>
+</div></body></html>`;
 }
 
 function layout(heading, paragraphsHtml, cta) {
@@ -325,41 +380,113 @@ export function tutorRemoved(ctx) {
   return { subject: "You've been removed from a session", html: layout("Session reassigned", lines.filter(Boolean).map(p).join("")), text: textJoin(lines.filter(Boolean)) };
 }
 
-/** Guide: confirm you will attend. Does not confirm for them. Email is secondary to WhatsApp. */
+/** Guide T-30 / replacement confirmation. V1 primary channel is email. Does not confirm for them. */
 export function guideAttendanceRequest(ctx) {
   const count = Number(ctx.count) > 0 ? Number(ctx.count) : 1;
-  const when = formatWhen(ctx.whenISO, ctx.tz);
-  const end = ctx.endISO ? formatWhen(ctx.endISO, ctx.tz) : null;
-  const hours =
-    ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
+  const start = formatOpsClock(ctx.whenISO, ctx.tz);
+  const deadline = formatOpsClock(ctx.deadlineISO || t30DeadlineIso(ctx.whenISO), ctx.tz);
+  const end = ctx.endISO ? formatOpsClock(ctx.endISO, ctx.tz) : null;
+  const hours = hoursLabel(ctx.durationMinutes);
   const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
   const replacement = Boolean(ctx.replacement);
-  if (count > 1) {
-    const lines = [
-      replacement
-        ? `You've been assigned ${count} consecutive Study Halls from ${when} to ${end || when}.`
-        : `You're scheduled for ${count} consecutive Study Halls from ${when} to ${end || when}.`,
-      "Please confirm that you'll be available for the full block from your Guide dashboard.",
-    ];
-    return {
-      subject: replacement
-        ? `Please confirm ${count} new Study Hall assignments`
-        : `Please confirm ${count} consecutive Study Halls`,
-      html: layout("Please confirm your Study Halls", lines.filter(Boolean).map(p).join(""), { href: dash, label: `Confirm all ${count}` }),
-      text: textJoin([...lines.filter(Boolean), "", `Confirm: ${dash}`]),
-    };
-  }
-  const lines = [
-    replacement ? "You've been assigned a Study Hall. Please confirm your availability." : "Your Study Hall starts in 30 minutes.",
-    `When: ${when}`,
-    `Duration: ${hours}`,
-    childrenLine(ctx),
-    "Please confirm that you'll be there from your Guide dashboard.",
+  const child = childrenLine(ctx);
+  const subject = replacement
+    ? count > 1
+      ? `⚠️ ACTION REQUIRED NOW: Confirm ${count} new Study Halls`
+      : "⚠️ ACTION REQUIRED NOW: Confirm your new Study Hall assignment"
+    : count > 1
+      ? `⚠️ ACTION REQUIRED NOW: Confirm ${count} upcoming Study Halls`
+      : "⚠️ ACTION REQUIRED NOW: Confirm your upcoming Study Hall";
+  const heading = count > 1 ? "Confirm your upcoming Study Halls" : "Confirm your upcoming Study Hall";
+  const startValue = count > 1 && end ? `${start} – ${end}` : start;
+  const ctaLabel = count > 1 ? `CONFIRM ALL ${count}` : "CONFIRM I WILL BE THERE";
+  const note =
+    "If you do not confirm by the deadline, the Study Hall may be released for emergency coverage.";
+  const factsHtml =
+    opsFact(count > 1 ? "Your Study Halls begin at" : "Your Study Hall begins at", `${startValue}`) +
+    (count === 1 ? opsFact("Duration", hours) : "") +
+    opsFact("Confirmation deadline", deadline) +
+    (child ? `<p style="margin:0 0 8px;font-size:14px;color:#374151">${esc(child)}</p>` : "");
+  const textLines = [
+    "ACTION REQUIRED",
+    "",
+    count > 1 ? `Your Study Halls begin at: ${startValue}` : `Your Study Hall begins at: ${start}`,
+    count === 1 ? `Duration: ${hours}` : null,
+    `Confirmation deadline: ${deadline}`,
+    child,
+    "",
+    ctaLabel,
+    dash,
+    "",
+    note,
   ];
   return {
-    subject: replacement ? "New Study Hall assignment — please confirm" : "Your Study Hall starts in 30 minutes — please confirm",
-    html: layout("Please confirm you'll be there", lines.filter(Boolean).map(p).join(""), { href: dash, label: "I'll be there" }),
-    text: textJoin([...lines.filter(Boolean), "", `Confirm: ${dash}`]),
+    subject,
+    html: opsLayout({
+      eyebrow: "Action required",
+      heading,
+      preheader: `Confirm by ${deadline}.`,
+      factsHtml,
+      cta: opsCta(dash, ctaLabel),
+      note,
+    }),
+    text: textJoin(textLines),
+  };
+}
+
+/**
+ * Private emergency coverage offer. Operational facts only — no parent contact,
+ * payment, address, other Guide names, or child identity.
+ */
+export function guideOpenCoverageOffer(ctx) {
+  const start = formatOpsClock(ctx.whenISO, ctx.tz);
+  const end = ctx.endISO ? formatOpsClock(ctx.endISO, ctx.tz) : null;
+  const hours = hoursLabel(ctx.durationMinutes);
+  const accept =
+    ctx.acceptUrl ||
+    `${String(ctx.appUrl || "").replace(/\/+$/, "")}/dashboard/tutor/open-coverage/${ctx.bookingId || ""}`;
+  const window = end ? `${start} – ${end}` : start;
+  let timeOnly = start;
+  try {
+    timeOnly = formatTime(ctx.whenISO, ctx.tz || "UTC");
+  } catch {
+    timeOnly = start;
+  }
+  const subject = `🚨 URGENT: Study Hall needs coverage at ${timeOnly}`;
+  const note =
+    "Clicking Accept immediately assigns this Study Hall to you AND confirms your attendance. No second confirmation is required. If another Guide accepts first, the portal will say this Study Hall has already been covered.";
+  const factsHtml =
+    `<p style="margin:0 0 16px;font-size:16px;line-height:1.45;color:#111827;font-weight:600">A Study Hall needs immediate Guide coverage.</p>` +
+    opsFact("Today", window) +
+    opsFact("Duration", hours) +
+    `<p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#111827;font-weight:600">First eligible Guide to accept gets this Study Hall.</p>`;
+  return {
+    subject,
+    html: opsLayout({
+      eyebrow: "Urgent coverage needed",
+      heading: "Urgent coverage needed",
+      preheader: "First available Guide to accept gets this Study Hall.",
+      factsHtml,
+      cta: opsCta(accept, "ACCEPT THIS STUDY HALL"),
+      note,
+      footer: `You're receiving this because you are an approved ${BRAND} Guide. Accept from your authenticated Guide portal.`,
+    }),
+    text: textJoin([
+      "URGENT COVERAGE NEEDED",
+      "",
+      "A Study Hall needs immediate Guide coverage.",
+      "",
+      "TODAY",
+      window,
+      hours,
+      "",
+      "First eligible Guide to accept gets this Study Hall.",
+      "",
+      "ACCEPT THIS STUDY HALL",
+      accept,
+      "",
+      note,
+    ]),
   };
 }
 

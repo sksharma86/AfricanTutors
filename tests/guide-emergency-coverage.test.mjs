@@ -173,9 +173,9 @@ describe("Emergency replacement — policy", () => {
     });
     assert.equal(search.title, "Guide coverage unconfirmed");
     assert.match(search.summary, /Replacement search active/);
-    assert.equal(search.detail, "8 eligible Guides notified");
+    assert.equal(search.detail, "8 eligible Guides offered");
     const issue = coverageSearchIssue({ offerCount: 8 });
-    assert.equal(issue.detail, "8 eligible Guides notified");
+    assert.equal(issue.detail, "8 eligible Guides offered");
   });
 
   it("successful claim clears the Management exception", () => {
@@ -194,7 +194,7 @@ describe("Emergency replacement — policy", () => {
   it("T-10 critical remains if nobody accepts", () => {
     const issue = managementAttendanceIssue({ booking, assignment: missed, nowMs: t10, offerCount: 8 });
     assert.equal(issue.kind, "guide_confirm_critical");
-    assert.equal(issue.title, "Critical coverage failure");
+    assert.equal(issue.title, "OPERATIONAL EMERGENCY — no Guide coverage");
   });
 
   it("T-2 protection remains if nobody accepts; covered bookings skip it", () => {
@@ -215,7 +215,7 @@ describe("Emergency replacement — policy", () => {
     assert.equal(rec.parentEmail, false);
     assert.equal(rec.parentSms, false);
     assert.ok(!CHANNEL_POLICY.sms.includes("guide_open_coverage"));
-    assert.ok(!CHANNEL_POLICY.email.includes("guide_open_coverage"));
+    assert.ok(CHANNEL_POLICY.email.includes("guide_open_coverage"));
   });
 
   it("WhatsApp offer is private, timezone-labeled, and PII-safe", () => {
@@ -279,12 +279,14 @@ describe("Emergency replacement — architecture", () => {
     assert.match(cron, /search_key|p_search_key/);
     assert.match(sql, /unique \(booking_id, tutor_id, search_key\)/);
     assert.match(sql, /on conflict \(booking_id, tutor_id, search_key\) do nothing/);
-    assert.match(notify, /openCoverageNotifyKey/);
+    assert.match(notify, /openCoverageEmailNotifyKey/);
     assert.match(notify, /type: "guide_open_coverage"/);
     const offerFn = notify.slice(
       notify.indexOf("export async function notifyOpenCoverageOffer"),
       notify.indexOf("/** Management exception when a confirmation deadline is missed"),
     );
+    assert.match(offerFn, /guideOpenCoverageOffer/);
+    assert.match(offerFn, /deliver\(/);
     assert.match(offerFn, /deliverGuideWhatsApp/);
     assert.doesNotMatch(offerFn, /deliverParentSms|coverage_cancellation/);
   });
@@ -315,8 +317,11 @@ describe("Emergency replacement — architecture", () => {
 
   it("does not introduce emergency bonus pay or Guide SMS", () => {
     assert.doesNotMatch(sql, /bonus|comp_rate|record_full_earning|emergency_pay/);
+    assert.ok(CHANNEL_POLICY.email.includes("guide_open_coverage"));
     assert.ok(CHANNEL_POLICY.whatsapp.includes("guide_open_coverage"));
     assert.ok(!CHANNEL_POLICY.sms.includes("guide_open_coverage"));
+    assert.match(read(".env.example"), /EMAIL-FIRST|email-first/i);
+    assert.match(read(".env.example"), /OPTIONAL \/ LATER/);
     assert.equal(NOTIFICATION_EVENTS.GUIDE_OPEN_COVERAGE, "guide_open_coverage");
     assert.match(read(".env.example"), /TWILIO_WA_CONTENT_SID_OPEN_COVERAGE/);
     process.env.TWILIO_WA_CONTENT_SID_OPEN_COVERAGE = "HXtest";

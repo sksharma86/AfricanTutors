@@ -35,6 +35,11 @@ export function openCoverageNotifyKey({ bookingId, tutorId, searchKey }) {
   return `open-coverage:${tutorId}:${bookingId}:${searchKey}`;
 }
 
+/** V1 email claim key. Distinct from any prior WhatsApp claim on the base key. */
+export function openCoverageEmailNotifyKey(opts) {
+  return `${openCoverageNotifyKey(opts)}:email`;
+}
+
 export function canStartCoverageSearch({ booking, assignment = null } = {}) {
   if (!booking || booking.status !== "confirmed") return { ok: false, reason: "ineligible" };
   if (!booking.tutor_id || !booking.scheduled_start) return { ok: false, reason: "ineligible" };
@@ -69,7 +74,7 @@ export function coverageSearchIssue({ offerCount = 0 } = {}) {
     kind: "guide_confirm_missed",
     title: "Guide coverage unconfirmed",
     summary: "Replacement search active.",
-    detail: n === 1 ? "1 eligible Guide notified" : `${n} eligible Guides notified`,
+    detail: n === 1 ? "1 eligible Guide offered" : `${n} eligible Guides offered`,
     action: "Review coverage",
     severity: "high",
   };

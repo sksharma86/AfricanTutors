@@ -409,7 +409,7 @@ describe("Guide WhatsApp channel", () => {
     process.env.TWILIO_WHATSAPP_DISABLED = prev.disabled;
   });
 
-  it("email remains secondary; Guide SMS is not a channel; Parent SMS is unchanged", () => {
+  it("email is V1 primary; Guide SMS is not a channel; Parent SMS is unchanged", () => {
     assert.ok(CHANNEL_POLICY.email.includes("guide_attendance_request"));
     assert.ok(CHANNEL_POLICY.whatsapp.includes("guide_attendance_request"));
     assert.ok(!CHANNEL_POLICY.sms.includes("guide_attendance_request"));
@@ -423,7 +423,9 @@ describe("Guide WhatsApp channel", () => {
       count: 4,
       appUrl: "https://example.com",
     });
-    assert.match(mail.subject, /4 consecutive/);
+    assert.match(mail.subject, /ACTION REQUIRED NOW/);
+    assert.match(mail.subject, /4 upcoming Study Halls/);
+    assert.match(mail.text, /CONFIRM ALL 4/);
   });
 
   it("WhatsApp delivery cannot mark attendance confirmed or missed", () => {

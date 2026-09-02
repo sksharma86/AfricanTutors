@@ -7,9 +7,9 @@ import { sendEmail } from "@/lib/email/transport";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
 import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
-import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey } from "@/lib/guide-attendance.mjs";
+import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey, t30DeadlineIso } from "@/lib/guide-attendance.mjs";
 import { guideAttendanceWhatsApp, guideOpenCoverageWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
-import { openCoverageNotifyKey, openCoveragePath } from "@/lib/open-coverage.mjs";
+import { openCoverageEmailNotifyKey, openCoverageNotifyKey, openCoveragePath, openCoverageUrl } from "@/lib/open-coverage.mjs";
 import { getWhatsAppConfig } from "@/lib/telephony/config";
 import {
   parentCancellationSms,
@@ -29,9 +29,10 @@ import { sendGuideWhatsApp, sendParentAttentionSms } from "@/lib/telephony/clien
  * server-side. Nothing here ever throws or blocks the caller's business action.
  *
  * Channel policy (summary):
- *   Email     — confirmations, purchases, reports, schedule changes, Guide backup
+ *   Email     — confirmations, purchases, reports, schedule changes, and V1
+ *               Guide attendance / emergency coverage (Resend).
  *   SMS       — parent 1h reminder; cancel; Call Parent (elsewhere). No Guide SMS.
- *   WhatsApp  — urgent Guide attendance / replacement alerts. Not confirmation.
+ *   WhatsApp  — optional / later Guide alerts. Missing config must not block V1.
  *   Voice     — Call Parent only (PR7; unchanged)
  */
 
@@ -850,6 +851,14 @@ export async function notifyGuideAttendanceRequest(
   const emailKey = attendanceNotifyKey({ tutorId: b.tutor_id, firstBookingId, source });
   const waKey = `${emailKey}:wa`;
 
+  const { data: assignment } = await service
+    .from("guide_attendance_assignments")
+    .select("deadline_at")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  const deadlineISO =
+    (typeof assignment?.deadline_at === "string" && assignment.deadline_at) || t30DeadlineIso(b.scheduled_start);
+
   const email = await deliver({
     key: emailKey,
     type: "guide_attendance_request",
@@ -858,6 +867,7 @@ export async function notifyGuideAttendanceRequest(
     rendered: T.guideAttendanceRequest({
       whenISO: b.scheduled_start,
       endISO: opts.endISO ?? null,
+      deadlineISO,
       tz: b.tutorTz,
       durationMinutes: b.duration_minutes,
       studentName: b.studentFirst,
@@ -893,7 +903,11 @@ export async function notifyGuideAttendanceRequest(
   return email;
 }
 
-/** Private WhatsApp offer for one eligible emergency replacement Guide. No parent notify. */
+/**
+ * Private emergency offer for one eligible replacement Guide.
+ * V1 primary channel is email. WhatsApp is optional / later and never blocks.
+ * No parent notify. Delivery failure does not change attendance or claim state.
+ */
 export async function notifyOpenCoverageOffer(
   bookingId: string,
   opts: { tutorId: string; searchKey: string },
@@ -908,6 +922,25 @@ export async function notifyOpenCoverageOffer(
     .eq("profile_id", opts.tutorId)
     .maybeSingle();
   const tz = (tutor?.timezone as string | null) || (guide?.timezone as string | null) || b.tutorTz;
+  const identity = { bookingId, tutorId: opts.tutorId, searchKey: opts.searchKey };
+  const acceptUrl = openCoverageUrl(APP_URL, bookingId);
+
+  const email = await deliver({
+    key: openCoverageEmailNotifyKey(identity),
+    type: "guide_open_coverage",
+    accountId: opts.tutorId,
+    bookingId,
+    rendered: T.guideOpenCoverageOffer({
+      whenISO: b.scheduled_start,
+      endISO: b.scheduled_end ?? b.scheduled_start,
+      tz,
+      durationMinutes: b.duration_minutes,
+      appUrl: APP_URL,
+      bookingId,
+      acceptUrl,
+    }),
+  });
+
   const wa = guideOpenCoverageWhatsApp({
     startISO: b.scheduled_start,
     endISO: b.scheduled_end ?? b.scheduled_start,
@@ -917,8 +950,8 @@ export async function notifyOpenCoverageOffer(
     acceptPath: openCoveragePath(bookingId),
   });
   const waCfg = getWhatsAppConfig();
-  return deliverGuideWhatsApp({
-    key: openCoverageNotifyKey({ bookingId, tutorId: opts.tutorId, searchKey: opts.searchKey }),
+  await deliverGuideWhatsApp({
+    key: `${openCoverageNotifyKey(identity)}:wa`,
     type: "guide_open_coverage",
     accountId: opts.tutorId,
     bookingId,
@@ -926,6 +959,8 @@ export async function notifyOpenCoverageOffer(
     contentSid: waCfg.openCoverageContentSid || null,
     variables: wa.variables,
   });
+
+  return email;
 }
 
 /** Management exception when a confirmation deadline is missed. One alert per block. */
