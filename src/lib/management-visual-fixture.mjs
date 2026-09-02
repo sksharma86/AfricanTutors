@@ -67,6 +67,43 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
     };
   }
 
+  if (scene === "oneissue") {
+    const hall = booking(now, {
+      id: "fx-one",
+      student_first_name: "Jordan",
+      tutor_display_name: "Sarah M.",
+      tutor_id: "g-sarah",
+      scheduled_start: later(now, 0, 18),
+      scheduled_end: later(now, 1, 18),
+    });
+    const attendance = {
+      id: "fx-att-one",
+      booking_id: hall.id,
+      tutor_id: "g-sarah",
+      source: "t30",
+      status: "missed",
+      deadline_at: later(now, 0, -2),
+      missed_at: later(now, 0, -2),
+    };
+    return {
+      bookings: [{ ...hall, issues: currentStudyHallIssues(hall, { attendance, assignmentsLoaded: true, nowMs }) }],
+      presenceByBooking: {},
+      attentionItems: collectNeedsAttention({
+        bookings: [hall],
+        attendanceByBooking: { [hall.id]: attendance },
+        assignmentsLoaded: true,
+        nowMs,
+      }),
+      guidesActive: 12,
+      outstandingTotals: [],
+      guides: [{ status: "approved", approved_at: later(now, -100) }],
+      reports: [],
+      payments: [],
+      nowMs,
+      timeZone,
+    };
+  }
+
   const liveA = booking(now, {
     id: "fx-live-1",
     student_first_name: "Jordan",

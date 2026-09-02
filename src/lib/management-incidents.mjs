@@ -356,7 +356,7 @@ function parentNotificationSummary(emails = []) {
 function customerImpactSummary({ resolution_type, complimentary, parentNotify, booking }) {
   if (resolution_type === "customer_protected") {
     const hour = (complimentary ?? []).some((row) => isComplimentaryRecovery(row, booking?.id));
-    return hour ? "Customer protected · booking restored · complementary hour issued" : "Customer protected";
+    return hour ? "Customer protected · booking restored · complimentary hour issued" : "Customer protected";
   }
   if (resolution_type === "cancelled") return "Study Hall cancelled";
   if (parentNotify.kind === "sent") return "Parent notified of coverage failure";
