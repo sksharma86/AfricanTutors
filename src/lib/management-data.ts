@@ -126,7 +126,7 @@ export async function loadManagementWorkspace(supabase: SB) {
     const attRes = await supabase
       .from("guide_attendance_assignments")
       .select(
-        "id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at",
+        "id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at, critical_at, customer_protected_at",
       )
       .in("booking_id", bookingIds)
       .then(

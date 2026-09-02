@@ -89,7 +89,7 @@ export default async function AdminStudyHallDetailPage({
       .then((r) => r, () => ({ data: null, error: null })),
     supabase!
       .from("guide_attendance_assignments")
-      .select("id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at")
+      .select("id, booking_id, tutor_id, source, status, requested_at, deadline_at, confirmed_at, missed_at, resolved_at, resolution, created_at, critical_at, customer_protected_at")
       .eq("booking_id", bookingId)
       .then((r) => r, () => ({ data: null, error: { message: "unavailable" } })),
     supabase!

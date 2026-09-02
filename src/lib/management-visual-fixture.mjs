@@ -3,6 +3,7 @@
  * Never imported by the real Overview. Does not write bookings, earnings, or reports.
  */
 
+import { collectOperationalIncidents } from "./management-incidents.mjs";
 import { collectNeedsAttention, currentStudyHallIssues } from "./management-ops.mjs";
 
 function later(now, hours, minutes = 0) {
@@ -312,4 +313,135 @@ export function managementHomeVisualFixture(now = new Date(), { empty = false, s
     nowMs,
     timeZone,
   };
+}
+
+/** Isolated Incident History fixture. Never writes bookings or ledgers. */
+export function managementIncidentHistoryFixture(now = new Date()) {
+  const timeZone = "America/Chicago";
+  const nowMs = now.getTime();
+  const iso = (minutesAgo) => new Date(nowMs - minutesAgo * 60_000).toISOString();
+  const bookings = [
+    {
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      status: "cancelled",
+      cancelled_at: iso(20),
+      student_first_name: "Jay Christopher Montgomery",
+      tutor_id: "g-tutor-1",
+      tutor_display_name: "Test Tutor 1",
+      parent_name: "Parent J",
+      scheduled_start: iso(10),
+      scheduled_end: iso(-50),
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      status: "cancelled",
+      cancelled_at: iso(18),
+      student_first_name: "Maddi",
+      tutor_id: "g-tutor-1",
+      tutor_display_name: "Test Tutor 1",
+      scheduled_start: iso(8),
+      scheduled_end: iso(-52),
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      status: "confirmed",
+      student_first_name: "Jordan",
+      tutor_id: "g-james",
+      tutor_display_name: "James M.",
+      scheduled_start: iso(-25),
+      scheduled_end: iso(-85),
+    },
+    {
+      id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      status: "confirmed",
+      student_first_name: "Sam",
+      tutor_id: "g-sarah",
+      tutor_display_name: "Sarah M.",
+      scheduled_start: iso(-8),
+      scheduled_end: iso(-68),
+    },
+  ];
+  const incidents = collectOperationalIncidents({
+    bookings,
+    assignmentsByBooking: {
+      [bookings[0].id]: [
+        {
+          booking_id: bookings[0].id,
+          tutor_id: "g-tutor-1",
+          source: "t30",
+          status: "missed",
+          requested_at: iso(40),
+          deadline_at: iso(30),
+          missed_at: iso(30),
+          resolution: "customer_protected",
+          customer_protected_at: iso(20),
+          resolved_at: iso(20),
+        },
+      ],
+      [bookings[1].id]: [
+        {
+          booking_id: bookings[1].id,
+          tutor_id: "g-tutor-1",
+          source: "t30",
+          status: "missed",
+          requested_at: iso(38),
+          missed_at: iso(28),
+          resolution: "customer_protected",
+          customer_protected_at: iso(18),
+        },
+      ],
+      [bookings[2].id]: [
+        {
+          booking_id: bookings[2].id,
+          tutor_id: "g-sarah",
+          source: "t30",
+          status: "missed",
+          requested_at: iso(50),
+          missed_at: iso(40),
+        },
+        {
+          booking_id: bookings[2].id,
+          tutor_id: "g-james",
+          source: "emergency",
+          status: "confirmed",
+          requested_at: iso(39),
+          confirmed_at: iso(36),
+        },
+      ],
+      [bookings[3].id]: [
+        {
+          booking_id: bookings[3].id,
+          tutor_id: "g-sarah",
+          source: "t30",
+          status: "missed",
+          requested_at: iso(25),
+          missed_at: iso(15),
+          critical_at: iso(9),
+        },
+      ],
+    },
+    offersByBooking: {
+      [bookings[2].id]: [
+        { booking_id: bookings[2].id, tutor_id: "g-james", status: "claimed", created_at: iso(39), claimed_at: iso(36) },
+        { booking_id: bookings[2].id, tutor_id: "g-grace", status: "closed", created_at: iso(39) },
+        { booking_id: bookings[2].id, tutor_id: "g-faith", status: "closed", created_at: iso(39) },
+        { booking_id: bookings[2].id, tutor_id: "g-chidi", status: "closed", created_at: iso(39) },
+      ],
+      [bookings[3].id]: [{ booking_id: bookings[3].id, status: "closed", created_at: iso(15), closed_at: iso(9) }],
+    },
+    complimentaryByBooking: {
+      [bookings[0].id]: [{ booking_id: bookings[0].id, minutes_delta: 60, reference: `comp-hour:${bookings[0].id}`, created_at: iso(20) }],
+      [bookings[1].id]: [{ booking_id: bookings[1].id, minutes_delta: 60, reference: `comp-hour:${bookings[1].id}`, created_at: iso(18) }],
+    },
+    emailsByBooking: {
+      [bookings[0].id]: [{ notification_type: "coverage_failure_protection", status: "sent", updated_at: iso(20) }],
+    },
+    guideNames: {
+      "g-tutor-1": "Test Tutor 1",
+      "g-james": "James M.",
+      "g-sarah": "Sarah M.",
+    },
+    nowMs,
+  });
+  return { incidents, nowMs, timeZone };
 }

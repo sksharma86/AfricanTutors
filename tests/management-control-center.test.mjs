@@ -246,7 +246,7 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(overviewUi, /Guides active/);
     assert.match(overviewUi, /Needs attention/);
     assert.match(overviewUi, /Outstanding Guide pay/);
-    assert.match(overviewUi, /Everything is running normally/);
+    assert.match(overviewUi, /No issues need attention/);
     assert.match(overviewUi, /managementDateLabel/);
     assert.match(overviewUi, /presentNeedsAttention/);
     assert.match(overviewUi, /browserTimezone/);

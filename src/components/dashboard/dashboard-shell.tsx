@@ -61,6 +61,7 @@ export function DashboardShell({
 export const ADMIN_PORTAL_NAV: DashboardNavItem[] = [
   { label: "Overview", href: "/dashboard/admin" },
   { label: "Study Halls", href: "/dashboard/admin/study-halls" },
+  { label: "Incident History", href: "/dashboard/admin/incidents" },
   { label: "Guides", href: "/dashboard/admin/guides" },
   { label: "Customers", href: "/dashboard/admin/customers" },
   { label: "Finance", href: "/dashboard/admin/finance" },

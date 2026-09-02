@@ -5,6 +5,7 @@
 
 import { groupManagementCoverageIssues, managementAttendanceIssue } from "./guide-attendance.mjs";
 import { bookingChildNames } from "./household-children.mjs";
+import { isActionableAttentionIssue } from "./management-incidents.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
 export const MANAGEMENT_STATUSES = ["ready", "live", "needs_attention", "completed", "cancelled"];
@@ -171,7 +172,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
     assignmentsLoaded,
     offerCount,
   });
-  if (attendanceIssue) {
+  if (isActionableAttentionIssue(attendanceIssue)) {
     const startLabel = startsInLabel(booking.scheduled_start, nowMs);
     issues.push({
       kind: attendanceIssue.kind,
@@ -180,9 +181,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
       detail:
         attendanceIssue.kind === "guide_confirm_critical"
           ? [startLabel, "No confirmed Guide"].filter(Boolean).join(" · ")
-          : attendanceIssue.kind === "guide_customer_protected"
-            ? "Booking restored · +1 complimentary hour issued"
-            : (attendanceIssue.detail ?? startLabel),
+          : (attendanceIssue.detail ?? startLabel),
       action: attendanceIssue.action,
       severity: attendanceIssue.severity ?? null,
     });
@@ -454,7 +453,9 @@ export function collectNeedsAttention({
       assignmentsLoaded: assignmentsLoaded || hasAttendanceKey,
       nowMs,
     });
-    for (const issue of issues) items.push(attentionFromIssue(b, issue));
+    for (const issue of issues) {
+      if (isActionableAttentionIssue(issue)) items.push(attentionFromIssue(b, issue));
+    }
   }
 
   for (const r of cancelRequests) {

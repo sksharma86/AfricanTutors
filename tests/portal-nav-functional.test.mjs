@@ -12,11 +12,13 @@ describe("Portal navigation — Management (admin)", () => {
   const guides = read("src/app/dashboard/admin/guides/page.tsx");
   const customers = read("src/app/dashboard/admin/customers/page.tsx");
   const finance = read("src/app/dashboard/admin/finance/page.tsx");
+  const incidents = read("src/app/dashboard/admin/incidents/page.tsx");
 
-  it("ADMIN_PORTAL_NAV exposes real Overview, Study Halls, Guides, Customers, Finance destinations", () => {
+  it("ADMIN_PORTAL_NAV exposes real Overview, Study Halls, Incident History, Guides, Customers, Finance destinations", () => {
     assert.match(shell, /ADMIN_PORTAL_NAV/);
     assert.match(shell, /label: "Overview".*href: "\/dashboard\/admin"/s);
     assert.match(shell, /label: "Study Halls".*href: "\/dashboard\/admin\/study-halls"/s);
+    assert.match(shell, /label: "Incident History".*href: "\/dashboard\/admin\/incidents"/s);
     assert.match(shell, /label: "Guides".*href: "\/dashboard\/admin\/guides"/s);
     assert.match(shell, /label: "Customers".*href: "\/dashboard\/admin\/customers"/s);
     assert.match(shell, /label: "Finance".*href: "\/dashboard\/admin\/finance"/s);
@@ -32,6 +34,9 @@ describe("Portal navigation — Management (admin)", () => {
     assert.match(studyHalls, /requireRole\("admin"/);
     assert.match(guides, /requireRole\("admin"/);
     assert.match(customers, /requireRole\("admin"/);
+    assert.match(incidents, /requireRole\("admin"/);
+    assert.match(incidents, /Incident History/);
+    assert.match(incidents, /ManagementIncidentHistory/);
     assert.doesNotMatch(admin, /Settings|available:\s*false|Soon/);
   });
 
@@ -98,6 +103,7 @@ describe("Portal navigation — mobile + a11y surface", () => {
     assert.match(sideNav, /focus-visible:outline/);
     assert.match(shell, /label: "Overview"/);
     assert.match(shell, /label: "Study Halls"/);
+    assert.match(shell, /label: "Incident History"/);
     assert.match(shell, /label: "Guides"/);
     assert.match(shell, /label: "Customers"/);
     assert.match(shell, /label: "Finance"/);
