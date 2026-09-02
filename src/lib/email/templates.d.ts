@@ -6,6 +6,7 @@ export interface RenderedEmail {
 export function formatMoney(cents: number | null | undefined): string;
 export function formatWhen(iso: string | null | undefined, tz: string | null | undefined): string;
 export function formatOpsClock(iso: string | null | undefined, tz: string | null | undefined): string;
+export function absoluteAppHref(appUrl: string | null | undefined, path: string | null | undefined): string;
 export function sessionUrl(appUrl: string | null | undefined, bookingId: string): string;
 
 export function welcome(ctx: { name?: string | null; appUrl?: string | null }): RenderedEmail;
