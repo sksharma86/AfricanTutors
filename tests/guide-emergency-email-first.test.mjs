@@ -76,7 +76,7 @@ describe("Email-first attendance and emergency coverage", () => {
     assert.match(mail.text, /Confirmation deadline/i);
     assert.match(mail.text, /CONFIRM I WILL BE THERE/);
     assert.match(mail.html, /CONFIRM I WILL BE THERE/);
-    assert.match(mail.html, /\/dashboard\/tutor/);
+    assert.match(mail.html, /<a href="https:\/\/studyhall\.example\/dashboard\/tutor"/);
     assert.doesNotMatch(mail.html, /token=|daily\.co/i);
   });
 
@@ -130,7 +130,7 @@ describe("Email-first attendance and emergency coverage", () => {
     assert.match(mail.subject, /🚨 URGENT: Study Hall needs coverage at 6:00 PM/);
     assert.match(mail.html, /First available Guide to accept gets this Study Hall/);
     assert.match(mail.text, /ACCEPT THIS STUDY HALL/);
-    assert.match(mail.html, new RegExp(`/dashboard/tutor/open-coverage/${BID}`));
+    assert.match(mail.html, new RegExp(`<a href="https://studyhall\\.example/dashboard/tutor/open-coverage/${BID}"`));
     assert.doesNotMatch(mail.html, /token=/);
     assert.equal(openCoveragePath(BID), `/dashboard/tutor/open-coverage/${BID}`);
   });

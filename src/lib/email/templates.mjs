@@ -69,12 +69,24 @@ function hoursLabel(minutes) {
   return `${minutes || 60} minutes`;
 }
 
+/** Absolute http(s) app href, or empty. Never emit a Gmail-broken relative path. */
+export function absoluteAppHref(appUrl, path) {
+  const base = String(appUrl || "").trim().replace(/\/+$/, "");
+  const suffix = String(path || "").startsWith("/") ? path : `/${path || ""}`;
+  if (!/^https?:\/\//i.test(base) || suffix === "/") return "";
+  return `${base}${suffix}`;
+}
+
 function opsCta(href, label) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0 10px">
-  <tr><td align="center">
-    <a href="${esc(href)}" style="display:block;width:100%;box-sizing:border-box;background:#111827;color:#ffffff;text-decoration:none;padding:16px 18px;border-radius:12px;font-weight:700;font-size:16px;line-height:1.25;text-align:center;min-height:48px">${esc(label)}</a>
+  if (!href || !/^https?:\/\//i.test(href)) return "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 8px">
+  <tr><td align="center" bgcolor="#111827" style="background-color:#111827;border-radius:12px">
+    <a href="${esc(href)}" target="_blank" style="display:inline-block;width:100%;box-sizing:border-box;background-color:#111827;color:#ffffff;text-decoration:none;padding:16px 18px;border-radius:12px;font-weight:700;font-size:16px;line-height:1.25;text-align:center;min-height:48px">${esc(label)}</a>
   </td></tr>
-</table>`;
+</table>
+<p style="margin:8px 0 0;font-size:13px;line-height:1.45;text-align:center">
+  <a href="${esc(href)}" target="_blank" style="color:#111827;text-decoration:underline;word-break:break-all">${esc(href)}</a>
+</p>`;
 }
 
 function opsFact(label, value) {
@@ -387,7 +399,7 @@ export function guideAttendanceRequest(ctx) {
   const deadline = formatOpsClock(ctx.deadlineISO || t30DeadlineIso(ctx.whenISO), ctx.tz);
   const end = ctx.endISO ? formatOpsClock(ctx.endISO, ctx.tz) : null;
   const hours = hoursLabel(ctx.durationMinutes);
-  const dash = (ctx.appUrl || "").replace(/\/+$/, "") + "/dashboard/tutor";
+  const dash = absoluteAppHref(ctx.appUrl, "/dashboard/tutor");
   const replacement = Boolean(ctx.replacement);
   const child = childrenLine(ctx);
   const subject = replacement
@@ -442,9 +454,9 @@ export function guideOpenCoverageOffer(ctx) {
   const start = formatOpsClock(ctx.whenISO, ctx.tz);
   const end = ctx.endISO ? formatOpsClock(ctx.endISO, ctx.tz) : null;
   const hours = hoursLabel(ctx.durationMinutes);
-  const accept =
-    ctx.acceptUrl ||
-    `${String(ctx.appUrl || "").replace(/\/+$/, "")}/dashboard/tutor/open-coverage/${ctx.bookingId || ""}`;
+  const accept = /^https?:\/\//i.test(String(ctx.acceptUrl || ""))
+    ? String(ctx.acceptUrl)
+    : absoluteAppHref(ctx.appUrl, ctx.bookingId ? `/dashboard/tutor/open-coverage/${ctx.bookingId}` : "");
   const window = end ? `${start} – ${end}` : start;
   let timeOnly = start;
   try {
