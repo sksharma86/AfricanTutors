@@ -77,7 +77,7 @@ export default async function ManagementVisualReviewPage({
           <ManagementSurface>
             <p className="text-[10px] font-semibold tracking-[0.16em] text-[#8a8174] uppercase">
               {scene === "critical"
-                ? "Critical coverage failure"
+                ? "OPERATIONAL EMERGENCY — no Guide coverage"
                 : scene === "protected" || scene === "firstprotect"
                   ? "Customer protected"
                   : scene === "criticalresolved" || scene === "resolved" || scene === "split" || scene === "restored" || scene === "history"
@@ -88,7 +88,7 @@ export default async function ManagementVisualReviewPage({
             </p>
             <p className={`mt-2 text-sm font-semibold ${scene === "critical" ? "text-[var(--mg-critical)]" : "text-[var(--mg-ink)]"}`}>
               {scene === "critical"
-                ? "Critical coverage failure"
+                ? "OPERATIONAL EMERGENCY — no Guide coverage"
                 : scene === "protected" || scene === "firstprotect"
                   ? "Customer protected"
                   : scene === "replacement" || scene === "replace2"
@@ -128,7 +128,7 @@ export default async function ManagementVisualReviewPage({
                   : scene === "protected" || scene === "firstprotect"
                     ? "Automatic customer protection completed. No further action required."
                     : scene === "search"
-                      ? "8 eligible Guides notified. Management can still reassign."
+                      ? "8 eligible Guides offered. Management can still reassign."
                       : scene === "restored" || scene === "history"
                         ? "Assigned Guide: James M. Attendance confirmed."
                         : scene === "replacement" || scene === "replace2"
@@ -169,7 +169,7 @@ export default async function ManagementVisualReviewPage({
               </li>
               <li className="py-2">
                 <p className="text-[var(--mg-ink)]">Replacement search opened</p>
-                <p className="text-xs text-[var(--mg-muted)]">8 eligible Guides notified · private WhatsApp offers</p>
+                <p className="text-xs text-[var(--mg-muted)]">8 eligible Guides offered · private email offers</p>
               </li>
               <li className="py-2">
                 <p className="text-[var(--mg-ink)]">Emergency replacement accepted</p>

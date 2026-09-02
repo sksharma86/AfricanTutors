@@ -63,7 +63,7 @@ describe("T-10 / T-2 customer protection policy", () => {
       nowMs,
     });
     assert.equal(issue.kind, "guide_confirm_critical");
-    assert.match(issue.title, /Critical coverage failure/i);
+    assert.match(issue.title, /OPERATIONAL EMERGENCY|Critical coverage failure/i);
     assert.equal(issue.action, "Reassign now");
     assert.equal(issue.severity, "critical");
   });
@@ -257,7 +257,7 @@ describe("T-10 / T-2 customer protection policy", () => {
         nowMs,
       }),
     );
-    assert.ok(presented.some((p) => /Critical coverage failure/i.test(p.title)));
+    assert.ok(presented.some((p) => /OPERATIONAL EMERGENCY|Critical coverage failure/i.test(p.title)));
   });
 
   it("confirm-at-T-2 and reassign-at-T-2 races resolve from CURRENT coverage", () => {

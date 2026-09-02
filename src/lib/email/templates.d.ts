@@ -5,6 +5,7 @@ export interface RenderedEmail {
 }
 export function formatMoney(cents: number | null | undefined): string;
 export function formatWhen(iso: string | null | undefined, tz: string | null | undefined): string;
+export function formatOpsClock(iso: string | null | undefined, tz: string | null | undefined): string;
 export function sessionUrl(appUrl: string | null | undefined, bookingId: string): string;
 
 export function welcome(ctx: { name?: string | null; appUrl?: string | null }): RenderedEmail;
@@ -86,6 +87,7 @@ export function tutorRemoved(ctx: { subject?: string | null; whenISO?: string | 
 export function guideAttendanceRequest(ctx: {
   whenISO?: string | null;
   endISO?: string | null;
+  deadlineISO?: string | null;
   tz?: string | null;
   durationMinutes?: number | null;
   studentName?: string | null;
@@ -93,6 +95,15 @@ export function guideAttendanceRequest(ctx: {
   appUrl?: string | null;
   count?: number;
   replacement?: boolean;
+}): RenderedEmail;
+export function guideOpenCoverageOffer(ctx: {
+  whenISO?: string | null;
+  endISO?: string | null;
+  tz?: string | null;
+  durationMinutes?: number | null;
+  appUrl?: string | null;
+  bookingId?: string | null;
+  acceptUrl?: string | null;
 }): RenderedEmail;
 export function coverageFailureProtection(ctx: {
   restorationLine?: string | null;

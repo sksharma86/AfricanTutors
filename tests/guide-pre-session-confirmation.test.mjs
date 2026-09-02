@@ -245,8 +245,9 @@ describe("Guide attendance confirmation — restoration and copy", () => {
       studentNames: ["Jordan"],
       appUrl: "https://example.com",
     });
-    assert.match(mail.subject, /starts in 30 minutes/i);
-    assert.match(mail.text, /I'll be there|confirm that you'll be there/i);
+    assert.match(mail.subject, /ACTION REQUIRED NOW/i);
+    assert.match(mail.text, /CONFIRM I WILL BE THERE|confirm/i);
+    assert.match(mail.text, /Confirmation deadline/i);
     assert.match(mail.text, /Jordan/);
     assert.equal(NOTIFICATION_EVENTS.GUIDE_ATTENDANCE_REQUEST, "guide_attendance_request");
     assert.ok(CHANNEL_POLICY.email.includes("guide_attendance_request"));

@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
 /**
  * Open T-30 confirmation windows and persist T-20 misses.
  * After a miss, open per-booking emergency replacement offers (first claim wins).
- * One WhatsApp + one email per contiguous confirmation block. Idempotent.
+ * V1 notifies by email (Resend). WhatsApp is optional and never required.
+ * One initial email per Guide per search cycle. Idempotent.
  * Does not silently auto-reassign, cancel, or refund.
  */
 async function handle(request: NextRequest) {
@@ -172,13 +173,31 @@ async function handle(request: NextRequest) {
       };
       if (!payload.ok) return;
       offersOpened += Number(payload.createdCount) || 0;
-      for (const cand of payload.candidates ?? []) {
+      const candidates = payload.candidates ?? [];
+      let sentCount = 0;
+      let failedCount = 0;
+      let duplicateCount = 0;
+      for (const cand of candidates) {
         if (!cand?.tutorId) continue;
         const sent = await notifyOpenCoverageOffer(row.booking_id, {
           tutorId: cand.tutorId,
           searchKey: payload.searchKey || row.id,
         });
-        if (sent?.status === "sent") offersNotified += 1;
+        if (sent?.status === "sent") sentCount += 1;
+        else if (sent?.status === "duplicate") duplicateCount += 1;
+        else if (sent?.status === "failed" || sent?.status === "error") failedCount += 1;
+      }
+      offersNotified += sentCount;
+      if (candidates.length > 0 && sentCount === 0 && duplicateCount === 0 && failedCount > 0) {
+        await notifyAdminAlert(`open-coverage-email-failed:${row.booking_id}:${payload.searchKey || row.id}`, {
+          title: "Emergency coverage emails failed",
+          summary: "Eligible Guides were identified but no emergency email was delivered.",
+          lines: [
+            `Booking: ${row.booking_id}`,
+            `Eligible Guides: ${candidates.length}`,
+            "Attendance and offer rows were not changed by the delivery failure.",
+          ],
+        });
       }
     } catch {
       /* search/notify failure must not change attendance or T-20 state */
@@ -198,8 +217,8 @@ async function handle(request: NextRequest) {
     seenCritical.add(row.booking_id);
     try {
       const r = await notifyAdminAlert(criticalNotifyKey(row.booking_id), {
-        title: "Critical coverage failure",
-        summary: "A Study Hall starts within 10 minutes and has no current confirmed Guide.",
+        title: "OPERATIONAL EMERGENCY — no Guide coverage",
+        summary: "A Study Hall starts within 10 minutes and emergency coverage has not been obtained.",
         lines: [
           `Booking: ${row.booking_id}`,
           row.scheduled_start ? `Start: ${row.scheduled_start}` : null,

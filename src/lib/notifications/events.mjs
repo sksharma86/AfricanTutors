@@ -56,11 +56,13 @@ export const CHANNEL_POLICY = Object.freeze({
     "recording_failure",
     "guide_attendance_request",
     "guide_confirmation_missed",
+    "guide_open_coverage",
     "coverage_cancellation",
     "coverage_failure_protection",
   ],
   /**
-   * Urgent Guide operational alerts. Not parent SMS. Not inbound confirmation.
+   * Optional / later Guide operational alerts. V1 does not require WhatsApp.
+   * Not parent SMS. Not inbound confirmation.
    */
   whatsapp: [
     "guide_attendance_request",

@@ -14,6 +14,7 @@ declare module "@/lib/open-coverage.mjs" {
   export function isSafeOpenCoveragePath(path: string | null | undefined): boolean;
   export function openCoverageUrl(appUrl: string | null | undefined, bookingId: string): string;
   export function openCoverageNotifyKey(opts: { bookingId: string; tutorId: string; searchKey: string }): string;
+  export function openCoverageEmailNotifyKey(opts: { bookingId: string; tutorId: string; searchKey: string }): string;
   export function canStartCoverageSearch(opts?: {
     booking?: { status?: string; tutor_id?: string | null; scheduled_start?: string | null } | null;
     assignment?: { id?: string; status?: string; tutor_id?: string | null } | null;

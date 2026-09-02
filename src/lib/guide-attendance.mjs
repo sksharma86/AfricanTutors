@@ -178,8 +178,8 @@ export function managementAttendanceIssue({
   if (persistBacked && isAtCriticalWindow(booking.scheduled_start, nowMs)) {
     return {
       kind: "guide_confirm_critical",
-      title: "Critical coverage failure",
-      summary: "No confirmed Guide.",
+      title: "OPERATIONAL EMERGENCY — no Guide coverage",
+      summary: "Study Hall starts within 10 minutes and emergency coverage has not been obtained.",
       detail: booking.tutor_display_name ?? null,
       action: "Reassign now",
       severity: "critical",
@@ -215,7 +215,7 @@ export function managementAttendanceIssue({
         kind: "guide_confirm_missed",
         title: "Guide coverage unconfirmed",
         summary: "Replacement search active.",
-        detail: notified === 1 ? "1 eligible Guide notified" : `${notified} eligible Guides notified`,
+        detail: notified === 1 ? "1 eligible Guide offered" : `${notified} eligible Guides offered`,
         action: "Review coverage",
         severity: "high",
       };

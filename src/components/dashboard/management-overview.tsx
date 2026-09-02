@@ -387,7 +387,7 @@ function AttentionCard({
                 className={`text-[13px] font-medium ${
                   item.critical ||
                   item.kind === "guide_confirm_critical" ||
-                  /CRITICAL COVERAGE|wasn't notified|Call parent|recording|Payment/i.test(item.title)
+                  /CRITICAL COVERAGE|OPERATIONAL EMERGENCY|wasn't notified|Call parent|recording|Payment/i.test(item.title)
                     ? "text-[var(--mg-critical)]"
                     : item.urgent
                       ? "text-[var(--mg-attention)]"
