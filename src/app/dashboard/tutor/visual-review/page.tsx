@@ -37,7 +37,7 @@ export default async function GuideHomeVisualReviewPage({
       <GuidePage>
         <p className="sr-only">Visual review fixture. Not Guide production data.</p>
         <GuideCompletedHeader child="Jordan" when="Wednesday, Aug 27 · 6:30 PM">
-          <p className="mt-4 text-sm text-white/62">Before you finish, tell the parent how the hour went.</p>
+          <p className="mt-4 text-sm text-white/70">Before you finish, tell the parent how the hour went.</p>
         </GuideCompletedHeader>
         <div className="mt-4">
           <GuideSurface>

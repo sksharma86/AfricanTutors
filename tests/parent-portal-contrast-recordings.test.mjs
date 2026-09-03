@@ -208,6 +208,7 @@ describe("Authenticated portal contrast tokens", () => {
     assert.match(form, /caret-\[var\(--gp-ink\)\]/);
     assert.match(form, /disabled:text-ink-400/);
     assert.match(header, /text-white/);
+    assert.match(header, /text-white\/80/);
     assert.match(header, /text-gold-300/);
     assert.match(page, /GuideSurface/);
     assert.match(page, /variant="page"/);

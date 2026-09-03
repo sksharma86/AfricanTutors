@@ -58,13 +58,13 @@ export default async function GuideReportPage({
         </Link>
       </p>
       <GuideCompletedHeader child={guideChildName(booking)} when={when}>
-        <p className="mt-4 text-sm text-white/62">Before you finish, tell the parent how the hour went.</p>
+        <p className="mt-4 text-sm text-white/70">Before you finish, tell the parent how the hour went.</p>
         {submitted ? (
           <p className="mt-6 text-sm font-medium text-gold-200">Report submitted</p>
         ) : booking.status === "cancelled" || booking.status === "expired" || booking.status === "no_show" ? (
-          <p className="mt-6 text-sm text-white/60">This Study Hall does not need a completion report.</p>
+          <p className="mt-6 text-sm text-white/70">This Study Hall does not need a completion report.</p>
         ) : !needed ? (
-          <p className="mt-6 text-sm text-white/60">
+          <p className="mt-6 text-sm text-white/70">
             The report opens when this Study Hall ends. Ready to join 5 minutes before start.
           </p>
         ) : null}
