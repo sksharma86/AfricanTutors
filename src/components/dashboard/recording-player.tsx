@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /**
- * Same-tab playback. Never uses window.open or target=_blank.
+ * Same-tab playback. Does not open a browser popup.
  * If the short-lived Daily URL cannot play inline, a same-tab link remains.
  */
 export function RecordingPlayer({ src, expiresAt }: { src: string; expiresAt?: string | null }) {

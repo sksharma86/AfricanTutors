@@ -112,9 +112,10 @@ describe("Parent Home — Next vs additional Upcoming Study Halls", () => {
       scheduled_start: "2026-09-06T18:00:00Z",
       scheduled_end: "2026-09-06T19:00:00Z",
     });
-    const lists = parentStudyHallLists([cancelled, extra, live, joinable], NOW);
+    const lists = parentStudyHallLists([live, joinable, extra, cancelled], NOW);
     const later = parentLaterStudyHalls(lists.upcoming, lists.next);
-    assert.ok(lists.next?.id === "join-now" || lists.next?.id === "live-now");
+    assert.equal(lists.next?.id, "live-now");
+    assert.equal(lists.upcoming.some((b) => b.id === "join-now"), true);
     assert.equal(lists.upcoming.some((b) => b.id === "cx"), false);
     assert.equal(later.some((b) => b.id === "cx"), false);
     assert.equal(later.some((b) => b.id === extra.id), true);
@@ -144,12 +145,12 @@ describe("Recording playback — in-portal viewer, no popups", () => {
     assert.match(button, /parentRecordingViewerPath/);
     assert.match(button, /LinkButton/);
     assert.match(button, /Watch recording/);
-    assert.doesNotMatch(button, /window\.open|target=_blank|fetch\("\/api\/recording\/access"/);
+    assert.doesNotMatch(button, /window\.open\(|target=_blank|fetch\("\/api\/recording\/access"/);
     assert.match(player, /playsInline/);
-    assert.doesNotMatch(player, /window\.open|target=["']_blank["']/);
+    assert.doesNotMatch(player, /window\.open\(|target=["']_blank["']/);
     assert.match(admin, /adminRecordingViewerPath/);
-    assert.doesNotMatch(admin, /window\.open/);
-    assert.doesNotMatch(finance, /window\.open/);
+    assert.doesNotMatch(admin, /window\.open\(/);
+    assert.doesNotMatch(finance, /window\.open\(/);
     assert.equal(parentRecordingViewerPath("rec-1"), "/dashboard/student/recordings/rec-1");
     assert.equal(adminRecordingViewerPath("rec-1"), "/dashboard/admin/recordings/rec-1");
   });

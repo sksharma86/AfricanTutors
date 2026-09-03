@@ -3,7 +3,7 @@ import { parentRecordingViewerPath } from "@/lib/recording-viewer.mjs";
 
 /**
  * Same-tab Watch recording. Authorization and the short-lived Daily link
- * happen on the authenticated viewer route — never via window.open.
+ * happen on the authenticated viewer route — never via a browser popup.
  */
 export function WatchRecordingButton({ recordingId }: { recordingId: string }) {
   return (

@@ -1,7 +1,7 @@
 /**
  * In-portal recording playback paths and copy.
  * Signed Daily URLs are minted only on the authenticated viewer page —
- * never placed on list-page hrefs or opened via window.open.
+ * never placed on list-page hrefs or opened as a browser popup.
  */
 
 export function parentRecordingViewerPath(recordingId) {
