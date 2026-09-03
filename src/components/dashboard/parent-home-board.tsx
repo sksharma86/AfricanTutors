@@ -56,7 +56,7 @@ export function ParentHomeBoard({
           )}
         </div>
         <div className="pp-home-upcoming">
-          <ParentUpcomingList bookings={later} showEmpty />
+          <ParentUpcomingList bookings={later} showEmpty hasNext={Boolean(next)} />
         </div>
         <div className="pp-home-utility">
           {hasRecent ? (

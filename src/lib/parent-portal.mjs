@@ -44,6 +44,16 @@ export function parentStudyHallLists(bookings, nowMs = Date.now()) {
   return { upcoming, past: completed, cancelled, next };
 }
 
+/** Upcoming list rows after the current Next Study Hall — never duplicates Next. */
+export function parentLaterStudyHalls(upcoming, next) {
+  if (!next?.id) return upcoming ?? [];
+  return (upcoming ?? []).filter((booking) => booking.id !== next.id);
+}
+
+export function parentUpcomingEmptyCopy(hasNext) {
+  return hasNext ? "No additional Study Halls scheduled." : "Nothing scheduled yet.";
+}
+
 export function lastCompletedStudyHall(bookings, nowMs = Date.now()) {
   const { past } = parentStudyHallLists(bookings, nowMs);
   const done = past.filter((b) => b.status === "completed" || b.status === "no_show");

@@ -134,7 +134,9 @@ describe("Parent Portal premium visual system", () => {
     assert.match(habit, /Study Hall\{month\.count === 1 \? "" : "s"\} completed/);
     assert.equal(parentHabitCopy(0).body, "Regular sessions can help turn homework time into a more predictable routine.");
     assert.match(upcoming, /Upcoming Study Halls/);
-    assert.match(upcoming, /Nothing scheduled yet/);
+    assert.match(upcoming, /parentUpcomingEmptyCopy/);
+    assert.match(portal, /Nothing scheduled yet/);
+    assert.match(portal, /No additional Study Halls scheduled/);
     assert.match(upcoming, /Book one →/);
     assert.doesNotMatch(upcoming, /Book a Study Hall →/);
     assert.match(board, /Your first Study Hall is on us — 60 minutes free, no credit card required/);

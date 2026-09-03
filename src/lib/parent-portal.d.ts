@@ -7,6 +7,11 @@ declare module "@/lib/parent-portal.mjs" {
     bookings: T[],
     nowMs?: number,
   ): { upcoming: T[]; past: T[]; cancelled: T[]; next: T | null };
+  export function parentLaterStudyHalls<T extends { id?: string }>(
+    upcoming: T[] | null | undefined,
+    next: T | null | undefined,
+  ): T[];
+  export function parentUpcomingEmptyCopy(hasNext: boolean): string;
   export function lastCompletedStudyHall<T extends { status: string; scheduled_start?: string | null; scheduled_end?: string | null }>(
     bookings: T[],
     nowMs?: number,

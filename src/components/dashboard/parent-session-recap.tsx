@@ -126,14 +126,14 @@ export function ParentCompletedHeader({
 }) {
   return (
     <ParentSurface featured>
-      <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall complete</p>
-      <p className="mt-2 font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-[1.85rem]">
+      <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Study Hall complete</p>
+      <p className="mt-2 font-display text-[1.65rem] font-semibold tracking-[-0.03em] text-white sm:text-[1.85rem]">
         {when}
       </p>
-      <p className="mt-3 text-lg font-medium text-ink-900">{childrenLine}</p>
+      <p className="mt-3 text-lg font-medium text-white">{childrenLine}</p>
       {guide ? (
-        <p className="mt-1 text-sm text-ink-500">
-          Guide <span className="font-medium text-ink-800">{guide}</span>
+        <p className="mt-1 text-sm text-white/60">
+          Guide <span className="font-medium text-white/86">{guide}</span>
         </p>
       ) : null}
     </ParentSurface>

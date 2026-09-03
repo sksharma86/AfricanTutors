@@ -394,6 +394,47 @@ body {
   box-shadow: var(--pp-shadow-1);
 }
 
+.parent-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.parent-app select,
+.parent-app textarea {
+  border-color: rgba(28, 25, 21, 0.12);
+  background: var(--pp-card);
+  color: var(--pp-ink);
+  caret-color: var(--pp-ink);
+  border-radius: 10px;
+}
+
+.parent-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"])::placeholder,
+.parent-app textarea::placeholder {
+  color: var(--pp-muted);
+  opacity: 0.72;
+}
+
+.parent-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+.parent-app select:focus,
+.parent-app textarea:focus {
+  outline: none;
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+}
+
+.parent-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):disabled,
+.parent-app select:disabled,
+.parent-app textarea:disabled {
+  background: #efe8d8;
+  color: var(--pp-muted);
+  caret-color: var(--pp-muted);
+}
+
+.parent-app input:-webkit-autofill,
+.parent-app input:-webkit-autofill:hover,
+.parent-app input:-webkit-autofill:focus,
+.parent-app textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--pp-ink);
+  caret-color: var(--pp-ink);
+  box-shadow: 0 0 0 1000px var(--pp-card) inset;
+}
+
 .parent-app .pp-interact,
 .parent-app a,
 .parent-app button {
@@ -493,6 +534,47 @@ body {
       "earn"
       "guide";
   }
+}
+
+.guide-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.guide-app select,
+.guide-app textarea {
+  border-color: rgba(28, 25, 21, 0.12);
+  background: var(--gp-card);
+  color: var(--gp-ink);
+  caret-color: var(--gp-ink);
+  border-radius: 10px;
+}
+
+.guide-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"])::placeholder,
+.guide-app textarea::placeholder {
+  color: var(--gp-muted);
+  opacity: 0.72;
+}
+
+.guide-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+.guide-app select:focus,
+.guide-app textarea:focus {
+  outline: none;
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+}
+
+.guide-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):disabled,
+.guide-app select:disabled,
+.guide-app textarea:disabled {
+  background: #efe8d8;
+  color: var(--gp-muted);
+  caret-color: var(--gp-muted);
+}
+
+.guide-app input:-webkit-autofill,
+.guide-app input:-webkit-autofill:hover,
+.guide-app input:-webkit-autofill:focus,
+.guide-app textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--gp-ink);
+  caret-color: var(--gp-ink);
+  box-shadow: 0 0 0 1000px var(--gp-card) inset;
 }
 
 .guide-app .gp-interact,
@@ -633,7 +715,14 @@ body {
   border-color: rgba(28, 25, 21, 0.12);
   background: var(--mg-card);
   color: var(--mg-ink);
+  caret-color: var(--mg-ink);
   border-radius: 10px;
+}
+
+.management-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"])::placeholder,
+.management-app textarea::placeholder {
+  color: var(--mg-muted);
+  opacity: 0.72;
 }
 
 .management-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
@@ -642,6 +731,23 @@ body {
   outline: none;
   border-color: #c9a227;
   box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+}
+
+.management-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):disabled,
+.management-app select:disabled,
+.management-app textarea:disabled {
+  background: #efe8d8;
+  color: var(--mg-muted);
+  caret-color: var(--mg-muted);
+}
+
+.management-app input:-webkit-autofill,
+.management-app input:-webkit-autofill:hover,
+.management-app input:-webkit-autofill:focus,
+.management-app textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--mg-ink);
+  caret-color: var(--mg-ink);
+  box-shadow: 0 0 0 1000px var(--mg-card) inset;
 }
 
 .management-app .mg-list {

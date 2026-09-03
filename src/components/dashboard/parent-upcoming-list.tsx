@@ -4,7 +4,13 @@ import { ParentIconChevron } from "@/components/dashboard/parent-icons";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { formatDuration } from "@/lib/format.mjs";
 import { bookingChildNames } from "@/lib/household-children.mjs";
-import { childFirstName, parentGuideLabel, parentSessionMinutes, parentStatusLabel } from "@/lib/parent-portal.mjs";
+import {
+  childFirstName,
+  parentGuideLabel,
+  parentSessionMinutes,
+  parentStatusLabel,
+  parentUpcomingEmptyCopy,
+} from "@/lib/parent-portal.mjs";
 import { formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 
@@ -22,9 +28,11 @@ function monthDay(iso: string, tz: string) {
 export function ParentUpcomingList({
   bookings,
   showEmpty = false,
+  hasNext = false,
 }: {
   bookings: ParentBooking[];
   showEmpty?: boolean;
+  hasNext?: boolean;
 }) {
   if (bookings.length === 0 && !showEmpty) return null;
   const visible = bookings.slice(0, HOME_LIMIT);
@@ -35,12 +43,14 @@ export function ParentUpcomingList({
       <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Upcoming Study Halls</p>
       {visible.length === 0 ? (
         <div className="mt-3">
-          <p className="text-sm text-[var(--pp-muted)]">Nothing scheduled yet.</p>
-          <p className="mt-1.5">
-            <Link href="/dashboard/student/book" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
-              Book one →
-            </Link>
-          </p>
+          <p className="text-sm text-[var(--pp-muted)]">{parentUpcomingEmptyCopy(hasNext)}</p>
+          {hasNext ? null : (
+            <p className="mt-1.5">
+              <Link href="/dashboard/student/book" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+                Book one →
+              </Link>
+            </p>
+          )}
         </div>
       ) : (
         <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">

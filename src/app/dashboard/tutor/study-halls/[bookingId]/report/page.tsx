@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { GuideCompletedHeader } from "@/components/dashboard/guide-completed-header";
 import { GuidePage } from "@/components/dashboard/guide-page";
 import { GuideSessionReport } from "@/components/dashboard/guide-session-report";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
@@ -56,24 +57,21 @@ export default async function GuideReportPage({
           ← Home
         </Link>
       </p>
-      <GuideSurface featured>
-        <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-700 uppercase">Study Hall complete</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
-          {guideChildName(booking)}
-        </h1>
-        <p className="mt-1 text-sm text-ink-500">{when}</p>
-        <p className="mt-4 text-sm text-ink-600">Before you finish, tell the parent how the hour went.</p>
-
+      <GuideCompletedHeader child={guideChildName(booking)} when={when}>
+        <p className="mt-4 text-sm text-white/70">Before you finish, tell the parent how the hour went.</p>
         {submitted ? (
-          <p className="mt-6 text-sm font-medium text-forest-700">Report submitted</p>
+          <p className="mt-6 text-sm font-medium text-gold-200">Report submitted</p>
         ) : booking.status === "cancelled" || booking.status === "expired" || booking.status === "no_show" ? (
-          <p className="mt-6 text-sm text-ink-500">This Study Hall does not need a completion report.</p>
+          <p className="mt-6 text-sm text-white/70">This Study Hall does not need a completion report.</p>
         ) : !needed ? (
-          <p className="mt-6 text-sm text-ink-500">
+          <p className="mt-6 text-sm text-white/70">
             The report opens when this Study Hall ends. Ready to join 5 minutes before start.
           </p>
-        ) : (
-          <div className="mt-6">
+        ) : null}
+      </GuideCompletedHeader>
+      {needed && !submitted ? (
+        <div className="mt-4">
+          <GuideSurface>
             <GuideSessionReport
               bookingId={booking.id}
               childName={booking.student_first_name}
@@ -81,9 +79,9 @@ export default async function GuideReportPage({
               alreadySubmitted={false}
               variant="page"
             />
-          </div>
-        )}
-      </GuideSurface>
+          </GuideSurface>
+        </div>
+      ) : null}
     </GuidePage>
   );
 }

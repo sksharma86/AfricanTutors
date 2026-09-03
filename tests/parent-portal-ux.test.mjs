@@ -52,6 +52,7 @@ describe("Parent portal UX — routes and authorization", () => {
     ["src/app/dashboard/student/study-halls/page.tsx", "/dashboard/student/study-halls"],
     ["src/app/dashboard/student/study-halls/[bookingId]/page.tsx", "/dashboard/student/study-halls/"],
     ["src/app/dashboard/student/reports/page.tsx", "/dashboard/student/reports"],
+    ["src/app/dashboard/student/recordings/[recordingId]/page.tsx", "/dashboard/student/recordings/"],
     ["src/app/dashboard/student/packages/page.tsx", "/dashboard/student/packages"],
     ["src/app/dashboard/student/account/page.tsx", "/dashboard/student/account"],
     ["src/app/dashboard/student/book/page.tsx", "/dashboard/student/book"],

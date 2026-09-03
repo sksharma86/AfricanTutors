@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 
 import { AdminWhen } from "@/components/dashboard/admin-when";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
+import { adminRecordingViewerPath } from "@/lib/recording-viewer.mjs";
 import { ManagementSubnav } from "@/components/dashboard/management-subnav";
 import {
   aggregateCompensationByCurrency,
@@ -593,7 +594,6 @@ function Ledger({ title, rows }: { title: string; rows: { delta: string; type: s
 
 function RecordingStatus({
   recordings,
-  onErr,
 }: {
   recordings: {
     id: string;
@@ -605,24 +605,8 @@ function RecordingStatus({
   }[];
   onErr: (m: string) => void;
 }) {
-  const [busy, setBusy] = useState<string | null>(null);
   if (recordings.length === 0) {
     return <p className="mt-2 text-xs text-ink-400">Recording: none available yet (may still be processing).</p>;
-  }
-  async function review(id: string) {
-    setBusy(id);
-    const res = await fetch("/api/admin/recording/access", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ recordingId: id }),
-    });
-    const data = await res.json().catch(() => null);
-    setBusy(null);
-    if (!res.ok || !data?.url) {
-      onErr(data?.error ?? "Could not open the recording.");
-      return;
-    }
-    window.open(data.url as string, "_blank", "noopener,noreferrer");
   }
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -648,16 +632,9 @@ function RecordingStatus({
             ? ` · until ${new Date(r.retention_until).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
             : "";
           return (
-            <Button
-              key={r.id}
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => review(r.id)}
-              disabled={busy === r.id}
-            >
-              {busy === r.id ? "Opening…" : `Review recording${mins}${until}`}
-            </Button>
+            <LinkButton key={r.id} href={adminRecordingViewerPath(r.id)} variant="outline" size="sm">
+              Review recording{mins}{until}
+            </LinkButton>
           );
         }
         return (
