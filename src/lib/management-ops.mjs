@@ -393,16 +393,39 @@ function item(partial) {
   };
 }
 
+/**
+ * Join Needs Attention metadata without repeating the same display value.
+ * Child, Guide, and incident detail each appear at most once.
+ */
+export function uniqueAttentionDetail(parts, separator = " · ") {
+  const seen = new Set();
+  const out = [];
+  for (const part of parts ?? []) {
+    const segments = String(part ?? "")
+      .split(separator)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const text of segments) {
+      const key = text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(text);
+    }
+  }
+  return out.join(separator);
+}
+
 function attentionFromIssue(booking, issue) {
   return item({
     id: `${issue.kind}:${booking.id}`,
     kind: issue.kind,
     title: issue.title,
     summary: issue.summary,
-    detail:
-      issue.kind === "guide_confirm_critical"
-        ? [bookingChildNames(booking, booking.student_first_name ?? "Child"), issue.detail].filter(Boolean).join(" · ")
-        : [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    detail: uniqueAttentionDetail([
+      bookingChildNames(booking, booking.student_first_name ?? "Child"),
+      issue.kind === "guide_confirm_critical" ? null : booking.tutor_display_name,
+      issue.detail,
+    ]),
     bookingId: booking.id,
     href: `/dashboard/admin/study-halls/${booking.id}`,
     action: issue.action,
