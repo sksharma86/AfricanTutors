@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { GuideCompletedHeader } from "@/components/dashboard/guide-completed-header";
 import { GuideHomeBoard } from "@/components/dashboard/guide-home-board";
 import { GuideOpenCoverageCard } from "@/components/dashboard/guide-open-coverage-card";
 import { GuidePage } from "@/components/dashboard/guide-page";
+import { GuideSessionReport } from "@/components/dashboard/guide-session-report";
 import { GuideStudyHalls } from "@/components/dashboard/guide-study-halls";
+import { GuideSurface } from "@/components/dashboard/guide-surface";
 import { requireRole } from "@/lib/auth";
 import { guideHomeVisualFixture, guideVisualReviewNow } from "@/lib/guide-home-visual-fixture.mjs";
 import { guideAttendanceWhatsApp, guideOpenCoverageWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
@@ -28,6 +31,27 @@ export default async function GuideHomeVisualReviewPage({
   if (process.env.GUIDE_HOME_VISUAL_REVIEW !== "1") notFound();
   await requireRole("tutor", "/dashboard/tutor");
   const params = await searchParams;
+
+  if (params.scene === "reportform") {
+    return (
+      <GuidePage>
+        <p className="sr-only">Visual review fixture. Not Guide production data.</p>
+        <GuideCompletedHeader child="Jordan" when="Wednesday, Aug 27 · 6:30 PM">
+          <p className="mt-4 text-sm text-white/62">Before you finish, tell the parent how the hour went.</p>
+        </GuideCompletedHeader>
+        <div className="mt-4">
+          <GuideSurface>
+            <GuideSessionReport
+              bookingId="fixture-report-booking"
+              childName="Jordan"
+              alreadySubmitted={false}
+              variant="page"
+            />
+          </GuideSurface>
+        </div>
+      </GuidePage>
+    );
+  }
   const reviewNow = guideVisualReviewNow(new Date("2026-08-26T21:00:00Z"), "America/Chicago", 16, 0);
   const fixture = guideHomeVisualFixture(reviewNow, {
     reportNeeded: params.report === "1",

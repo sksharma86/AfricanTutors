@@ -185,9 +185,11 @@ describe("Guide workstation — mandatory report", () => {
 
   it("report page uses existing fields and does not invent a new schema", () => {
     const page = read("src/app/dashboard/tutor/study-halls/[bookingId]/report/page.tsx");
+    const header = read("src/components/dashboard/guide-completed-header.tsx");
     const form = read("src/components/dashboard/guide-session-report.tsx");
     const m30 = read("supabase/migrations/0030_guide_report_after_session_end.sql");
-    assert.match(page, /Study Hall complete/);
+    assert.match(header, /Study Hall complete/);
+    assert.match(page, /GuideCompletedHeader/);
     assert.match(page, /Before you finish, tell the parent how the hour went/);
     assert.match(form, /What did they work on/);
     assert.match(form, /Note for parent \(optional\)/);

@@ -78,6 +78,54 @@ export function parentHomeVisualFixture(now = new Date(), { scene = null } = {})
     tutor_display_name: "Sarah",
   });
 
+  if (scene === "empty") {
+    return {
+      firstName: "Priya",
+      next: null,
+      last: null,
+      lastReport: null,
+      lastRecording: null,
+      later: [],
+      bookings: [],
+      householdTz: "America/Chicago",
+      minutes: 0,
+      creditCents: 0,
+      preferFreeSession: true,
+    };
+  }
+
+  if (scene === "one-next") {
+    return {
+      firstName: "Priya",
+      next,
+      last: recent,
+      lastReport: {
+        id: "fixture-report",
+        booking_id: recent.id,
+        submitted_at: recent.scheduled_end,
+        focus_rating: "good_focus",
+        work_summary: "Homework stayed on track.",
+        redirection_level: "a_little",
+        guide_note: null,
+      },
+      lastRecording: {
+        id: "fixture-rec",
+        booking_id: recent.id,
+        status: "completed",
+        retention_until: at(now, 60),
+        deleted_at: null,
+        daily_recording_id: "fixture",
+        completed_at: recent.scheduled_end,
+      },
+      later: [],
+      bookings: [next, recent, ...completed],
+      householdTz: "America/Chicago",
+      minutes: 660,
+      creditCents: 0,
+      preferFreeSession: false,
+    };
+  }
+
   if (scene === "protected") {
     return {
       firstName: "Priya",

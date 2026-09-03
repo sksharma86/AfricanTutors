@@ -18,6 +18,9 @@ import {
   type RedirectionLevel,
 } from "@/lib/session-report.mjs";
 
+const FIELD_CLASS =
+  "gp-field mt-1 w-full rounded-lg border border-ink-200 bg-[var(--gp-card)] px-2 py-1.5 text-xs text-[var(--gp-ink)] placeholder:text-[var(--gp-muted)] caret-[var(--gp-ink)] outline-none focus:border-[#c9a227] focus:shadow-[0_0_0_3px_rgba(201,162,39,0.18)] disabled:bg-ink-100 disabled:text-ink-400 disabled:caret-ink-400";
+
 type ChildTarget = { id: string; firstName: string };
 
 type ChildDraft = {
@@ -142,7 +145,7 @@ export function GuideSessionReport({
           Complete report
         </button>
       ) : (
-        <div className={variant === "page" ? "w-full text-left" : "w-full max-w-sm rounded-xl border border-ink-200 bg-white p-3 text-left shadow-sm sm:w-80"}>
+        <div className={variant === "page" ? "w-full bg-[var(--gp-card)] text-left text-[var(--gp-ink)]" : "w-full max-w-sm rounded-xl border border-ink-200 bg-white p-3 text-left shadow-sm sm:w-80"}>
           <p className="text-xs font-semibold text-ink-800">
             {multi
               ? "How did Study Hall go for each child?"
@@ -261,7 +264,7 @@ function ChildFields({
           rows={2}
           maxLength={WORK_SUMMARY_MAX}
           placeholder={WORK_COMPLETED_PLACEHOLDER}
-          className="mt-1 w-full rounded-lg border border-ink-200 px-2 py-1.5 text-xs text-ink-800"
+          className={FIELD_CLASS}
         />
         <span className="mt-0.5 block text-[10px] text-ink-400">{WORK_COMPLETED_HINT}</span>
         <span className="mt-0.5 block text-right text-[10px] text-ink-400">
@@ -305,7 +308,7 @@ function ChildFields({
           rows={2}
           maxLength={GUIDE_NOTE_MAX}
           placeholder="Optional short note"
-          className="mt-1 w-full rounded-lg border border-ink-200 px-2 py-1.5 text-xs text-ink-800"
+          className={FIELD_CLASS}
         />
       </label>
     </div>

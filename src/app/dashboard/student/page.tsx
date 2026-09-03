@@ -9,7 +9,7 @@ import { requireRole } from "@/lib/auth";
 import { accountFreeTrialUsed } from "@/lib/free-trial.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPostSessionOffer } from "@/lib/parent-next-step.mjs";
-import { lastCompletedStudyHall, parentStudyHallLists } from "@/lib/parent-portal.mjs";
+import { lastCompletedStudyHall, parentLaterStudyHalls, parentStudyHallLists } from "@/lib/parent-portal.mjs";
 import { loadParentWorkspace } from "@/lib/parent-portal-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -37,7 +37,7 @@ export default async function StudentDashboardPage() {
   const data = await loadParentWorkspace(supabase!, user.id);
   const freeTrialAvailable = !accountFreeTrialUsed(data.bookings);
   const { next, upcoming } = parentStudyHallLists(data.bookings);
-  const later = upcoming.filter((booking) => booking.id !== next?.id);
+  const later = parentLaterStudyHalls(upcoming, next);
   const last = lastCompletedStudyHall(data.bookings);
   const lastReport = last ? data.reportByBooking.get(last.id) ?? null : null;
   const nextStep = parentPostSessionOffer({
