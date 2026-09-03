@@ -39,7 +39,7 @@ describe("Management Console premium", () => {
     assert.match(board, /Guides active/);
     assert.match(board, /Needs attention/);
     assert.match(board, /Outstanding Guide pay/);
-    assert.match(board, /Everything is running normally/);
+    assert.match(board, /No issues need attention/);
     assert.doesNotMatch(board, /Let's make today great|quota|Top Guides|satisfaction/i);
     assert.doesNotMatch(board, /managementGreeting/);
   });

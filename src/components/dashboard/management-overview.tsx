@@ -117,7 +117,7 @@ export function ManagementOverview({
                   {presented.length} {presented.length === 1 ? "issue requires" : "issues require"} attention
                 </p>
               ) : (
-                <p className="text-[12.5px] text-white/55">No operational issues require attention.</p>
+                <p className="text-[12.5px] text-white/55">No issues need attention</p>
               )}
             </div>
             <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
@@ -372,11 +372,12 @@ function AttentionCard({
       </p>
       {items.length === 0 ? (
         <div className="mt-3">
-          <p className="text-[15px] font-medium text-[var(--mg-positive)]">Clear</p>
+          <p className="text-[15px] font-medium text-[var(--mg-positive)]">No issues need attention</p>
           <p className="mt-1 text-sm leading-6 text-[var(--mg-muted)]">
-            Everything is running normally.
-            <br />
-            No coverage issues, failed notifications, or unresolved parent requests.
+            Coverage, notifications, and parent requests are clear.
+          </p>
+          <p className="mt-3">
+            <PortalTextLink href="/dashboard/admin/incidents">Incident History →</PortalTextLink>
           </p>
         </div>
       ) : (
@@ -406,6 +407,11 @@ function AttentionCard({
           ))}
         </ul>
       )}
+      {items.length > 0 ? (
+        <p className="mt-3">
+          <PortalTextLink href="/dashboard/admin/incidents">Incident History →</PortalTextLink>
+        </p>
+      ) : null}
     </ManagementSurface>
   );
 }

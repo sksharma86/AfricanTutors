@@ -5,6 +5,7 @@
 
 import { groupManagementCoverageIssues, managementAttendanceIssue } from "./guide-attendance.mjs";
 import { bookingChildNames } from "./household-children.mjs";
+import { isActionableAttentionIssue } from "./management-incidents.mjs";
 import { JOIN_CLOSE_GRACE_MIN } from "./session-window.mjs";
 
 export const MANAGEMENT_STATUSES = ["ready", "live", "needs_attention", "completed", "cancelled"];
@@ -171,7 +172,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
     assignmentsLoaded,
     offerCount,
   });
-  if (attendanceIssue) {
+  if (isActionableAttentionIssue(attendanceIssue)) {
     const startLabel = startsInLabel(booking.scheduled_start, nowMs);
     issues.push({
       kind: attendanceIssue.kind,
@@ -180,9 +181,7 @@ export function currentStudyHallIssues(booking, extras = {}) {
       detail:
         attendanceIssue.kind === "guide_confirm_critical"
           ? [startLabel, "No confirmed Guide"].filter(Boolean).join(" · ")
-          : attendanceIssue.kind === "guide_customer_protected"
-            ? "Booking restored · +1 complimentary hour issued"
-            : (attendanceIssue.detail ?? startLabel),
+          : (attendanceIssue.detail ?? startLabel),
       action: attendanceIssue.action,
       severity: attendanceIssue.severity ?? null,
     });
@@ -394,16 +393,39 @@ function item(partial) {
   };
 }
 
+/**
+ * Join Needs Attention metadata without repeating the same display value.
+ * Child, Guide, and incident detail each appear at most once.
+ */
+export function uniqueAttentionDetail(parts, separator = " · ") {
+  const seen = new Set();
+  const out = [];
+  for (const part of parts ?? []) {
+    const segments = String(part ?? "")
+      .split(separator)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const text of segments) {
+      const key = text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(text);
+    }
+  }
+  return out.join(separator);
+}
+
 function attentionFromIssue(booking, issue) {
   return item({
     id: `${issue.kind}:${booking.id}`,
     kind: issue.kind,
     title: issue.title,
     summary: issue.summary,
-    detail:
-      issue.kind === "guide_confirm_critical"
-        ? [bookingChildNames(booking, booking.student_first_name ?? "Child"), issue.detail].filter(Boolean).join(" · ")
-        : [bookingChildNames(booking, booking.student_first_name ?? "Child"), booking.tutor_display_name, issue.detail].filter(Boolean).join(" · "),
+    detail: uniqueAttentionDetail([
+      bookingChildNames(booking, booking.student_first_name ?? "Child"),
+      issue.kind === "guide_confirm_critical" ? null : booking.tutor_display_name,
+      issue.detail,
+    ]),
     bookingId: booking.id,
     href: `/dashboard/admin/study-halls/${booking.id}`,
     action: issue.action,
@@ -454,7 +476,9 @@ export function collectNeedsAttention({
       assignmentsLoaded: assignmentsLoaded || hasAttendanceKey,
       nowMs,
     });
-    for (const issue of issues) items.push(attentionFromIssue(b, issue));
+    for (const issue of issues) {
+      if (isActionableAttentionIssue(issue)) items.push(attentionFromIssue(b, issue));
+    }
   }
 
   for (const r of cancelRequests) {

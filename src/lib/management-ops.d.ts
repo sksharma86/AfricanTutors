@@ -69,6 +69,7 @@ export function studyHallViewMembership(
   opts?: { tz: string; nowMs: number; presence?: unknown; issues?: StudyHallIssue[] },
 ): boolean;
 export function startsInLabel(iso: string | null | undefined, nowMs?: number): string | null;
+export function uniqueAttentionDetail(parts?: Array<string | null | undefined>, separator?: string): string;
 export function collectNeedsAttention(input?: Record<string, unknown> | object): {
   id: string;
   kind: string;

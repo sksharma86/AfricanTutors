@@ -29,6 +29,9 @@ export const MgmtIconGuides = strokeIcon(
 export const MgmtIconCustomers = strokeIcon(
   "M9.2 11.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6Z M4.8 19c.5-2.6 2.3-4 4.4-4s3.9 1.4 4.4 4 M16.4 11.4a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6Z M15.2 15.4c2.1 0 3.7 1.2 4.2 3.6",
 );
+export const MgmtIconIncidents = strokeIcon(
+  "M12 4.8 4.8 19.2h14.4L12 4.8Z M12 10.2v4.2 M12 16.8h.01",
+);
 export const MgmtIconFinance = strokeIcon(
   "M5.4 8.2h13.2A1.4 1.4 0 0 1 20 9.6v8.2A1.4 1.4 0 0 1 18.6 19.2H5.4A1.4 1.4 0 0 1 4 17.8V9.6A1.4 1.4 0 0 1 5.4 8.2Z M12 12.2v3.6 M10.2 13.4h2.4a1.4 1.4 0 0 1 0 2.8h-1.6",
 );
@@ -36,6 +39,7 @@ export const MgmtIconFinance = strokeIcon(
 export const MGMT_NAV_ICONS = {
   Overview: MgmtIconOverview,
   "Study Halls": MgmtIconHalls,
+  "Incident History": MgmtIconIncidents,
   Guides: MgmtIconGuides,
   Customers: MgmtIconCustomers,
   Finance: MgmtIconFinance,

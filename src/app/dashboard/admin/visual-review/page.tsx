@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { ManagementIncidentHistory } from "@/components/dashboard/management-incident-history";
+import { ManagementIncidentDetail } from "@/components/dashboard/management-incident-detail";
 import { ManagementOverview } from "@/components/dashboard/management-overview";
 import { ManagementStudyHalls } from "@/components/dashboard/management-study-halls";
 import { ManagementStudyHallActions } from "@/components/dashboard/management-study-hall-actions";
@@ -9,7 +11,11 @@ import { ManagementSurface } from "@/components/dashboard/management-surface";
 import { ManagementPage } from "@/components/dashboard/management-page";
 import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { requireRole } from "@/lib/auth";
-import { managementHomeVisualFixture, managementVisualReviewNow } from "@/lib/management-visual-fixture.mjs";
+import {
+  managementHomeVisualFixture,
+  managementIncidentHistoryFixture,
+  managementVisualReviewNow,
+} from "@/lib/management-visual-fixture.mjs";
 
 export const metadata: Metadata = { title: "Management visual review" };
 export const dynamic = "force-dynamic";
@@ -30,6 +36,35 @@ export default async function ManagementVisualReviewPage({
   const scene = params.scene === "attention" ? (params.view === "block4" ? "block4missed" : "missed") : params.scene ?? null;
   const fixture = managementHomeVisualFixture(reviewNow, { empty: params.empty === "1", scene });
   const attentionList = params.view === "attention" || params.scene === "attention";
+  const incidentFixture = managementIncidentHistoryFixture(reviewNow);
+  const showIncidents = params.scene === "incidents" || params.view === "incidents";
+  const showIncidentDetail = params.scene === "incident-detail";
+
+  if (showIncidents || showIncidentDetail) {
+    return (
+      <ManagementPage navItems={ADMIN_PORTAL_NAV} wide>
+        <p className="sr-only">Visual review fixture. Not Management production data.</p>
+        <p className="mb-3 text-[11px] font-medium tracking-[0.1em] text-[#8a8174] uppercase">
+          Visual review fixture · not production data
+        </p>
+        {showIncidentDetail ? (
+          <ManagementIncidentDetail incident={incidentFixture.incidents[0] as never} timeZone={incidentFixture.timeZone} />
+        ) : (
+          <>
+            <h1 className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-[var(--mg-ink)]">
+              Incident History
+            </h1>
+            <p className="mt-1 text-sm text-[var(--mg-muted)]">
+              What went wrong, what the system did, and how it ended.
+            </p>
+            <div className="mt-4">
+              <ManagementIncidentHistory incidents={incidentFixture.incidents as never} nowMs={incidentFixture.nowMs} />
+            </div>
+          </>
+        )}
+      </ManagementPage>
+    );
+  }
 
   return (
     <ManagementPage navItems={ADMIN_PORTAL_NAV} compose={!attentionList} wide={attentionList}>

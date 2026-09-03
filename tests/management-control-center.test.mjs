@@ -11,6 +11,7 @@ import {
   matchesStudyHallSearch,
   presentNeedsAttention,
   studyHallViewMembership,
+  uniqueAttentionDetail,
 } from "../src/lib/management-ops.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
@@ -136,6 +137,59 @@ describe("Management Control Center — Needs Attention", () => {
     assert.ok(items.find((i) => i.kind === "needs_guide").title !== "Needs attention");
   });
 
+  it("does not duplicate the Guide name in the rendered attention detail", () => {
+    const booking = {
+      id: "b-miss",
+      status: "confirmed",
+      tutor_id: "g1",
+      tutor_display_name: "Sarah M.",
+      student_first_name: "Jordan",
+      scheduled_start: start,
+      scheduled_end: end,
+      payment_status: "paid",
+    };
+    const assignment = {
+      id: "a-miss",
+      booking_id: "b-miss",
+      tutor_id: "g1",
+      source: "t30",
+      status: "missed",
+      missed_at: "2026-08-27T17:40:00.000Z",
+    };
+    const items = collectNeedsAttention({
+      bookings: [booking],
+      attendanceByBooking: { "b-miss": assignment },
+      assignmentsLoaded: true,
+      nowMs: nowBefore,
+    });
+    const missed = items.find((i) => i.kind === "guide_confirm_missed");
+    assert.ok(missed);
+    assert.equal(missed.detail, "Jordan · Sarah M.");
+    assert.doesNotMatch(missed.detail, /Sarah M\.\s*·\s*Sarah M\./);
+    const segments = missed.detail.split(" · ");
+    assert.equal(new Set(segments.map((s) => s.toLowerCase())).size, segments.length);
+
+    const withSearch = collectNeedsAttention({
+      bookings: [booking],
+      attendanceByBooking: { "b-miss": assignment },
+      assignmentsLoaded: true,
+      offerCountByBooking: { "b-miss": 4 },
+      nowMs: nowBefore,
+    }).find((i) => i.kind === "guide_confirm_missed");
+    assert.equal(withSearch.detail, "Jordan · Sarah M. · 4 eligible Guides offered");
+    const searchSegments = withSearch.detail.split(" · ");
+    assert.equal(new Set(searchSegments.map((s) => s.toLowerCase())).size, searchSegments.length);
+
+    const otherGuide = collectNeedsAttention({
+      bookings: [{ ...booking, id: "b-other", student_first_name: "Ava", tutor_display_name: "Chidi Okeke" }],
+      attendanceByBooking: { "b-other": { ...assignment, booking_id: "b-other" } },
+      assignmentsLoaded: true,
+      nowMs: nowBefore,
+    }).find((i) => i.kind === "guide_confirm_missed");
+    assert.equal(otherGuide.detail, "Ava · Chidi Okeke");
+    assert.equal(uniqueAttentionDetail(["Ava", "Chidi Okeke", "Chidi Okeke"]), "Ava · Chidi Okeke");
+  });
+
   it("does not permanently flag historical notification or recording failures", () => {
     const items = collectNeedsAttention({
       bookings: [
@@ -246,7 +300,7 @@ describe("Management Control Center — routes and authorization", () => {
     assert.match(overviewUi, /Guides active/);
     assert.match(overviewUi, /Needs attention/);
     assert.match(overviewUi, /Outstanding Guide pay/);
-    assert.match(overviewUi, /Everything is running normally/);
+    assert.match(overviewUi, /No issues need attention/);
     assert.match(overviewUi, /managementDateLabel/);
     assert.match(overviewUi, /presentNeedsAttention/);
     assert.match(overviewUi, /browserTimezone/);

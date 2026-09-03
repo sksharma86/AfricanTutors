@@ -15,4 +15,9 @@ declare module "@/lib/management-visual-fixture.mjs" {
     nowMs: number;
     timeZone: string;
   };
+  export function managementIncidentHistoryFixture(now?: Date): {
+    incidents: unknown[];
+    nowMs: number;
+    timeZone: string;
+  };
 }
