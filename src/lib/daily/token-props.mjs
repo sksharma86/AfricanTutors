@@ -13,6 +13,10 @@
  * Only admins are `is_owner`; their recording chrome is left unset so existing
  * admin support behavior is preserved.
  *
+ * Camera starts on (`start_video_off: false`) for every role. Daily cannot
+ * require a camera to stay on via token permissions — `canSend` can only
+ * withhold video. In-room enforcement lives in session-room + camera-presence.
+ *
  * Recording is composed 720p (cost-aware, keeps screen-share/documents legible).
  * Pure ESM (+ .d.ts) so the exact token shape is unit-testable.
  */

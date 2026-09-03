@@ -3,7 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { CallParentControl } from "@/components/session/call-parent-control";
+import {
+  classifyCameraError,
+  classifyLocalVideoTrack,
+  localVideoTrackFromParticipants,
+  nextCameraPresenceAction,
+} from "@/lib/daily/camera-presence.mjs";
 import type { SessionInfo } from "@/lib/session-service";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { customerBookingStatus } from "@/lib/status-labels.mjs";
@@ -12,7 +19,9 @@ type Frame = {
   join: (o: { url: string; token?: string }) => Promise<unknown>;
   leave: () => Promise<unknown>;
   destroy: () => void;
-  on: (e: string, cb: () => void) => void;
+  on: (e: string, cb: (ev?: unknown) => void) => void;
+  setLocalVideo: (enabled: boolean) => void;
+  participants: () => { local?: { tracks?: { video?: unknown } } };
 };
 
 function sessionEndedForReport(info: SessionInfo): boolean {
@@ -43,6 +52,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
   const [error, setError] = useState<string | null>(null);
   const [inCall, setInCall] = useState(false);
   const [stageOpen, setStageOpen] = useState(false);
+  const [cameraWarning, setCameraWarning] = useState<{ title: string; body: string } | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<Frame | null>(null);
   const payloadRef = useRef<{ roomUrl: string; token: string } | null>(null);
@@ -97,9 +107,32 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           iframeStyle: { width: "100%", height: "100%", border: "0", borderRadius: "16px" },
         }) as unknown as Frame;
         frameRef.current = frame;
+
+        const syncCamera = (classification = classifyLocalVideoTrack(localVideoTrackFromParticipants(frame.participants()))) => {
+          const next = nextCameraPresenceAction(classification, info.role);
+          setCameraWarning(next.warning);
+          if (next.restore) {
+            try {
+              frame.setLocalVideo(true);
+            } catch {
+              /* browser / permission may refuse */
+            }
+          }
+        };
+
+        frame.on("joined-meeting", () => {
+          syncCamera();
+        });
+        frame.on("participant-updated", () => {
+          syncCamera();
+        });
+        frame.on("camera-error", () => {
+          syncCamera(classifyCameraError());
+        });
         frame.on("left-meeting", () => {
           setInCall(false);
           setStageOpen(false);
+          setCameraWarning(null);
           leaveBeacon();
           try {
             frame.destroy();
@@ -118,6 +151,7 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
       } catch {
         teardownFrame();
         setStageOpen(false);
+        setCameraWarning(null);
         setError("Could not start the video room. Please try again.");
       } finally {
         setBusy(false);
@@ -193,9 +227,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
           <div className="rounded-lg border border-forest-700/50 bg-forest-950/40 p-3 text-xs leading-5 text-ink-200">
             <p className="font-medium text-forest-200">Guide expectations</p>
             <p className="mt-1">
-              Stay present, encourage focus, redirect gently, and keep a calm study environment. Do not tutor, teach
-              lessons, or give homework answers. If you need a parent to check in physically, use Call Parent — you will
-              never see their phone number.
+              Stay present, encourage focus, redirect gently, and keep a calm study environment. Stay visible on camera
+              for the whole Study Hall. Do not tutor, teach lessons, or give homework answers. If you need a parent to
+              check in physically, use Call Parent — you will never see their phone number.
             </p>
             <div className="mt-3 max-w-sm">
               <CallParentControl bookingId={bookingId} enabled={state === "open" || inCall} />
@@ -226,6 +260,15 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
         ) : null}
 
         <div className="relative mt-6">
+          {stageOpen && cameraWarning ? (
+            <div className="mb-4">
+              <CameraRequiredBanner
+                title={cameraWarning.title}
+                body={cameraWarning.body}
+                variant={isGuide ? "guide" : "student"}
+              />
+            </div>
+          ) : null}
           <div
             ref={containerRef}
             data-daily-mount="true"
@@ -241,7 +284,9 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
               {state === "open" ? (
                 <>
                   <h2 className="font-display text-xl font-semibold text-white">You&apos;re ready to join</h2>
-                  <p className="mt-1 text-sm text-ink-300">Camera, microphone, and screen sharing are available in the room.</p>
+                  <p className="mt-1 text-sm text-ink-300">
+                    Camera is required during Study Hall. You can mute your microphone. Screen sharing stays available.
+                  </p>
                   {info.videoConfigured === false ? (
                     <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
                       Video service is not configured in this environment.
