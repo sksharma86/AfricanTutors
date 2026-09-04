@@ -120,7 +120,10 @@ function layout(heading, paragraphsHtml, cta) {
     : "";
   return `<!doctype html><html><body style="margin:0;background:#f6f6f4;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2937">
 <div style="max-width:560px;margin:0 auto;padding:24px">
-  <div style="font-weight:700;letter-spacing:.02em;color:#111827;font-size:18px;margin-bottom:16px">${BRAND}</div>
+  <div style="margin:0 0 16px 0;line-height:1.25">
+    <span style="font-weight:700;letter-spacing:-0.02em;color:#0c0c0b;font-size:18px">Study Hall</span>
+    <span style="font-weight:500;color:#6a665d;font-size:15px"> (at home)</span>
+  </div>
   <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px">
     <h1 style="font-size:20px;margin:0 0 12px">${esc(heading)}</h1>
     ${paragraphsHtml}

@@ -8,10 +8,12 @@ describe("Pre-launch functional UX — brand + confirmation", () => {
   it("SITE_NAME and lockup use Study Hall (at home)", () => {
     const constants = read("src/lib/constants.ts");
     const lockup = read("src/components/brand/brand-lockup.tsx");
+    const logo = read("src/components/brand/study-hall-logo.tsx");
     const card = read("src/components/auth/auth-card.tsx");
     assert.match(constants, /SITE_NAME = "Study Hall \(at home\)"/);
-    assert.match(lockup, /Study Hall[\s\S]*\(at home\)/);
-    assert.match(card, /Study Hall[\s\S]*\(at home\)/);
+    assert.match(lockup, /StudyHallLogo/);
+    assert.match(logo, /Study Hall[\s\S]*\(at home\)/);
+    assert.match(card, /StudyHallLogo/);
     assert.doesNotMatch(constants, /Study Hall at Home/);
   });
 

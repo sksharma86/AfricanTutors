@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" role="img" aria-label="Study Hall (at home)">
+  <path d="M5 14.15 16 5.45 27 14.15V26.15H5Z" stroke="#0c0c0b" stroke-width="1.65" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M16 7.35V10.55" stroke="#0c0c0b" stroke-width="1.35" stroke-linecap="round"/>
+  <path d="M13.85 10.55H18.15L17.35 12.85H14.65Z" fill="#c98816"/>
+  <path d="M14.45 12.9H17.55L19.55 19.85H12.45Z" fill="#c98816" opacity="0.28"/>
+  <path d="M10.4 19.95H21.6" stroke="#0c0c0b" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M12.15 19.95V24.15" stroke="#0c0c0b" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M19.85 19.95V24.15" stroke="#0c0c0b" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M9.15 17.55V23.55" stroke="#0c0c0b" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M9.15 21.05H12.35" stroke="#0c0c0b" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
