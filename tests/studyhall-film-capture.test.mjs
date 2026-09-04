@@ -33,4 +33,10 @@ describe("Study Hall film capture — isolation", () => {
     assert.match(room, /createFrame/);
     assert.match(room, /CallParentControl/);
   });
+
+  it("captures scenes in story order rather than object-key order", () => {
+    const capture = read("film/capture.mjs");
+    assert.match(capture, /const ORDER = \["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"\]/);
+    assert.match(capture, /const ids = only \? \[only\] : ORDER/);
+  });
 });
