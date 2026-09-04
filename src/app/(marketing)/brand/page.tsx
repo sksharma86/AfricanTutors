@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 import { StudyHallLogo } from "@/components/brand/study-hall-logo";
 import { StudyHallMark } from "@/components/brand/study-hall-mark";
+import { CustomerShell } from "@/components/dashboard/customer-shell";
+import { GuideShell } from "@/components/dashboard/guide-shell";
+import { ManagementShell } from "@/components/dashboard/management-shell";
 import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
@@ -105,6 +108,39 @@ export default function BrandVisualReviewPage() {
           </div>
         </figure>
       </Container>
+
+      <div className="mx-auto mt-12 max-w-[1360px] space-y-10 px-5 lg:px-8">
+        <section data-qa="parent-chrome">
+          <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
+            G / L · Parent portal chrome
+          </p>
+          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+            <CustomerShell>
+              <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not customer data.</div>
+            </CustomerShell>
+          </div>
+        </section>
+        <section data-qa="guide-chrome">
+          <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
+            H · Guide portal chrome
+          </p>
+          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+            <GuideShell>
+              <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not Guide data.</div>
+            </GuideShell>
+          </div>
+        </section>
+        <section data-qa="mgmt-chrome">
+          <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
+            I · Management portal chrome
+          </p>
+          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+            <ManagementShell>
+              <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not operations data.</div>
+            </ManagementShell>
+          </div>
+        </section>
+      </div>
     </section>
   );
 }

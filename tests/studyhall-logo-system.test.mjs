@@ -119,7 +119,8 @@ describe("Study Hall logo system — email, favicon, a11y", () => {
     assert.match(icon, /viewBox="0 0 32 32"/);
     assert.match(icon, /#0c0c0b/);
     assert.match(icon, /#c98816/);
-    assert.doesNotMatch(icon, /Study Hall|<image /);
+    assert.match(icon, /aria-label="Study Hall \(at home\)"/);
+    assert.doesNotMatch(icon, /<text |<image /);
     assert.match(apple, /width: 180/);
     assert.match(layout, /icon\.svg/);
     assert.match(layout, /applicationName: SITE_NAME/);
