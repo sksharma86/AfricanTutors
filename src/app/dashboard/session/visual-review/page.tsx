@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { requireUser } from "@/lib/auth";
 import { cameraWarningCopy } from "@/lib/daily/camera-presence.mjs";
@@ -29,10 +30,13 @@ export default async function SessionCameraVisualReviewPage({
     <div className="min-h-full bg-[#0b0d10] px-4 py-8 sm:px-6">
       <p className="sr-only">Visual review fixture. Not a live Study Hall.</p>
       <div className="mx-auto max-w-5xl overflow-hidden rounded-[20px] border border-white/10 bg-[#12141a]">
-        <div className="border-b border-white/10 px-5 py-5 sm:px-6">
-          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-white">Study Hall</h1>
-          <p className="mt-1 text-sm text-ink-300">Visual review · camera presence</p>
+        <div className="flex items-start gap-3 border-b border-white/10 px-5 py-5 sm:px-6">
+          <StudyHallMark size={36} variant="dark" className="mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold text-white">Study Hall</h1>
+            <p className="mt-1 text-sm text-ink-300">Visual review · camera presence</p>
+          </div>
         </div>
         <div className="p-5 sm:p-6">
           {scene === "guide-warning" ? (

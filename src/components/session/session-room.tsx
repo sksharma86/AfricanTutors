@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { CallParentControl } from "@/components/session/call-parent-control";
 import {
@@ -196,21 +197,24 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
   return (
     <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#12141a]">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 px-5 py-5 sm:px-6">
-        <div>
-          <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
-          <p className="mt-1 text-sm text-ink-300">
-            {isGuide
-              ? Array.isArray(info.child_names) && info.child_names.length > 1
-                ? "Children"
-                : "Child"
-              : "Guide"}
-            : {info.counterpart ?? "—"}
-          </p>
-          {isGuide && Array.isArray(info.child_names) && info.child_names.length > 1 ? (
-            <p className="mt-0.5 text-sm text-ink-400">{info.child_names.length} children</p>
-          ) : null}
-          <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
+        <div className="flex items-start gap-3">
+          <StudyHallMark size={36} variant="dark" className="mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
+            <p className="mt-1 text-sm text-ink-300">
+              {isGuide
+                ? Array.isArray(info.child_names) && info.child_names.length > 1
+                  ? "Children"
+                  : "Child"
+                : "Guide"}
+              : {info.counterpart ?? "—"}
+            </p>
+            {isGuide && Array.isArray(info.child_names) && info.child_names.length > 1 ? (
+              <p className="mt-0.5 text-sm text-ink-400">{info.child_names.length} children</p>
+            ) : null}
+            <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-1 text-xs font-medium text-white/80">

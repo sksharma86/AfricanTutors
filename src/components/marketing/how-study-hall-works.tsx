@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 
+import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import {
   INFOGRAPHIC_BOOK_BODY,
   INFOGRAPHIC_REPORT_BODY,
@@ -13,16 +14,7 @@ const DIVIDER = "#E6E0D7";
 const BORDER = "#E6DED1";
 
 function ProductHouseMark() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path
-        d="M5 14.2 16 5.5l11 8.7V26a1.5 1.5 0 0 1-1.5 1.5h-19A1.5 1.5 0 0 1 5 26V14.2Z"
-        stroke={GOLD}
-        strokeWidth="1.8"
-      />
-      <path d="M12.2 27.5V18.4h7.6v9.1" stroke={GOLD} strokeWidth="1.8" />
-    </svg>
-  );
+  return <StudyHallMark size={22} variant="mono" className="text-[#C99125]" />;
 }
 
 function StepCircle({ n }: { n: 1 | 2 | 3 }) {
