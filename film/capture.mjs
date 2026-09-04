@@ -414,11 +414,12 @@ const SCENES = {
   "15": scene15,
 };
 
+const ORDER = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"];
 const only = process.argv[2];
 
 dirs();
 await withBrowser(async (browser) => {
-  const ids = only ? [only] : Object.keys(SCENES);
+  const ids = only ? [only] : ORDER;
   for (const id of ids) {
     const fn = SCENES[id];
     if (!fn) throw new Error(`Unknown scene ${id}`);
