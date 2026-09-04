@@ -16,6 +16,7 @@ const SIZES = [16, 24, 32, 40, 48] as const;
 
 /**
  * Isolated logo review. Not linked from public navigation.
+ * Lives outside the marketing layout so portal chrome is not covered by the public header.
  */
 export default function BrandVisualReviewPage() {
   return (
@@ -114,7 +115,7 @@ export default function BrandVisualReviewPage() {
           <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
             G / L · Parent portal chrome
           </p>
-          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+          <div className="max-h-[32rem] overflow-hidden rounded-[20px] border border-ink-100">
             <CustomerShell>
               <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not customer data.</div>
             </CustomerShell>
@@ -124,7 +125,7 @@ export default function BrandVisualReviewPage() {
           <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
             H · Guide portal chrome
           </p>
-          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+          <div className="max-h-[32rem] overflow-hidden rounded-[20px] border border-ink-100">
             <GuideShell>
               <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not Guide data.</div>
             </GuideShell>
@@ -134,7 +135,7 @@ export default function BrandVisualReviewPage() {
           <p className="mb-3 text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
             I · Management portal chrome
           </p>
-          <div className="overflow-hidden rounded-[20px] border border-ink-100">
+          <div className="max-h-[32rem] overflow-hidden rounded-[20px] border border-ink-100">
             <ManagementShell>
               <div className="px-6 py-10 text-sm text-ink-500">Chrome review only. Not operations data.</div>
             </ManagementShell>

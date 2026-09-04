@@ -39,6 +39,3 @@ export const DESK_LEG_R = "M19.85 19.95V24.15";
 export const CHAIR_BACK = "M9.15 17.55V23.55";
 export const CHAIR_SEAT = "M9.15 21.05H12.35";
 
-export function compactLampVisible(size: number): boolean {
-  return size >= 20;
-}

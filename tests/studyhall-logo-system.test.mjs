@@ -134,6 +134,16 @@ describe("Study Hall logo system — email, favicon, a11y", () => {
     assert.match(logo, /Study Hall <span/);
   });
 
+  it("exposes an isolated /brand visual review outside marketing chrome", () => {
+    const page = read("src/app/brand/page.tsx");
+    assert.match(page, /StudyHallLogo/);
+    assert.match(page, /StudyHallMark/);
+    assert.match(page, /CustomerShell/);
+    assert.match(page, /GuideShell/);
+    assert.match(page, /ManagementShell/);
+    assert.match(page, /robots: \{ index: false/);
+  });
+
   it("does not rename AfricanTutors infrastructure identifiers", () => {
     const pkg = read("package.json");
     assert.match(pkg, /"name": "african-tutors"/);

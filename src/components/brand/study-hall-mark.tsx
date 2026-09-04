@@ -10,7 +10,6 @@ import {
   LAMP_SHADE,
   LIGHT_CONE,
   MARK_VIEWBOX,
-  compactLampVisible,
   markColors,
   resolveMarkDetail,
   type StudyHallMarkDetail,
@@ -62,7 +61,7 @@ export function StudyHallMark({
       />
       {resolved === "compact" ? (
         <>
-          {compactLampVisible(size) ? <circle cx="16" cy="11.15" r="1.35" fill={gold} /> : null}
+          <circle cx="16" cy="11.15" r="1.45" fill={gold} />
           <path d={DESK_COMPACT} stroke={line} strokeWidth={stroke} strokeLinecap="round" />
         </>
       ) : (
