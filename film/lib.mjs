@@ -105,16 +105,20 @@ export async function gotoReady(page, url) {
   await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
   await hideCaptureChrome(page);
   await page.evaluate(async () => {
-    if (document.fonts?.ready) await document.fonts.ready;
-    await Promise.all(
-      [...document.images].map((img) =>
-        img.complete
-          ? null
-          : new Promise((res) => {
-              img.onload = img.onerror = res;
-            }),
+    const timeout = (ms) => new Promise((res) => setTimeout(res, ms));
+    if (document.fonts?.ready) await Promise.race([document.fonts.ready, timeout(2500)]);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.onload = img.onerror = res;
+              }),
+        ),
       ),
-    );
+      timeout(4000),
+    ]);
   });
   await page.waitForTimeout(900);
 }
