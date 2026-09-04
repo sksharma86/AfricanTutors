@@ -102,7 +102,12 @@ export async function recordPage(browser, outMp4, runScene, { prepare } = {}) {
 }
 
 export async function gotoReady(page, url) {
-  await page.goto(url, { waitUntil: "networkidle", timeout: 45000 });
+  await page.goto(url, { waitUntil: "load", timeout: 45000 });
+  try {
+    await page.waitForLoadState("networkidle", { timeout: 8000 });
+  } catch {
+    /* HMR / long-poll should not block capture */
+  }
   await hideCaptureChrome(page);
   await page.evaluate(async () => {
     const timeout = (ms) => new Promise((res) => setTimeout(res, ms));

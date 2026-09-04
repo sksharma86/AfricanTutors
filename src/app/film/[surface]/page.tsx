@@ -81,6 +81,15 @@ export default async function FilmSurfacePage({
 
   const parentNow = new Date("2026-08-26T21:00:00.000Z");
   const parent = parentHomeVisualFixture(parentNow, { scene: "one-next" });
+  if (parent.next) {
+    const start = new Date(Date.now() + 22 * 3600_000);
+    parent.next = {
+      ...parent.next,
+      scheduled_start: start.toISOString(),
+      scheduled_end: new Date(start.getTime() + 60 * 60_000).toISOString(),
+      status: "confirmed",
+    };
+  }
   const guideNow = guideVisualReviewNow(new Date("2026-08-26T21:00:00Z"), "America/Chicago", 16, 0);
   const guide = guideHomeVisualFixture(guideNow, {});
   const guideRequired = guideHomeVisualFixture(guideNow, { scene: "required" });

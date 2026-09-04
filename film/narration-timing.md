@@ -8,23 +8,25 @@ Resolution: 1920×1080 · 30 fps · no audio track.
 Approximate start times assume scenes play in order with hard cuts (no extra transition pad).
 Update the “Actual” column from `manifests/scene-manifest.json` after assembly.
 
-| # | Filename | Target | Actual | Thesis beat |
-|---|----------|--------|--------|-------------|
-| 01 | 01-homework-has-changed.mp4 | ~35s | see manifest | Modern attention problem |
-| 02 | 02-ai-paradox.mp4 | ~50s | see manifest | AI paradox |
-| 03 | 03-what-study-hall-is.mp4 | ~40s | see manifest | What Study Hall is |
-| 04 | 04-parent-entry.mp4 | ~45s | see manifest | Parent experience is simple |
-| 05 | 05-booking.mp4 | ~50s | see manifest | Booking |
-| 06 | 06-guide-workstation.mp4 | ~40s | see manifest | A real human is on the other side |
-| 07 | 07-proactive-reliability.mp4 | ~35s | see manifest | Issues caught before the family |
-| 08 | 08-actual-product.mp4 | ~70s | see manifest | Live human presence |
-| 09 | 09-post-session-loop.mp4 | ~50s | see manifest | Parent gets time back, keeps visibility |
-| 10 | 10-management-reveal.mp4 | ~15s | see manifest | Simple for families / not simple underneath |
-| 11 | 11-management-control-center.mp4 | ~65s | see manifest | Exceptions, not frantic ops |
-| 12 | 12-finance-workforce.mp4 | ~40s | see manifest | Finance / Guide compensation |
-| 13 | 13-invisible-machine.mp4 | ~45s | see manifest | Technology in service of presence |
-| 14 | 14-return-to-human.mp4 | ~55s | see manifest | Return to one child, one Guide |
-| 15 | 15-final-brand.mp4 | ~15s | see manifest | Final brand hold |
+Silent master: `master/study-hall-master-silent.mp4` · **616.7s (10:17)** · no audio.
+
+| # | Filename | Target | Actual | Master start | Thesis beat |
+|---|----------|--------|--------|--------------|-------------|
+| 01 | 01-homework-has-changed.mp4 | ~35s | 41.1s | 0:00 | Modern attention problem |
+| 02 | 02-ai-paradox.mp4 | ~50s | 46.0s | 0:41 | AI paradox |
+| 03 | 03-what-study-hall-is.mp4 | ~40s | 37.6s | 1:27 | What Study Hall is |
+| 04 | 04-parent-entry.mp4 | ~45s | 40.2s | 2:05 | Parent experience is simple |
+| 05 | 05-booking.mp4 | ~50s | 41.5s | 2:45 | Booking |
+| 06 | 06-guide-workstation.mp4 | ~40s | 36.1s | 3:26 | A real human is on the other side |
+| 07 | 07-proactive-reliability.mp4 | ~35s | 38.1s | 4:03 | Issues caught before the family |
+| 08 | 08-actual-product.mp4 | ~70s | 68.0s | 4:41 | Live human presence |
+| 09 | 09-post-session-loop.mp4 | ~50s | 44.2s | 5:49 | Parent gets time back, keeps visibility |
+| 10 | 10-management-reveal.mp4 | ~15s | 15.5s | 6:33 | Simple for families / not simple underneath |
+| 11 | 11-management-control-center.mp4 | ~65s | 61.6s | 6:48 | Exceptions, not frantic ops |
+| 12 | 12-finance-workforce.mp4 | ~40s | 33.9s | 7:50 | Finance / Guide compensation |
+| 13 | 13-invisible-machine.mp4 | ~45s | 42.5s | 8:24 | Technology in service of presence |
+| 14 | 14-return-to-human.mp4 | ~55s | 54.0s | 9:06 | Return to one child, one Guide |
+| 15 | 15-final-brand.mp4 | ~15s | 16.4s | 10:00 | Final brand hold |
 
 ---
 

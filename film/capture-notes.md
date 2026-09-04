@@ -50,3 +50,12 @@ If the owner has approved dual-participant session stills, recapture 08 and 14 w
 - Playwright `recordVideo` includes navigation. Capture now prepares the page, then trims the load.
 - Next.js dev badge hidden via `devIndicators: false` and CSS.
 - `Object.keys` listed scenes 10–15 before 01–09 (integer-like keys). Capture now uses an explicit order array.
+- `networkidle` can hang under Next HMR. Capture waits for `load`, then a short networkidle timeout.
+- Writing large videos directly to `/opt/cursor/artifacts` hit store I/O errors. Recapture used `FILM_OUT=/tmp/operation-dumbo-drop`, then copied the finished package.
+- Parent Home compared fixture August times to the real clock and showed “ended.” Film-only: `parent.next` is shifted ~22 hours forward. Not a product change.
+
+## Recapture recommendations
+- Scene 08 / 14 if approved Guide+child Daily stills become available.
+- Scene 05 if you want closer to the 50s target (currently 41.5s).
+- Scene 12 if you want a longer finance hold (currently 33.9s).
+- Scene 04 if 11:14 PM as “next Study Hall” feels too late; shift the film-only offset.
