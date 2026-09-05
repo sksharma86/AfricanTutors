@@ -15,6 +15,7 @@ const MARKETING_FILES = [
   "src/app/(marketing)/faq/page.tsx",
   "src/app/(marketing)/how-it-works/page.tsx",
   "src/app/(marketing)/about/page.tsx",
+  "src/app/(marketing)/the-study-hall-hour/page.tsx",
   "src/app/(marketing)/contact/page.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/live-studyhall.tsx",
@@ -29,6 +30,12 @@ const MARKETING_FILES = [
   "src/components/marketing/faq.tsx",
   "src/components/marketing/product-showcase.tsx",
   "src/components/marketing/product-visuals.tsx",
+  "src/components/marketing/study-hall-hour-section.tsx",
+  "src/components/marketing/study-hall-method.tsx",
+  "src/components/marketing/parent-relief.tsx",
+  "src/components/marketing/study-hall-365.tsx",
+  "src/components/marketing/human-difference.tsx",
+  "src/components/marketing/week-rhythm.tsx",
   "src/components/layout/navbar.tsx",
   "src/components/layout/mobile-menu.tsx",
   "src/components/layout/footer.tsx",
@@ -109,7 +116,7 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   it("mobile navigation is accessible and auth-aware (item 17)", () => {
     assert.match(mobile, /aria-expanded/);
     assert.match(mobile, /aria-label/);
-    assert.match(mobile, /md:hidden/);
+    assert.match(mobile, /lg:hidden|md:hidden/);
     assert.match(mobile, /isAuthed/);
   });
 });

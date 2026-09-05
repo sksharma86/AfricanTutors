@@ -30,12 +30,14 @@ const PUBLIC_MARKETING = [
   "src/app/(marketing)/faq/page.tsx",
   "src/app/(marketing)/how-it-works/page.tsx",
   "src/app/(marketing)/about/page.tsx",
+  "src/app/(marketing)/the-study-hall-hour/page.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/household-value.tsx",
   "src/components/marketing/how-study-hall-works.tsx",
   "src/components/marketing/pricing-section.tsx",
   "src/components/marketing/why-african-tutors.tsx",
   "src/components/marketing/habit-building.tsx",
+  "src/components/marketing/study-hall-365.tsx",
   "src/components/marketing/cta-section.tsx",
   "src/lib/faq.ts",
   "src/lib/household-pricing-copy.mjs",
@@ -45,39 +47,32 @@ function marketingText() {
   return PUBLIC_MARKETING.map(read).join("\n");
 }
 
-function dollarThreeContexts(text) {
+function dollarContexts(text, re) {
   const out = [];
-  const re = /\$3(?:\.33)?/g;
   let m;
   while ((m = re.exec(text))) {
-    out.push(text.slice(Math.max(0, m.index - 80), Math.min(text.length, m.index + 80)));
+    out.push(text.slice(Math.max(0, m.index - 90), Math.min(text.length, m.index + 90)));
   }
   return out;
 }
 
 describe("Household marketing — homepage placement and compact value", () => {
-  it("hero keeps the approved headline, From $9/hour, and the restrained sibling cue", () => {
+  it("hero keeps the habit headline and the restrained sibling cue", () => {
     const hero = read("src/components/marketing/site-hero.tsx");
     const page = read("src/app/(marketing)/page.tsx");
-    assert.match(hero, /Homework gets done/);
-    assert.match(hero, /You get your evening back/);
-    assert.match(hero, /PREPAID_FROM_HOURLY_USD/);
+    assert.match(hero, /Make studying a habit/);
     assert.match(hero, /HERO_HOUSEHOLD_CUE/);
     assert.equal(HERO_HOUSEHOLD_CUE, "Up to 3 siblings can join one Study Hall.");
-    assert.match(read("src/lib/pricing.ts"), /PREPAID_FROM_HOURLY_USD = 9/);
-    assert.match(page, /<HouseholdValue/);
     assert.match(page, /<SiteHero/);
+    assert.match(page, /<StudyHall365/);
     const heroIdx = page.indexOf("<SiteHero");
     const whyIdx = page.indexOf("<WhyStudyHall");
-    const householdIdx = page.indexOf("<HouseholdValue");
-    const howIdx = page.indexOf("<HowStudyHallWorks");
-    assert.ok(heroIdx < whyIdx, "Before / After follows the hero");
-    assert.ok(whyIdx < householdIdx, "Household follows Before / After");
-    assert.ok(householdIdx < howIdx, "Household precedes How Study Hall Works");
-    assert.doesNotMatch(page.slice(heroIdx, whyIdx), /<HouseholdValue/);
+    const hourIdx = page.indexOf("<StudyHallHourSection");
+    assert.ok(heroIdx < whyIdx, "Parent problem follows the hero");
+    assert.ok(whyIdx < hourIdx, "Study Hall Hour follows the parent problem");
   });
 
-  it("household headline emphasizes up to 3 siblings, not a second hero", () => {
+  it("household copy emphasizes up to 3 siblings, not a second hero", () => {
     const band = read("src/components/marketing/household-value.tsx");
     assert.equal(HOUSEHOLD_VALUE_EYEBROW, "One Study Hall. One price.");
     assert.equal(HOUSEHOLD_VALUE_HEADLINE, "Up to 3 siblings can join together.");
@@ -90,61 +85,55 @@ describe("Household marketing — homepage placement and compact value", () => {
     assert.doesNotMatch(band, /ChildMarks|1 child|2 siblings|3 siblings/);
     assert.doesNotMatch(band, /Same Study Hall price/);
     assert.doesNotMatch(band, /<Image|grid-cols-3|rounded-\[22px\]|shadow-/);
-    assert.doesNotMatch(band, /transform:\s*scale|scale-\[/);
-    assert.doesNotMatch(band, /text-3xl|text-4xl|text-5xl|min-h-\[|py-16|py-12/);
     assert.doesNotMatch(band, /\$3|\$3\/hour|per child\/hour/);
-    assert.doesNotMatch(band, /Built for big families|for families with multiple children/i);
     assert.deepEqual(
       HOUSEHOLD_VALUE_STEPS.map((s) => s.count),
       ["1 child", "2 siblings", "3 siblings"],
     );
     assert.ok(HOUSEHOLD_VALUE_STEPS.every((s) => s.price === "Same Study Hall price"));
-    assert.match(band, /overflow-x-hidden/);
-    assert.match(band, /pb-5/);
   });
 });
 
 describe("Household marketing — pricing claims", () => {
-  it("keeps $12 / $10 / $9 and From $9/hour as the universal floor", () => {
-    const pricing = read("src/components/marketing/pricing-section.tsx");
-    assert.match(pricing, /AS_LOW_AS_LABEL/);
-    assert.match(read("src/lib/pricing.ts"), /AS_LOW_AS_LABEL = `As low as \$\$\{PREPAID_FROM_HOURLY_USD\}\/hour`/);
+  it("keeps authoritative backend package constants unchanged", () => {
     assert.match(read("src/lib/pricing.ts"), /PAYG_PRICE_USD = 12/);
     assert.match(read("src/lib/pricing.ts"), /PREPAID_FROM_HOURLY_USD = 9/);
     assert.equal(PACKAGE_14H_PRICE_CENTS, 14000);
     assert.equal(PACKAGE_28H_PRICE_CENTS, 25200);
     assert.equal(PACKAGE_14H_MINUTES, 840);
     assert.equal(PACKAGE_28H_MINUTES, 1680);
-    assert.match(read("src/components/marketing/site-hero.tsx"), /From \$\{PREPAID_FROM_HOURLY_USD\}\/hour/);
   });
 
-  it("shows household economics without making $3 the primary price", () => {
+  it("shows Study Hall 365 household economics without making $1.60 the primary price", () => {
     assert.equal(FAMILY_VALUE_EYEBROW, "One price. Up to three siblings.");
     assert.match(FAMILY_VALUE_BODY, /no additional cost per child/);
     assert.deepEqual([...FAMILY_VALUE_MATH], [
-      "Pay as you go · $12/hour · with 3 children: $4 per child/hour",
-      "14 hours · $10/hour · with 3 children: about $3.33 per child/hour",
-      "28 hours · $9/hour · with 3 children: $3 per child/hour",
+      "Study Hall 365 · $149/month · one Study Hall available each calendar day",
+      "In a 31-day month at daily use: about $4.81 per Study Hall",
+      "With three siblings in that same Study Hall: about $1.60 per child-hour",
     ]);
     assert.match(FAMILY_VALUE_RATE, /three siblings/);
-    assert.match(FAMILY_VALUE_RATE, /\$3 per child\/hour/);
-    const pricing = read("src/components/marketing/pricing-section.tsx");
-    assert.match(pricing, /FAMILY_VALUE_MATH/);
-    assert.doesNotMatch(pricing, /From \$3|Study Hall from \$3|Starting at \$3/);
+    assert.match(FAMILY_VALUE_RATE, /\$1\.60 per child-hour/);
+    const flagship = read("src/components/marketing/study-hall-365.tsx");
+    assert.match(flagship, /FAMILY_VALUE_MATH/);
+    assert.doesNotMatch(flagship, /From \$1\.60|Starting at \$1\.60/);
   });
 
-  it("every general-site $3 claim is immediately qualified by three children / siblings", () => {
-    const contexts = dollarThreeContexts(marketingText());
-    assert.ok(contexts.length >= 2, "expected qualified $3 household math on the public site");
+  it("every general-site $1.60 / $4.81 claim is qualified by 31-day or three-sibling use", () => {
+    const text = marketingText();
+    const contexts = [
+      ...dollarContexts(text, /\$1\.60/g),
+      ...dollarContexts(text, /\$4\.81/g),
+    ];
+    assert.ok(contexts.length >= 2, "expected qualified 365 household math on the public site");
     for (const ctx of contexts) {
       assert.match(
         ctx,
-        /3 children|three children|three siblings|three kids|3 siblings/i,
-        `unqualified $3 context: ${ctx}`,
+        /31-day|31 days|three siblings|3 siblings|three children|three kids/i,
+        `unqualified rate context: ${ctx}`,
       );
-      assert.doesNotMatch(ctx, /From \$3\/hour|Study Hall from \$3|as little as \$3 per child, per hour(?! when)/i);
     }
-    assert.doesNotMatch(marketingText(), /From \$3\/hour|Starting at \$3\/hour|Study Hall from \$3/);
+    assert.doesNotMatch(text, /From \$1\.60\/hour|Starting at \$1\.60/);
   });
 
   it("does not imply one free Study Hall per child", () => {
@@ -197,15 +186,15 @@ describe("Household marketing — FAQ, How it works, booking", () => {
     const text = marketingText();
     assert.doesNotMatch(text, /group session|classroom|cohort|per-seat|student slot|shared tutor/i);
     assert.doesNotMatch(text, /Built for big families|Study Hall is for families with multiple children/);
-    assert.match(read("src/components/marketing/site-hero.tsx"), /keeps your child focused/);
-    assert.match(read("src/components/marketing/why-african-tutors.tsx"), /Less checking\. More breathing room/);
+    assert.match(read("src/components/marketing/site-hero.tsx"), /HERO_HOUSEHOLD_CUE/);
+    assert.match(read("src/components/marketing/why-african-tutors.tsx"), /Academic work now competes/);
   });
 
   it("campaign copy is reusable and not the homepage hero", () => {
-    assert.equal(MULTI_CHILD_CAMPAIGN.headline, "Three kids. Three sets of homework. One Study Hall.");
+    assert.equal(MULTI_CHILD_CAMPAIGN.headline, "Three kids. One Study Hall. One price.");
     assert.match(MULTI_CHILD_CAMPAIGN.price, /three kids/);
-    assert.match(MULTI_CHILD_CAMPAIGN.price, /\$3 each per hour/);
-    assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /Three kids\. Three sets of homework/);
+    assert.match(MULTI_CHILD_CAMPAIGN.price, /\$1\.60/);
+    assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /Three kids\. One Study Hall/);
     assert.doesNotMatch(read("src/app/(marketing)/page.tsx"), /MULTI_CHILD_CAMPAIGN/);
   });
 });

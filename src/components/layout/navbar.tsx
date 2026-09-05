@@ -26,7 +26,7 @@ export async function Navbar() {
       <Container size="wide" className="flex h-14 items-center justify-between gap-4 sm:h-16">
         <BrandLockup priority variant="product" />
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-5 lg:flex xl:gap-7">
           {PUBLIC_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -38,7 +38,7 @@ export async function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {user ? (
             <>
               <LinkButton href={dashboardHref} variant="ghost" size="sm">

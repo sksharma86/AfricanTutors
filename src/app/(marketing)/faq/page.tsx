@@ -8,7 +8,7 @@ import { FAQ_ITEMS } from "@/lib/faq";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers about Study Hall (at home): how it works, Guides, pricing, the free session, Call Parent, recordings, and more.",
+    "Answers about Study Hall (at home): the Study Hall Hour, Guides, pricing, the free session, Call Parent, recordings, and more.",
   alternates: { canonical: "/faq" },
 };
 

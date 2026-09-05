@@ -11,7 +11,7 @@ import { FREE_TRIAL_CTA } from "@/lib/pricing";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "How live Study Hall works — from booking to report, including Call Parent and 60-day recordings.",
+    "How live Study Hall works — choose a time, Plan, Focus, Finish, then a Guide report and 60-day recording.",
 };
 
 export default function HowItWorksPage() {
@@ -19,15 +19,20 @@ export default function HowItWorksPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         eyebrow="How it works"
-        title="Book. Study Hall. Done."
-        description="We handle matching, scheduling, and the live session. Guides supervise and encourage — they do not tutor. You get reports, recordings, and Call Parent when your child needs you."
+        title="Choose a time. Use the hour."
+        description="Pick a day that works. Your child joins from home. The hour follows Plan, Focus, and Finish. You get a report, a recording, and the option to do it again."
       />
 
       <HowStudyHallWorks showHeadline={false} />
 
       <Container size="wide" className="pb-10">
         <div className="max-w-2xl border-t border-ink-100 pt-10">
-          <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink-900">One Study Hall for the household</h2>
+          <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink-900">Then repeat, when it helps</h2>
+          <p className="mt-3 text-[15px] leading-7 text-ink-500">
+            Consistency is how an hour becomes a routine. That does not mean every family uses Study
+            Hall every day, or at the same time. Book the days that fit. Skip the ones that don’t.
+          </p>
+          <h2 className="mt-10 text-xl font-semibold tracking-[-0.03em] text-ink-900">One Study Hall for the household</h2>
           <p className="mt-3 text-[15px] leading-7 text-ink-500">{HOW_IT_WORKS_HOUSEHOLD}</p>
           <h2 className="mt-10 text-xl font-semibold tracking-[-0.03em] text-ink-900">Fully managed</h2>
           <p className="mt-3 text-[15px] leading-7 text-ink-500">

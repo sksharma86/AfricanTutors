@@ -32,12 +32,11 @@ describe("Parent communication safety + homepage preview", () => {
     const portal = read("src/components/marketing/product-showcase.tsx");
     assert.match(portal, /parent-app/);
     assert.match(portal, /#f6f1e8|#161c18/);
-    assert.match(portal, /Next Study Hall/);
+    assert.match(portal, /Tonight’s Study Hall|Tonight's Study Hall/);
     assert.match(portal, /Join Study Hall/);
     assert.match(portal, /PARENT_PORTAL_NAV/);
-    assert.match(portal, /Strong routine/);
-    assert.match(portal, /11 hours/);
-    assert.match(portal, /Buy hours &amp; save/);
+    assert.match(portal, /WeekRhythm/);
+    assert.doesNotMatch(portal, /Buy hours/);
     assert.doesNotMatch(portal, /bg-\[#f4f5f7\]/);
     assert.doesNotMatch(portal, /bg-ink-900 px-6/);
     assert.doesNotMatch(portal, /Hi Priya/);

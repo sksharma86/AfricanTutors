@@ -91,17 +91,6 @@ function VideoPlayerIcon() {
   );
 }
 
-function PeopleIcon() {
-  return (
-    <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
-      <circle cx="17" cy="15" r="5.5" stroke={GOLD} strokeWidth="2" />
-      <path d="M7.5 32.5c1.4-6 5-9 9.5-9s8.1 3 9.5 9" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
-      <circle cx="30.5" cy="14.5" r="4.5" stroke={GOLD} strokeWidth="2" />
-      <path d="M29 23.5c4.2.3 7.2 3.2 8.5 8.5" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function ShieldIcon() {
   return (
     <svg width="40" height="42" viewBox="0 0 40 42" fill="none" aria-hidden="true">
@@ -164,13 +153,19 @@ function TrustFooter() {
         <ShieldIcon />
         <span className="h-px w-[120px] lg:w-[300px]" style={{ backgroundColor: GOLD }} />
       </div>
-      <p className="mt-3 text-center text-[16px] leading-[1.45] text-[#222] lg:mt-2 lg:text-[16px] lg:whitespace-nowrap">
-        <strong className="font-bold text-ink">Safe. Structured. Reliable.</strong>{" "}
+      <p className="mt-3 text-center text-[16px] leading-[1.45] text-[#222] lg:mt-2 lg:text-[16px]">
+        <strong className="font-bold text-ink">The subject changes. The routine doesn’t.</strong>{" "}
         Vetted Guides, recorded sessions, and parent contact when needed.
       </p>
     </div>
   );
 }
+
+const METHOD = [
+  { title: "Plan", body: "What needs to get done this hour?" },
+  { title: "Focus", body: "The child works. The Guide stays present." },
+  { title: "Finish", body: "What got done, and what comes next?" },
+] as const;
 
 export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: boolean }) {
   return (
@@ -195,20 +190,18 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           </div>
           {showHeadline ? (
             <h2
-              data-phrase="Book. Study Hall. Done."
-              className="mt-4 text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink lg:mt-3 lg:text-[56px] lg:leading-[1.02] lg:whitespace-nowrap"
+              data-phrase="Choose a time. Use the hour."
+              className="mt-4 text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink lg:mt-3 lg:text-[56px] lg:leading-[1.02]"
             >
-              Book.
-              <br className="lg:hidden" /> Study Hall.
-              <br className="lg:hidden" /> Done.
+              Choose a time.
+              <br className="lg:hidden" /> Use the hour.
             </h2>
           ) : null}
-          <p className="mt-3.5 max-w-[34rem] text-[18px] font-medium leading-[1.45] text-[#444] lg:mt-2.5 lg:max-w-none lg:text-[21px] lg:font-normal">
-            Simple for parents. Focused for kids. Real support from a live Guide.
+          <p className="mt-3.5 max-w-[36rem] text-[18px] font-medium leading-[1.45] text-[#444] lg:mt-2.5 lg:max-w-none lg:text-[21px] lg:font-normal">
+            Pick a day. Your child joins. Plan, focus, finish. Then do it again when it helps.
           </p>
         </div>
 
-        {/* Desktop flowchart */}
         <div className="mt-8 hidden lg:mt-6 lg:grid lg:grid-cols-[23%_3%_48%_3%_23%] lg:items-start" data-qa="hshw-desktop">
           <div className="flex flex-col items-center" data-qa="hshw-book">
             <StepCircle n={1} />
@@ -219,7 +212,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               <FlowItem
                 iconBg="#FBF3E3"
                 icon={<CalendarClockIcon />}
-                title="Choose your time."
+                title="Choose a day and time."
                 body={INFOGRAPHIC_BOOK_BODY}
                 matchHeight
               />
@@ -247,21 +240,30 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
               <span className="absolute left-1 top-0 xl:left-2">
                 <StepCircle n={2} />
               </span>
-              <StageHeading>Study Hall</StageHeading>
+              <StageHeading>The Hour</StageHeading>
             </div>
             <div className="mt-5 flex items-center justify-center gap-4">
               <span className="h-px w-[48px]" style={{ backgroundColor: GOLD }} />
               <p className="text-[16px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
-                LIVE GUIDE PRESENCE
+                PLAN · FOCUS · FINISH
               </p>
               <span className="h-px w-[48px]" style={{ backgroundColor: GOLD }} />
+            </div>
+
+            <div className="mt-4 grid w-full grid-cols-3 gap-2 px-2">
+              {METHOD.map((step) => (
+                <div key={step.title} className="rounded-[14px] bg-white/80 px-2 py-3 text-center">
+                  <p className="text-[14px] font-bold uppercase tracking-[0.04em] text-ink">{step.title}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-[#333]">{step.body}</p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-4 grid w-full grid-cols-2 gap-x-8 xl:mt-5 xl:gap-x-12">
               <div className="relative col-span-2 grid grid-cols-2 gap-x-8 xl:gap-x-12">
                 <Image
                   src="/images/marketing/studyhall-hero-desk.webp"
-                  alt="A school-age child seated at a desk, focused on homework"
+                  alt="A school-age child seated at a desk during focused academic time"
                   width={238}
                   height={192}
                   data-qa="hshw-child-photo"
@@ -295,23 +297,15 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 THEIR GUIDE
               </p>
               <p className="mx-auto mt-2 max-w-[16rem] text-center text-[16px] leading-[1.4] text-[#222]">
-                Works independently on homework or studying.
+                Works independently on the academic work they brought.
               </p>
               <p className="mx-auto mt-2 max-w-[17rem] text-center text-[16px] leading-[1.4] text-[#222]">
-                Stays present with encouragement and redirection to keep the session focused and moving.
+                Stays present with encouragement and redirection to keep the hour focused and moving.
               </p>
             </div>
 
             <div className="mt-3.5 h-px w-[88%]" style={{ backgroundColor: DIVIDER }} />
-            <div className="mt-3 flex items-center justify-center gap-2.5">
-              <span className="inline-flex lg:[&>svg]:size-9">
-                <PeopleIcon />
-              </span>
-              <div className="text-left">
-                <p className="text-[18px] font-bold leading-tight text-ink">Focused time. Real progress.</p>
-                <p className="mt-0.5 text-[15px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
-              </div>
-            </div>
+            <p className="mt-3 px-4 text-center text-[16px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
           </div>
 
           <div className="flex items-center justify-center self-stretch" aria-hidden="true">
@@ -321,13 +315,13 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           <div className="flex flex-col items-center" data-qa="hshw-report">
             <StepCircle n={3} />
             <div className="mt-2">
-              <StageHeading>Report</StageHeading>
+              <StageHeading>After</StageHeading>
             </div>
             <div className="mt-7 w-full">
               <FlowItem
                 iconBg="#EAF4F8"
                 icon={<DocumentCheckIcon />}
-                title="Session report."
+                title="Guide report."
                 body={INFOGRAPHIC_REPORT_BODY}
                 matchHeight
               />
@@ -342,28 +336,27 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           </div>
         </div>
 
-        {/* Mobile flowchart */}
         <div className="mt-8 flex flex-col items-center lg:hidden" data-qa="hshw-mobile">
           <div className="flex w-full flex-col items-center" data-qa="hshw-mobile-book">
-          <StepCircle n={1} />
-          <div className="mt-2.5">
-            <StageHeading>Book</StageHeading>
-          </div>
-          <div className="mt-6 w-full space-y-6">
-            <FlowItem
-              iconBg="#FBF3E3"
-              icon={<CalendarClockIcon />}
-              title="Choose your time."
-              body={INFOGRAPHIC_BOOK_BODY}
-            />
-            <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
-            <FlowItem
-              iconBg="#EAF4F8"
-              icon={<LaptopUserIcon />}
-              title="Join from your Parent Portal."
-              body="When it’s time, open your Parent Portal and join Study Hall."
-            />
-          </div>
+            <StepCircle n={1} />
+            <div className="mt-2.5">
+              <StageHeading>Book</StageHeading>
+            </div>
+            <div className="mt-6 w-full space-y-6">
+              <FlowItem
+                iconBg="#FBF3E3"
+                icon={<CalendarClockIcon />}
+                title="Choose a day and time."
+                body={INFOGRAPHIC_BOOK_BODY}
+              />
+              <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
+              <FlowItem
+                iconBg="#EAF4F8"
+                icon={<LaptopUserIcon />}
+                title="Join from your Parent Portal."
+                body="When it’s time, open your Parent Portal and join Study Hall."
+              />
+            </div>
           </div>
 
           <div className="my-6" aria-hidden="true">
@@ -378,18 +371,26 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
             <div className="flex flex-col items-center">
               <StepCircle n={2} />
               <div className="mt-2.5">
-                <StageHeading>Study Hall</StageHeading>
+                <StageHeading>The Hour</StageHeading>
               </div>
               <div className="mt-6 flex w-full items-center justify-center gap-3">
                 <span className="h-px w-10" style={{ backgroundColor: GOLD }} />
-                <p className="text-[16px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
-                  LIVE GUIDE PRESENCE
+                <p className="text-[15px] font-bold uppercase tracking-[0.04em]" style={{ color: GOLD }}>
+                  PLAN · FOCUS · FINISH
                 </p>
                 <span className="h-px w-10" style={{ backgroundColor: GOLD }} />
               </div>
+              <div className="mt-4 w-full space-y-2">
+                {METHOD.map((step) => (
+                  <div key={step.title} className="rounded-[14px] bg-white/80 px-3 py-3">
+                    <p className="text-[15px] font-bold uppercase tracking-[0.04em] text-ink">{step.title}</p>
+                    <p className="mt-1 text-[15px] leading-snug text-[#333]">{step.body}</p>
+                  </div>
+                ))}
+              </div>
               <Image
                 src="/images/marketing/studyhall-hero-desk.webp"
-                alt="A school-age child seated at a desk, focused on homework"
+                alt="A school-age child seated at a desk during focused academic time"
                 width={350}
                 height={263}
                 className="mt-5 aspect-[4/3] h-auto w-full rounded-[16px] object-cover"
@@ -401,7 +402,7 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 YOUR CHILD
               </p>
               <p className="mt-3 max-w-[18rem] text-center text-[17px] leading-[1.4] text-[#222]">
-                Works independently on homework or studying.
+                Works independently on the academic work they brought.
               </p>
               <p className="my-4 text-[42px] font-medium leading-none text-ink" aria-hidden="true">
                 +
@@ -420,14 +421,10 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
                 THEIR GUIDE
               </p>
               <p className="mt-3 max-w-[20rem] text-center text-[17px] leading-[1.4] text-[#222]">
-                Stays present with encouragement and redirection to keep the session focused and moving.
+                Stays present with encouragement and redirection to keep the hour focused and moving.
               </p>
               <div className="mt-5 h-px w-[90%]" style={{ backgroundColor: DIVIDER }} />
-              <div className="mt-5 flex flex-col items-center text-center">
-                <PeopleIcon />
-                <p className="mt-2 text-[19px] font-bold text-ink">Focused time. Real progress.</p>
-                <p className="mt-1 text-[16px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
-              </div>
+              <p className="mt-5 text-center text-[16px] leading-snug text-[#333]">{INFOGRAPHIC_STUDY_BODY}</p>
             </div>
           </div>
 
@@ -436,31 +433,25 @@ export function HowStudyHallWorks({ showHeadline = true }: { showHeadline?: bool
           </div>
 
           <div className="flex w-full flex-col items-center" data-qa="hshw-mobile-report">
-          <StepCircle n={3} />
-          <div className="mt-2.5">
-            <StageHeading>Report</StageHeading>
-          </div>
-          <div className="mt-6 w-full space-y-6">
-            <FlowItem
-              iconBg="#EAF4F8"
-              icon={<DocumentCheckIcon />}
-              title="Session report."
-              body={INFOGRAPHIC_REPORT_BODY}
-            />
-            <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
-            <FlowItem
-              iconBg="#EDF5DF"
-              icon={<VideoPlayerIcon />}
-              title="Recording available."
-              body="View the full session securely in your Parent Portal."
-            />
-          </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center lg:hidden" aria-hidden="true">
-          <div className="my-6">
-            <GoldDownArrow />
+            <StepCircle n={3} />
+            <div className="mt-2.5">
+              <StageHeading>After</StageHeading>
+            </div>
+            <div className="mt-6 w-full space-y-6">
+              <FlowItem
+                iconBg="#EAF4F8"
+                icon={<DocumentCheckIcon />}
+                title="Guide report."
+                body={INFOGRAPHIC_REPORT_BODY}
+              />
+              <div className="h-px w-full" style={{ backgroundColor: DIVIDER }} />
+              <FlowItem
+                iconBg="#EDF5DF"
+                icon={<VideoPlayerIcon />}
+                title="Recording available."
+                body="View the full session securely in your Parent Portal."
+              />
+            </div>
           </div>
         </div>
 

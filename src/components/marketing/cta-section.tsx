@@ -1,6 +1,6 @@
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
+import { FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
 
 export function CtaSection({
   title,
@@ -49,7 +49,7 @@ export function CtaSection({
           </div>
           {showFinePrint ? (
             <p className="mt-5 text-sm text-white/45">
-              {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
+              {NO_CARD_REQUIRED}
             </p>
           ) : null}
         </div>

@@ -1,32 +1,32 @@
 import { BrandLockup } from "@/components/brand/brand-lockup";
-import { PARENT_NAV_ICONS, ParentIconClock, ParentIconPlay, ParentIconReports } from "@/components/dashboard/parent-icons";
+import { PARENT_NAV_ICONS, ParentIconPlay, ParentIconReports } from "@/components/dashboard/parent-icons";
 import { Reveal } from "@/components/marketing/reveal";
+import { WeekRhythm } from "@/components/marketing/week-rhythm";
 import { Container } from "@/components/ui/container";
 import { PARENT_PORTAL_NAV } from "@/lib/parent-portal.mjs";
 
 /**
- * Marketing window into the current premium Parent Portal Home.
- * Static composition only — does not import the visual-review fixture
- * or write bookings. Representative names match the isolated fixture.
+ * Marketing composition of a future routine-centered Parent Portal.
+ * Static only — not a product screenshot and not interactive.
  */
 export function ProductShowcase() {
   return (
     <section id="parent-account" className="scroll-mt-24 bg-[#eef0f3] pb-8 pt-12 sm:pb-10 sm:pt-14">
       <Container size="wide">
         <Reveal>
-          <p className="mkt-eyebrow">The parent portal</p>
+          <p className="mkt-eyebrow">Your Study Hall week</p>
           <h2 className="mkt-display mt-3 max-w-[14ch] text-4xl text-ink-900 sm:text-5xl lg:text-[3.4rem]">
-            Your evening, in one place.
+            See the week at a glance.
           </h2>
           <p className="mt-4 max-w-xl text-[15px] leading-7 text-ink-500 sm:text-[16px]">
-            See what’s next. Book. Join. Manage hours. Read the report. Watch the recording.
+            Tonight’s Study Hall. Completed days. What’s next. Reports and recordings when the hour is over.
           </p>
         </Reveal>
 
         <Reveal delay={80}>
           <div className="mx-auto mt-8 w-full max-w-full sm:mt-10 lg:max-w-[88%]">
             <p className="mb-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-400">
-              Parent Portal
+              A look at the week — marketing preview
             </p>
             <div
               aria-hidden
@@ -106,13 +106,16 @@ function ParentPortalPreview() {
             <NextHero />
           </div>
 
-          <div className="mt-3 hidden gap-2.5 sm:grid sm:grid-cols-2">
-            <RecentCard />
-            <HabitCard />
+          <div className="mt-3 rounded-[16px] bg-[var(--pp-card)] px-3 py-3 ring-1 ring-[#1c1915]/[0.05]">
+            <p className="mb-2 text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">
+              This week
+            </p>
+            <WeekRhythm compact />
           </div>
 
-          <div className="mt-3">
-            <HoursRow />
+          <div className="mt-3 hidden gap-2.5 sm:grid sm:grid-cols-2">
+            <RecentCard />
+            <UpcomingCard />
           </div>
         </div>
       </div>
@@ -125,11 +128,11 @@ function NextHero() {
     <div className="pp-hero relative overflow-hidden rounded-[18px] bg-[#161c18] px-4 py-4 text-[#F6F1E8] shadow-[var(--pp-shadow-2)] before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-[3px] before:bg-gold-400 sm:rounded-[22px] sm:px-5 sm:py-5">
       <div className="pp-hero-atmosphere" />
       <div className="relative">
-        <p className="text-[10px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Next Study Hall</p>
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Tonight’s Study Hall</p>
         <p className="mt-2 font-display text-[2.05rem] font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-[2.45rem]">
           6:30 PM
         </p>
-        <p className="mt-1.5 text-[13px] text-white/68">Tonight · 1 hr</p>
+        <p className="mt-1.5 text-[13px] text-white/68">Thursday · 60 minutes</p>
         <div className="mt-3 border-t border-white/12 pt-3">
           <p className="text-[1.05rem] font-medium tracking-[-0.02em] text-white">Jordan</p>
           <p className="mt-0.5 text-[13px] text-white/60">
@@ -149,7 +152,7 @@ function NextHero() {
 function RecentCard() {
   return (
     <div className="rounded-[16px] bg-[var(--pp-card)] px-3.5 py-3 ring-1 ring-[#1c1915]/[0.05]">
-      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Recent Study Hall</p>
+      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Completed</p>
       <p className="mt-2 text-[12.5px] text-[var(--pp-muted)]">Tue · 6:30 PM</p>
       <p className="mt-0.5 text-[13.5px] font-medium text-[var(--pp-ink)]">Jordan</p>
       <p className="text-[12.5px] text-[var(--pp-muted)]">with Guide Sarah</p>
@@ -166,36 +169,17 @@ function RecentCard() {
   );
 }
 
-function HabitCard() {
+function UpcomingCard() {
   return (
     <div className="rounded-[16px] bg-[var(--pp-card)] px-3.5 py-3 ring-1 ring-[#1c1915]/[0.05]">
-      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">This month</p>
-      <p className="mt-2 font-display text-[1.85rem] font-semibold leading-none tracking-[-0.045em] text-[var(--pp-ink)]">
-        8
-      </p>
-      <p className="mt-1 text-[12.5px] text-[var(--pp-muted)]">Study Halls completed</p>
-      <p className="mt-2 text-[13.5px] font-medium text-[var(--pp-ink)]">Strong routine.</p>
+      <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Upcoming</p>
+      <p className="mt-2 text-[12.5px] text-[var(--pp-muted)]">Fri · 6:30 PM</p>
+      <p className="mt-0.5 text-[13.5px] font-medium text-[var(--pp-ink)]">Jordan</p>
+      <p className="text-[12.5px] text-[var(--pp-muted)]">with Guide James</p>
+      <p className="mt-2 text-[13.5px] font-medium text-[var(--pp-ink)]">Scheduled.</p>
       <p className="mt-0.5 text-[12px] leading-5 text-[var(--pp-muted)]">
-        Consistency is helping focused homework time become more familiar.
+        One more hour this week. Same routine, whatever the work is.
       </p>
-    </div>
-  );
-}
-
-function HoursRow() {
-  return (
-    <div className="flex min-h-11 items-center justify-between gap-3 rounded-[14px] bg-[var(--pp-card)] px-3.5 py-2 ring-1 ring-[#1c1915]/[0.05]">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <span className="inline-flex size-7 items-center justify-center rounded-full bg-[#f3e6c4] text-[#c9a227]">
-          <ParentIconClock className="h-3.5 w-3.5" />
-        </span>
-        <p className="text-sm text-[var(--pp-ink)]">
-          <span className="font-semibold">11</span>
-          <span className="text-[var(--pp-muted)]"> hours available</span>
-          <span className="sr-only">11 hours</span>
-        </p>
-      </div>
-      <span className="shrink-0 text-[13px] font-medium text-[var(--pp-ink)]">Buy hours &amp; save →</span>
     </div>
   );
 }

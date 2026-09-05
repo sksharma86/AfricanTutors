@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 /**
- * Legacy tutoring catalog route. Study Hall is supervision across any homework —
+ * Legacy tutoring catalog route. Study Hall is focused academic time —
  * not subject-by-subject tutoring. Redirect keeps old links from 404ing.
  */
 export const metadata: Metadata = {
