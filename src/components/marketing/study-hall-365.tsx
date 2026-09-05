@@ -4,7 +4,6 @@ import {
   FAMILY_VALUE_BODY,
   FAMILY_VALUE_EYEBROW,
   FAMILY_VALUE_MATH,
-  FAMILY_VALUE_RATE,
 } from "@/lib/household-pricing-copy.mjs";
 import { STUDY_HALL_365_MONTHLY_USD } from "@/lib/public-offers";
 
@@ -49,13 +48,12 @@ export function StudyHall365() {
               {FAMILY_VALUE_EYEBROW}
             </p>
             <p className="mt-3 max-w-2xl text-[16px] leading-7 text-white/74">{FAMILY_VALUE_BODY}</p>
-            <ul className="mt-6 max-w-2xl space-y-2 text-[15px] leading-7 text-white/62">
+            <ul className="mt-6 max-w-2xl space-y-2 text-[15px] leading-7 text-white/68">
               {FAMILY_VALUE_MATH.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
-            <p className="mt-6 max-w-2xl text-[15px] leading-7 text-white/78">{FAMILY_VALUE_RATE}</p>
-            <p className="mt-3 max-w-2xl text-[13px] leading-6 text-white/42">
+            <p className="mt-6 max-w-2xl text-[13px] leading-6 text-white/42">
               Not every month has 31 days. The figures above show maximum use in a 31-day month.
             </p>
           </div>
