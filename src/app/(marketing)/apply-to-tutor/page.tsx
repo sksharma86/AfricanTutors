@@ -6,7 +6,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
   title: "Become a Guide",
-  description: "Apply to become a Study Hall (at home) Guide and help families build dependable homework routines.",
+  description: "Apply to become a Study Hall (at home) Guide and help families keep a dependable academic hour.",
 };
 
 export default function ApplyToTutorPage() {

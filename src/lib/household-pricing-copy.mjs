@@ -10,7 +10,7 @@ export const HOUSEHOLD_VALUE_EYEBROW = "One Study Hall. One price.";
 export const HOUSEHOLD_VALUE_HEADLINE = "Up to 3 siblings can join together.";
 
 export const HOUSEHOLD_VALUE_BODY =
-  "Have more than one child with homework? Put them in the same Study Hall with one live Guide. You pay for the Study Hall, not per child.";
+  "Have more than one child? Put them in the same Study Hall with one live Guide. You pay for the Study Hall, not per child.";
 
 export const HOUSEHOLD_VALUE_STEPS = Object.freeze([
   { count: "1 child", price: "Same Study Hall price" },
@@ -24,12 +24,12 @@ export const FAMILY_VALUE_BODY =
   "Up to three children from the same household can attend a Study Hall together at no additional cost per child. You pay for the Study Hall, not per child.";
 
 export const FAMILY_VALUE_RATE =
-  "With three siblings in the same Study Hall, our 28-hour package works out to $3 per child/hour.";
+  "At maximum use in a 31-day month, Study Hall 365 is about $4.81 per Study Hall — or about $1.60 per child-hour when three siblings share that hour.";
 
 export const FAMILY_VALUE_MATH = Object.freeze([
-  "Pay as you go · $12/hour · with 3 children: $4 per child/hour",
-  "14 hours · $10/hour · with 3 children: about $3.33 per child/hour",
-  "28 hours · $9/hour · with 3 children: $3 per child/hour",
+  "Study Hall 365 · $149/month · one Study Hall available each calendar day",
+  "In a 31-day month at daily use: about $4.81 per Study Hall",
+  "With three siblings in that same Study Hall: about $1.60 per child-hour",
 ]);
 
 export const FREE_STUDY_HALL_HOUSEHOLD =

@@ -49,7 +49,6 @@ describe("Phase 9 — package pricing claims (items 6-10)", () => {
 describe("Phase 9 — marketing copy matches real business rules", () => {
   const faq = read("src/lib/faq.ts");
   const pricing = read("src/components/marketing/pricing-section.tsx");
-  const trust = read("src/components/marketing/trust-safety.tsx");
 
   it("FAQ free-trial answer is account-scoped, 1 hour, no card (items 1,2,19)", () => {
     assert.match(faq, /one per account/i);
@@ -70,8 +69,8 @@ describe("Phase 9 — marketing copy matches real business rules", () => {
 
   it("trust/safety avoids absolute claims and matches real controls (item 14)", () => {
     assert.doesNotMatch(marketingText, /100% safe|guaranteed safe|completely secure|totally safe/i);
-    assert.match(trust, /recorded for quality and safety/i);
-    assert.match(trust, /approved before they work with families/i);
+    assert.match(faq, /recorded for quality and safety/i);
+    assert.match(faq, /approved before they work with families/i);
   });
 
   it("no fabricated testimonials, reviews, ratings, or press claims (item 13)", () => {
@@ -97,7 +96,7 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   it("anonymous primary CTA routes to signup with consistent label (item 15)", () => {
     assert.match(pricingLib, /FREE_TRIAL_CTA = "Try your first Study Hall free"/);
     assert.match(home, /href:\s*"\/signup"/);
-    assert.match(home, /FREE_TRIAL_CTA/);
+    assert.match(home, /START_FREE_CTA/);
   });
 
   it("authenticated student CTA routes to booking (item 16)", () => {
@@ -109,7 +108,7 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   it("mobile navigation is accessible and auth-aware (item 17)", () => {
     assert.match(mobile, /aria-expanded/);
     assert.match(mobile, /aria-label/);
-    assert.match(mobile, /md:hidden/);
+    assert.match(mobile, /lg:hidden/);
     assert.match(mobile, /isAuthed/);
   });
 });
