@@ -125,6 +125,13 @@ export function CheckoutReturnView() {
               >
                 View prepaid hours
               </Link>
+            ) : status?.purpose === "subscription" ? (
+              <Link
+                href="/dashboard/student/packages#study-hall-365"
+                className="rounded-lg border border-ink-200 px-4 py-2 text-sm font-medium text-ink-700 hover:border-ink-300"
+              >
+                View membership
+              </Link>
             ) : (
               <Link
                 href="/dashboard/student/book"

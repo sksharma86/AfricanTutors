@@ -36,6 +36,16 @@ async function must(label, result) {
   return result;
 }
 
+async function deleteWhereInOptional(admin, table, column, ids) {
+  try {
+    await deleteWhereIn(admin, table, column, ids);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (/does not exist|schema cache|Could not find the table/i.test(message)) return 0;
+    throw err;
+  }
+}
+
 async function deleteWhereIn(admin, table, column, ids) {
   if (!ids.length) return 0;
   let removed = 0;
@@ -139,6 +149,8 @@ export async function purgeApplicationDataForUsers(admin, userIds) {
   }
   if (paymentIds.length) await deleteWhereIn(admin, "refunds", "payment_id", paymentIds);
   await deleteWhereIn(admin, "refunds", "account_id", ids);
+  await deleteWhereInOptional(admin, "study_hall_365_day_usage", "account_id", ids);
+  await deleteWhereInOptional(admin, "study_hall_365_subscriptions", "account_id", ids);
   await deleteWhereIn(admin, "package_minute_ledger", "account_id", ids);
   await deleteWhereIn(admin, "dollar_credit_ledger", "account_id", ids);
   await deleteWhereIn(admin, "payments", "account_id", ids);
@@ -165,11 +177,14 @@ async function leftoverBlockers(admin, userId) {
     ["bookings", "account_id"],
     ["students", "account_id"],
     ["tutor_profiles", "approved_by"],
+    ["study_hall_365_day_usage", "account_id"],
+    ["study_hall_365_subscriptions", "account_id"],
   ];
   const found = [];
   for (const [table, column] of checks) {
     const { count, error } = await admin.from(table).select("*", { count: "exact", head: true }).eq(column, userId);
     if (error) {
+      if (/does not exist|schema cache|Could not find the table/i.test(error.message)) continue;
       found.push(`${table}.${column}: lookup failed (${error.message})`);
     } else if (count) {
       found.push(`${table}.${column}=${count}`);

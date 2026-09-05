@@ -330,15 +330,16 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
   it("Hours keeps package math, PAYG $12, and #prepaid; hides Stripe jargon", () => {
     const hours = read("src/app/dashboard/student/packages/page.tsx");
     assert.match(hours, /Hours never expire/);
-    assert.match(hours, /14 hours \/ \$140/);
-    assert.match(hours, /28 hours \/ \$252/);
-    assert.match(hours, /\$9\/hour/);
+    assert.match(hours, /10 Study Halls \/ \$100/);
+    assert.match(hours, /Study Hall 365/);
+    assert.match(hours, /\$149\/month/);
     assert.match(hours, /Pay as you go · \$12\/hour/);
     assert.match(hours, /id="prepaid"/);
     assert.match(hours, /SingleSessionCards/);
     assert.match(hours, /PackageStore/);
     assert.equal(parentPaymentPurposeLabel("package"), "Prepaid hours");
     assert.equal(parentPaymentPurposeLabel("booking"), "Study Hall session");
+    assert.equal(parentPaymentPurposeLabel("subscription"), "Study Hall 365");
     assert.equal(parentPaymentStatusLabel("requires_payment_method"), "Payment needs attention");
     assert.match(hours, /parentPaymentPurposeLabel/);
     assert.doesNotMatch(hours, /webhook|checkout session/i);

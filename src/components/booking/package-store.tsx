@@ -16,6 +16,7 @@ export interface PackageRow {
   name: string;
   minutes: number;
   price_cents: number;
+  code?: string;
 }
 
 const TECHNICAL_ERROR = /permission denied|violates|constraint|null value|relation|column|function|syntax|jwt|supabase|fetch failed|network|policy/i;
