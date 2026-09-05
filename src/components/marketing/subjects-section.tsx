@@ -16,7 +16,7 @@ export function SubjectsSection({
           <div className="max-w-2xl">
             <p className="text-sm font-semibold tracking-wide text-gold-700 uppercase">What kids work on</p>
             <h2 className="mt-3 font-display text-3xl font-semibold text-ink-900 sm:text-4xl">
-              The homework kids bring to Study Hall.
+              The work kids bring to Study Hall.
             </h2>
             <p className="mt-4 text-base leading-7 text-ink-500">
               Kids work on their own assignments while a Guide keeps them focused and accountable.

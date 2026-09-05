@@ -1,12 +1,12 @@
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
-import { AS_LOW_AS_LABEL, FREE_TRIAL_CTA, NO_CARD_REQUIRED } from "@/lib/pricing";
+import { START_FREE_CTA } from "@/lib/public-offers";
 
 export function CtaSection({
   title,
   description,
   primaryHref = "/signup",
-  primaryLabel = FREE_TRIAL_CTA,
+  primaryLabel = START_FREE_CTA,
   secondaryHref,
   secondaryLabel,
   showFinePrint = true,
@@ -48,9 +48,7 @@ export function CtaSection({
             ) : null}
           </div>
           {showFinePrint ? (
-            <p className="mt-5 text-sm text-white/45">
-              {NO_CARD_REQUIRED} {AS_LOW_AS_LABEL}.
-            </p>
+            <p className="mt-5 text-sm text-white/45">No credit card required.</p>
           ) : null}
         </div>
       </Container>

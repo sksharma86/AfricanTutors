@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { LinkButton } from "@/components/ui/button";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
-import { FREE_TRIAL_CTA } from "@/lib/pricing";
+import { START_FREE_CTA } from "@/lib/public-offers";
 
 export function MobileMenu({
   isAuthed,
@@ -21,7 +21,7 @@ export function MobileMenu({
   const close = () => setOpen(false);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         aria-expanded={open}
@@ -70,7 +70,7 @@ export function MobileMenu({
                   Sign in
                 </LinkButton>
                 <LinkButton href="/signup" variant="primary" className="w-full" onClick={close}>
-                  {FREE_TRIAL_CTA}
+                  {START_FREE_CTA}
                 </LinkButton>
               </>
             )}

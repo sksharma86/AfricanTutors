@@ -119,7 +119,7 @@ describe("Household Study Hall — marketing & FAQ", () => {
     assert.match(FAMILY_VALUE_BODY, /You pay for the Study Hall, not per child/);
     assert.equal(
       FAMILY_VALUE_RATE,
-      "With three siblings in the same Study Hall, our 28-hour package works out to $3 per child/hour.",
+      "At maximum use in a 31-day month, Study Hall 365 is about $4.81 per Study Hall — or about $1.60 per child-hour when three siblings share that hour.",
     );
     assert.doesNotMatch(pricing, /\$3\/hour(?! when)/);
     assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /\$3 per child|From \$3/i);

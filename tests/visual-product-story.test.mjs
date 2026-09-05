@@ -5,83 +5,79 @@ import { describe, it } from "node:test";
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 describe("Visual product story — homepage contracts", () => {
-  it("hero is photographic and not a fabricated portal", () => {
+  it("hero is photographic, short, and habit-first", () => {
     const hero = read("src/components/marketing/site-hero.tsx");
     assert.match(hero, /student-tutoring-session\.jpg/);
-    assert.match(hero, /Homework gets done/);
-    assert.match(hero, /See how it works/);
-    assert.match(hero, /PREPAID_FROM_HOURLY_USD/);
-    assert.doesNotMatch(hero, /HeroProductVisual/);
-    assert.doesNotMatch(hero, /Starting at \$12/);
-    assert.doesNotMatch(hero, /Kenya/);
-    assert.doesNotMatch(hero, /Study Hall \(at home\)/);
+    assert.match(hero, /Make studying a habit\./);
+    assert.match(hero, /A focused hour with a real human Guide/);
+    assert.match(hero, /First Study Hall free\. No credit card required\./);
+    assert.doesNotMatch(hero, /HeroProductVisual|ROUTINE_WEEK|Mon|Tue|Wed/);
+    assert.doesNotMatch(hero, /Starting at \$12|Study Hall 365|sibling/i);
+    assert.doesNotMatch(hero, /Homework gets done|See how it works|PREPAID_FROM_HOURLY_USD/);
+    assert.doesNotMatch(hero, /Kenya|Study Hall \(at home\)|African Tutors/);
   });
 
-  it("how Study Hall works is an editorial BOOK → STUDY HALL → REPORT infographic", () => {
-    const graphic = read("src/components/marketing/how-study-hall-works.tsx");
+  it("homepage is seven chapters, not the old infographic stack", () => {
     const page = read("src/app/(marketing)/page.tsx");
-    assert.match(page, /HowStudyHallWorks/);
+    const jsx = page.slice(page.indexOf("return"));
+    const order = [
+      "SiteHero",
+      "HourChapter",
+      "MethodChapter",
+      "WhyStudyHall",
+      "Routine365",
+      "TrustSafety",
+      "PricingSection",
+      "Faq",
+      "CtaSection",
+    ];
+    let last = -1;
+    for (const name of order) {
+      const i = jsx.indexOf(name);
+      assert.ok(i > last, `${name} must follow previous section`);
+      last = i;
+    }
+    assert.doesNotMatch(page, /HowStudyHallWorks|HouseholdValue|HabitBuilding|ProductShowcase/);
     assert.doesNotMatch(page, /LiveStudyHallDemo|TrustRow|<Steps/);
-    assert.match(graphic, /Book\. Study Hall\. Done\./);
-    assert.match(graphic, />Book</);
-    assert.match(graphic, />Study Hall</);
-    assert.match(graphic, />Report</);
-    assert.match(graphic, /Choose your time\./);
-    assert.match(graphic, /INFOGRAPHIC_BOOK_BODY/);
-    assert.match(graphic, /Join from your Parent Portal\./);
-    assert.match(graphic, /LIVE GUIDE PRESENCE/);
-    assert.match(graphic, /YOUR CHILD/);
-    assert.match(graphic, /THEIR GUIDE/);
-    assert.match(graphic, /Focused time\. Real progress\./);
-    assert.match(graphic, /INFOGRAPHIC_STUDY_BODY/);
-    assert.match(graphic, /INFOGRAPHIC_REPORT_BODY/);
-    assert.match(graphic, /Session report\./);
-    assert.match(graphic, /Recording available\./);
-    assert.match(graphic, /Parent Portal/);
-    assert.match(graphic, /Safe\. Structured\. Reliable\./);
-    assert.match(graphic, /studyhall-hero-desk\.webp/);
-    assert.match(graphic, /tutor-portrait\.jpg/);
-    assert.doesNotMatch(graphic, /Jordan|screen share|raise hand|whiteboard|chat panel/i);
-    assert.doesNotMatch(graphic, /Pick a time\.|Get the recap\./);
-    assert.match(graphic, /Book\.\s*<br[^/]*\/>\s*Study Hall\.\s*<br[^/]*\/>\s*Done\./);
-    assert.equal((graphic.match(/Book\. Study Hall\. Done\./g) || []).length, 1);
   });
 
-  it("parent portal showcase is one composition, not a four-card grid", () => {
+  it("how-it-works page is a short journey, not the hour page", () => {
+    const how = read("src/app/(marketing)/how-it-works/page.tsx");
+    const journey = read("src/components/marketing/how-it-works-journey.tsx");
+    assert.match(how, /HowItWorksJourney/);
+    assert.doesNotMatch(how, /HowStudyHallWorks|LiveStudyHallDemo|<Steps/);
+    assert.match(journey, /Choose a time/);
+    assert.match(journey, /Join/);
+    assert.match(journey, /Plan/);
+    assert.match(journey, /Focus/);
+    assert.match(journey, /Finish/);
+    assert.match(journey, /Report/);
+    assert.match(journey, /Return/);
+  });
+
+  it("parent portal showcase file remains a single composition", () => {
     const portal = read("src/components/marketing/product-showcase.tsx");
     assert.match(portal, /Next Study Hall/);
     assert.match(portal, /11 hours/);
     assert.match(portal, /View report|Recording ready|Read report/);
     assert.match(portal, /PARENT_PORTAL_NAV|Study Halls/);
     assert.match(portal, /parent-app/);
-    assert.match(portal, /#161c18|#f6f1e8/);
     assert.doesNotMatch(portal, /Matching complete|America\/Chicago|Dashboard \/ Book/);
     assert.doesNotMatch(portal, /ProductStreakCard|ProductHoursCard|sm:grid-cols-2[\s\S]*ProductReportCard/);
-    assert.doesNotMatch(portal, /bg-\[#f4f5f7\]/);
-    assert.doesNotMatch(portal, /bg-ink-900 px-6/);
-    assert.match(portal, /Parent Portal/);
-    assert.match(portal, /lg:max-w-\[88%\]/);
-    assert.match(portal, /border-\[#D8D0C4\]/);
   });
 
-  it("homepage how-it-works page no longer mounts the old steps or fake live room", () => {
-    const how = read("src/app/(marketing)/how-it-works/page.tsx");
-    assert.match(how, /HowStudyHallWorks/);
-    assert.doesNotMatch(how, /LiveStudyHallDemo|<Steps/);
-    assert.doesNotMatch(how, /from \"@\/components\/marketing\/steps\"/);
-    assert.doesNotMatch(how, /from \"@\/components\/marketing\/live-studyhall\"/);
-  });
-
-  it("advertises as low as \$9/hour and never Starting at \$12/hour", () => {
-    const pricing = read("src/lib/pricing.ts");
-    const hero = read("src/components/marketing/site-hero.tsx");
+  it("public pricing is the upcoming ladder with Start free only", () => {
+    const pricingLib = read("src/lib/pricing.ts");
+    const offers = read("src/lib/public-offers.ts");
     const section = read("src/components/marketing/pricing-section.tsx");
-    assert.match(pricing, /FREE_TRIAL_CTA = "Try your first Study Hall free"/);
-    assert.match(pricing, /PLANS_AS_LOW_AS_LABEL/);
-    assert.match(pricing, /PREPAID_FROM_HOURLY_USD = 9/);
-    assert.match(hero, /PREPAID_FROM_HOURLY_USD/);
-    assert.match(section, /AS_LOW_AS_LABEL/);
-    assert.doesNotMatch(`${hero}\n${section}`, /Starting at \$12/);
+    assert.match(pricingLib, /FREE_TRIAL_CTA = "Try your first Study Hall free"/);
+    assert.match(offers, /START_FREE_CTA = "Start free"/);
+    assert.match(section, /First Study Hall free/);
+    assert.match(section, /Study Hall 365/);
+    assert.match(section, /\$149/);
+    assert.match(section, /coming next/);
+    assert.doesNotMatch(section, /Subscribe|Buy now|href=.*365/);
+    assert.doesNotMatch(`${read("src/components/marketing/site-hero.tsx")}\n${section}`, /Starting at \$12/);
   });
 
   it("motion exists and respects reduced motion", () => {
@@ -112,9 +108,10 @@ describe("Visual product story — homepage contracts", () => {
       "src/components/marketing/pricing-section.tsx",
       "src/components/marketing/cta-section.tsx",
       "src/lib/pricing.ts",
-    ].map(read).join("\n");
+    ]
+      .map(read)
+      .join("\n");
     assert.doesNotMatch(files, /Starting at \$12/);
     assert.match(read("src/lib/pricing.ts"), /AS_LOW_AS_LABEL = `As low as \$\$\{PREPAID_FROM_HOURLY_USD\}\/hour`/);
-    assert.match(read("src/lib/pricing.ts"), /PLANS_AS_LOW_AS_LABEL/);
   });
 });

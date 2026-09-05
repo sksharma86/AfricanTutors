@@ -2,43 +2,31 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 
 const PILLARS = [
-  {
-    title: "Highly vetted Guides",
-    body: "Every Guide is reviewed and approved before they work with families.",
-  },
-  {
-    title: "Private, on-platform sessions",
-    body: "Study Halls happen inside the platform rather than through personal contact.",
-  },
-  {
-    title: "Recorded for safety",
-    body: "Sessions are recorded for quality and safety. Parents can review completed Study Halls.",
-  },
-  {
-    title: "Parent contact when needed",
-    body: "A Guide can reach you when necessary without seeing your private phone number.",
-  },
+  "Highly vetted Guides",
+  "Live camera presence",
+  "Sessions stay on the platform",
+  "Recorded — parents can review for 60 days",
+  "A short report after every Study Hall",
+  "Call Parent without revealing your number",
 ] as const;
 
 export function TrustSafety() {
   return (
-    <section className="scroll-mt-24 bg-white pb-14 pt-8 sm:pb-20 sm:pt-10">
+    <section id="trust" className="bg-[#fcfaf6] py-20 sm:py-28">
       <Container size="wide">
         <Reveal>
-          <p className="mkt-eyebrow">Trust &amp; safety</p>
-          <h2 className="mkt-display mt-3 max-w-[14ch] text-4xl text-ink-900 sm:text-5xl">
-            Supervision you can see.
+          <h2 className="mkt-display max-w-[14ch] text-4xl text-ink-900 sm:text-5xl">
+            Human presence. Visible safeguards.
           </h2>
+          <p className="mt-5 max-w-xl text-[16px] leading-7 text-ink-500">
+            AI can help a student find an answer. Study Hall helps make sure there’s still a
+            student sitting there doing the work.
+          </p>
         </Reveal>
 
-        <ul className="mt-10 divide-y divide-ink-100 border-y border-ink-100">
-          {PILLARS.map((p, i) => (
-            <Reveal key={p.title} delay={i * 50}>
-              <li className="grid gap-2 py-6 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-baseline sm:gap-10">
-                <p className="text-[15px] font-semibold tracking-[-0.02em] text-ink-900">{p.title}</p>
-                <p className="max-w-xl text-[15px] leading-7 text-ink-500">{p.body}</p>
-              </li>
-            </Reveal>
+        <ul className="mt-12 max-w-xl space-y-3 text-[16px] leading-7 text-ink-700">
+          {PILLARS.map((item) => (
+            <li key={item}>{item}</li>
           ))}
         </ul>
       </Container>

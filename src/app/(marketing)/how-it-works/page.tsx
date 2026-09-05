@@ -2,40 +2,31 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CtaSection } from "@/components/marketing/cta-section";
-import { HowStudyHallWorks } from "@/components/marketing/how-study-hall-works";
+import { HowItWorksJourney } from "@/components/marketing/how-it-works-journey";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Container } from "@/components/ui/container";
 import { HOW_IT_WORKS_HOUSEHOLD } from "@/lib/household-pricing-copy.mjs";
-import { FREE_TRIAL_CTA } from "@/lib/pricing";
+import { PUBLIC_OFFER_CTA_HREF, START_FREE_CTA } from "@/lib/public-offers";
 
 export const metadata: Metadata = {
-  title: "How It Works",
-  description:
-    "How live Study Hall works — from booking to report, including Call Parent and 60-day recordings.",
+  title: "How it works",
+  description: "Choose a time, join a 60-minute Study Hall, then plan, focus, and finish — with a report after.",
+  alternates: { canonical: "/how-it-works" },
 };
 
 export default function HowItWorksPage() {
   return (
     <div className="mkt-atmosphere">
       <PageHeader
-        eyebrow="How it works"
-        title="Book. Study Hall. Done."
-        description="We handle matching, scheduling, and the live session. Guides supervise and encourage — they do not tutor. You get reports, recordings, and Call Parent when your child needs you."
+        title="Choose a time. Join. Do the hour."
+        description="A 60-minute Study Hall with a live Guide. Then a report, a recording, and the option to come back."
       />
-
-      <HowStudyHallWorks showHeadline={false} />
-
-      <Container size="wide" className="pb-10">
-        <div className="max-w-2xl border-t border-ink-100 pt-10">
-          <h2 className="text-xl font-semibold tracking-[-0.03em] text-ink-900">One Study Hall for the household</h2>
-          <p className="mt-3 text-[15px] leading-7 text-ink-500">{HOW_IT_WORKS_HOUSEHOLD}</p>
-          <h2 className="mt-10 text-xl font-semibold tracking-[-0.03em] text-ink-900">Fully managed</h2>
-          <p className="mt-3 text-[15px] leading-7 text-ink-500">
-            Scheduling, sessions, and payments run through Study Hall (at home). Every Guide is
-            recruited, carefully vetted, and approved — you’re never left to find someone on your
-            own.
-          </p>
-          <p className="mt-6 text-sm text-ink-400">
+      <HowItWorksJourney />
+      <Container size="wide" className="pb-16 sm:pb-20">
+        <div className="max-w-xl border-t border-ink-100 pt-12">
+          <h2 className="mkt-display text-2xl text-ink-900">One price for the household</h2>
+          <p className="mt-3 text-[16px] leading-7 text-ink-500">{HOW_IT_WORKS_HOUSEHOLD}</p>
+          <p className="mt-8 text-sm text-ink-400">
             Want to become a Guide?{" "}
             <Link href="/guides/apply" className="font-medium text-ink-700 underline-offset-4 hover:underline">
               Apply here
@@ -44,13 +35,14 @@ export default function HowItWorksPage() {
           </p>
         </div>
       </Container>
-
       <CtaSection
-        title="See it for yourself."
-        description="Book a real Study Hall with a Guide — your first hour is free."
-        primaryLabel={FREE_TRIAL_CTA}
-        secondaryHref="/pricing"
-        secondaryLabel="View pricing"
+        title="Start with one free hour."
+        description="No credit card required."
+        primaryHref={PUBLIC_OFFER_CTA_HREF}
+        primaryLabel={START_FREE_CTA}
+        secondaryHref="/the-study-hall-hour"
+        secondaryLabel="The Study Hall Hour"
+        showFinePrint={false}
       />
     </div>
   );

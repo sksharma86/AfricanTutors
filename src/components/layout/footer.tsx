@@ -11,8 +11,7 @@ export function Footer() {
         <div className="max-w-sm">
           <BrandLockup variant="product" />
           <p className="mt-3 text-sm leading-6 text-ink-500">
-            Live online Study Hall for families. A highly vetted Guide keeps your child focused while
-            they do their own homework.
+            Focused academic time. Real human accountability. Better routines.
           </p>
         </div>
 

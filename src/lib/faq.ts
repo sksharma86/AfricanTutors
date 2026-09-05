@@ -1,9 +1,6 @@
 /**
- * Public FAQ content. Every answer must match the actual implemented business
- * rules (current pricing, one-free-session-per-account/household, non-expiring
- * package hours, the 24-hour cancellation policy, recorded on-platform sessions,
- * managed availability-based matching). Do not add policy the product doesn't
- * enforce. (Study Hall is homework supervision, not subject-by-subject tutoring.)
+ * Public FAQ. Answers must match implemented rules.
+ * Offer architecture is marketing presentation; 365 checkout is not live.
  */
 export interface FaqItem {
   q: string;
@@ -13,47 +10,51 @@ export interface FaqItem {
 export const FAQ_ITEMS: FaqItem[] = [
   {
     q: "What is Study Hall (at home)?",
-    a: "Live online homework supervision. A highly vetted Guide stays with your child on video while they do their own work — so they stay focused, and you get the evening back.",
+    a: "A 60-minute live Study Hall. Your child sits down to work on their academic life while a highly vetted Guide stays present on video — for accountability, encouragement, and redirection.",
   },
   {
     q: "Is this tutoring?",
-    a: "No. Study Hall (at home) provides live homework supervision and accountability rather than subject instruction.",
+    a: "No. The child does their own work. Guides do not tutor, teach lessons, provide answers, or complete assignments.",
   },
   {
-    q: "What does the Guide actually do?",
-    a: "Guides create the structure that helps kids start, stay focused, and finish their work independently.",
+    q: "What can they work on?",
+    a: "Homework, studying, reading, test preparation, projects, research, reviewing, catching up, working ahead, or school organization.",
   },
   {
-    q: "Can my child ask for homework help?",
-    a: "Children should bring their own homework and work independently. Guides may encourage them to try the next step, but they do not tutor, teach lessons, or provide answers.",
+    q: "What if my child doesn’t have homework?",
+    a: "They can read, review, prepare for a test, catch up, work ahead, or organize. Study Hall does not require an emergency.",
   },
   {
-    q: "Who are the Guides?",
-    a: "Every Guide is reviewed and approved before working with families. They stay present, encourage focus, and keep the hour moving.",
+    q: "Does my child need to be struggling in school?",
+    a: "No. Study Hall is for students across academic levels — catching up, staying current, or protecting what’s already going well. Grades 3–12.",
   },
   {
-    q: "Where do Guides work from?",
-    a: "Guides work remotely from Kenya. They’re carefully vetted and trained for Study Hall (at home). Their role is supervision, encouragement, redirection, and accountability — not tutoring.",
+    q: "Do I have to use Study Hall every day?",
+    a: "No. Study Hall 365 makes one hour available every calendar day. You choose which days to use.",
+  },
+  {
+    q: "Do I have to book the same time every day?",
+    a: "No. A consistent time can help, but days and times can change.",
+  },
+  {
+    q: "How are Guides vetted?",
+    a: "Study Hall (at home) recruits, reviews, and trains every Guide. They must be approved before they work with families. They work remotely from Kenya.",
+  },
+  {
+    q: "Are sessions recorded?",
+    a: "Yes. Sessions are recorded for quality and safety. Parents can access recordings for 60 days after the Study Hall.",
+  },
+  {
+    q: "How does the first free Study Hall work?",
+    a: "Create a parent account, add your child, and book a 60-minute Study Hall. Eligible new accounts get the first 1-hour Study Hall session free — no credit card. One per account, not one per child.",
   },
   {
     q: "How much does it cost?",
-    a: "Pay as you go is $12/hour. Prepaid routines save more: 14 hours for $140 ($10/hour), or 28 hours for $252 ($9/hour). Prepaid hours never expire.",
-  },
-  {
-    q: "Is the first session really free?",
-    a: "Yes. Your first 1-hour Study Hall session is free — a real session with a Guide, not a sales call. No credit card required. The free session is one per account.",
-  },
-  {
-    q: "How does the free first session work?",
-    a: "Create a parent account, add your child, and book a 60-minute Study Hall. Eligible new accounts get the first hour free — no credit card. The free session is one per account, not one per child.",
-  },
-  {
-    q: "How long can I access recordings?",
-    a: "Recordings stay available for 60 days after the session. They are not stored permanently.",
+    a: "Your first 60-minute Study Hall is free. Pay as you go is $12 for one hour. À la carte is $100 for 10 Study Halls that never expire. Study Hall 365 is $149/month for one hour available every calendar day. Start with the free hour — 365 checkout is not live yet.",
   },
   {
     q: "Can siblings join the same Study Hall?",
-    a: "Yes. Up to three children from the same household can join one Study Hall together at no additional cost per child. All participating children should remain visible on camera during the session. You receive a short report with feedback for each child.",
+    a: "Yes. Up to three children from the same household can join one Study Hall at no additional cost per child. All participating children should remain visible on camera. You receive feedback for each child.",
   },
   {
     q: "Can I cancel?",
@@ -61,50 +62,22 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "What equipment does my child need?",
-    a: "A computer or tablet with a camera and microphone, a reliable internet connection, and their homework. They join from home through Study Hall (at home).",
-  },
-  {
-    q: "Do I need a credit card for the free session?",
-    a: "No. The free session requires no credit card and no payment information.",
-  },
-  {
-    q: "How does Study Hall work?",
-    a: "Create a parent account, add your child, and pick a time. Your child joins a private live Study Hall from home. Afterward, you get a short report. Recordings stay available for 60 days.",
-  },
-  {
-    q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for safety and parent review. Parents can access recordings in their account for 60 days after the Study Hall.",
+    a: "A computer or tablet with a camera and microphone, a reliable internet connection, and whatever they plan to work on.",
   },
   {
     q: "What if my child needs me during Study Hall?",
-    a: "If a Guide needs you during Study Hall, they can contact your phone directly through the platform. Guides never see your phone number.",
+    a: "A Guide can Call Parent through the platform. Guides never see your phone number.",
   },
   {
-    q: "Can I book for more than one child?",
-    a: "Yes. One parent account can book for one, two, or three children. The free first Study Hall is one per account, not one per child — and up to three siblings can join that one Study Hall.",
-  },
-  {
-    q: "Do prepaid hours expire?",
-    a: "No. Prepaid hours never expire and apply automatically when they fully cover a session.",
-  },
-  {
-    q: "What happens if I cancel?",
-    a: "Cancel 24 or more hours before a session and its value returns to your account. Cancellations within 24 hours of the start time are non-refundable.",
+    q: "Do prepaid Study Halls expire?",
+    a: "À la carte Study Halls never expire. Study Hall 365 unused days do not roll over.",
   },
   {
     q: "Can I choose my Guide?",
-    a: "We match your child with an available, approved Guide for the time you choose. Where we can, we keep children with a Guide they’ve worked with before.",
-  },
-  {
-    q: "What do children work on?",
-    a: "Their own homework — any subject. Guides provide supervision and accountability, not subject tutoring, so there’s nothing to prepare in advance.",
-  },
-  {
-    q: "How are Guides approved?",
-    a: "Every Guide is recruited, carefully vetted, and trained by Study Hall (at home), and must be approved before working with families.",
+    a: "We match your child with an available, highly vetted Guide for the time you choose. Where we can, we keep children with a Guide they’ve worked with before.",
   },
   {
     q: "What happens if I have a problem with a session?",
-    a: "Report any completed session from your parent portal. Our team reviews every report, and you can track status from Received to Resolved.",
+    a: "Report any completed session from your parent portal. Our team reviews every report.",
   },
 ];
