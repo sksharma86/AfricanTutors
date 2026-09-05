@@ -15,8 +15,8 @@ export function Faq({
   return (
     <section id={id} className="scroll-mt-24 bg-[#f4f5f7] py-14 sm:py-20">
       <Container size="narrow">
-        <p className="mkt-eyebrow">{eyebrow}</p>
-        <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">{title}</h2>
+        {eyebrow ? <p className="mkt-eyebrow">{eyebrow}</p> : null}
+        <h2 className={`mkt-display text-3xl text-ink-900 sm:text-[2.5rem] ${eyebrow ? "mt-3" : ""}`}>{title}</h2>
         <dl className="mt-10 divide-y divide-ink-100 border-t border-ink-100">
           {items.map((item) => (
             <div key={item.q}>

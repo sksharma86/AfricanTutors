@@ -7,7 +7,7 @@ import { LinkButton } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
-import { FREE_TRIAL_CTA } from "@/lib/pricing";
+import { START_FREE_CTA } from "@/lib/public-offers";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export async function Navbar() {
@@ -26,7 +26,7 @@ export async function Navbar() {
       <Container size="wide" className="flex h-14 items-center justify-between gap-4 sm:h-16">
         <BrandLockup priority variant="product" />
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex">
           {PUBLIC_NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -38,7 +38,7 @@ export async function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {user ? (
             <>
               <LinkButton href={dashboardHref} variant="ghost" size="sm">
@@ -56,7 +56,7 @@ export async function Navbar() {
                 Sign in
               </LinkButton>
               <LinkButton href="/signup" variant="primary" size="sm">
-                {FREE_TRIAL_CTA}
+                {START_FREE_CTA}
               </LinkButton>
             </>
           )}

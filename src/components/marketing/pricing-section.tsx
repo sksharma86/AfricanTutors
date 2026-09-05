@@ -1,157 +1,83 @@
-import Link from "next/link";
-
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
+import { FAMILY_VALUE_BODY, FAMILY_VALUE_EYEBROW, FAMILY_VALUE_RATE } from "@/lib/household-pricing-copy.mjs";
 import type { PublicPackage } from "@/lib/marketing";
-import { packageBadge } from "@/lib/packages.mjs";
-import {
-  FAMILY_VALUE_BODY,
-  FAMILY_VALUE_EYEBROW,
-  FAMILY_VALUE_MATH,
-  FAMILY_VALUE_RATE,
-  FREE_STUDY_HALL_HOUSEHOLD,
-} from "@/lib/household-pricing-copy.mjs";
-import {
-  AS_LOW_AS_LABEL,
-  FREE_TRIAL_CTA,
-  PAYG_PRICE_USD,
-  formatCents,
-  formatUsd,
-} from "@/lib/pricing";
+import { PUBLIC_OFFERS, PUBLIC_OFFER_CTA_HREF, START_FREE_CTA } from "@/lib/public-offers";
 
-/**
- * Acquisition offer first, then three paid choices.
- * Values come from existing pricing / package catalog — presentation only.
- */
 export function PricingSection({
-  packages,
   withHeader = true,
   compact = false,
-  ctaHref = "/signup",
-  ctaLabel = FREE_TRIAL_CTA,
+  ctaHref = PUBLIC_OFFER_CTA_HREF,
+  ctaLabel = START_FREE_CTA,
 }: {
-  packages: PublicPackage[];
+  packages?: PublicPackage[];
   withHeader?: boolean;
-  /** Homepage-only: tighten dead space into adjacent sections. */
   compact?: boolean;
   ctaHref?: string;
   ctaLabel?: string;
 }) {
-  const sorted = [...packages].sort((a, b) => a.minutes - b.minutes);
+  const featured = PUBLIC_OFFERS.find((offer) => "featured" in offer && offer.featured);
+  const supporting = PUBLIC_OFFERS.filter((offer) => !("featured" in offer && offer.featured));
 
   return (
     <section
       id="pricing"
-      className={
-        compact
-          ? "scroll-mt-24 bg-[#f7f6f3] pb-10 pt-8 sm:pb-12 sm:pt-10"
-          : "scroll-mt-24 bg-[#f7f6f3] py-16 sm:py-24"
-      }
+      className={compact ? "scroll-mt-24 bg-white py-16 sm:py-20" : "scroll-mt-24 bg-white py-20 sm:py-28"}
     >
       <Container size="wide">
         {withHeader ? (
-          <div className="max-w-2xl">
-            <p className="mkt-eyebrow">Pricing</p>
-            <h2 className="mkt-display mt-3 text-3xl text-ink-900 sm:text-[2.5rem]">
-              {AS_LOW_AS_LABEL}.
-            </h2>
-          </div>
+          <h2 className="mkt-display text-3xl text-ink-900 sm:text-[2.6rem]">Then choose what fits.</h2>
         ) : null}
 
-        <div className={`${withHeader ? "mt-10" : "mt-2"} space-y-4`}>
-          <div className="rounded-[22px] bg-white px-5 py-7 ring-1 ring-ink-900/[0.06] sm:px-8">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-gold-700 uppercase">
-              First Study Hall
-            </p>
-            <p className="mt-3 font-display text-[1.85rem] font-semibold tracking-[-0.03em] text-ink-900 sm:text-4xl">
-              Your first Study Hall is on us.
-            </p>
-            <p className="mt-3 text-[15px] leading-7 text-ink-500">{FREE_STUDY_HALL_HOUSEHOLD}</p>
-            <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-              <p className="font-display text-5xl font-semibold tracking-[-0.04em] text-ink-900">$0</p>
-              <TrackCta href={ctaHref} cta={ctaLabel} location="pricing" variant="primary" size="lg">
-                {ctaLabel}
-              </TrackCta>
+        <div className={`${withHeader ? "mt-10" : "mt-2"} space-y-8`}>
+          <div className="flex flex-wrap items-end justify-between gap-6 border-b border-ink-100 pb-8">
+            <div>
+              <p className="text-[13px] font-medium tracking-[0.04em] text-gold-700 uppercase">Try it</p>
+              <p className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+                First Study Hall free
+              </p>
+              <p className="mt-2 text-[15px] text-ink-500">60 minutes. No credit card. Up to three siblings.</p>
             </div>
+            <TrackCta href={ctaHref} cta={ctaLabel} location="pricing" variant="primary" size="lg">
+              {ctaLabel}
+            </TrackCta>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[22px] bg-white px-5 py-6 ring-1 ring-ink-900/[0.05]">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">
-                Pay as you go
+          {featured ? (
+            <div data-offer={featured.id} className="bg-ink-900 px-6 py-8 text-white sm:px-10 sm:py-10">
+              <p className="text-[13px] font-medium tracking-[0.08em] text-gold-300 uppercase">
+                {featured.name}
               </p>
-              <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
-                {formatUsd(PAYG_PRICE_USD)}/hour
+              <p className="mt-3 font-display text-5xl font-semibold tracking-[-0.04em]">
+                {featured.price}
+                {"unit" in featured ? (
+                  <span className="ml-1 text-[1.1rem] font-medium text-white/50">{featured.unit}</span>
+                ) : null}
               </p>
-              <p className="mt-2 text-sm text-ink-500">For occasional evenings</p>
+              <p className="mt-3 max-w-md text-[16px] leading-7 text-white/70">{featured.detail}</p>
             </div>
+          ) : null}
 
-            {sorted.map((pkg) => {
-              const badge = packageBadge(pkg.minutes);
-              const featured = badge === "MOST POPULAR";
-              return (
-                <div
-                  key={pkg.id}
-                  className={
-                    featured
-                      ? "rounded-[22px] bg-ink-900 px-5 py-6 text-white"
-                      : "rounded-[22px] bg-white px-5 py-6 ring-1 ring-ink-900/[0.05]"
-                  }
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p
-                      className={`text-[11px] font-semibold tracking-[0.14em] uppercase ${
-                        featured ? "text-gold-300" : "text-ink-400"
-                      }`}
-                    >
-                      {pkg.name}
-                    </p>
-                    {badge ? (
-                      <span
-                        className={`text-[10px] font-semibold tracking-[0.08em] uppercase ${
-                          featured ? "text-gold-300" : "text-ink-500"
-                        }`}
-                      >
-                        {badge === "MOST POPULAR" ? "Most popular" : "Best value"}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em]">
-                    {formatCents(pkg.priceCents)}
-                  </p>
-                  <p className={`mt-1 text-sm ${featured ? "text-white/70" : "text-ink-500"}`}>
-                    {formatCents(pkg.effectiveHourlyCents)}/hour
-                  </p>
-                  {pkg.savingsCents > 0 ? (
-                    <p className={`mt-3 text-sm font-medium ${featured ? "text-gold-300" : "text-ink-700"}`}>
-                      Save {formatCents(pkg.savingsCents)}
-                    </p>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-[22px] bg-white px-5 py-6 ring-1 ring-ink-900/[0.06] sm:px-8">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-gold-700 uppercase">
-            {FAMILY_VALUE_EYEBROW}
-          </p>
-          <p className="mt-3 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_BODY}</p>
-          <ul className="mt-4 space-y-1.5 text-sm leading-6 text-ink-600">
-            {FAMILY_VALUE_MATH.map((line) => (
-              <li key={line}>{line}</li>
+          <div className="grid gap-8 sm:grid-cols-2">
+            {supporting.map((offer) => (
+              <div key={offer.id} data-offer={offer.id}>
+                <p className="text-[13px] font-medium text-ink-400">{offer.name}</p>
+                <p className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
+                  {offer.price}
+                </p>
+                <p className="mt-2 text-[15px] text-ink-500">{offer.detail}</p>
+              </div>
             ))}
-          </ul>
-          <p className="mt-4 text-[15px] leading-7 text-ink-700">{FAMILY_VALUE_RATE}</p>
-        </div>
+          </div>
 
-        <p className="mt-8 text-sm text-ink-500">
-          Prepaid hours never expire.{" "}
-          <Link href="/faq" className="font-medium text-ink-800 underline-offset-4 hover:underline">
-            Pricing questions
-          </Link>
-        </p>
+          <p className="max-w-xl text-[14px] leading-6 text-ink-400">
+            {FAMILY_VALUE_EYEBROW} {FAMILY_VALUE_BODY} {FAMILY_VALUE_RATE}
+          </p>
+          <p className="max-w-xl text-[14px] leading-6 text-ink-400">
+            The first hour is available now. À la carte Study Halls never expire. Study Hall 365
+            ($149/month) and the 10-Study-Hall option are coming next — there is no checkout for them yet.
+          </p>
+        </div>
       </Container>
     </section>
   );
