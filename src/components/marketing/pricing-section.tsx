@@ -70,13 +70,16 @@ export function PricingSection({
             ))}
           </div>
 
-          <p className="max-w-xl text-[14px] leading-6 text-ink-400">
-            {FAMILY_VALUE_EYEBROW} {FAMILY_VALUE_BODY} {FAMILY_VALUE_RATE}
-          </p>
-          <p className="max-w-xl text-[14px] leading-6 text-ink-400">
-            The first hour is available now. À la carte Study Halls never expire. Study Hall 365
-            ($149/month) and the 10-Study-Hall option are coming next — there is no checkout for them yet.
-          </p>
+          <div className="max-w-xl space-y-2 text-[14px] leading-6 text-ink-400">
+            <p>
+              {FAMILY_VALUE_EYEBROW} {FAMILY_VALUE_BODY}
+            </p>
+            <p>{FAMILY_VALUE_RATE}</p>
+            <p>
+              The first hour is available now. À la carte Study Halls never expire. Study Hall 365
+              ($149/month) and the 10-Study-Hall option are coming next — there is no checkout for them yet.
+            </p>
+          </div>
         </div>
       </Container>
     </section>

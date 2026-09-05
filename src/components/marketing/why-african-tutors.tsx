@@ -11,9 +11,9 @@ export function WhyStudyHall() {
         alt="A quieter evening at home while Study Hall is underway"
         fill
         sizes="100vw"
-        className="object-cover opacity-45"
+        className="object-cover opacity-70"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink-900/88 via-ink-900/70 to-ink-900/40" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink-900/78 via-ink-900/48 to-ink-900/20" aria-hidden />
 
       <Container size="wide" className="relative z-10">
         <Reveal>

@@ -18,24 +18,16 @@ export function Routine365() {
         </Reveal>
 
         <Reveal delay={70}>
-          <p className="mt-12 max-w-3xl font-display text-[1.2rem] font-semibold leading-relaxed tracking-[-0.02em] text-ink-800 sm:hidden">
-            {ROUTINE_WEEK.map((item, index) => (
-              <span key={item.day}>
-                {index > 0 ? <span className="text-ink-300"> · </span> : null}
-                <span className="text-ink-400">{item.day}</span> {item.mark}
-              </span>
-            ))}
-          </p>
-          <ol className="mt-12 hidden grid-cols-7 gap-3 sm:grid">
+          <ol className="mt-12 grid grid-cols-7 gap-1 sm:gap-3">
             {ROUTINE_WEEK.map((item) => {
               const today = item.mark === "Today";
               return (
                 <li key={item.day} className="text-center">
-                  <p className="text-[11px] font-semibold tracking-[0.12em] text-ink-400 uppercase">
+                  <p className="text-[10px] font-semibold tracking-[0.1em] text-ink-400 uppercase sm:text-[11px] sm:tracking-[0.12em]">
                     {item.day}
                   </p>
                   <p
-                    className={`mt-3 font-display text-[1.25rem] font-semibold tracking-[-0.03em] ${
+                    className={`mt-2 font-display text-[0.95rem] font-semibold tracking-[-0.03em] sm:mt-3 sm:text-[1.25rem] ${
                       today ? "text-ink-900" : "text-ink-700"
                     }`}
                   >

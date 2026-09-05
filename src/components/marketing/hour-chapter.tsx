@@ -33,7 +33,7 @@ export function HourChapter() {
                 href="/the-study-hall-hour"
                 className="text-[15px] font-semibold text-ink-900 underline-offset-4 hover:underline"
               >
-                The Study Hall Hour
+                How the hour works
               </Link>
             </p>
           </Reveal>

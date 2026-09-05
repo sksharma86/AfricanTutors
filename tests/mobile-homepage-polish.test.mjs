@@ -42,8 +42,7 @@ describe("Mobile homepage polish", () => {
   it("week visual lives in the 365 chapter and adapts on small screens", () => {
     const routine = read("src/components/marketing/routine-365.tsx");
     assert.match(routine, /ROUTINE_WEEK/);
-    assert.match(routine, /sm:hidden/);
-    assert.match(routine, /sm:grid/);
+    assert.match(routine, /grid-cols-7/);
     assert.doesNotMatch(routine, /\bSet\b/);
     assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /ROUTINE_WEEK/);
   });
