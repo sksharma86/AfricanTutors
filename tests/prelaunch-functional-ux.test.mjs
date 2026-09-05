@@ -72,7 +72,7 @@ describe("Pre-launch functional UX — phone + packages + applicant gates", () =
     assert.match(home, /View application status/);
     assert.match(home, /\/dashboard\/applicant/);
     assert.match(pricing, /getGuideApplicantInfo/);
-    assert.match(pricing, /packages#prepaid/);
+    assert.match(pricing, /\/dashboard\/student\/book|packages#prepaid/);
     assert.match(pricing, /View application status/);
   });
 });

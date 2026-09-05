@@ -109,19 +109,17 @@ describe("Household Study Hall — booking UX & API", () => {
 });
 
 describe("Household Study Hall — marketing & FAQ", () => {
-  it("pricing callout qualifies the $3 claim and does not advertise a bare $3/hour", () => {
-    const pricing = read("src/components/marketing/pricing-section.tsx");
-    assert.match(pricing, /FAMILY_VALUE_EYEBROW/);
-    assert.match(pricing, /FAMILY_VALUE_BODY/);
-    assert.match(pricing, /FAMILY_VALUE_RATE/);
+  it("pricing callout qualifies household math and does not advertise a bare per-child rate", () => {
+    const flagship = read("src/components/marketing/study-hall-365.tsx");
+    assert.match(flagship, /FAMILY_VALUE_EYEBROW/);
+    assert.match(flagship, /FAMILY_VALUE_BODY/);
+    assert.match(flagship, /FAMILY_VALUE_MATH/);
     assert.equal(FAMILY_VALUE_EYEBROW, "One price. Up to three siblings.");
     assert.match(FAMILY_VALUE_BODY, /no additional cost per child/);
     assert.match(FAMILY_VALUE_BODY, /You pay for the Study Hall, not per child/);
-    assert.equal(
-      FAMILY_VALUE_RATE,
-      "With three siblings in the same Study Hall, our 28-hour package works out to $3 per child/hour.",
-    );
-    assert.doesNotMatch(pricing, /\$3\/hour(?! when)/);
+    assert.match(FAMILY_VALUE_RATE, /31-day month/);
+    assert.match(FAMILY_VALUE_RATE, /\$1\.60 per child-hour/);
+    assert.doesNotMatch(flagship, /From \$1\.60|Starting at \$1\.60/);
     assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /\$3 per child|From \$3/i);
   });
 
