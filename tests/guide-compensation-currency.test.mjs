@@ -163,8 +163,8 @@ describe("Guide compensation currency — source contracts", () => {
     const pricing = read("src/lib/pricing.ts");
     assert.match(pricing, /PAYG_PRICE_USD = 12/);
     assert.match(pricing, /minutes: 60, priceUsd: 12/);
-    assert.match(pricing, /minutes: 120, priceUsd: 24/);
-    assert.match(pricing, /minutes: 180, priceUsd: 36/);
+    assert.doesNotMatch(pricing, /minutes: 120, priceUsd: 24/);
+    assert.doesNotMatch(pricing, /minutes: 180, priceUsd: 36/);
     assert.match(pricing, /ONLY customer-facing pricing/);
     assert.match(pricing, /export function formatCents/);
     assert.doesNotMatch(pricing, /comp_currency|KES|COMPENSATION_CURRENCIES/);

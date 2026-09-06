@@ -23,8 +23,8 @@ function resolveStudentIds(body: Record<string, unknown>): string[] {
  * session and decides funding; the client cannot set an amount. Returns either a
  * Stripe Checkout URL (payment due) or a confirmed/request result (no payment).
  *
- * Study Hall customer bookings are whole-hour blocks only (60 / 120 / 180).
- * Up to three household children may join one booking; price is duration-only.
+ * New customer Study Halls are exactly 60 minutes. Duration is rejected when
+ * supplied as anything else. Price and funding are decided by book_session.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -41,7 +41,10 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  const duration: StudyHallDuration = isStudyHallDuration(body.duration) ? body.duration : 60;
+  if ("duration" in (body as object) && (body as { duration?: unknown }).duration != null && !isStudyHallDuration((body as { duration?: unknown }).duration)) {
+    return NextResponse.json({ error: "Study Hall sessions are 60 minutes." }, { status: 400 });
+  }
+  const duration: StudyHallDuration = 60;
   const isFreeTrial = Boolean(body.isFreeTrial);
   const subjectId = typeof body.subjectId === "string" ? body.subjectId : null;
 

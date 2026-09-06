@@ -145,9 +145,9 @@ export function evaluateStudyHall365Day(input) {
 }
 
 /**
- * Combined future-booking hint. 365 daily entitlement is preferred when
- * available; prepaid minutes and the free first Study Hall remain separate
- * funding paths. PAYG is always a fallback and is never "entitled" here.
+ * Combined future-booking hint. Unused free first Study Hall wins, then an
+ * unused entitled 365 day, then prepaid minutes, then PAYG. A consumed 365
+ * day does not block prepaid/PAYG. PAYG is always a fallback.
  *
  * @param {{
  *   studyHall365?: ReturnType<typeof evaluateStudyHall365Day> | null,
@@ -156,11 +156,11 @@ export function evaluateStudyHall365Day(input) {
  * }} input
  */
 export function chooseBookingSource(input) {
-  if (input.studyHall365?.entitled) {
-    return { source: "study_hall_365", entitled: true, reason: input.studyHall365.reason };
-  }
   if (input.freeTrialEligible) {
     return { source: "free_trial", entitled: true, reason: "free_first_study_hall" };
+  }
+  if (input.studyHall365?.entitled) {
+    return { source: "study_hall_365", entitled: true, reason: input.studyHall365.reason };
   }
   if ((Number(input.prepaidMinutes) || 0) >= 60) {
     return { source: "prepaid", entitled: true, reason: "prepaid_minutes" };

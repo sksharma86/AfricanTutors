@@ -52,6 +52,7 @@ interface StartResult {
   paymentId: string;
   bookingId?: string;
   funding: string;
+  fundingSource?: string;
   sessionPriceCents?: number;
   packageMinutesUsed?: number;
   creditCentsUsed: number;
@@ -86,7 +87,7 @@ export async function createBookingCheckout(
     subjectId: string | null;
     otherSubject?: string | null;
     note?: string | null;
-    duration: 60 | 120 | 180;
+    duration: 60;
     startISO: string | null;
     isFreeTrial: boolean;
   },
@@ -131,6 +132,7 @@ export async function createBookingCheckout(
     booking_id: string;
     payment_id: string;
     funding: string;
+    funding_source?: string;
     session_price_cents: number;
     package_minutes_used: number;
     credit_cents_used: number;
@@ -154,6 +156,7 @@ export async function createBookingCheckout(
       paymentId: q.payment_id,
       bookingId: q.booking_id,
       funding: q.funding,
+      fundingSource: q.funding_source ?? q.funding,
       sessionPriceCents: q.session_price_cents,
       packageMinutesUsed: q.package_minutes_used,
       creditCentsUsed: q.credit_cents_used,
@@ -182,7 +185,7 @@ export async function createBookingCheckout(
             price_data: {
               currency: "usd",
               unit_amount: q.stripe_cents_due,
-              product_data: { name: `Study Hall session (${params.duration} min)` },
+              product_data: { name: "Study Hall (60 minutes)" },
             },
           },
         ],
@@ -213,6 +216,7 @@ export async function createBookingCheckout(
       paymentId: q.payment_id,
       bookingId: q.booking_id,
       funding: q.funding,
+      fundingSource: q.funding_source ?? q.funding,
       sessionPriceCents: q.session_price_cents,
       packageMinutesUsed: q.package_minutes_used,
       creditCentsUsed: q.credit_cents_used,

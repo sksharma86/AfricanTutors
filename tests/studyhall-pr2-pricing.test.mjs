@@ -23,10 +23,10 @@ describe("Study Hall PR2 — authoritative client pricing constants", () => {
     assert.match(pricingSrc, /minutes:\s*60,\s*priceUsd:\s*12/);
   });
 
-  it("customer SESSION_OPTIONS are whole-hour Study Hall blocks at $12/hour", () => {
+  it("customer SESSION_OPTIONS are a single 60-minute Study Hall at $12", () => {
     assert.match(pricingSrc, /minutes:\s*60,\s*priceUsd:\s*12/);
-    assert.match(pricingSrc, /minutes:\s*120,\s*priceUsd:\s*24/);
-    assert.match(pricingSrc, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.doesNotMatch(pricingSrc, /minutes:\s*120,/);
+    assert.doesNotMatch(pricingSrc, /minutes:\s*180,/);
     assert.doesNotMatch(pricingSrc, /minutes:\s*30,/);
   });
 

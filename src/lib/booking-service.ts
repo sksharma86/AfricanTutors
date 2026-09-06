@@ -78,6 +78,9 @@ export async function getAvailableSlots(params: {
   toISO?: string;
   slotMinutes?: number;
 }): Promise<string[]> {
+  if (params.subjectId == null && params.duration !== 60) {
+    throw new Error("Study Hall sessions are 60 minutes");
+  }
   const supabase = await client();
   const from = params.fromISO ?? new Date(Date.now() + MIN_BOOKING_NOTICE_MINUTES * 60000).toISOString();
   const to = params.toISO ?? new Date(Date.now() + BOOKING_HORIZON_DAYS * 86400000).toISOString();
@@ -108,6 +111,9 @@ export async function requestBooking(params: {
   startISO: string | null;
   isFreeTrial: boolean;
 }): Promise<string> {
+  if (params.subjectId == null && params.startISO && params.duration !== 60) {
+    throw new Error("Study Hall sessions are 60 minutes");
+  }
   const supabase = await client();
   const studentIds = params.studentIds ?? [params.studentId];
   if (params.startISO) {

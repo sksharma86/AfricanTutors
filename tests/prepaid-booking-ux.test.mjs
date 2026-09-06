@@ -48,22 +48,21 @@ describe("Prepaid booking UX — wizard wiring (source)", () => {
   const wiz = read("src/components/booking/booking-wizard.tsx");
   const helper = read("src/lib/booking-prepaid-display.mjs");
 
-  it("wizard uses prepaid display helpers for duration cards and confirm CTA", () => {
-    assert.match(wiz, /durationOptionPriceLabel/);
+  it("wizard uses prepaid display helpers on confirm, without a duration picker", () => {
     assert.match(wiz, /isFullyPrepaidQuote/);
     assert.match(wiz, /remainingBalanceMinutes/);
-    assert.match(wiz, /Confirm with prepaid hours/);
-    assert.match(wiz, /Covered by prepaid balance/);
-    assert.match(wiz, /No payment required\. Your card will not be charged\./);
-    assert.match(wiz, /Hours after booking/);
+    assert.match(wiz, /formatPrepaidStudyHallBalance/);
+    assert.doesNotMatch(wiz, /durationOptionPriceLabel|setDuration|Choose a session/);
+    assert.match(wiz, /Uses 1 prepaid Study Hall/);
+    assert.match(wiz, /Your card will not be charged/);
     assert.match(helper, /Uses \$\{formatDuration/);
   });
 
-  it("success path still says prepaid hours; free trial and Stripe CTAs preserved", () => {
-    assert.match(wiz, /confirmed using your prepaid hours/);
+  it("success path uses Study Hall language; free trial and Stripe CTAs preserved", () => {
+    assert.match(wiz, /confirmed using 1 prepaid Study Hall/);
     assert.match(wiz, /Confirm booking/);
-    assert.match(wiz, /First 1-hour Study Hall — FREE/);
-    assert.match(wiz, /secure checkout to pay the amount due/);
+    assert.match(wiz, /First Study Hall is free|First Study Hall free/);
+    assert.match(wiz, /secure checkout to pay \$12/);
   });
 
   it("date/time step uses day strip without nested all-days scroll trap", () => {

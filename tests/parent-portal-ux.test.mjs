@@ -379,7 +379,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     const wizard = read("src/components/booking/booking-wizard.tsx");
     assert.match(book, /ParentPage/);
     assert.match(book, /BookingWizard/);
-    assert.match(book, /initialDuration=\{initialDuration\}/);
+    assert.match(book, /Every Study Hall is 60 minutes/);
     assert.match(wizard, /Date & time|date &amp; time/);
     assert.doesNotMatch(wizard, /max-h-96/);
   });

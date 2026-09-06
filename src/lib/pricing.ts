@@ -5,10 +5,10 @@
  * compensation or internal unit economics here (or anywhere shipped to the
  * browser). Those live in the internal `BUSINESS_MODEL.md` document.
  *
- * Study Hall pricing model ($12/hour, whole-hour blocks only):
- *   - 1 hour  (60 min)  = $12
- *   - 2 hours (120 min) = $24
- *   - 3 hours (180 min) = $36
+ * Study Hall customer booking is exactly 60 minutes / $12 PAYG.
+ * Historical 120- and 180-minute bookings remain readable; they are not
+ * offered to new customer bookings.
+ *   - 1 Study Hall (60 min) = $12
  *   - A new account's first 60-minute Study Hall session is FREE (no card)
  *
  * Server SQL (`session_list_price_cents` / booking_quote / book_session /
@@ -22,18 +22,21 @@ export interface SessionOption {
   label: string;
 }
 
-/** Customer-facing Study Hall session lengths (whole hours only). */
+/** New customer Study Halls are exactly one hour. */
 export const SESSION_OPTIONS: SessionOption[] = [
-  { minutes: 60, priceUsd: 12, label: "1 hour" },
-  { minutes: 120, priceUsd: 24, label: "2 hours" },
-  { minutes: 180, priceUsd: 36, label: "3 hours" },
+  { minutes: 60, priceUsd: 12, label: "60 minutes" },
 ];
 
-export type StudyHallDuration = 60 | 120 | 180;
+export type StudyHallDuration = 60;
 
-export const STUDY_HALL_DURATIONS: StudyHallDuration[] = [60, 120, 180];
+export const STUDY_HALL_DURATIONS: StudyHallDuration[] = [60];
 
 export function isStudyHallDuration(n: unknown): n is StudyHallDuration {
+  return n === 60;
+}
+
+/** Historical customer durations that may still exist on old bookings. */
+export function isHistoricalStudyHallDuration(n: unknown): n is 60 | 120 | 180 {
   return n === 60 || n === 120 || n === 180;
 }
 

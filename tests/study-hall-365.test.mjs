@@ -278,12 +278,20 @@ describe("Study Hall 365 — household / siblings / funding choice", () => {
     assert.doesNotMatch(sql, /p_student_id|p_child_count|p_student_ids/);
   });
 
-  it("prefers 365, then free trial, then prepaid, then PAYG", () => {
+  it("prefers unused free first, then 365, then prepaid, then PAYG", () => {
     assert.equal(
       chooseBookingSource({
         studyHall365: { entitled: true, reason: "available" },
         prepaidMinutes: 600,
         freeTrialEligible: true,
+      }).source,
+      "free_trial",
+    );
+    assert.equal(
+      chooseBookingSource({
+        studyHall365: { entitled: true, reason: "available" },
+        prepaidMinutes: 600,
+        freeTrialEligible: false,
       }).source,
       "study_hall_365",
     );
