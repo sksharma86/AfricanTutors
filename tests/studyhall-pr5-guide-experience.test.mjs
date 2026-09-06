@@ -88,8 +88,8 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     assert.match(pricing, /PAYG_PRICE_USD = 12/);
     assert.match(pricing, /FREE_TRIAL_MINUTES = 60/);
     assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
-    assert.match(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
-    assert.match(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.doesNotMatch(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
+    assert.doesNotMatch(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
     assert.doesNotMatch(pricing, /minutes:\s*30,/);
     assert.equal(PACKAGE_14H_MINUTES, 840);
     assert.equal(PACKAGE_14H_PRICE_CENTS, 14000);

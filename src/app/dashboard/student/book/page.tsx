@@ -24,11 +24,8 @@ export default async function BookSessionPage({
   }
   const supabase = await createSupabaseServerClient();
 
-  // Whole-hour Study Hall only (60 / 120 / 180); anything else defaults to 1 hour.
-  const { duration } = await searchParams;
-  const parsed = Number(duration);
-  const initialDuration: 60 | 120 | 180 =
-    parsed === 120 || parsed === 180 || parsed === 60 ? parsed : 60;
+  // Duration query params cannot create a longer booking. Always 60 minutes.
+  void searchParams;
 
   const { data: students } = await supabase!
     .from("students")
@@ -47,10 +44,10 @@ export default async function BookSessionPage({
         Book a Study Hall session
       </h1>
       <p className="mt-2 text-base leading-7 text-ink-500">
-        Choose your child, length, and time. We’ll match an approved Guide.
+        Choose who is joining and a time. Every Study Hall is 60 minutes.
       </p>
       <div className="mt-8">
-        <BookingWizard students={(students ?? []) as StudentRow[]} initialDuration={initialDuration} />
+        <BookingWizard students={(students ?? []) as StudentRow[]} />
       </div>
     </ParentPage>
   );

@@ -93,7 +93,7 @@ export default async function PackagesPage() {
       </ParentSurface>
 
       <div className="pp-commerce mt-10">
-        <p className="mb-3 text-sm text-[var(--pp-muted)]">Pay as you go · $12/hour</p>
+        <p className="mb-3 text-sm text-[var(--pp-muted)]">Pay as you go · $12 for one 60-minute Study Hall</p>
         <SingleSessionCards />
       </div>
 

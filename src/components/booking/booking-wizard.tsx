@@ -7,14 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BOOKING_HORIZON_DAYS, MIN_BOOKING_NOTICE_MINUTES } from "@/lib/booking-config";
-import { FREE_TRIAL_MINUTES, SESSION_OPTIONS, formatUsd, type StudyHallDuration } from "@/lib/pricing";
-import { formatDuration, formatMoneyCents } from "@/lib/format.mjs";
-import {
-  durationOptionPriceLabel,
-  isFullyPrepaidQuote,
-  prepaidCoversDuration,
-  remainingBalanceMinutes,
-} from "@/lib/booking-prepaid-display.mjs";
+import { formatMoneyCents } from "@/lib/format.mjs";
+import { isFullyPrepaidQuote, remainingBalanceMinutes } from "@/lib/booking-prepaid-display.mjs";
+import { customerFundingLabel, formatPrepaidStudyHallBalance } from "@/lib/study-hall-funding-copy.mjs";
 import {
   MAX_CHILDREN_PER_STUDY_HALL,
   firstNameOf,
@@ -51,7 +46,7 @@ function friendlyError(message?: string | null): string {
   return message;
 }
 
-type Step = "student" | "duration" | "time" | "confirm" | "done";
+type Step = "student" | "time" | "confirm" | "done";
 
 interface Quote {
   session_price_cents: number;
@@ -60,17 +55,16 @@ interface Quote {
   credit_cents_used: number;
   stripe_cents_due: number;
   funding: string;
+  funding_source?: string;
 }
 
 export function BookingWizard({
   students: initialStudents,
   subjects: _subjects = [],
-  initialDuration = 60,
 }: {
   students: StudentRow[];
   /** Unused — Study Hall books without a subject. Kept optional for page compat. */
   subjects?: SubjectRow[];
-  initialDuration?: StudyHallDuration;
 }) {
   void _subjects;
   const router = useRouter();
@@ -86,15 +80,8 @@ export function BookingWizard({
     initialStudents[0]?.id ? [initialStudents[0].id] : [],
   );
   const [childLimitMessage, setChildLimitMessage] = useState<string | null>(null);
-  const [freeTrialUsed, setFreeTrialUsed] = useState<boolean | null>(null);
-
   const [note, setNote] = useState("");
-
-  // Duration may be preselected from the Pricing page ("Book 1/2/3 hours").
-  // This is display state only — it never sets price or bypasses the free-trial
-  // option, which the duration step still presents when the account is eligible.
-  const [duration, setDuration] = useState<StudyHallDuration>(initialDuration);
-  const [isFreeTrial, setIsFreeTrial] = useState(false);
+  const duration = 60;
 
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -126,20 +113,8 @@ export function BookingWizard({
   const joiningLabel = formatChildNames(joiningNames, "Your child");
   const multiChild = selectedStudents.length >= 2;
 
-  // Free trial is ONE PER ACCOUNT (not per student), so eligibility keys on the
-  // signed-in account, not the selected student. Server remains authoritative.
-  useEffect(() => {
-    if (!supabase || !accountId) return;
-    let active = true;
-    supabase.rpc("account_has_used_free_trial", { p_account: accountId }).then(({ data }) => {
-      if (active) setFreeTrialUsed(Boolean(data));
-    });
-    return () => {
-      active = false;
-    };
-  }, [supabase, accountId]);
-
   // Load the signed-in account id + current balances (owner-scoped, server-derived).
+  // Free-trial eligibility is previewed by booking_quote and enforced by book_session.
   useEffect(() => {
     if (!supabase) return;
     let active = true;
@@ -163,10 +138,15 @@ export function BookingWizard({
   // Recompute the authoritative funding breakdown whenever the paid session
   // changes. This is display-only; book_session recomputes under locks.
   useEffect(() => {
-    if (!supabase || !accountId || isFreeTrial) return;
+    if (!supabase || !accountId) return;
     let active = true;
     supabase
-      .rpc("booking_quote", { p_account: accountId, p_duration: duration, p_is_free_trial: false })
+      .rpc("booking_quote", {
+        p_account: accountId,
+        p_duration: duration,
+        p_is_free_trial: false,
+        p_start: selectedSlot,
+      })
       .then(({ data, error: qErr }) => {
         if (!active) return;
         if (qErr) {
@@ -179,7 +159,7 @@ export function BookingWizard({
     return () => {
       active = false;
     };
-  }, [supabase, accountId, duration, isFreeTrial]);
+  }, [supabase, accountId, duration, selectedSlot]);
 
   async function addStudent() {
     if (!supabase || submittingRef.current) return;
@@ -213,7 +193,7 @@ export function BookingWizard({
     }
   }
 
-  async function loadSlots(dur: StudyHallDuration) {
+  async function loadSlots(dur = 60) {
     if (!supabase) return;
     setSlotsLoading(true);
     setSlots([]);
@@ -262,7 +242,8 @@ export function BookingWizard({
     submittingRef.current = true;
     setBusy(true);
     setError(null);
-    track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBookingStarted : ANALYTICS_EVENTS.paidBookingStarted, {
+    const usingFree = quote?.funding === "free_trial" || quote?.funding_source === "free_trial";
+    track(usingFree ? ANALYTICS_EVENTS.freeTrialBookingStarted : ANALYTICS_EVENTS.paidBookingStarted, {
       duration,
     });
     let res: Response;
@@ -276,9 +257,9 @@ export function BookingWizard({
           subjectId: null,
           otherSubject: null,
           note: note.trim() || null,
-          duration,
+          duration: 60,
           startISO: selectedSlot,
-          isFreeTrial,
+          isFreeTrial: quote?.funding === "free_trial",
         }),
       });
     } catch {
@@ -312,32 +293,27 @@ export function BookingWizard({
         .single();
       ref = b?.public_reference ?? "";
     }
-    track(isFreeTrial ? ANALYTICS_EVENTS.freeTrialBooked : ANALYTICS_EVENTS.paidBookingCompleted, {
+    track(usingFree ? ANALYTICS_EVENTS.freeTrialBooked : ANALYTICS_EVENTS.paidBookingCompleted, {
       funding: payload?.funding ?? "",
     });
     setConfirmation({
       ref,
-      isFree: isFreeTrial,
+      isFree: usingFree || payload?.funding === "free_trial",
       scheduled: true,
-      funding: payload?.funding ?? "",
+      funding: payload?.funding_source ?? payload?.funding ?? "",
     });
     setStep("done");
   }
 
-  const priceLabel = isFreeTrial ? "FREE" : formatUsd(SESSION_OPTIONS.find((o) => o.minutes === duration)!.priceUsd);
+  const fundingKey = quote?.funding_source ?? quote?.funding ?? "";
+  const isFreeTrial = fundingKey === "free_trial";
   const fullyPrepaid = !isFreeTrial && isFullyPrepaidQuote(quote);
   const prepaidRemaining =
     fullyPrepaid && balances
       ? remainingBalanceMinutes(balances.minutes, quote!.package_minutes_used)
       : null;
 
-  const confirmCta = busy
-    ? "Booking…"
-    : isFreeTrial
-      ? "Confirm booking"
-      : fullyPrepaid
-        ? "Confirm with prepaid hours"
-        : "Confirm booking";
+  const confirmCta = busy ? "Booking…" : "Confirm booking";
 
   const slotsByDay = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -389,18 +365,24 @@ export function BookingWizard({
           </svg>
         </div>
         <h2 className="mt-5 font-display text-2xl font-semibold text-ink-900">
-          {confirmation.isFree || confirmation.funding === "package" || confirmation.funding === "credit"
+          {confirmation.isFree ||
+          confirmation.funding === "package" ||
+          confirmation.funding === "prepaid" ||
+          confirmation.funding === "credit" ||
+          confirmation.funding === "study_hall_365"
             ? "Study Hall booked"
             : "Booking held"}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-600">
           {confirmation.isFree
-            ? "Your free 1-hour Study Hall is confirmed. We’ve matched an approved Guide."
-            : confirmation.funding === "package"
-              ? "Your session is confirmed using your prepaid hours. An approved Guide is matched."
-              : confirmation.funding === "credit"
-                ? "Your session is confirmed using your account credit. An approved Guide is matched."
-                : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."}
+            ? "Your first Study Hall is confirmed. We’ve matched an approved Guide."
+            : confirmation.funding === "study_hall_365"
+              ? "This Study Hall is included with Study Hall 365. An approved Guide is matched."
+              : confirmation.funding === "package" || confirmation.funding === "prepaid"
+                ? "Your session is confirmed using 1 prepaid Study Hall. An approved Guide is matched."
+                : confirmation.funding === "credit"
+                  ? "Your session is confirmed using your account credit. An approved Guide is matched."
+                  : "Your time is reserved and an approved Guide is matched. Complete payment to confirm this session."}
         </p>
         {selectedSlot ? (
           <dl className="mt-4 divide-y divide-ink-100 rounded-xl border border-ink-100 px-4 text-sm">
@@ -408,23 +390,8 @@ export function BookingWizard({
               label="When"
               value={`${formatDayHeading(selectedSlot, studentTz)}, ${formatTime(selectedSlot, studentTz)} (${tzAbbreviation(selectedSlot, studentTz)})`}
             />
-            <Row
-              label="Duration"
-              value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`}
-            />
-            <Row
-              label={confirmation.isFree ? "Price" : fullyPrepaid ? "Payment" : "Due today"}
-              value={
-                confirmation.isFree
-                  ? "Free"
-                  : fullyPrepaid
-                    ? "Covered by prepaid hours"
-                    : quote
-                      ? formatMoneyCents(quote.stripe_cents_due)
-                      : priceLabel
-              }
-              highlight
-            />
+            <Row label="Duration" value="60 minutes" />
+            <Row label="Funding" value={customerFundingLabel(confirmation.funding)} highlight />
           </dl>
         ) : null}
         <p className="mt-3 text-sm text-ink-500">
@@ -440,10 +407,9 @@ export function BookingWizard({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Booking steps">
-        {stepPill(1, "Who", step === "student", ["duration", "time", "confirm"].includes(step))}
-        {stepPill(2, "Session", step === "duration", ["time", "confirm"].includes(step))}
-        {stepPill(3, "Date & time", step === "time", ["confirm"].includes(step))}
-        {stepPill(4, "Confirm", step === "confirm", false)}
+        {stepPill(1, "Who", step === "student", ["time", "confirm"].includes(step))}
+        {stepPill(2, "When", step === "time", ["confirm"].includes(step))}
+        {stepPill(3, "Confirm", step === "confirm", false)}
       </div>
 
       {error ? (
@@ -543,92 +509,12 @@ export function BookingWizard({
           </details>
 
           <div className="mt-6">
-            <Button onClick={() => setStep("duration")} disabled={!studentIds.length}>
-              Continue
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      {/* STEP 2: duration + free trial */}
-      {step === "duration" ? (
-        <div className={card}>
-          <h2 className="font-display text-xl font-semibold text-ink-900">Choose a session</h2>
-          {balances && (balances.minutes > 0 || balances.creditCents > 0) ? (
-            <p className="mt-2 rounded-lg border border-forest-200 bg-forest-50 px-3 py-2 text-xs text-ink-600">
-              Your balance:{" "}
-              {balances.minutes > 0 ? (
-                <span className="font-medium text-ink-800">{formatDuration(balances.minutes)} of Prepaid Hours</span>
-              ) : null}
-              {balances.minutes > 0 && balances.creditCents > 0 ? " · " : null}
-              {balances.creditCents > 0 ? (
-                <span className="font-medium text-ink-800">{formatMoneyCents(balances.creditCents)} account credit</span>
-              ) : null}
-            </p>
-          ) : null}
-          <div className="mt-4 space-y-3">
-            {freeTrialUsed === false ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setDuration(FREE_TRIAL_MINUTES);
-                  setIsFreeTrial(true);
-                }}
-                className={`flex w-full items-center justify-between rounded-xl border-2 px-5 py-4 text-left ${
-                  isFreeTrial ? "border-gold-400 bg-gold-50" : "border-ink-200 hover:border-ink-300"
-                }`}
-              >
-                <span>
-                  <span className="block font-semibold text-ink-900">First 1-hour Study Hall — FREE</span>
-                  <span className="text-sm text-ink-500">60 minutes · $0 · No credit card required.</span>
-                </span>
-                <span className="font-display text-2xl font-semibold text-gold-600">$0</span>
-              </button>
-            ) : null}
-
-            {SESSION_OPTIONS.map((o) => {
-              const covered = balances != null && balances.minutes >= o.minutes;
-              const rightLabel = durationOptionPriceLabel(
-                balances?.minutes ?? 0,
-                o.minutes,
-                formatUsd(o.priceUsd),
-              );
-              return (
-                <button
-                  key={o.minutes}
-                  type="button"
-                  onClick={() => {
-                    setDuration(o.minutes as StudyHallDuration);
-                    setIsFreeTrial(false);
-                  }}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl border px-5 py-4 text-left ${
-                    !isFreeTrial && duration === o.minutes
-                      ? "border-ink-900 bg-ink-50"
-                      : "border-ink-200 hover:border-ink-300"
-                  }`}
-                >
-                  <span className="font-medium text-ink-900">{o.label}</span>
-                  <span
-                    className={`text-right font-display font-semibold text-ink-900 ${
-                      covered ? "text-sm sm:text-base" : "text-xl"
-                    }`}
-                  >
-                    {rightLabel}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <Button variant="outline" onClick={() => setStep("student")}>
-              Back
-            </Button>
             <Button
               onClick={() => {
-                loadSlots(duration);
+                loadSlots(60);
                 setStep("time");
               }}
+              disabled={!studentIds.length}
             >
               Continue
             </Button>
@@ -636,7 +522,7 @@ export function BookingWizard({
         </div>
       ) : null}
 
-      {/* STEP 3: date & time — compact day strip + times (no nested page scroll trap) */}
+      {/* STEP 2: date & time */}
       {step === "time" ? (
         <div className={card}>
           <h2 className="font-display text-xl font-semibold text-ink-900">Choose a date &amp; time</h2>
@@ -647,7 +533,7 @@ export function BookingWizard({
             <p className="mt-6 text-sm text-ink-400">Finding available Study Hall times…</p>
           ) : slotsByDay.length === 0 ? (
             <p className="mt-6 rounded-lg border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-400">
-              No available Study Hall times in the next few days. Please try another duration or check back soon.
+              No available Study Hall times in the next few days. Please check back soon.
             </p>
           ) : (
             <div className="mt-5 space-y-5">
@@ -727,7 +613,7 @@ export function BookingWizard({
           {/* Sticky actions so Continue stays reachable without hunting outside a scroll area */}
           <div className="sticky bottom-0 z-10 -mx-6 mt-6 border-t border-ink-100 bg-white/95 px-6 py-4 backdrop-blur sm:-mx-8 sm:px-8">
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" onClick={() => setStep("duration")}>
+              <Button variant="outline" onClick={() => setStep("student")}>
                 Back
               </Button>
               <Button onClick={() => setStep("confirm")} disabled={!selectedSlot} className="min-w-[8.5rem]">
@@ -764,34 +650,16 @@ export function BookingWizard({
                 value={`${formatDayHeading(selectedSlot, studentTz)}, ${formatTime(selectedSlot, studentTz)} (${tzAbbreviation(selectedSlot, studentTz)})`}
               />
             ) : null}
-            <Row label="Duration" value={SESSION_OPTIONS.find((o) => o.minutes === duration)?.label ?? `${duration} minutes`} />
-            {isFreeTrial ? <Row label="Price" value={priceLabel} highlight /> : null}
-            {!isFreeTrial && !quote ? <Row label="Price" value={priceLabel} /> : null}
-            {!isFreeTrial && fullyPrepaid && quote ? (
-              <>
-                <Row label="Payment" value="Covered by prepaid balance" highlight />
-                <Row label="Prepaid Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
-                {prepaidRemaining != null ? (
-                  <Row label="Hours after booking" value={formatDuration(prepaidRemaining)} />
-                ) : null}
-                <Row label="Due today" value={formatMoneyCents(0)} highlight />
-              </>
+            <Row label="Duration" value="60 minutes" />
+            <Row label="Funding" value={customerFundingLabel(fundingKey)} highlight />
+            {fullyPrepaid && prepaidRemaining != null ? (
+              <Row label="Prepaid after this" value={formatPrepaidStudyHallBalance(prepaidRemaining)} />
             ) : null}
-            {!isFreeTrial && !fullyPrepaid && quote ? (
-              <>
-                <Row label="Price" value={priceLabel} />
-                {quote.package_minutes_used > 0 ? (
-                  <Row label="Prepaid Hours" value={`−${formatDuration(quote.package_minutes_used)}`} />
-                ) : null}
-                {quote.credit_cents_used > 0 ? (
-                  <Row label="Account credit" value={`−${formatMoneyCents(quote.credit_cents_used)}`} />
-                ) : null}
-                <Row
-                  label="Due today"
-                  value={formatMoneyCents(quote.stripe_cents_due)}
-                  highlight={quote.stripe_cents_due === 0}
-                />
-              </>
+            {balances && !isFreeTrial && fundingKey !== "study_hall_365" && balances.minutes > 0 ? (
+              <Row label="Prepaid balance" value={formatPrepaidStudyHallBalance(balances.minutes)} />
+            ) : null}
+            {!isFreeTrial && quote && quote.stripe_cents_due > 0 ? (
+              <Row label="Due today" value={formatMoneyCents(quote.stripe_cents_due)} highlight />
             ) : null}
           </dl>
           {multiChild ? (
@@ -813,15 +681,19 @@ export function BookingWizard({
           </div>
           {!isFreeTrial ? (
             <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
-              {fullyPrepaid
-                ? "No payment required. Your card will not be charged."
-                : quote && quote.stripe_cents_due === 0
-                  ? "This session is fully covered by your account credit — no payment required."
-                  : balances && balances.minutes > 0 && !prepaidCoversDuration(balances.minutes, duration)
-                    ? `Your prepaid balance (${formatDuration(balances.minutes)}) doesn’t cover this full ${formatDuration(duration)} session, so the cash price applies. Prepaid hours are used only when they fully cover the session. You’ll be taken to secure checkout for the amount due.`
-                    : "You'll be taken to secure checkout to pay the amount due. Your slot is held for 15 minutes."}
+              {fundingKey === "study_hall_365"
+                ? "This Study Hall is included with Study Hall 365 for this calendar day. Another Study Hall today would use prepaid balance or $12."
+                : fullyPrepaid
+                  ? "Uses 1 prepaid Study Hall. Your card will not be charged."
+                  : quote && quote.stripe_cents_due === 0
+                    ? "This session is fully covered by your account credit — no payment required."
+                    : "You'll be taken to secure checkout to pay $12. Your slot is held for 15 minutes."}
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-4 rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs text-ink-500">
+              Your first Study Hall is free. No credit card required.
+            </p>
+          )}
           <div className="mt-6 flex gap-3">
             <Button variant="outline" onClick={() => setStep("time")}>
               Back

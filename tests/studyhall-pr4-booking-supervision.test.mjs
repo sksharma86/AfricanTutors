@@ -34,11 +34,9 @@ describe("Study Hall PR4 — source: supervision + whole-hour bookings", () => {
     const route = read("src/app/api/checkout/booking/route.ts");
     assert.doesNotMatch(pricing, /minutes:\s*30,/);
     assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
-    assert.match(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
-    assert.match(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
-    assert.match(pricing, /label: "1 hour"/);
-    assert.match(pricing, /label: "2 hours"/);
-    assert.match(pricing, /label: "3 hours"/);
+    assert.doesNotMatch(pricing, /minutes:\s*120,/);
+    assert.doesNotMatch(pricing, /minutes:\s*180,/);
+    assert.match(pricing, /label: "60 minutes"/);
     assert.doesNotMatch(wiz, /30 minutes|30-minute/i);
     assert.doesNotMatch(cards, /30 minutes|Book 30/i);
     assert.match(route, /isStudyHallDuration/);
@@ -49,7 +47,7 @@ describe("Study Hall PR4 — source: supervision + whole-hour bookings", () => {
     const page = read("src/app/dashboard/student/book/page.tsx");
     assert.doesNotMatch(page, /listActiveSubjects|from\("subjects"\)/);
     assert.match(page, /Book a Study Hall session/);
-    assert.match(page, /match an approved Guide/);
+    assert.match(page, /Every Study Hall is 60 minutes|60 minutes/);
   });
 
   it("customer-facing surfaces avoid tutoring / tutor-selection language in booking", () => {
@@ -363,7 +361,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       start: futureUtc(5, 10).toISOString(),
     });
     assert.ok(r.error);
-    assert.match(r.error.message, /1, 2, or 3 hours|Invalid duration/i);
+    assert.match(r.error.message, /1, 2, or 3 hours|Study Hall sessions are 60 minutes|Invalid duration/i);
   });
 
   it("null-subject slots + auto Guide assignment for 60-min free session", async (t) => {

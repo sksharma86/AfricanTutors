@@ -23,15 +23,14 @@ describe("Pricing page — single sessions before packages", () => {
     assert.match(shell, /Book a Study Hall/);
   });
 
-  it("single-session prices derive from whole-hour SESSION_OPTIONS ($12 / $24 / $36)", () => {
+  it("single-session prices derive from the one-hour SESSION_OPTIONS ($12)", () => {
     assert.match(pricing, /minutes:\s*60,\s*priceUsd:\s*12/);
-    assert.match(pricing, /minutes:\s*120,\s*priceUsd:\s*24/);
-    assert.match(pricing, /minutes:\s*180,\s*priceUsd:\s*36/);
+    assert.doesNotMatch(pricing, /minutes:\s*120,/);
+    assert.doesNotMatch(pricing, /minutes:\s*180,/);
     assert.doesNotMatch(pricing, /minutes:\s*30,/);
-    // Cards derive from SESSION_OPTIONS, not hardcoded amounts.
-    assert.match(cards, /SESSION_OPTIONS/);
-    assert.doesNotMatch(cards, /\$\s?12\b|\$\s?24\b|\$\s?36\b/); // no hardcoded dollar literal
-    assert.doesNotMatch(cards, /\b1200\b|\b2400\b|\b3600\b/); // no hardcoded cents literal
+    assert.match(cards, /PAYG_PRICE_USD|SESSION_OPTIONS/);
+    assert.doesNotMatch(cards, /\$\s?24\b|\$\s?36\b/);
+    assert.doesNotMatch(cards, /\b2400\b|\b3600\b/);
   });
 
   it("single-session section renders before prepaid packages (item 4)", () => {
@@ -42,18 +41,17 @@ describe("Pricing page — single sessions before packages", () => {
     assert.match(page, /Pricing &amp; Study Hall options/);
   });
 
-  it("CTAs enter the existing booking flow with duration preselected (items 6,7)", () => {
-    assert.match(cards, /book\?duration=\$\{option\.minutes\}/);
-    // Book page accepts only whole-hour Study Hall durations (60 / 120 / 180).
-    assert.match(bookPage, /parsed === 120 \|\| parsed === 180 \|\| parsed === 60/);
-    assert.match(bookPage, /initialDuration=\{initialDuration\}/);
-    assert.match(wizard, /initialDuration/);
+  it("CTAs enter the booking flow without a client-controlled duration", () => {
+    assert.match(cards, /\/dashboard\/student\/book/);
+    assert.doesNotMatch(cards, /duration=/);
+    assert.match(bookPage, /Duration query params cannot create a longer booking/);
+    assert.doesNotMatch(wizard, /initialDuration|setDuration/);
   });
 
   it("free-trial stays the single account-scoped mechanism; cards add none (item 8)", () => {
     // The one authoritative free-trial check remains in the wizard.
-    assert.match(wizard, /account_has_used_free_trial/);
-    assert.match(wizard, /freeTrialUsed === false/);
+    assert.match(wizard, /booking_quote/);
+    assert.match(wizard, /funding === "free_trial"|funding_source === "free_trial"/);
     // The new cards introduce no second free-trial / payment mechanism.
     assert.doesNotMatch(cards, /useState|\.rpc\(|checkout|is_free_trial|isFreeTrial/);
   });

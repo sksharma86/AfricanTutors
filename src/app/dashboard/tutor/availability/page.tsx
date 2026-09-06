@@ -22,8 +22,7 @@ export default async function GuideAvailabilityPage() {
         Availability
       </h1>
       <p className="mt-2 text-sm text-[var(--gp-muted)]">
-        Keep continuous blocks open for the full Study Hall length parents book (1, 2, or 3 hours). A Study Hall is
-        never split across multiple Guides.
+        Keep continuous 60-minute blocks open. Every new Study Hall is one hour and is never split across multiple Guides.
       </p>
       <div className="gp-ops mt-6">
         <AvailabilityManager

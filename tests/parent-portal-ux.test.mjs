@@ -333,7 +333,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.match(hours, /10 Study Halls \/ \$100/);
     assert.match(hours, /Study Hall 365/);
     assert.match(hours, /\$149\/month/);
-    assert.match(hours, /Pay as you go · \$12\/hour/);
+    assert.match(hours, /Pay as you go · \$12 for one 60-minute Study Hall/);
     assert.match(hours, /id="prepaid"/);
     assert.match(hours, /SingleSessionCards/);
     assert.match(hours, /PackageStore/);
@@ -379,7 +379,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     const wizard = read("src/components/booking/booking-wizard.tsx");
     assert.match(book, /ParentPage/);
     assert.match(book, /BookingWizard/);
-    assert.match(book, /initialDuration=\{initialDuration\}/);
+    assert.match(book, /Every Study Hall is 60 minutes/);
     assert.match(wizard, /Date & time|date &amp; time/);
     assert.doesNotMatch(wizard, /max-h-96/);
   });
