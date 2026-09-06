@@ -129,6 +129,7 @@ export function parentPaymentPurposeLabel(purpose) {
   const p = String(purpose ?? "");
   if (p === "package") return "Prepaid hours";
   if (p === "booking") return "Study Hall session";
+  if (p === "subscription") return "Study Hall 365";
   if (p === "refund") return "Refund";
   return p.replace(/_/g, " ") || "Purchase";
 }

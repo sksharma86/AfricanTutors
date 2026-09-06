@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { PackageStore, type PackageRow } from "@/components/booking/package-store";
+import { StudyHall365Card } from "@/components/booking/study-hall-365-card";
 import { LinkButton } from "@/components/ui/button";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentPage } from "@/components/dashboard/parent-page";
@@ -11,6 +12,7 @@ import { requireRole } from "@/lib/auth";
 import { formatMoneyCents } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPaymentPurposeLabel, parentPaymentStatusLabel } from "@/lib/parent-portal.mjs";
+import { customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -28,10 +30,10 @@ export default async function PackagesPage() {
   const { data: authUser } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   const uid = authUser?.user?.id ?? null;
 
-  const [{ data: packages }, balancesRes, paymentsRes] = await Promise.all([
+  const [{ data: packages }, balancesRes, paymentsRes, membershipRes] = await Promise.all([
     supabase!
       .from("package_products")
-      .select("id, name, minutes, price_cents")
+      .select("id, code, name, minutes, price_cents")
       .eq("is_active", true)
       .order("sort_order"),
     uid ? supabase!.rpc("get_customer_balances", { p_account: uid }) : Promise.resolve({ data: null }),
@@ -42,6 +44,11 @@ export default async function PackagesPage() {
           .eq("account_id", uid)
           .order("created_at", { ascending: false })
           .limit(12)
+          .then((r) => r, () => ({ data: null, error: null }))
+      : Promise.resolve({ data: null }),
+    uid
+      ? supabase!
+          .rpc("get_study_hall_365_membership", { p_account: uid })
           .then((r) => r, () => ({ data: null, error: null }))
       : Promise.resolve({ data: null }),
   ]);
@@ -56,6 +63,22 @@ export default async function PackagesPage() {
     stripe_paid_cents: number;
     created_at: string;
   }[];
+  const offerPackages = customerFacingPrepaidPackages((packages ?? []) as PackageRow[]);
+  const membershipPayload = membershipRes && "data" in membershipRes ? membershipRes.data : null;
+  const mem =
+    membershipPayload && typeof membershipPayload === "object" && "membership" in membershipPayload
+      ? (membershipPayload as { membership: Record<string, unknown> | null }).membership
+      : membershipPayload && typeof membershipPayload === "object" && "entitled" in (membershipPayload as object)
+        ? (membershipPayload as Record<string, unknown>)
+        : null;
+  const membership = mem
+    ? {
+        status: String(mem.customer_status ?? (mem.entitled ? "active" : "inactive")),
+        entitled: Boolean(mem.entitled),
+        cancelAtPeriodEnd: Boolean(mem.cancel_at_period_end),
+        periodEnd: String(mem.current_period_end ?? ""),
+      }
+    : null;
 
   return (
     <ParentPage wide>
@@ -77,10 +100,20 @@ export default async function PackagesPage() {
       <div id="prepaid" className="pp-commerce mt-10 scroll-mt-24">
         <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Save with prepaid hours</h2>
         <p className="mt-1 text-sm text-[var(--pp-muted)]">
-          14 hours / $140 · 28 hours / $252 · as low as $9/hour. Hours never expire.
+          10 Study Halls / $100 · $10 each. Purchased Study Halls never expire.
         </p>
         <div className="mt-4">
-          <PackageStore packages={(packages ?? []) as PackageRow[]} creditCents={creditCents} />
+          <PackageStore packages={offerPackages} creditCents={creditCents} />
+        </div>
+      </div>
+
+      <div id="study-hall-365" className="pp-commerce mt-10 scroll-mt-24">
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Study Hall 365</h2>
+        <p className="mt-1 text-sm text-[var(--pp-muted)]">
+          $149/month. One Study Hall each local calendar day. Cancel anytime — access continues through the paid period.
+        </p>
+        <div className="mt-4 max-w-md">
+          <StudyHall365Card membership={membership} />
         </div>
       </div>
 

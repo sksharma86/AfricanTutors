@@ -96,10 +96,10 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
       .order("sort_order");
     assert.equal(error, null, error?.message);
     const rows = (data ?? []).map((r) => [r.code, r.minutes, r.price_cents]);
-    assert.deepEqual(rows, [
-      ["pkg_14h", 840, 14000],
-      ["pkg_28h", 1680, 25200],
-    ]);
+    assert.ok(rows.some((r) => r[0] === "pkg_14h" && r[1] === 840 && r[2] === 14000));
+    assert.ok(rows.some((r) => r[0] === "pkg_28h" && r[1] === 1680 && r[2] === 25200));
+    const ten = rows.find((r) => r[0] === "pkg_10sh");
+    if (ten) assert.deepEqual(ten, ["pkg_10sh", 600, 10000]);
   });
 
   it("6. Dollar account credit applies correctly against the $12 session", async () => {

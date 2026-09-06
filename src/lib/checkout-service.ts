@@ -1,16 +1,23 @@
 import "server-only";
 
+import type Stripe from "stripe";
+
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { assertHalfHourStart } from "@/lib/half-hour-grid.mjs";
 import { missingStudentIdsRpc } from "@/lib/household-children.mjs";
 import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { formatCents } from "@/lib/pricing";
-import { isStripeConfigured } from "@/lib/stripe/config";
+import { isStripeConfigured, STRIPE_PRICE_STUDY_HALL_365 } from "@/lib/stripe/config";
 import { stripeCheckoutExpiresAt } from "@/lib/stripe/checkout-expiry.mjs";
 import { getStripe } from "@/lib/stripe/client";
 import { ensureStripeCustomer } from "@/lib/stripe/customer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/service";
+import {
+  STUDY_HALL_365_KIND,
+  STUDY_HALL_365_MONTHLY_CENTS,
+  STUDY_HALL_365_PRODUCT_NAME,
+} from "@/lib/study-hall-365/catalog.mjs";
 
 /** Pending Guide applicants keep role=student but must not book or buy hours. */
 async function assertNotGuideApplicant(userId: string): Promise<void> {
@@ -269,7 +276,12 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
             price_data: {
               currency: "usd",
               unit_amount: q.stripe_cents_due,
-              product_data: { name: `Prepaid hours (${q.minutes} minutes)` },
+              product_data: {
+                name:
+                  q.minutes === 600
+                    ? "10 Study Halls"
+                    : `Prepaid hours (${q.minutes} minutes)`,
+              },
             },
           },
         ],
@@ -372,7 +384,10 @@ export async function getCheckoutStatus(paymentId: string): Promise<CheckoutStat
   } else if (pay.status === "succeeded") {
     if (pay.purpose === "package") {
       uiState = "completed";
-      message = "Payment confirmed — your prepaid hours are now available.";
+      message = "Payment confirmed — your prepaid Study Halls are now available.";
+    } else if (pay.purpose === "subscription") {
+      uiState = "completed";
+      message = "Payment confirmed — Study Hall 365 is active for this household.";
     } else {
       uiState = "confirmed";
       message = "Payment confirmed — your session is booked.";
@@ -399,4 +414,92 @@ export async function getCheckoutStatus(paymentId: string): Promise<CheckoutStat
     uiState,
     message,
   };
+}
+
+function studyHall365LineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
+  const production = process.env.VERCEL_ENV === "production";
+  if (production && !STRIPE_PRICE_STUDY_HALL_365) {
+    throw new Error("STRIPE_PRICE_STUDY_HALL_365 is required in production");
+  }
+  if (STRIPE_PRICE_STUDY_HALL_365) {
+    return { quantity: 1, price: STRIPE_PRICE_STUDY_HALL_365 };
+  }
+  return {
+    quantity: 1,
+    price_data: {
+      currency: "usd",
+      unit_amount: STUDY_HALL_365_MONTHLY_CENTS,
+      recurring: { interval: "month" },
+      product_data: { name: STUDY_HALL_365_PRODUCT_NAME },
+    },
+  };
+}
+
+export async function createStudyHall365Checkout(baseUrl: string): Promise<StartResult> {
+  const { supabase, user } = await authed();
+  await assertNotGuideApplicant(user.id);
+
+  const { data, error } = await supabase.rpc("start_study_hall_365_checkout");
+  if (error) throw new Error(error.message);
+  const q = data as {
+    payment_id: string;
+    gross_cents: number;
+    stripe_cents_due: number;
+    status: string;
+    deduped?: boolean;
+  };
+
+  const service = getServiceSupabase();
+  try {
+    if (!isStripeConfigured) throw new Error("STRIPE_NOT_CONFIGURED");
+    const customerId = await ensureStripeCustomer(service, user.id, user.email);
+    const stripe = getStripe();
+    const meta = {
+      kind: STUDY_HALL_365_KIND,
+      payment_id: q.payment_id,
+      account_id: user.id,
+    };
+
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "subscription",
+        customer: customerId,
+        client_reference_id: q.payment_id,
+        line_items: [studyHall365LineItem()],
+        metadata: meta,
+        subscription_data: { metadata: meta },
+        success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,
+        cancel_url: `${baseUrl}/checkout/return?payment=${q.payment_id}&canceled=1`,
+      },
+      { idempotencyKey: `checkout-365-${q.payment_id}` },
+    );
+
+    await service
+      .from("payments")
+      .update({
+        stripe_checkout_session_id: session.id,
+        stripe_customer_id: customerId,
+        idempotency_key: `checkout-365-${q.payment_id}`,
+        status: "requires_payment",
+      })
+      .eq("id", q.payment_id);
+
+    return {
+      status: "requires_payment",
+      checkoutUrl: session.url ?? undefined,
+      paymentId: q.payment_id,
+      funding: "stripe",
+      creditCentsUsed: 0,
+      stripeCentsDue: q.stripe_cents_due,
+    };
+  } catch (err) {
+    await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
+    if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
+      throw new Error("Online payment is not available yet. Please try again later.");
+    }
+    if (err instanceof Error && /already has a Study Hall 365/i.test(err.message)) {
+      throw err;
+    }
+    throw new Error("We couldn't start secure checkout. Please try again.");
+  }
 }

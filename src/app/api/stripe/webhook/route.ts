@@ -5,6 +5,13 @@ import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
 import { getStripe } from "@/lib/stripe/client";
 import { STRIPE_WEBHOOK_SECRET, isStripeWebhookConfigured } from "@/lib/stripe/config";
 import { getServiceSupabase } from "@/lib/supabase/service";
+import {
+  fulfillStudyHall365Checkout,
+  isStudyHall365Session,
+  syncFromInvoice,
+  syncSubscriptionById,
+} from "@/lib/study-hall-365/stripe-sync";
+import { STUDY_HALL_365_KIND } from "@/lib/study-hall-365/catalog.mjs";
 
 // Stripe signature verification needs the raw body + Node runtime.
 export const runtime = "nodejs";
@@ -73,6 +80,14 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (isStudyHall365Session(session)) {
+          // Subscription Checkout is paid when the first invoice collects;
+          // payment_status may be "paid" or "no_payment_required".
+          if (session.payment_status === "paid" || session.payment_status === "no_payment_required") {
+            await fulfillStudyHall365Checkout(supabase, session, event);
+          }
+          break;
+        }
         // Only fulfill fully-paid sessions (async/pending payments fulfill later
         // via payment_intent.succeeded or checkout.session.async_payment_succeeded).
         if (session.payment_status === "paid") {
@@ -88,6 +103,38 @@ export async function POST(request: NextRequest) {
       case "payment_intent.succeeded": {
         const pi = event.data.object as Stripe.PaymentIntent;
         await fulfillFromMetadata(supabase, pi.metadata, pi.amount_received ?? pi.amount, pi.id);
+        break;
+      }
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        await syncSubscriptionById(supabase, {
+          subscriptionId: sub.id,
+          accountId: sub.metadata?.account_id ?? null,
+          eventId: event.id,
+          eventCreated: event.created,
+        });
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        await syncSubscriptionById(supabase, {
+          subscriptionId: sub.id,
+          accountId: sub.metadata?.account_id ?? null,
+          eventId: event.id,
+          eventCreated: event.created,
+          ended: true,
+        });
+        break;
+      }
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await syncFromInvoice(supabase, invoice, event);
+        break;
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await syncFromInvoice(supabase, invoice, event);
         break;
       }
       case "checkout.session.expired":
@@ -132,6 +179,7 @@ async function fulfillFromMetadata(
 ): Promise<void> {
   const kind = metadata?.kind;
   const paymentId = metadata?.payment_id;
+  if (kind === STUDY_HALL_365_KIND) return; // handled by the subscription path
   if (!paymentId || (kind !== "booking" && kind !== "package")) return; // not ours; safe no-op
 
   const chargeId = typeof paymentIntent === "string" ? paymentIntent : (paymentIntent?.id ?? null);
@@ -159,7 +207,7 @@ async function cancelFromMetadata(
 ): Promise<void> {
   const kind = metadata?.kind;
   const paymentId = metadata?.payment_id;
-  if (!paymentId || (kind !== "booking" && kind !== "package")) return;
+  if (!paymentId || (kind !== "booking" && kind !== "package" && kind !== STUDY_HALL_365_KIND)) return;
   const { error } = await supabase.rpc("cancel_pending_payment", { p_payment_id: paymentId, p_reason: reason });
   if (error) throw new Error(error.message);
 }

@@ -7,6 +7,7 @@ export const STANDARD_HOURLY_CENTS = 1200;
 /** Catalog codes for the active Study Hall PR2 packages. */
 export const PACKAGE_CODE_14H = "pkg_14h";
 export const PACKAGE_CODE_28H = "pkg_28h";
+export const PACKAGE_CODE_10SH = "pkg_10sh";
 
 /** Minutes / list prices for new purchases (cents). */
 export const PACKAGE_14H_MINUTES = 840;
