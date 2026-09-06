@@ -12,39 +12,49 @@ const havePsql = (() => {
   }
 })();
 
-function sql(text) {
-  const out = execSync(`sudo -u postgres psql -v ON_ERROR_STOP=1 -d ${DB} -A -t -c ${JSON.stringify(text)}`, {
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024,
-  });
-  return out.trim();
-}
-
-function lastLine(text) {
-  const lines = String(text)
+function dataLines(text) {
+  return String(text)
     .split("\n")
     .map((line) => line.trim())
-    .filter(Boolean);
+    .filter(
+      (line) =>
+        line &&
+        !/^(INSERT|UPDATE|DELETE|SELECT \d+|SET|RESET|CREATE|DROP|ALTER|GRANT|REVOKE|BEGIN|COMMIT|NOTIFY)\b/.test(line),
+    );
+}
+
+function sql(text) {
+  const out = execSync(`sudo -u postgres psql -v ON_ERROR_STOP=1 -q -d ${DB} -A -t`, {
+    encoding: "utf8",
+    input: text,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  const lines = dataLines(out);
   return lines[lines.length - 1] ?? "";
 }
 
+function sqlRaw(text) {
+  return execSync(`sudo -u postgres psql -v ON_ERROR_STOP=1 -q -d ${DB} -A -t`, {
+    encoding: "utf8",
+    input: text,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
 function asRole(uid, query) {
-  return execSync(
-    `sudo -u postgres psql -v ON_ERROR_STOP=1 -d ${DB} -A -t -c ${JSON.stringify(`
-      select set_config('request.jwt.claim.sub', '${uid}', false);
-      set role authenticated;
-      ${query}
-      reset role;
-    `)}`,
-    { encoding: "utf8" },
-  );
+  return sqlRaw(`
+    select set_config('request.jwt.claim.sub', '${uid}', false);
+    set role authenticated;
+    ${query}
+    reset role;
+  `);
 }
 
 function spawnConsume(accountId, localDate) {
   const query = `select consume_study_hall_365_day('${accountId}'::uuid, '${localDate}'::date, null, '${localDate}T18:00:00Z'::timestamptz);`;
   return new Promise((resolve, reject) => {
-    const child = spawn("sudo", ["-u", "postgres", "psql", "-v", "ON_ERROR_STOP=1", "-d", DB, "-A", "-t", "-c", query], {
-      stdio: ["ignore", "pipe", "pipe"],
+    const child = spawn("sudo", ["-u", "postgres", "psql", "-v", "ON_ERROR_STOP=1", "-d", DB, "-A", "-t"], {
+      stdio: ["pipe", "pipe", "pipe"],
     });
     let out = "";
     let err = "";
@@ -59,6 +69,8 @@ function spawnConsume(accountId, localDate) {
       if (code !== 0) reject(new Error(err || out || `psql exit ${code}`));
       else resolve(out.trim());
     });
+    child.stdin.write(query);
+    child.stdin.end();
   });
 }
 
@@ -72,8 +84,8 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
 
   it("applies 0036+0037 on an isolated local database (not demo)", () => {
     execSync("bash scripts/setup-study-hall-365-throwaway-db.sh", { stdio: "pipe" });
-    const ten = sql(`select minutes || ',' || price_cents || ',' || is_active from package_products where code = 'pkg_10sh'`);
-    assert.equal(ten, "600,10000,t");
+    const ten = sql(`select minutes::text || ',' || price_cents::text || ',' || is_active::text from package_products where code = 'pkg_10sh'`);
+    assert.match(ten, /^600,10000,t/);
     const tables = sql(
       `select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('study_hall_365_subscriptions','study_hall_365_day_usage')`,
     );
@@ -164,7 +176,7 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
     `);
     assert.match(stale, /skipped_stale/);
     const status = sql(`select status || ',' || stripe_price_id || ',' || cancel_at_period_end::text from study_hall_365_subscriptions where account_id = '${parent}'`);
-    assert.equal(status, "active,price_test,f");
+    assert.match(status, /^active,price_test,f/);
     const audit = sql(`
       select count(*) from financial_audit_log
        where action = 'study_hall_365_stale_event' and reason = 'stale Stripe event ignored'
@@ -222,14 +234,14 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
     `);
     sql(`update bookings set status = 'cancelled' where id = '${booking}'`);
     const afterCancel = sql(`
-      select count(*) || ',' || coalesce(booking_id::text,'') from study_hall_365_day_usage
+      select count(*)::text || ',' || coalesce(min(booking_id::text),'') from study_hall_365_day_usage
        where account_id = '${parent}' and local_date = '2026-09-23'
     `);
     assert.match(afterCancel, /^1,/);
-    assert.match(afterCancel, booking);
+    assert.ok(afterCancel.includes(booking), afterCancel);
     sql(`delete from bookings where id = '${booking}'`);
     const afterDelete = sql(`
-      select count(*) || ',' || coalesce(booking_id::text,'null') from study_hall_365_day_usage
+      select count(*)::text || ',' || coalesce(min(booking_id::text),'null') from study_hall_365_day_usage
        where account_id = '${parent}' and local_date = '2026-09-23'
     `);
     assert.equal(afterDelete, "1,null");
@@ -257,7 +269,7 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
 
   it("parents cannot read raw Stripe ids; Parent B and Guides cannot read Parent A", () => {
     const asParent = asRole(parent, `select count(*)::text from study_hall_365_subscriptions;`);
-    assert.equal(lastLine(asParent), "0");
+    assert.equal(dataLines(asParent).filter((line) => /^\d+$/.test(line)).pop(), "0");
 
     const membership = asRole(parent, `select get_study_hall_365_membership('${parent}'::uuid);`);
     assert.match(membership, /entitled/);
@@ -284,8 +296,8 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
     assert.equal(guideDenied, true);
 
     const guideSelect = asRole(guide, `select count(*)::text from study_hall_365_subscriptions;`);
-    assert.equal(lastLine(guideSelect), "0");
+    assert.equal(dataLines(guideSelect).filter((line) => /^\d+$/.test(line)).pop(), "0");
     const otherSelect = asRole(other, `select count(*)::text from study_hall_365_subscriptions;`);
-    assert.equal(lastLine(otherSelect), "0");
+    assert.equal(dataLines(otherSelect).filter((line) => /^\d+$/.test(line)).pop(), "0");
   });
 });

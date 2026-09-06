@@ -34,14 +34,14 @@ async function tablesReady() {
 describe("Study Hall 365 — catalog + RPC presence (live, read-only)", { skip: !hasSupabaseEnv }, () => {
   const svc = adminClient();
 
-  it("pkg_10sh is 600 minutes / $100 when migration 0036 is applied", async () => {
+  it("pkg_10sh is 600 minutes / $100 when migration 0036 is applied", async (t) => {
     const { data, error } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
       .eq("code", PACKAGE_CODE_10_STUDY_HALLS)
       .maybeSingle();
     if (error || !data) {
-      assert.ok(true, "ENVIRONMENT/BLOCKED: pkg_10sh not in this database yet");
+      t.skip("ENVIRONMENT/BLOCKED: pkg_10sh not in this database yet");
       return;
     }
     assert.equal(data.minutes, PACKAGE_10SH_MINUTES);

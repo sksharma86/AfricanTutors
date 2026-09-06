@@ -63,7 +63,7 @@ export default async function PackagesPage() {
     stripe_paid_cents: number;
     created_at: string;
   }[];
-  const offerPackages = customerFacingPrepaidPackages((packages ?? []) as (PackageRow & { code?: string })[]);
+  const offerPackages = customerFacingPrepaidPackages((packages ?? []) as PackageRow[]);
   const membershipPayload = membershipRes && "data" in membershipRes ? membershipRes.data : null;
   const mem =
     membershipPayload && typeof membershipPayload === "object" && "membership" in membershipPayload

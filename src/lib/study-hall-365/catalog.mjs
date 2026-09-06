@@ -24,7 +24,9 @@ export const CUSTOMER_PREPAID_OFFER_CODES = [PACKAGE_CODE_10_STUDY_HALLS];
  * If pkg_10sh is missing (migration not applied), fall back to remaining
  * active rows so the old purchase path is not removed before cutover.
  *
- * @param {{ code?: string }[]} packages
+ * @template {{ code?: string }} T
+ * @param {T[] | null | undefined} packages
+ * @returns {T[]}
  */
 export function customerFacingPrepaidPackages(packages) {
   const rows = Array.isArray(packages) ? packages : [];
