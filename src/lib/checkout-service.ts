@@ -417,6 +417,10 @@ export async function getCheckoutStatus(paymentId: string): Promise<CheckoutStat
 }
 
 function studyHall365LineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
+  const production = process.env.VERCEL_ENV === "production";
+  if (production && !STRIPE_PRICE_STUDY_HALL_365) {
+    throw new Error("STRIPE_PRICE_STUDY_HALL_365 is required in production");
+  }
   if (STRIPE_PRICE_STUDY_HALL_365) {
     return { quantity: 1, price: STRIPE_PRICE_STUDY_HALL_365 };
   }

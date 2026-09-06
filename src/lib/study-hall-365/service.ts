@@ -50,6 +50,7 @@ export async function getStudyHall365Entitlement(params: {
     p_account: params.accountId,
     p_local_date: params.localDate ?? null,
     p_as_of: (params.asOf ?? new Date()).toISOString(),
+    p_booking_start: params.bookingStart ? new Date(params.bookingStart).toISOString() : null,
   });
   if (error) throw new Error(error.message);
 
@@ -108,6 +109,7 @@ export async function consumeStudyHall365Day(params: {
   localDate: string;
   bookingId?: string | null;
   asOf?: Date;
+  bookingStart?: Date | string | null;
 }) {
   const db = getServiceSupabase();
   const { data, error } = await db.rpc("consume_study_hall_365_day", {
@@ -115,27 +117,24 @@ export async function consumeStudyHall365Day(params: {
     p_local_date: params.localDate,
     p_booking_id: params.bookingId ?? null,
     p_as_of: (params.asOf ?? new Date()).toISOString(),
+    p_booking_start: params.bookingStart ? new Date(params.bookingStart).toISOString() : null,
   });
   if (error) throw new Error(error.message);
   return data as { ok: boolean; reason: string; local_date?: string; id?: string };
 }
 
-export async function loadOwnMembership(
-  client: SupabaseClient,
-  accountId: string,
-): Promise<Pick<
-  StudyHall365Row,
-  "status" | "current_period_end" | "current_period_start" | "cancel_at_period_end" | "ended_at"
-> | null> {
-  const { data, error } = await client
-    .from("study_hall_365_subscriptions")
-    .select("status, current_period_start, current_period_end, cancel_at_period_end, ended_at")
-    .eq("account_id", accountId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) return null;
-  return data;
+export async function loadOwnMembership(client: SupabaseClient, accountId: string) {
+  const { data, error } = await client.rpc("get_study_hall_365_membership", { p_account: accountId });
+  if (error || !data) return null;
+  const mem = (data as { membership?: Record<string, unknown> | null }).membership ?? null;
+  if (!mem) return null;
+  return {
+    customerStatus: String(mem.customer_status ?? ""),
+    entitled: Boolean(mem.entitled),
+    cancelAtPeriodEnd: Boolean(mem.cancel_at_period_end),
+    currentPeriodStart: (mem.current_period_start as string | null) ?? null,
+    currentPeriodEnd: (mem.current_period_end as string | null) ?? null,
+  };
 }
 
 export function membershipSummaryForUi(

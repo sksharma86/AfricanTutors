@@ -12,8 +12,7 @@ import { requireRole } from "@/lib/auth";
 import { formatMoneyCents } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPaymentPurposeLabel, parentPaymentStatusLabel } from "@/lib/parent-portal.mjs";
-import { CUSTOMER_PREPAID_OFFER_CODES } from "@/lib/study-hall-365/catalog.mjs";
-import { isSubscriptionEntitled } from "@/lib/study-hall-365/entitlement.mjs";
+import { customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -49,12 +48,7 @@ export default async function PackagesPage() {
       : Promise.resolve({ data: null }),
     uid
       ? supabase!
-          .from("study_hall_365_subscriptions")
-          .select("status, current_period_end, cancel_at_period_end, ended_at")
-          .eq("account_id", uid)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
+          .rpc("get_study_hall_365_membership", { p_account: uid })
           .then((r) => r, () => ({ data: null, error: null }))
       : Promise.resolve({ data: null }),
   ]);
@@ -69,20 +63,20 @@ export default async function PackagesPage() {
     stripe_paid_cents: number;
     created_at: string;
   }[];
-  const allPackages = (packages ?? []) as (PackageRow & { code?: string })[];
-  const tenPack = allPackages.filter((p) => p.code && CUSTOMER_PREPAID_OFFER_CODES.includes(p.code));
-  const offerPackages = tenPack.length > 0 ? tenPack : allPackages;
-  const mem = membershipRes && "data" in membershipRes ? membershipRes.data : null;
+  const offerPackages = customerFacingPrepaidPackages((packages ?? []) as (PackageRow & { code?: string })[]);
+  const membershipPayload = membershipRes && "data" in membershipRes ? membershipRes.data : null;
+  const mem =
+    membershipPayload && typeof membershipPayload === "object" && "membership" in membershipPayload
+      ? (membershipPayload as { membership: Record<string, unknown> | null }).membership
+      : membershipPayload && typeof membershipPayload === "object" && "entitled" in (membershipPayload as object)
+        ? (membershipPayload as Record<string, unknown>)
+        : null;
   const membership = mem
     ? {
-        status: mem.status as string,
-        entitled: isSubscriptionEntitled(mem.status as string, {
-          cancelAtPeriodEnd: Boolean(mem.cancel_at_period_end),
-          periodEnd: mem.current_period_end as string,
-          endedAt: (mem.ended_at as string | null) ?? null,
-        }),
+        status: String(mem.customer_status ?? (mem.entitled ? "active" : "inactive")),
+        entitled: Boolean(mem.entitled),
         cancelAtPeriodEnd: Boolean(mem.cancel_at_period_end),
-        periodEnd: mem.current_period_end as string,
+        periodEnd: String(mem.current_period_end ?? ""),
       }
     : null;
 

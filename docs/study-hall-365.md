@@ -39,7 +39,25 @@ The free first Study Hall remains a separate no-card path.
 
 Paid window is half-open: `[current_period_start, current_period_end)`.
 A local date is covered when that civil day **overlaps** the paid window.
-A future booking start timestamp must fall inside the paid window (PR3).
+
+### PR3 booking contract
+
+PR3 must pass the scheduled Study Hall **start instant** into:
+
+- `get_study_hall_365_entitlement(..., p_booking_start)`
+- `consume_study_hall_365_day(..., p_booking_start)`
+- or `evaluateStudyHall365Day({ bookingStart })` / `getStudyHall365Entitlement({ bookingStart })`
+
+Rules, in order:
+
+1. Membership status must be entitled at `as_of`.
+2. The household local civil date of the booking must overlap the paid window.
+3. The booking start instant must satisfy `period_start <= start < period_end`.
+4. That local date must not already be consumed.
+
+A civil date can overlap the paid window (e.g. subscribe at 4pm local) while a
+morning start that same day is still **before** `current_period_start`.
+Step 3 rejects that. Do not book from civil-date overlap alone.
 
 ## Daily consumption
 
@@ -80,10 +98,44 @@ Out-of-order: `upsert_study_hall_365_subscription` applies a snapshot only when
 
 Success URLs never credit value.
 
+## Parent-facing membership data
+
+Raw `study_hall_365_subscriptions` / `study_hall_365_day_usage` rows are
+server/admin only after `0037`. Parents do **not** SELECT those tables.
+
+Parent Hours UI and `GET /api/billing/membership` call
+`get_study_hall_365_membership`, which returns only:
+
+- `customer_status` (`active` | `cancels_at_period_end` | `inactive`)
+- `entitled`
+- `cancel_at_period_end`
+- `current_period_start` / `current_period_end`
+
+Never returned: `stripe_subscription_id`, `stripe_customer_id`,
+`stripe_price_id`, `last_stripe_event_id`, `last_stripe_event_created`,
+invoice ids.
+
+Admins may SELECT the raw tables (existing `is_admin` policy) for later ops.
+Guides have no access.
+
+`profiles.stripe_customer_id` remains a pre-existing Phase 4A own-row column.
+PR80 billing routes never send it to the browser.
+
+## Customer Portal flow
+
+1. Authenticated parent clicks Manage billing.
+2. `POST /api/billing/portal` uses `getCurrentUser()`.
+3. Service role reads `profiles.stripe_customer_id` (never the browser).
+4. Server creates a Stripe Billing Portal session.
+5. JSON response is `{ url }` only.
+
 ## Stripe / Vercel configuration still required
 
 1. `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (already required)
-2. Optional `STRIPE_PRICE_STUDY_HALL_365` — monthly Price at **14900 cents**. If unset, Checkout uses `price_data`.
+2. **Production:** `STRIPE_PRICE_STUDY_HALL_365` is **required** when
+   `VERCEL_ENV=production`. Create a Stripe Product **Study Hall 365** with a
+   recurring Price: **$149.00 USD / month**. Do not hardcode the Price id.
+   Local/dev may omit it and use inline `price_data` for the same amount.
 3. Stripe Dashboard webhook must include the subscription/invoice events above (in addition to existing Checkout / PaymentIntent events).
 4. Stripe Customer Portal: enable update payment method + cancel at period end. `/api/billing/portal` returns 409 until that is configured.
 5. Do **not** enable a Stripe subscription trial.
@@ -92,11 +144,12 @@ Production is **not** ready until those Dashboard items exist. Code does not har
 
 ## Cutover
 
-1. Apply `0036_study_hall_365.sql` (additive). Existing balances unchanged.
-2. Confirm `pkg_10sh` is active (600 / $100). Leave `pkg_14h` / `pkg_28h` active until live purchase tests are updated and 10-pack Checkout is verified.
-3. Parent Hours UI offers `pkg_10sh` when present; otherwise it falls back to remaining active packages so the old path is not removed before the new one works.
-4. After 10-pack is verified in production, a later migration may set `pkg_14h` / `pkg_28h` `is_active=false`. Do **not** delete those rows.
-5. Historical `pkg_10h` ($190 / 600 min, inactive) stays inactive forever.
+1. Apply `0036_study_hall_365.sql` and `0037_study_hall_365_parent_privacy.sql`. Existing balances unchanged.
+2. Confirm `pkg_10sh` is active (600 / $100). Leave `pkg_14h` / `pkg_28h` **`is_active=true`** until live `purchase_package` tests are updated and production 10-pack Checkout is verified.
+3. Parent Hours UI (`customerFacingPrepaidPackages`): if `pkg_10sh` is present, list **only** that SKU. Parents do not see 14h + 28h + 10-pack together. If `pkg_10sh` is missing, fall back to remaining active rows.
+4. `purchase_package` can still sell 14h/28h by id while they stay active (API, not Hours UI).
+5. Set `pkg_14h` / `pkg_28h` `is_active=false` in a **later** migration after: (a) `0036` is in production, (b) 10-pack webhook credit is verified live, (c) phase4/PR2 live tests that buy `pkg_14h` are updated. Do **not** delete those rows.
+6. Historical `pkg_10h` ($190 / 600 min, inactive) stays inactive forever.
 
 ## Deferred to PR3+
 

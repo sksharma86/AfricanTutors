@@ -17,6 +17,7 @@ import {
   PACKAGE_CODE_10_STUDY_HALLS,
   STUDY_HALL_365_KIND,
   STUDY_HALL_365_MONTHLY_CENTS,
+  customerFacingPrepaidPackages,
 } from "../src/lib/study-hall-365/catalog.mjs";
 import {
   chooseBookingSource,
@@ -192,6 +193,34 @@ describe("Study Hall 365 — paid window vs local date", () => {
     assert.equal(day2.reason, "available");
   });
 
+  it("civil date overlap is not enough when booking start is outside the paid window", () => {
+    const start = new Date("2026-09-17T16:00:00.000Z");
+    const end = new Date("2026-10-17T16:00:00.000Z");
+    const morning = evaluateStudyHall365Day({
+      status: "active",
+      periodStart: start,
+      periodEnd: end,
+      timeZone: "America/Chicago",
+      localDate: "2026-09-17",
+      now: "2026-09-17T18:00:00.000Z",
+      bookingStart: "2026-09-17T10:00:00.000Z",
+    });
+    assert.equal(morning.entitled, false);
+    assert.equal(morning.reason, "booking_outside_paid_window");
+
+    const afternoon = evaluateStudyHall365Day({
+      status: "active",
+      periodStart: start,
+      periodEnd: end,
+      timeZone: "America/Chicago",
+      localDate: "2026-09-17",
+      now: "2026-09-17T18:00:00.000Z",
+      bookingStart: "2026-09-17T17:00:00.000Z",
+    });
+    assert.equal(afternoon.entitled, true);
+    assert.equal(afternoon.reason, "available");
+  });
+
   it("canceled-day consumption remains consumed", () => {
     const result = evaluateStudyHall365Day({
       status: "active",
@@ -353,20 +382,19 @@ describe("Study Hall 365 — architecture / safety static checks", () => {
   });
 
   it("consume RPC is service-role only; parents cannot write usage", () => {
+    const privacy = read("supabase/migrations/0037_study_hall_365_parent_privacy.sql");
     assert.match(migration, /grant execute on function public.consume_study_hall_365_day[\s\S]*to service_role/);
     assert.match(migration, /revoke all on function public.consume_study_hall_365_day/);
-    assert.match(migration, /for select to authenticated/);
-    assert.doesNotMatch(
-      migration.replace(/create policy study_hall_365_sub_select[\s\S]*?;/g, ""),
-      /for insert to authenticated/,
-    );
+    assert.match(privacy, /grant execute on function public.consume_study_hall_365_day[\s\S]*to service_role/);
+    assert.match(privacy, /p_booking_start timestamptz/);
+    assert.doesNotMatch(privacy, /for insert to authenticated/);
   });
 
   it("does not deactivate historical packages or reuse pkg_10h", () => {
     assert.match(migration, /pkg_10sh/);
     assert.doesNotMatch(migration, /is_active = false/);
     assert.match(migration, /Do NOT reuse pkg_10h/);
-    assert.match(read("src/app/dashboard/student/packages/page.tsx"), /CUSTOMER_PREPAID_OFFER_CODES/);
+    assert.match(read("src/app/dashboard/student/packages/page.tsx"), /customerFacingPrepaidPackages/);
   });
 
   it("does not mint monthly credit rows or touch Daily / Dumbo", () => {
@@ -378,5 +406,62 @@ describe("Study Hall 365 — architecture / safety static checks", () => {
   it("labels subscription purchases for parents", () => {
     assert.equal(parentPaymentPurposeLabel("subscription"), "Study Hall 365");
     assert.equal(parentPaymentPurposeLabel("package"), "Prepaid hours");
+  });
+
+  it("Hours UI hides 14h/28h once pkg_10sh is in the catalog", () => {
+    const mixed = [
+      { code: "pkg_14h", name: "14 Hour Routine" },
+      { code: "pkg_28h", name: "28 Hour Routine" },
+      { code: "pkg_10sh", name: "10 Study Halls" },
+    ];
+    const shown = customerFacingPrepaidPackages(mixed);
+    assert.deepEqual(shown.map((p) => p.code), ["pkg_10sh"]);
+    const fallback = customerFacingPrepaidPackages([
+      { code: "pkg_14h" },
+      { code: "pkg_28h" },
+    ]);
+    assert.deepEqual(fallback.map((p) => p.code), ["pkg_14h", "pkg_28h"]);
+  });
+
+  it("parent-facing membership path never selects raw Stripe identifiers", () => {
+    const privacy = read("supabase/migrations/0037_study_hall_365_parent_privacy.sql");
+    const hours = read("src/app/dashboard/student/packages/page.tsx");
+    const membership = read("src/app/api/billing/membership/route.ts");
+    const service = read("src/lib/study-hall-365/service.ts");
+    assert.match(privacy, /drop policy if exists study_hall_365_sub_select_own/);
+    assert.match(privacy, /get_study_hall_365_membership/);
+    assert.match(privacy, /customer_status/);
+    assert.doesNotMatch(hours, /from\("study_hall_365_subscriptions"\)/);
+    assert.match(hours, /get_study_hall_365_membership/);
+    assert.match(membership, /get_study_hall_365_membership/);
+    assert.match(membership, /publicMembership/);
+    assert.match(membership, /never returned/);
+    assert.doesNotMatch(membership, /stripe_subscription_id:\s|stripe_customer_id:\s|stripe_price_id:\s/);
+    assert.match(service, /loadOwnMembership/);
+    assert.match(service, /p_booking_start/);
+    const returnBlock = privacy.slice(privacy.indexOf("return jsonb_build_object"));
+    assert.doesNotMatch(returnBlock, /stripe_subscription_id|stripe_customer_id|stripe_price_id|last_stripe_event/);
+  });
+
+  it("Customer Portal resolves Stripe customer on the server and returns only a URL", () => {
+    const portal = read("src/app/api/billing/portal/route.ts");
+    const card = read("src/components/booking/study-hall-365-card.tsx");
+    assert.match(portal, /getServiceSupabase/);
+    assert.match(portal, /from\("profiles"\)/);
+    assert.match(portal, /select\("stripe_customer_id"\)/);
+    assert.match(portal, /NextResponse\.json\(\{ url: session\.url \}\)/);
+    assert.doesNotMatch(portal, /stripe_customer_id:\s*profile/);
+    assert.match(card, /payload\?\.url/);
+    assert.doesNotMatch(card, /stripe_customer_id|cus_/);
+  });
+
+  it("production requires a configured Stripe Price; local may use price_data", () => {
+    assert.match(checkout, /VERCEL_ENV === "production"/);
+    assert.match(checkout, /STRIPE_PRICE_STUDY_HALL_365 is required in production/);
+    assert.match(checkout, /price_data:/);
+    assert.match(checkout, /recurring:\s*\{\s*interval:\s*"month"/);
+    assert.doesNotMatch(checkout, /price_[A-Za-z0-9]{10,}/);
+    assert.match(read(".env.example"), /Required when VERCEL_ENV=production/);
+    assert.match(read(".env.example"), /\$149\.00 USD/);
   });
 });

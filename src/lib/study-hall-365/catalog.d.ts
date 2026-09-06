@@ -6,6 +6,7 @@ export const PACKAGE_10SH_STUDY_HALLS: number;
 export const LEGACY_ACTIVE_PACKAGE_CODES: string[];
 export const HISTORICAL_INACTIVE_PACKAGE_CODES: string[];
 export const CUSTOMER_PREPAID_OFFER_CODES: string[];
+export function customerFacingPrepaidPackages<T extends { code?: string }>(packages: T[] | null | undefined): T[];
 export const STUDY_HALL_365_MONTHLY_CENTS: number;
 export const STUDY_HALL_365_MONTHLY_USD: number;
 export const STUDY_HALL_365_PRODUCT_NAME: string;

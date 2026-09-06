@@ -15,6 +15,10 @@ import {
   signIn,
 } from "./helpers.mjs";
 
+// Configured NEXT_PUBLIC_SUPABASE_URL only. On the locked canonical demo this
+// file is SKIP / ENVIRONMENT-BLOCKED (0036 absent; writes refused). Do not
+// treat those skips as passes. Authoritative live writes for PR #80 hardening:
+// tests/study-hall-365-pg-live.test.mjs against the local throwaway database.
 const liveWritesAllowed =
   hasSupabaseEnv &&
   !(isCanonicalDemoProject() && process.env.ALLOW_DEMO_DB_WRITES !== "1") &&
@@ -325,15 +329,27 @@ describe(
 
         const { data: own } = await parentClient
           .from("study_hall_365_subscriptions")
-          .select("account_id, status")
+          .select("account_id, status, stripe_subscription_id, stripe_customer_id, stripe_price_id")
           .eq("account_id", parent.id);
-        assert.ok((own ?? []).length >= 1);
+        assert.equal((own ?? []).length, 0, "parents must not SELECT raw subscription rows");
+
+        const ownMembership = await parentClient.rpc("get_study_hall_365_membership", {
+          p_account: parent.id,
+        });
+        assert.equal(ownMembership.error, null, ownMembership.error?.message);
+        const memJson = JSON.stringify(ownMembership.data ?? {});
+        assert.match(memJson, /entitled|customer_status/);
+        assert.doesNotMatch(memJson, /stripe_subscription_id|stripe_customer_id|stripe_price_id|cus_test|sub_test/);
 
         const { data: peek } = await otherClient
           .from("study_hall_365_subscriptions")
           .select("account_id")
           .eq("account_id", parent.id);
         assert.equal((peek ?? []).length, 0);
+        const otherMem = await otherClient.rpc("get_study_hall_365_membership", {
+          p_account: parent.id,
+        });
+        assert.ok(otherMem.error, "Parent B cannot read Parent A membership");
 
         const { data: guidePeek } = await guideClient
           .from("study_hall_365_subscriptions")
