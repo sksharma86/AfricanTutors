@@ -61,7 +61,7 @@ describe("Prepaid booking UX — wizard wiring (source)", () => {
   it("success path uses Study Hall language; free trial and Stripe CTAs preserved", () => {
     assert.match(wiz, /confirmed using 1 prepaid Study Hall/);
     assert.match(wiz, /Confirm booking/);
-    assert.match(wiz, /First Study Hall is free|First Study Hall free/);
+    assert.match(wiz, /first Study Hall is free/i);
     assert.match(wiz, /secure checkout to pay \$12/);
   });
 

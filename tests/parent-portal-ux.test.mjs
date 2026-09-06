@@ -333,7 +333,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.match(hours, /10 Study Halls \/ \$100/);
     assert.match(hours, /Study Hall 365/);
     assert.match(hours, /\$149\/month/);
-    assert.match(hours, /Pay as you go · \$12\/hour/);
+    assert.match(hours, /Pay as you go · \$12 for one 60-minute Study Hall/);
     assert.match(hours, /id="prepaid"/);
     assert.match(hours, /SingleSessionCards/);
     assert.match(hours, /PackageStore/);

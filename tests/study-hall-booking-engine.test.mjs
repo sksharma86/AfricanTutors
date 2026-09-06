@@ -97,6 +97,7 @@ describe("PR3 booking engine — 365 contract", () => {
     const createIdx = migration.indexOf("v_booking_id := public.create_booking", migration.indexOf("Study Hall 365"));
     assert.ok(createIdx > 0 && consumeIdx > createIdx);
     assert.match(migration, /funding_source = 'study_hall_365'/);
+    assert.match(migration, /get_study_hall_365_entitlement\(v_account, v_local, now\(\), p_start\)/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Cancel does not restore the 365 day/);
   });
 

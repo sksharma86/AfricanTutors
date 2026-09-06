@@ -313,18 +313,18 @@ begin
       'stripe_cents_due', 0, 'booking_status', v_status);
   end if;
 
-  -- Study Hall 365: evaluate with the actual start instant, then book, then consume.
+  -- Study Hall 365: evaluate the booking start's local date + instant, then book, then consume.
   if p_subject_id is null and p_start is not null then
-    v_ent := public.get_study_hall_365_entitlement(v_account, null, now(), p_start);
+    v_tz := public.resolve_account_timezone(v_account);
+    begin
+      v_local := (p_start at time zone v_tz)::date;
+    exception when others then
+      v_local := (p_start at time zone 'America/Chicago')::date;
+    end;
+    v_ent := public.get_study_hall_365_entitlement(v_account, v_local, now(), p_start);
     if coalesce((v_ent->>'entitled')::boolean, false) then
       v_booking_id := public.create_booking(
         p_student_id, p_subject_id, p_other_subject, p_request_note, 60, p_start, false, v_ids);
-      v_tz := public.resolve_account_timezone(v_account);
-      begin
-        v_local := (p_start at time zone v_tz)::date;
-      exception when others then
-        v_local := (p_start at time zone 'America/Chicago')::date;
-      end;
 
       select * into v_sub
         from public.study_hall_365_subscriptions
@@ -488,6 +488,8 @@ declare
   v_price int; v_pkg int; v_credit int; v_pkg_used int := 0; v_credit_used int := 0; v_due int;
   v_ent jsonb;
   v_free boolean;
+  v_tz text;
+  v_local date;
 begin
   if auth.uid() is not null and auth.uid() <> p_account and not public.is_admin(auth.uid()) then
     raise exception 'Not authorized';
@@ -506,7 +508,13 @@ begin
   end if;
 
   if p_duration = 60 and p_start is not null then
-    v_ent := public.get_study_hall_365_entitlement(p_account, null, now(), p_start);
+    v_tz := public.resolve_account_timezone(p_account);
+    begin
+      v_local := (p_start at time zone v_tz)::date;
+    exception when others then
+      v_local := (p_start at time zone 'America/Chicago')::date;
+    end;
+    v_ent := public.get_study_hall_365_entitlement(p_account, v_local, now(), p_start);
     if coalesce((v_ent->>'entitled')::boolean, false) then
       return jsonb_build_object(
         'session_price_cents', 0, 'is_free_trial', false, 'package_minutes_used', 0,

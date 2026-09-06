@@ -11,7 +11,7 @@ Duration is not a customer choice. The server rejects any new scheduled Study Ha
 ## Funding priority (server, one request = one source)
 
 1. **Unused free first Study Hall** — even if 365 is active. A new 365 member who has not used the free session still gets the free session first; that day’s 365 entitlement remains.
-2. **Study Hall 365** — if that start instant is entitled (`current_period_start <= start < current_period_end`) and the local date is unused. Timezone is `profiles.timezone` via `resolve_account_timezone`.
+2. **Study Hall 365** — if that start instant is entitled (`current_period_start <= start < current_period_end`) and the **booking start's** local date is unused. Timezone is `profiles.timezone` via `resolve_account_timezone`. Do not evaluate today's civil date.
 3. **Prepaid minutes** — if balance ≥ 60. Consumes exactly 60.
 4. **Account credit** — existing dollar-credit path (unchanged).
 5. **PAYG** — $12 (1200 cents). 15-minute payment hold. Signed webhook confirms. Success URL is not authority.

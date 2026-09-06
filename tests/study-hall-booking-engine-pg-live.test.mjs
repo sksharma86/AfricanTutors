@@ -315,7 +315,7 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
       spawnBook(raceChild, "2026-09-26T18:00:00Z"),
       spawnBook(raceChild, "2026-09-26T20:00:00Z"),
     ]);
-    const prepaidWins = raced.filter((r) => /prepaid|package/.test(r)).length;
+    const prepaidWins = raced.filter((r) => /"funding_source": "prepaid"|"funding": "package"/.test(r)).length;
     assert.equal(prepaidWins, 1, raced.join(" | "));
     assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${raceParent}'`), "0");
     assert.equal(sql(`select count(*) from bookings where account_id='${raceParent}' and funding_source='prepaid'`), "1");
@@ -376,7 +376,7 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     } catch {
       /* expected */
     }
-    assert.equal(sql(`select public.account_has_used_free_trial('${freeRoll}'::uuid)::text`), "f");
+    assert.match(sql(`select public.account_has_used_free_trial('${freeRoll}'::uuid)::text`), /^(f|false)$/);
     assert.equal(sql(`select count(*) from bookings where account_id='${freeRoll}'`), "0");
   });
 
