@@ -102,17 +102,18 @@ async function scheduleOne(
       baseUrl,
     );
 
-    if (session.replaceBookingId && booked.bookingId) {
+    const paymentPending = booked.status === "requires_payment" || (booked.stripeCentsDue ?? 0) > 0;
+
+    if (session.replaceBookingId && booked.bookingId && !paymentPending) {
       const supabase = await createSupabaseServerClient();
       if (supabase) {
         const cancelled = await cancelExisting(supabase, session.replaceBookingId);
         if (!cancelled.ok) {
-          const status = booked.status === "requires_payment" ? "needs_payment" : "scheduled";
           return {
             localDate: session.localDate,
             startISO: session.startISO,
             replaceBookingId: session.replaceBookingId,
-            status,
+            status: "scheduled",
             message: cancelled.message ?? "Scheduled. Cancel the previous session from Study Halls if it is still listed.",
             bookingId: booked.bookingId,
             checkoutUrl: booked.checkoutUrl,
@@ -122,13 +123,15 @@ async function scheduleOne(
       }
     }
 
-    if (booked.status === "requires_payment") {
+    if (paymentPending) {
       return {
         localDate: session.localDate,
         startISO: session.startISO,
         replaceBookingId: session.replaceBookingId,
         status: "needs_payment",
-        message: "Time reserved — complete payment to confirm.",
+        message: session.replaceBookingId
+          ? "Complete payment to confirm the new time. Your current session stays scheduled until then."
+          : "Time reserved — complete payment to confirm.",
         bookingId: booked.bookingId,
         checkoutUrl: booked.checkoutUrl,
         funding: booked.fundingSource ?? booked.funding,

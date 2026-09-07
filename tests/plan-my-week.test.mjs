@@ -197,6 +197,9 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.doesNotMatch(service, /consume_study_hall_365|study_hall_365_day_usage|chooseBookingSource/);
     assert.match(engine, /consume_study_hall_365_day|insert into public\.study_hall_365_day_usage/);
     assert.match(engine, /v_use_free := not public.account_has_used_free_trial/);
+    const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
+    assert.match(m40, /prepaid \/ credit \/ PAYG/);
+    assert.doesNotMatch(service, /study_hall_365_day_usage|already_consumed/);
   });
 
   it("processes sessions independently for partial success and guards double submit", () => {
@@ -216,8 +219,11 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(service, /customer_cancel_booking/);
     assert.match(cancelUi, /\/api\/bookings\/cancel/);
     assert.match(cancelApi, /customer_cancel_booking/);
-    assert.match(ui, /Replaces the current session after the new time is booked/);
+    assert.match(ui, /Replaces the current session after the new time is confirmed/);
+    assert.match(ui, /If payment is needed, the current session stays/);
     assert.match(ui, /After it is removed, you can pick a replacement time/);
+    assert.match(service, /paymentPending/);
+    assert.match(service, /Your current session stays scheduled until then/);
   });
 
   it("parent cannot address another household; Guides cannot use Plan My Week", () => {
@@ -240,7 +246,10 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(engine, /create or replace function public.book_session/);
     assert.match(engine, /create or replace function public.booking_quote/);
     const files = readdirSync(new URL("../supabase/migrations", import.meta.url).pathname);
-    assert.equal(files.some((name) => name.startsWith("0040")), false);
+    assert.equal(files.some((name) => name.startsWith("0040")), true);
+    const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
+    assert.match(m40, /create or replace function public.book_session/);
+    assert.doesNotMatch(m40, /plan-week|Plan My Week/);
     assert.equal(existsSync(new URL("../supabase/migrations/0039_study_hall_365_security_hardening.sql", import.meta.url)), true);
   });
 

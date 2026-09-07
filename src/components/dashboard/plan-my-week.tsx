@@ -317,7 +317,9 @@ export function PlanMyWeek({
             <li key={row.startISO} className="py-3 text-sm text-[var(--pp-ink)]">
               {formatPlanSessionLine(row.startISO, timeZone)}
               {row.replaceBookingId ? (
-                <span className="mt-0.5 block text-[12px] text-[var(--pp-muted)]">Replaces the current session after the new time is booked</span>
+                <span className="mt-0.5 block text-[12px] text-[var(--pp-muted)]">
+                  Replaces the current session after the new time is confirmed. If payment is needed, the current session stays until that payment completes.
+                </span>
               ) : null}
             </li>
           ))}
