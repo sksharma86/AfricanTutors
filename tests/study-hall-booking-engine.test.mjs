@@ -87,18 +87,30 @@ describe("PR3 booking engine — funding priority", () => {
 });
 
 describe("PR3 booking engine — 365 contract", () => {
-  const migration = read("supabase/migrations/0038_one_hour_booking_engine.sql");
-
-  it("books then consumes in one RPC; cancel does not restore", () => {
-    assert.match(migration, /create_booking\(/);
-    assert.match(migration, /insert into public.study_hall_365_day_usage/);
-    assert.match(migration, /This day is already included with Study Hall 365/);
-    const consumeIdx = migration.indexOf("insert into public.study_hall_365_day_usage");
-    const createIdx = migration.indexOf("v_booking_id := public.create_booking", migration.indexOf("Study Hall 365"));
-    assert.ok(createIdx > 0 && consumeIdx > createIdx);
-    assert.match(migration, /funding_source = 'study_hall_365'/);
-    assert.match(migration, /get_study_hall_365_entitlement\(v_account, v_local, now\(\), p_start\)/);
+  it("books then consumes in one RPC; cancel does not restore; consume loss falls through", () => {
+    const m38 = read("supabase/migrations/0038_one_hour_booking_engine.sql");
+    const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
+    assert.match(m40, /create_booking\(/);
+    assert.match(m40, /insert into public.study_hall_365_day_usage/);
+    const body40 = m40.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    assert.doesNotMatch(body40, /This day is already included with Study Hall 365/);
+    assert.doesNotMatch(body40, /Study Hall 365 is not available for that time/);
+    assert.doesNotMatch(body40, /raise exception.*365/i);
+    const block = m40.indexOf("lock membership");
+    const lockIdx = m40.indexOf("for update", block);
+    const createIdx = m40.indexOf("v_booking_id := public.create_booking", lockIdx);
+    const consumeIdx = m40.indexOf("insert into public.study_hall_365_day_usage", createIdx);
+    assert.ok(lockIdx > 0 && createIdx > lockIdx && consumeIdx > createIdx);
+    assert.match(m40, /if v_booking_id is null then/);
+    assert.match(m40, /funding_source = 'study_hall_365'/);
+    assert.match(m40, /get_study_hall_365_entitlement\(v_account, v_local, now\(\), p_start\)/);
+    const m42 = read("supabase/migrations/0042_same_day_365_replacement_transfer.sql");
+    assert.match(m42, /p_replaces_booking_id/);
+    assert.match(m42, /set booking_id = v_booking_id/);
+    assert.match(m38, /This day is already included with Study Hall 365/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Cancel does not restore the 365 day/);
+    assert.match(read("docs/study-hall-booking-engine.md"), /prepaid, then credit, then PAYG/);
+    assert.match(read("docs/study-hall-booking-engine.md"), /Prepaid \/ credit \/ PAYG/);
   });
 
   it("start outside the paid window is not 365", () => {
@@ -123,8 +135,9 @@ describe("PR3 booking engine — security / authority", () => {
     assert.doesNotMatch(api, /funding_source|p_funding/);
     assert.match(checkout, /client never supplies an amount/);
     assert.match(checkout, /unit_amount: q.stripe_cents_due/);
-    assert.match(migration, /Not authorized to book for this student/);
-    assert.match(migration, /Guides cannot book parent Study Halls/);
-    assert.match(migration, /debug_fail_after_funding/);
+    const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
+    assert.match(m40, /Not authorized to book for this student/);
+    assert.match(m40, /Guides cannot book parent Study Halls/);
+    assert.match(m40, /debug_fail_after_funding/);
   });
 });

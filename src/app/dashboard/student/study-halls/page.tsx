@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
@@ -22,6 +23,14 @@ export default async function ParentStudyHallsPage() {
   return (
     <ParentPage>
       <h1 className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">Study Halls</h1>
+      <p className="mt-2">
+        <Link
+          href="/dashboard/student/plan-week"
+          className="text-sm font-medium text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline"
+        >
+          Plan my week
+        </Link>
+      </p>
       <div className="mt-6">
         <Suspense fallback={<p className="text-sm text-ink-500">Loading Study Halls…</p>}>
           <ParentStudyHalls bookings={data.bookings} />

@@ -90,6 +90,8 @@ export async function createBookingCheckout(
     duration: 60;
     startISO: string | null;
     isFreeTrial: boolean;
+    /** Durable Change intent: cancel this booking only after the new one is confirmed. */
+    replaceBookingId?: string | null;
   },
   baseUrl: string,
 ): Promise<StartResult> {
@@ -100,6 +102,10 @@ export async function createBookingCheckout(
   // "Other" requests only occur when both subject and start are null.
   // Price is duration-only; p_student_ids does not change hours or Stripe amount.
   const studentIds = params.studentIds ?? [params.studentId];
+  const replaceBookingId =
+    typeof params.replaceBookingId === "string" && params.replaceBookingId.trim()
+      ? params.replaceBookingId.trim()
+      : null;
   if (params.startISO) {
     const { data: kids } = await supabase.from("students").select("timezone").in("id", studentIds);
     assertHalfHourStart(
@@ -107,6 +113,8 @@ export async function createBookingCheckout(
       (kids ?? []).map((k) => (k as { timezone?: string }).timezone),
     );
   }
+  // Replacement id is an input to book_session so same-day 365 / free-trial
+  // coverage can transfer before prepaid / credit / PAYG (and before Stripe).
   const sessionArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
@@ -115,6 +123,7 @@ export async function createBookingCheckout(
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+    p_replaces_booking_id: replaceBookingId,
   };
   let { data, error } = await supabase.rpc("book_session", {
     ...sessionArgs,
@@ -140,10 +149,31 @@ export async function createBookingCheckout(
     booking_status: string;
   };
 
+  if (replaceBookingId && q.booking_id) {
+    const attached = await supabase.rpc("attach_booking_replacement", {
+      p_new_booking: q.booking_id,
+      p_old_booking: replaceBookingId,
+    });
+    if (attached.error) {
+      if (q.stripe_cents_due > 0) {
+        const service = getServiceSupabase();
+        await rollbackReservation(
+          service,
+          q.payment_id,
+          "Replacement intent could not be recorded; reservation released",
+        );
+        throw new Error("We couldn't start the time change. Your current session is unchanged.");
+      }
+    }
+  }
+
   // Non-Stripe outcomes are already final in the DB transaction.
   // Await notify so Vercel keeps the invocation alive until Resend dispatch
   // finishes; never let email failure undo a committed booking.
   if (q.stripe_cents_due <= 0) {
+    if (replaceBookingId && q.booking_id) {
+      await supabase.rpc("finalize_booking_replacement", { p_new_booking: q.booking_id });
+    }
     if (q.funding !== "request") {
       try {
         await notifyBookingConfirmed(q.booking_id);
@@ -173,6 +203,13 @@ export async function createBookingCheckout(
     if (!isStripeConfigured) throw new Error("STRIPE_NOT_CONFIGURED");
     const customerId = await ensureStripeCustomer(service, user.id, user.email);
     const stripe = getStripe();
+    const metadata: Record<string, string> = {
+      kind: "booking",
+      payment_id: q.payment_id,
+      account_id: user.id,
+      booking_id: q.booking_id,
+    };
+    if (replaceBookingId) metadata.replaces_booking_id = replaceBookingId;
 
     const session = await stripe.checkout.sessions.create(
       {
@@ -189,9 +226,9 @@ export async function createBookingCheckout(
             },
           },
         ],
-        metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+        metadata,
         payment_intent_data: {
-          metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+          metadata,
         },
         expires_at: stripeCheckoutExpiresAt(),
         success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,

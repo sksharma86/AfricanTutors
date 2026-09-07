@@ -170,6 +170,8 @@ type Meta = Stripe.Metadata | null | undefined;
  * for its business object. Fulfillment is idempotent at the payment-object and
  * ledger level, so re-delivery (or overlapping session/payment_intent events for
  * the same payment) can never double-issue minutes or double-confirm a booking.
+ * Replacement cancellation (Change) is finalized inside fulfill_booking_payment
+ * from bookings.replaces_booking_id — not from Stripe metadata alone.
  */
 async function fulfillFromMetadata(
   supabase: ReturnType<typeof getServiceSupabase>,

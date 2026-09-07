@@ -25,15 +25,33 @@ Client cannot set `funding_source`, price, or a non-60 duration. Guides cannot c
 `book_session` (one SECURITY DEFINER transaction):
 
 1. Validate children / duration / household.
-2. Create the booking (`create_booking` re-checks Guide availability).
-3. Lock the entitled subscription row and insert `study_hall_365_day_usage`.
-4. If the unique `(account_id, local_date)` insert hits a conflict, the exception rolls back the booking.
+2. If the start's local date is entitled, lock the membership row, re-read usage, then create the booking and insert `study_hall_365_day_usage`.
+3. Unique `(account_id, local_date)` is the one-per-day 365 authority. Two concurrent same-day attempts cannot both consume 365.
+4. If that insert loses (day already consumed), the booking is **not** aborted. The same transaction continues through prepaid, then credit, then PAYG.
 
 Do not call `consume_study_hall_365_day` from the browser. That RPC is financial-actor only; booking inserts usage itself.
 
-A failed booking (no Guide, past time, outside paid window, conflict) never writes a usage row.
+A failed booking (no Guide, past time, outside paid window) never writes a usage row.
 
-Cancel does not restore the 365 day. The parent cannot cancel 4 PM and rebook 7 PM on 365 the same local date. Prepaid/PAYG remain available as a separate request.
+Cancel does not restore the 365 day. The parent cannot cancel 4 PM and rebook 7 PM on 365 the same local date as a **second** request. Prepaid / credit / PAYG remain available as a separate request.
+
+## Change (Plan My Week replacement)
+
+`book_session` receives `p_replaces_booking_id` from the server (Plan My Week / checkout). The client does not choose funding.
+
+**CASE A — additional same-local-day Study Hall.** The existing 365 session remains. A new booking without a replace id, or whose replace id is not the booking that owns that day's usage, cannot consume 365 again. It falls through to prepaid / credit / PAYG (0040).
+
+**CASE B — replace the 365 session on the same local date.** The replacement is that day's one included Study Hall. `book_session` reassociates the existing `study_hall_365_day_usage.booking_id`, funds the new row as `study_hall_365`, returns `stripe_cents_due = 0` (no Checkout), and cancels the old row in the same transaction. Exactly one usage row remains. No prepaid or credit deduction.
+
+**CASE C — replace onto a different local date.** The old day's usage is not transferred. The destination date uses independent 365 eligibility. If that date is unused and entitled, the new booking consumes it as 365; the old date stays consumed after cancel (existing policy). If the destination is already consumed or not entitled, prepaid / credit / PAYG apply, then 0041 finalizes the original.
+
+Free-trial Change is the same shape as CASE B: the live trial row is cancelled in-transaction so the unique one-per-account index can attach to the successor. The replacement stays `free_trial`; it does not fall through to 365 / prepaid / PAYG.
+
+Immediate (prepaid / credit) Change still books the new session first, then `finalize_booking_replacement` cancels the old one with existing restore economics (early restore, late forfeit). PAYG Change persists `bookings.replaces_booking_id` before returning Stripe Checkout. Do **not** cancel the original because a checkout URL exists. `fulfill_booking_payment` confirms the new booking, then cancels the original. Abandoned, expired, or failed payment leaves the original intact. Duplicate webhooks are idempotent. Success URL is not authority.
+
+A same-day 365 replacement must never create a Stripe Checkout in order to undo it later.
+
+Ordinary (non-Change) PAYG checkout does not set `replaces_booking_id`. The booking wizard does not pass a replace id.
 
 ## Prepaid cancellation
 
