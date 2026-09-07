@@ -37,11 +37,12 @@ function sqlAll(text) {
   return dataLines(out);
 }
 
-function spawnBook(studentId, startIso) {
+function spawnBook(studentId, startIso, replaces = null) {
+  const ninth = replaces ? `, '${replaces}'::uuid` : "";
   const query = `
     select book_session(
       '${studentId}'::uuid, null, null, null, 60,
-      '${startIso}'::timestamptz, false, array['${studentId}'::uuid]
+      '${startIso}'::timestamptz, false, array['${studentId}'::uuid]${ninth}
     );
   `;
   return new Promise((resolve, reject) => {
@@ -66,12 +67,13 @@ function spawnBook(studentId, startIso) {
   });
 }
 
-function book(studentId, startIso, duration = 60, free = false, ids = null) {
+function book(studentId, startIso, duration = 60, free = false, ids = null, replaces = null) {
   const arr = ids ?? [studentId];
+  const ninth = replaces ? `, '${replaces}'::uuid` : "";
   return sql(`
     select book_session(
       '${studentId}'::uuid, null, null, null, ${duration},
-      '${startIso}'::timestamptz, ${free}, array[${arr.map((id) => `'${id}'::uuid`).join(",")}]
+      '${startIso}'::timestamptz, ${free}, array[${arr.map((id) => `'${id}'::uuid`).join(",")}]${ninth}
     );
   `);
 }
@@ -128,7 +130,7 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
   const periodStart = "2026-09-17T16:00:00+00";
   const periodEnd = "2026-10-17T16:00:00+00";
 
-  it("applies 0036–0041 on an isolated booking throwaway database", () => {
+  it("applies 0036–0042 on an isolated booking throwaway database", () => {
     execSync("bash scripts/setup-study-hall-booking-throwaway-db.sh", { stdio: "pipe" });
     const quoteForms = sql(`
       select count(*) from pg_proc p
@@ -642,5 +644,173 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     assert.equal(sql(`select status from bookings where id='${newId}'`), "confirmed");
     assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
     assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${imParent}'`), "60");
+  });
+
+  it("CASE B: same-local-day 365 Change keeps 365, one usage row, no prepaid/credit/PAYG", () => {
+    const p = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa30";
+    const c = "11111111-1111-1111-1111-111111111150";
+    seedHousehold(p, c, "America/Chicago", "365Change");
+    useFree(p, c);
+    subscribe365(p, "active", false, periodStart, periodEnd, "365ch");
+    sql(`
+      insert into package_minute_ledger (account_id, minutes_delta, entry_type, reason, reference)
+      values ('${p}', 600, 'admin_adjustment', 'unused prepaid', '365ch-prepaid');
+      insert into dollar_credit_ledger (account_id, amount_cents, entry_type, reason, reference)
+      values ('${p}', 5000, 'admin_adjustment', 'unused credit', '365ch-credit');
+    `);
+    const first = book(c, "2026-10-05T21:00:00Z");
+    assert.match(first, /study_hall_365/);
+    const oldId = sql(`select id from bookings where account_id='${p}' and scheduled_start='2026-10-05T21:00:00Z'`);
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p}' and local_date='2026-10-05'`), oldId);
+
+    const next = book(c, "2026-10-05T23:00:00Z", 60, false, null, oldId);
+    assert.match(next, /"funding_source":\s*"study_hall_365"/);
+    assert.match(next, /"stripe_cents_due":\s*0/);
+    assert.doesNotMatch(next, /"funding_source":\s*"(prepaid|credit|payg)"/);
+    const newId = sql(`select id from bookings where account_id='${p}' and scheduled_start='2026-10-05T23:00:00Z'`);
+    assert.equal(sql(`select funding_source from bookings where id='${newId}'`), "study_hall_365");
+    assert.equal(sql(`select status from bookings where id='${newId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p}' and local_date='2026-10-05'`), "1");
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p}' and local_date='2026-10-05'`), newId);
+    assert.equal(sql(`select replaces_booking_id from bookings where id='${newId}'`), oldId);
+    assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${p}'`), "600");
+    assert.equal(sql(`select coalesce(sum(amount_cents),0) from dollar_credit_ledger where account_id='${p}'`), "5000");
+    assert.equal(sql(`select count(*) from payments where booking_id='${newId}' and status='requires_payment'`), "0");
+
+    const attached = sql(`select attach_booking_replacement('${newId}'::uuid, '${oldId}'::uuid);`);
+    assert.match(attached, /attached/);
+    const fin1 = sql(`select finalize_booking_replacement('${newId}'::uuid);`);
+    assert.match(fin1, /already_cancelled/);
+    const fin2 = sql(`select finalize_booking_replacement('${newId}'::uuid);`);
+    assert.match(fin2, /already_cancelled/);
+  });
+
+  it("CASE A: additional same-day session still falls through; CASE C uses independent dates", () => {
+    const p = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa31";
+    const c = "11111111-1111-1111-1111-111111111151";
+    seedHousehold(p, c, "America/Chicago", "365Extra");
+    useFree(p, c);
+    subscribe365(p, "active", false, periodStart, periodEnd, "365ex");
+    sql(`
+      insert into package_minute_ledger (account_id, minutes_delta, entry_type, reason, reference)
+      values ('${p}', 60, 'admin_adjustment', 'extra day prepaid', '365ex-prepaid');
+    `);
+    const first = book(c, "2026-10-06T21:00:00Z");
+    assert.match(first, /study_hall_365/);
+    const oldId = sql(`select id from bookings where account_id='${p}' and scheduled_start='2026-10-06T21:00:00Z'`);
+
+    const extra = book(c, "2026-10-06T23:00:00Z");
+    assert.doesNotMatch(extra, /"funding_source":\s*"study_hall_365"/);
+    assert.match(extra, /prepaid|package/);
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p}' and local_date='2026-10-06'`), "1");
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p}' and local_date='2026-10-06'`), oldId);
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "confirmed");
+
+    const p2 = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa32";
+    const c2 = "11111111-1111-1111-1111-111111111152";
+    seedHousehold(p2, c2, "America/Chicago", "365Cross");
+    useFree(p2, c2);
+    subscribe365(p2, "active", false, periodStart, periodEnd, "365x");
+    book(c2, "2026-10-06T16:00:00Z");
+    const wedId = sql(`select id from bookings where account_id='${p2}' and scheduled_start='2026-10-06T16:00:00Z'`);
+    const thu = book(c2, "2026-10-07T16:00:00Z", 60, false, null, wedId);
+    assert.match(thu, /study_hall_365/);
+    const thuId = sql(`select id from bookings where account_id='${p2}' and scheduled_start='2026-10-07T16:00:00Z'`);
+    assert.equal(sql(`select status from bookings where id='${wedId}'`), "confirmed");
+    assert.equal(sql(`select funding_source from bookings where id='${thuId}'`), "study_hall_365");
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p2}'`), "2");
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-06'`), wedId);
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-07'`), thuId);
+    sql(`select attach_booking_replacement('${thuId}'::uuid, '${wedId}'::uuid);`);
+    sql(`select finalize_booking_replacement('${thuId}'::uuid);`);
+    assert.equal(sql(`select status from bookings where id='${wedId}'`), "cancelled");
+    assert.equal(sql(`select status from bookings where id='${thuId}'`), "confirmed");
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p2}'`), "2");
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-06'`), wedId);
+  });
+
+  it("same-day 365 Change honors timezone midnight and concurrent replacements cannot both stay 365", async () => {
+    const p = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa33";
+    const c = "11111111-1111-1111-1111-111111111153";
+    seedHousehold(p, c, "America/Chicago", "365Tz");
+    useFree(p, c);
+    subscribe365(p, "active", false, periodStart, periodEnd, "365tz");
+    const first = book(c, "2026-10-08T04:00:00Z");
+    assert.match(first, /study_hall_365/);
+    assert.equal(sql(`select local_date::text from study_hall_365_day_usage where account_id='${p}'`), "2026-10-07");
+    const oldId = sql(`select id from bookings where account_id='${p}' and scheduled_start='2026-10-08T04:00:00Z'`);
+    const sameLocal = book(c, "2026-10-08T03:00:00Z", 60, false, null, oldId);
+    assert.match(sameLocal, /study_hall_365/);
+    const sameId = sql(`select id from bookings where account_id='${p}' and scheduled_start='2026-10-08T03:00:00Z'`);
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p}'`), "1");
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${p}'`), sameId);
+    assert.equal(sql(`select local_date::text from study_hall_365_day_usage where account_id='${p}'`), "2026-10-07");
+
+    const p2 = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa34";
+    const c2 = "11111111-1111-1111-1111-111111111154";
+    seedHousehold(p2, c2, "America/Chicago", "365Race");
+    useFree(p2, c2);
+    subscribe365(p2, "active", false, periodStart, periodEnd, "365rc");
+    book(c2, "2026-10-09T16:00:00Z");
+    const raceOld = sql(`select id from bookings where account_id='${p2}' and scheduled_start='2026-10-09T16:00:00Z'`);
+    const raced = await Promise.all([
+      spawnBook(c2, "2026-10-09T18:00:00Z", raceOld),
+      spawnBook(c2, "2026-10-09T20:00:00Z", raceOld),
+    ]);
+    const wins = raced.filter((row) => /"funding_source":\s*"study_hall_365"/.test(row)).length;
+    assert.equal(wins, 1, raced.join(" | "));
+    assert.equal(
+      sql(`select count(*) from bookings where account_id='${p2}' and funding_source='study_hall_365' and status='confirmed'`),
+      "1",
+    );
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-09'`), "1");
+  });
+
+  it("unauthorized household cannot steal 365 usage via replacement; free-trial Change stays free_trial", () => {
+    const owner = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa35";
+    const ownerChild = "11111111-1111-1111-1111-111111111155";
+    const thief = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa36";
+    const thiefChild = "11111111-1111-1111-1111-111111111156";
+    seedHousehold(owner, ownerChild, "America/Chicago", "365Owner");
+    seedHousehold(thief, thiefChild, "America/Chicago", "365Thief");
+    useFree(owner, ownerChild);
+    useFree(thief, thiefChild);
+    subscribe365(owner, "active", false, periodStart, periodEnd, "365own");
+    subscribe365(thief, "active", false, periodStart, periodEnd, "365thf");
+    book(ownerChild, "2026-10-10T16:00:00Z");
+    const victimId = sql(`select id from bookings where account_id='${owner}' and scheduled_start='2026-10-10T16:00:00Z'`);
+    let stolen = "";
+    try {
+      sql(`
+        select book_session(
+          '${thiefChild}'::uuid, null, null, null, 60,
+          '2026-10-10T18:00:00Z'::timestamptz, false,
+          array['${thiefChild}'::uuid], '${victimId}'::uuid
+        );
+      `);
+    } catch (err) {
+      stolen = String(err.stderr || err.message || err);
+    }
+    assert.match(stolen, /Not authorized to replace this session/i);
+    assert.equal(sql(`select booking_id from study_hall_365_day_usage where account_id='${owner}' and local_date='2026-10-10'`), victimId);
+    assert.equal(sql(`select status from bookings where id='${victimId}'`), "confirmed");
+
+    const tp = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa37";
+    const tc = "11111111-1111-1111-1111-111111111157";
+    seedHousehold(tp, tc, "America/Chicago", "TrialCh");
+    const trial = book(tc, "2026-10-11T16:00:00Z", 60, true);
+    assert.match(trial, /free_trial/);
+    const trialOld = sql(`select id from bookings where account_id='${tp}' and scheduled_start='2026-10-11T16:00:00Z'`);
+    const trialNext = book(tc, "2026-10-11T18:00:00Z", 60, false, null, trialOld);
+    assert.match(trialNext, /"funding_source":\s*"free_trial"/);
+    assert.doesNotMatch(trialNext, /"funding_source":\s*"(study_hall_365|prepaid|payg|credit)"/);
+    const trialNew = sql(`select id from bookings where account_id='${tp}' and scheduled_start='2026-10-11T18:00:00Z'`);
+    assert.equal(sql(`select funding_source from bookings where id='${trialNew}'`), "free_trial");
+    assert.equal(sql(`select is_free_trial from bookings where id='${trialNew}'`), "t");
+    assert.equal(sql(`select status from bookings where id='${trialOld}'`), "cancelled");
+    assert.equal(sql(`select count(*) from bookings where account_id='${tp}' and is_free_trial and status <> 'cancelled'`), "1");
+    sql(`select attach_booking_replacement('${trialNew}'::uuid, '${trialOld}'::uuid);`);
+    assert.match(sql(`select finalize_booking_replacement('${trialNew}'::uuid);`), /already_cancelled/);
   });
 });

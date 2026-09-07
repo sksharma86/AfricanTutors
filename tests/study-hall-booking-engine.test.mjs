@@ -104,6 +104,9 @@ describe("PR3 booking engine — 365 contract", () => {
     assert.match(m40, /if v_booking_id is null then/);
     assert.match(m40, /funding_source = 'study_hall_365'/);
     assert.match(m40, /get_study_hall_365_entitlement\(v_account, v_local, now\(\), p_start\)/);
+    const m42 = read("supabase/migrations/0042_same_day_365_replacement_transfer.sql");
+    assert.match(m42, /p_replaces_booking_id/);
+    assert.match(m42, /set booking_id = v_booking_id/);
     assert.match(m38, /This day is already included with Study Hall 365/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Cancel does not restore the 365 day/);
     assert.match(read("docs/study-hall-booking-engine.md"), /prepaid, then credit, then PAYG/);

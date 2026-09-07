@@ -16,6 +16,7 @@ const returnView = read("src/app/checkout/return/return-view.tsx");
 describe("PAYG Change replacement lifecycle", () => {
   it("1. immediately funded Change books new first, then finalizes/cancels old", () => {
     assert.match(checkout, /replaceBookingId/);
+    assert.match(checkout, /p_replaces_booking_id:\s*replaceBookingId/);
     assert.match(checkout, /finalize_booking_replacement/);
     assert.match(planService, /replaceBookingId: session.replaceBookingId/);
     assert.match(planService, /!paymentPending/);
@@ -28,7 +29,9 @@ describe("PAYG Change replacement lifecycle", () => {
     assert.match(m41, /bookings\.replaces_booking_id/);
     const attachIdx = checkout.indexOf("attach_booking_replacement");
     const stripeIdx = checkout.indexOf("checkout.sessions.create");
-    assert.ok(attachIdx > 0 && attachIdx < stripeIdx);
+    const rpcIdx = checkout.indexOf('rpc("book_session"');
+    const replacesArgIdx = checkout.indexOf("p_replaces_booking_id");
+    assert.ok(replacesArgIdx > 0 && replacesArgIdx < rpcIdx && rpcIdx < attachIdx && attachIdx < stripeIdx);
     assert.match(planService, /Your current session stays scheduled until then/);
   });
 

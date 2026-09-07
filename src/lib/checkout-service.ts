@@ -102,6 +102,10 @@ export async function createBookingCheckout(
   // "Other" requests only occur when both subject and start are null.
   // Price is duration-only; p_student_ids does not change hours or Stripe amount.
   const studentIds = params.studentIds ?? [params.studentId];
+  const replaceBookingId =
+    typeof params.replaceBookingId === "string" && params.replaceBookingId.trim()
+      ? params.replaceBookingId.trim()
+      : null;
   if (params.startISO) {
     const { data: kids } = await supabase.from("students").select("timezone").in("id", studentIds);
     assertHalfHourStart(
@@ -109,6 +113,8 @@ export async function createBookingCheckout(
       (kids ?? []).map((k) => (k as { timezone?: string }).timezone),
     );
   }
+  // Replacement id is an input to book_session so same-day 365 / free-trial
+  // coverage can transfer before prepaid / credit / PAYG (and before Stripe).
   const sessionArgs = {
     p_student_id: params.studentId,
     p_subject_id: params.subjectId,
@@ -117,6 +123,7 @@ export async function createBookingCheckout(
     p_duration: params.duration,
     p_start: params.startISO,
     p_is_free_trial: params.isFreeTrial,
+    p_replaces_booking_id: replaceBookingId,
   };
   let { data, error } = await supabase.rpc("book_session", {
     ...sessionArgs,
@@ -129,11 +136,6 @@ export async function createBookingCheckout(
     ({ data, error } = await supabase.rpc("book_session", sessionArgs));
   }
   if (error) throw new Error(error.message);
-
-  const replaceBookingId =
-    typeof params.replaceBookingId === "string" && params.replaceBookingId.trim()
-      ? params.replaceBookingId.trim()
-      : null;
 
   const q = data as {
     booking_id: string;

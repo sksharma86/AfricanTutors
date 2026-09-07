@@ -229,6 +229,7 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     const m41 = read("supabase/migrations/0041_booking_replacement_finalization.sql");
     assert.match(m41, /replaces_booking_id/);
     assert.match(checkout, /attach_booking_replacement/);
+    assert.match(checkout, /p_replaces_booking_id:\s*replaceBookingId/);
   });
 
   it("parent cannot address another household; Guides cannot use Plan My Week", () => {
@@ -253,9 +254,13 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     const files = readdirSync(new URL("../supabase/migrations", import.meta.url).pathname);
     assert.equal(files.some((name) => name.startsWith("0040")), true);
     assert.equal(files.some((name) => name.startsWith("0041")), true);
+    assert.equal(files.some((name) => name.startsWith("0042")), true);
     const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
     assert.match(m40, /create or replace function public.book_session/);
     assert.doesNotMatch(m40, /plan-week|Plan My Week/);
+    const m42 = read("supabase/migrations/0042_same_day_365_replacement_transfer.sql");
+    assert.match(m42, /p_replaces_booking_id/);
+    assert.doesNotMatch(m42, /plan-week|Plan My Week/);
     assert.equal(existsSync(new URL("../supabase/migrations/0039_study_hall_365_security_hardening.sql", import.meta.url)), true);
   });
 
