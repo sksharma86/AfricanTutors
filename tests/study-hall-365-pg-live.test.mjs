@@ -82,7 +82,7 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
   const periodStart = "2026-09-17T16:00:00+00";
   const periodEnd = "2026-10-17T16:00:00+00";
 
-  it("applies 0036+0037 on an isolated local database (not demo)", () => {
+  it("applies 0036+0037+0039 on an isolated local database (not demo)", () => {
     execSync("bash scripts/setup-study-hall-365-throwaway-db.sh", { stdio: "pipe" });
     const ten = sql(`select minutes::text || ',' || price_cents::text || ',' || is_active::text from package_products where code = 'pkg_10sh'`);
     assert.match(ten, /^600,10000,t/);
@@ -96,6 +96,17 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
          and policyname = 'study_hall_365_sub_select_own'
     `);
     assert.equal(privacy, "0");
+    const acl = sql(`
+      select string_agg(rolname || ':' || sel::text || '/' || trunc::text, ',' order by rolname)
+      from (
+        select r.rolname,
+               has_table_privilege(r.oid, 'public.study_hall_365_subscriptions'::regclass, 'SELECT') as sel,
+               has_table_privilege(r.oid, 'public.study_hall_365_subscriptions'::regclass, 'TRUNCATE') as trunc
+        from pg_roles r
+        where r.rolname in ('anon','authenticated','service_role')
+      ) s
+    `);
+    assert.equal(acl, "anon:f/f,authenticated:t/f,service_role:t/t");
   });
 
   it("legacy 420 + 10-pack fulfillment + webhook replay = 1020 once", () => {

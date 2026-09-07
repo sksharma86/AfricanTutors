@@ -127,8 +127,14 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
   const periodStart = "2026-09-17T16:00:00+00";
   const periodEnd = "2026-10-17T16:00:00+00";
 
-  it("applies 0036–0038 on an isolated booking throwaway database", () => {
+  it("applies 0036–0039 on an isolated booking throwaway database", () => {
     execSync("bash scripts/setup-study-hall-booking-throwaway-db.sh", { stdio: "pipe" });
+    const quoteForms = sql(`
+      select count(*) from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname = 'booking_quote'
+    `);
+    assert.equal(quoteForms, "1");
     seedHousehold(parent, child);
     sql(`
       insert into students (id, account_id, full_name, timezone) values
@@ -149,6 +155,8 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     useFree(parent365, child365);
     useFree(parentPayg, childPayg);
     useFree(parentPre, childPre);
+    const threeArg = sql(`select (booking_quote('${parentPayg}'::uuid, 60, false))->>'funding'`);
+    assert.equal(threeArg, "stripe");
     assert.equal(sql(`select to_regclass('public.bookings') is not null`), "t");
   });
 
