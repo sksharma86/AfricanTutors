@@ -6,6 +6,7 @@ import { evaluateStudyHall365Day, chooseBookingSource } from "../src/lib/study-h
 import { localDateForInstant } from "../src/lib/study-hall-365/calendar.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+const sqlBody = (sql) => sql.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
 const m38 = read("supabase/migrations/0038_one_hour_booking_engine.sql");
 const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
@@ -77,8 +78,9 @@ describe("Same-day 365 extra Study Hall — intended hierarchy", () => {
 
   it("4–5. second same-day booking is not rejected as a 365 duplicate; PAYG remains the last source", () => {
     assert.match(m38, /This day is already included with Study Hall 365/);
-    assert.doesNotMatch(m40, /This day is already included with Study Hall 365/);
-    assert.doesNotMatch(m40, /Study Hall 365 is not available for that time/);
+    assert.doesNotMatch(sqlBody(m40), /This day is already included with Study Hall 365/);
+    assert.doesNotMatch(sqlBody(m40), /Study Hall 365 is not available for that time/);
+    assert.doesNotMatch(sqlBody(m40), /raise exception.*365/i);
     assert.match(m40, /Keep this booking and fund it/);
     assert.match(m40, /Do not raise; do not consume 365/);
   });

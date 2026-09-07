@@ -9,8 +9,8 @@
 --   1. get_study_hall_365_entitlement may report entitled=true (no usage yet).
 --   2. create_booking runs.
 --   3. insert into study_hall_365_day_usage ON CONFLICT DO NOTHING.
---   4. If the unique (account_id, local_date) insert loses, the function RAISES
---      'This day is already included with Study Hall 365' and aborts.
+--   4. If the unique (account_id, local_date) insert loses, 0038 raised a
+--      terminal same-day 365 exception and aborted the whole function.
 -- Sequential second bookings after a committed usage row already skip 365
 -- (entitled=false, reason=already_consumed) and fall through. Concurrent
 -- same-local-day attempts both see entitled=true; the loser was treated as

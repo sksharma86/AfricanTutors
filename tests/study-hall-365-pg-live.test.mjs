@@ -106,7 +106,7 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
         where r.rolname in ('anon','authenticated','service_role')
       ) s
     `);
-    assert.equal(acl, "anon:f/f,authenticated:t/f,service_role:t/t");
+    assert.match(acl, /anon:f(alse)?\/f(alse)?,authenticated:t(rue)?\/f(alse)?,service_role:t(rue)?\/t(rue)?/);
   });
 
   it("legacy 420 + 10-pack fulfillment + webhook replay = 1020 once", () => {

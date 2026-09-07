@@ -92,8 +92,10 @@ describe("PR3 booking engine — 365 contract", () => {
     const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
     assert.match(m40, /create_booking\(/);
     assert.match(m40, /insert into public.study_hall_365_day_usage/);
-    assert.doesNotMatch(m40, /This day is already included with Study Hall 365/);
-    assert.doesNotMatch(m40, /Study Hall 365 is not available for that time/);
+    const body40 = m40.replace(/--[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    assert.doesNotMatch(body40, /This day is already included with Study Hall 365/);
+    assert.doesNotMatch(body40, /Study Hall 365 is not available for that time/);
+    assert.doesNotMatch(body40, /raise exception.*365/i);
     const block = m40.indexOf("lock membership");
     const lockIdx = m40.indexOf("for update", block);
     const createIdx = m40.indexOf("v_booking_id := public.create_booking", lockIdx);
@@ -104,7 +106,8 @@ describe("PR3 booking engine — 365 contract", () => {
     assert.match(m40, /get_study_hall_365_entitlement\(v_account, v_local, now\(\), p_start\)/);
     assert.match(m38, /This day is already included with Study Hall 365/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Cancel does not restore the 365 day/);
-    assert.match(read("docs/study-hall-booking-engine.md"), /prepaid \/ credit \/ PAYG/);
+    assert.match(read("docs/study-hall-booking-engine.md"), /prepaid, then credit, then PAYG/);
+    assert.match(read("docs/study-hall-booking-engine.md"), /Prepaid \/ credit \/ PAYG/);
   });
 
   it("start outside the paid window is not 365", () => {
