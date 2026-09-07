@@ -56,6 +56,7 @@ describe("Parent portal UX — routes and authorization", () => {
     ["src/app/dashboard/student/packages/page.tsx", "/dashboard/student/packages"],
     ["src/app/dashboard/student/account/page.tsx", "/dashboard/student/account"],
     ["src/app/dashboard/student/book/page.tsx", "/dashboard/student/book"],
+    ["src/app/dashboard/student/plan-week/page.tsx", "/dashboard/student/plan-week"],
   ];
 
   it("every parent destination is a real route guarded by requireRole(student)", () => {

@@ -75,6 +75,12 @@ export function CustomerShell({ children }: { children: ReactNode }) {
           >
             Book a Study Hall
           </Link>
+          <Link
+            href="/dashboard/student/plan-week"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-[12px] px-3 text-[13px] font-medium text-[#3d3932] underline-offset-4 hover:bg-[#ebe4d6] hover:text-[#1c1915] hover:underline"
+          >
+            Plan my week
+          </Link>
           <LogoutButton quiet className="w-full justify-center px-2.5 text-[13px]" />
         </div>
       </aside>
@@ -90,6 +96,12 @@ export function CustomerShell({ children }: { children: ReactNode }) {
               textClassName="text-[13px] sm:text-[14px]"
             />
             <div className="flex shrink-0 items-center gap-1.5">
+              <Link
+                href="/dashboard/student/plan-week"
+                className="inline-flex min-h-11 items-center whitespace-nowrap rounded-[12px] px-2.5 text-sm font-medium text-[#3d3932] hover:bg-[#ebe4d6] hover:text-[#1c1915] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"
+              >
+                Plan week
+              </Link>
               <Link
                 href="/dashboard/student/book"
                 className="inline-flex min-h-11 items-center whitespace-nowrap rounded-[12px] bg-[#c9a227] px-3.5 text-sm font-semibold text-[#1c1915] hover:bg-[#b8921f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"

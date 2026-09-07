@@ -44,13 +44,16 @@ export function ParentUpcomingList({
       {visible.length === 0 ? (
         <div className="mt-3">
           <p className="text-sm text-[var(--pp-muted)]">{parentUpcomingEmptyCopy(hasNext)}</p>
-          {hasNext ? null : (
-            <p className="mt-1.5">
+          <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+            {hasNext ? null : (
               <Link href="/dashboard/student/book" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
                 Book one →
               </Link>
-            </p>
-          )}
+            )}
+            <Link href="/dashboard/student/plan-week" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+              Plan my week →
+            </Link>
+          </p>
         </div>
       ) : (
         <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">
@@ -102,6 +105,13 @@ export function ParentUpcomingList({
         <p className="mt-2">
           <Link href="/dashboard/student/study-halls" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
             View full schedule →
+          </Link>
+        </p>
+      ) : null}
+      {visible.length > 0 ? (
+        <p className={extra > 0 ? "mt-1" : "mt-2"}>
+          <Link href="/dashboard/student/plan-week" className="text-[13px] font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+            Plan my week →
           </Link>
         </p>
       ) : null}

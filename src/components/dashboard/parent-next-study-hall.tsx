@@ -62,9 +62,17 @@ export function ParentNextStudyHall({
               </div>
             </div>
           </div>
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
             <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
               Book a Study Hall
+            </LinkButton>
+            <LinkButton
+              href="/dashboard/student/plan-week"
+              variant="ghost"
+              size="sm"
+              className="px-0 text-white/70 hover:bg-transparent hover:text-white"
+            >
+              Plan my week
             </LinkButton>
           </div>
         </div>
@@ -117,14 +125,24 @@ export function ParentNextStudyHall({
               Join Study Hall →
             </LinkButton>
           ) : (
-            <LinkButton
-              href={`/dashboard/student/study-halls/${next.id}`}
-              variant="ghost"
-              size="sm"
-              className="px-0 text-white/70 hover:bg-transparent hover:text-white"
-            >
-              View Study Hall
-            </LinkButton>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <LinkButton
+                href={`/dashboard/student/study-halls/${next.id}`}
+                variant="ghost"
+                size="sm"
+                className="px-0 text-white/70 hover:bg-transparent hover:text-white"
+              >
+                View Study Hall
+              </LinkButton>
+              <LinkButton
+                href="/dashboard/student/plan-week"
+                variant="ghost"
+                size="sm"
+                className="px-0 text-white/70 hover:bg-transparent hover:text-white"
+              >
+                Plan my week
+              </LinkButton>
+            </div>
           )}
         </div>
       </div>
