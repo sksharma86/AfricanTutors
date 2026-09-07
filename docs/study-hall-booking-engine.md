@@ -25,15 +25,15 @@ Client cannot set `funding_source`, price, or a non-60 duration. Guides cannot c
 `book_session` (one SECURITY DEFINER transaction):
 
 1. Validate children / duration / household.
-2. Create the booking (`create_booking` re-checks Guide availability).
-3. Lock the entitled subscription row and insert `study_hall_365_day_usage`.
-4. If the unique `(account_id, local_date)` insert hits a conflict, the exception rolls back the booking.
+2. If the start's local date is entitled, lock the membership row, re-read usage, then create the booking and insert `study_hall_365_day_usage`.
+3. Unique `(account_id, local_date)` is the one-per-day 365 authority. Two concurrent same-day attempts cannot both consume 365.
+4. If that insert loses (day already consumed), the booking is **not** aborted. The same transaction continues through prepaid, then credit, then PAYG.
 
 Do not call `consume_study_hall_365_day` from the browser. That RPC is financial-actor only; booking inserts usage itself.
 
-A failed booking (no Guide, past time, outside paid window, conflict) never writes a usage row.
+A failed booking (no Guide, past time, outside paid window) never writes a usage row.
 
-Cancel does not restore the 365 day. The parent cannot cancel 4 PM and rebook 7 PM on 365 the same local date. Prepaid/PAYG remain available as a separate request.
+Cancel does not restore the 365 day. The parent cannot cancel 4 PM and rebook 7 PM on 365 the same local date. Prepaid / credit / PAYG remain available as a separate request.
 
 ## Prepaid cancellation
 

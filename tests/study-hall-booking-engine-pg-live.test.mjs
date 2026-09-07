@@ -122,12 +122,13 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
   const guideUser = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee";
   const start365 = "2026-09-21T18:00:00Z";
   const start365b = "2026-09-21T20:00:00Z";
+  const start365c = "2026-09-21T22:00:00Z";
   const startNext = "2026-09-22T18:00:00Z";
   const startOutside = "2026-09-17T10:00:00Z";
   const periodStart = "2026-09-17T16:00:00+00";
   const periodEnd = "2026-10-17T16:00:00+00";
 
-  it("applies 0036–0039 on an isolated booking throwaway database", () => {
+  it("applies 0036–0040 on an isolated booking throwaway database", () => {
     execSync("bash scripts/setup-study-hall-booking-throwaway-db.sh", { stdio: "pipe" });
     const quoteForms = sql(`
       select count(*) from pg_proc p
@@ -253,8 +254,12 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${parent365}'`), "0");
 
     const results = await Promise.all([spawnBook(child365, start365), spawnBook(child365, start365b)]);
+    const joined = results.join(" | ");
     const wins = results.filter((r) => /study_hall_365/.test(r)).length;
-    assert.equal(wins, 1, results.join(" | "));
+    assert.equal(wins, 1, joined);
+    assert.doesNotMatch(joined, /already included/i);
+    const fallbacks = results.filter((r) => /payg|prepaid|package|stripe|credit/.test(r) && !/study_hall_365/.test(r)).length;
+    assert.equal(fallbacks, 1, joined);
     assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${parent365}' and local_date='2026-09-21'`), "1");
     assert.equal(sql(`select funding_source from bookings where account_id='${parent365}' and funding_source='study_hall_365' order by created_at desc limit 1`), "study_hall_365");
     assert.equal(sql(`select duration_minutes from bookings where account_id='${parent365}' and funding_source='study_hall_365' order by created_at desc limit 1`), "60");
@@ -262,9 +267,9 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     const booking = sql(`select id from bookings where account_id='${parent365}' and funding_source='study_hall_365' order by created_at desc limit 1`);
     sql(`select customer_cancel_booking('${booking}'::uuid);`);
     assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${parent365}' and local_date='2026-09-21'`), "1");
-    const secondSameDay = book(child365, start365b);
+    const secondSameDay = book(child365, start365c);
     assert.doesNotMatch(secondSameDay, /study_hall_365/);
-    assert.match(secondSameDay, /payg|prepaid|package|stripe/);
+    assert.match(secondSameDay, /payg|prepaid|package|stripe|credit/);
 
     const next = book(child365, startNext);
     assert.match(next, /study_hall_365/);
@@ -415,6 +420,23 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
        where account_id = '${mix}';
     `);
     assert.equal(sql(`select funding_source from bookings where account_id='${mix}' and scheduled_start='2026-09-21T19:00:00Z'`), "study_hall_365");
+
+    const creditParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa13";
+    const creditChild = "11111111-1111-1111-1111-111111111133";
+    seedHousehold(creditParent, creditChild);
+    useFree(creditParent, creditChild);
+    subscribe365(creditParent, "active", false, periodStart, periodEnd, "cred");
+    const creditFirst = book(creditChild, "2026-09-21T17:00:00Z");
+    assert.match(creditFirst, /study_hall_365/);
+    sql(`
+      insert into dollar_credit_ledger (account_id, amount_cents, entry_type, reason, reference)
+      values ('${creditParent}', 1200, 'admin_adjustment', 'same-day extra', 'credit-1200');
+    `);
+    const creditSecond = book(creditChild, "2026-09-21T19:00:00Z");
+    assert.match(creditSecond, /credit/);
+    assert.doesNotMatch(creditSecond, /study_hall_365/);
+    assert.equal(sql(`select funding_source from bookings where account_id='${creditParent}' and scheduled_start='2026-09-21T19:00:00Z'`), "credit");
+    assert.equal(sql(`select coalesce(sum(amount_cents),0) from dollar_credit_ledger where account_id='${creditParent}'`), "0");
   });
 
   it("39-42. timezone / UTC midnight / DST / period-end instant", () => {
@@ -427,6 +449,12 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     const utcMidnight = book(tzChild, "2026-09-22T04:00:00Z");
     assert.match(utcMidnight, /study_hall_365/);
     assert.equal(sql(`select local_date::text from study_hall_365_day_usage where account_id='${tzParent}'`), "2026-09-21");
+    const sameLocalExtra = book(tzChild, "2026-09-22T03:00:00Z");
+    assert.doesNotMatch(sameLocalExtra, /study_hall_365/);
+    assert.match(sameLocalExtra, /payg|prepaid|package|stripe|credit/);
+    const afterMidnight = book(tzChild, "2026-09-22T05:30:00Z");
+    assert.match(afterMidnight, /study_hall_365/);
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${tzParent}'`), "2");
 
     const dstParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa12";
     const dstChild = "11111111-1111-1111-1111-111111111132";

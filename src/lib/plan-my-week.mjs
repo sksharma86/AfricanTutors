@@ -258,9 +258,6 @@ export function planWeekResultMessage(errorMessage) {
   if (/no longer available|No Guide is available|choose another slot/i.test(m)) {
     return "Time no longer available";
   }
-  if (/already included with Study Hall 365/i.test(m)) {
-    return "This day already has a Study Hall 365 session. Choose another day, or book prepaid from the usual flow.";
-  }
   if (/Cannot book a time in the past|already passed/i.test(m)) {
     return "That time has already passed";
   }
