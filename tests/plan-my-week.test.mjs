@@ -151,6 +151,7 @@ describe("Plan My Week — parent portal entry and authorization", () => {
   const cancelApi = read("src/app/api/bookings/cancel/route.ts");
   const engine = read("supabase/migrations/0038_one_hour_booking_engine.sql");
   const admin = read("src/app/dashboard/admin/page.tsx");
+  const checkout = read("src/lib/checkout-service.ts");
 
   it("parent can open Plan My Week from a student-only page", () => {
     assert.equal(PLAN_MY_WEEK_HREF, "/dashboard/student/plan-week");
@@ -222,8 +223,12 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(ui, /Replaces the current session after the new time is confirmed/);
     assert.match(ui, /If payment is needed, the current session stays/);
     assert.match(ui, /After it is removed, you can pick a replacement time/);
+    assert.match(service, /replaceBookingId: session.replaceBookingId/);
     assert.match(service, /paymentPending/);
     assert.match(service, /Your current session stays scheduled until then/);
+    const m41 = read("supabase/migrations/0041_booking_replacement_finalization.sql");
+    assert.match(m41, /replaces_booking_id/);
+    assert.match(checkout, /attach_booking_replacement/);
   });
 
   it("parent cannot address another household; Guides cannot use Plan My Week", () => {
@@ -247,6 +252,7 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(engine, /create or replace function public.booking_quote/);
     const files = readdirSync(new URL("../supabase/migrations", import.meta.url).pathname);
     assert.equal(files.some((name) => name.startsWith("0040")), true);
+    assert.equal(files.some((name) => name.startsWith("0041")), true);
     const m40 = read("supabase/migrations/0040_same_day_365_funding_fallback.sql");
     assert.match(m40, /create or replace function public.book_session/);
     assert.doesNotMatch(m40, /plan-week|Plan My Week/);

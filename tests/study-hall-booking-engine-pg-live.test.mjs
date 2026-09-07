@@ -128,7 +128,7 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
   const periodStart = "2026-09-17T16:00:00+00";
   const periodEnd = "2026-10-17T16:00:00+00";
 
-  it("applies 0036–0040 on an isolated booking throwaway database", () => {
+  it("applies 0036–0041 on an isolated booking throwaway database", () => {
     execSync("bash scripts/setup-study-hall-booking-throwaway-db.sh", { stdio: "pipe" });
     const quoteForms = sql(`
       select count(*) from pg_proc p
@@ -520,5 +520,127 @@ describe("PR3 booking engine — throwaway live writes", { skip: !havePsql, conc
     `);
     assert.equal(sql(`select duration_minutes from bookings where duration_minutes=120 limit 1`), "120");
     assert.equal(sql(`select funding_source from bookings where duration_minutes=120 limit 1`) || "", "");
+  });
+
+  it("PAYG Change persists replacement; payment confirms new and cancels old", () => {
+    const chParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa20";
+    const chChild = "11111111-1111-1111-1111-111111111140";
+    seedHousehold(chParent, chChild, "America/Chicago", "Change");
+    useFree(chParent, chChild);
+    subscribe365(chParent, "active", false, periodStart, periodEnd, "chg");
+
+    const oldOut = book(chChild, "2026-09-23T17:00:00Z");
+    assert.match(oldOut, /study_hall_365/);
+    const oldId = sql(`select id from bookings where account_id='${chParent}' and scheduled_start='2026-09-23T17:00:00Z'`);
+    assert.match(oldId, /-/);
+
+    const newOut = book(chChild, "2026-09-23T19:00:00Z");
+    assert.match(newOut, /payg|stripe/);
+    const newId = sql(`select id from bookings where account_id='${chParent}' and scheduled_start='2026-09-23T19:00:00Z'`);
+    const payId = sql(`select id from payments where booking_id='${newId}' order by created_at desc limit 1`);
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${newId}'`), "pending");
+
+    sql(`select attach_booking_replacement('${newId}'::uuid, '${oldId}'::uuid);`);
+    assert.equal(sql(`select replaces_booking_id from bookings where id='${newId}'`), oldId);
+
+    const fulfilled = sql(`select fulfill_booking_payment('${payId}'::uuid, 1200, 'pi_change_ok');`);
+    assert.match(fulfilled, /confirmed/);
+    assert.equal(sql(`select status from bookings where id='${newId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+    assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${chParent}' and local_date='2026-09-23'`), "1");
+
+    const again = sql(`select fulfill_booking_payment('${payId}'::uuid, 1200, 'pi_change_ok');`);
+    assert.match(again, /already_fulfilled/);
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+    assert.equal(sql(`select count(*) from bookings where account_id='${chParent}' and scheduled_start is not null and status='confirmed'`), "1");
+  });
+
+  it("PAYG Change abandoned/expired hold leaves the original session", () => {
+    const abParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa21";
+    const abChild = "11111111-1111-1111-1111-111111111141";
+    seedHousehold(abParent, abChild, "America/Chicago", "Abandon");
+    useFree(abParent, abChild);
+    sql(`
+      insert into package_minute_ledger (account_id, minutes_delta, entry_type, reason, reference)
+      values ('${abParent}', 60, 'admin_adjustment', 'old prepaid', 'abandon-old-60');
+    `);
+    const oldOut = book(abChild, "2026-09-24T17:00:00Z");
+    assert.match(oldOut, /prepaid|package/);
+    const oldId = sql(`select id from bookings where account_id='${abParent}' and scheduled_start='2026-09-24T17:00:00Z'`);
+    const minutesBefore = sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${abParent}'`);
+
+    const newOut = book(abChild, "2026-09-24T19:00:00Z");
+    assert.match(newOut, /payg|stripe/);
+    const newId = sql(`select id from bookings where account_id='${abParent}' and scheduled_start='2026-09-24T19:00:00Z'`);
+    const payId = sql(`select id from payments where booking_id='${newId}' order by created_at desc limit 1`);
+    sql(`select attach_booking_replacement('${newId}'::uuid, '${oldId}'::uuid);`);
+    sql(`update payments set expires_at = now() - interval '1 minute' where id='${payId}';`);
+    sql(`update bookings set payment_hold_expires_at = now() - interval '1 minute' where id='${newId}';`);
+
+    const late = sql(`select fulfill_booking_payment('${payId}'::uuid, 1200, 'pi_change_late');`);
+    assert.match(late, /credited/);
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "confirmed");
+    assert.match(sql(`select status from bookings where id='${newId}'`), /expired|cancelled/);
+    assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${abParent}'`), minutesBefore);
+  });
+
+  it("replacement fulfillment is safe if the old booking is already cancelled; ordinary PAYG is unchanged", () => {
+    const preParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa22";
+    const preChild = "11111111-1111-1111-1111-111111111142";
+    seedHousehold(preParent, preChild, "America/Chicago", "PreCancel");
+    useFree(preParent, preChild);
+    subscribe365(preParent, "active", false, periodStart, periodEnd, "prec");
+    book(preChild, "2026-09-25T17:00:00Z");
+    const oldId = sql(`select id from bookings where account_id='${preParent}' and scheduled_start='2026-09-25T17:00:00Z'`);
+    book(preChild, "2026-09-25T19:00:00Z");
+    const newId = sql(`select id from bookings where account_id='${preParent}' and scheduled_start='2026-09-25T19:00:00Z'`);
+    const payId = sql(`select id from payments where booking_id='${newId}' order by created_at desc limit 1`);
+    sql(`select attach_booking_replacement('${newId}'::uuid, '${oldId}'::uuid);`);
+    sql(`select customer_cancel_booking('${oldId}'::uuid);`);
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+    const fulfilled = sql(`select fulfill_booking_payment('${payId}'::uuid, 1200, 'pi_already_cancelled');`);
+    assert.match(fulfilled, /confirmed/);
+    assert.equal(sql(`select status from bookings where id='${newId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+
+    const plainParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa23";
+    const plainChild = "11111111-1111-1111-1111-111111111143";
+    seedHousehold(plainParent, plainChild, "America/Chicago", "PlainPayg");
+    useFree(plainParent, plainChild);
+    const keep = book(plainChild, "2026-09-26T17:00:00Z");
+    assert.match(keep, /payg|stripe/);
+    const keepId = sql(`select id from bookings where account_id='${plainParent}' and scheduled_start='2026-09-26T17:00:00Z'`);
+    const extra = book(plainChild, "2026-09-26T19:00:00Z");
+    assert.match(extra, /payg|stripe/);
+    const extraId = sql(`select id from bookings where account_id='${plainParent}' and scheduled_start='2026-09-26T19:00:00Z'`);
+    const extraPay = sql(`select id from payments where booking_id='${extraId}' order by created_at desc limit 1`);
+    sql(`select fulfill_booking_payment('${extraPay}'::uuid, 1200, 'pi_plain_payg');`);
+    assert.equal(sql(`select status from bookings where id='${extraId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${keepId}'`), "pending");
+    assert.equal(sql(`select replaces_booking_id from bookings where id='${extraId}'`) || "", "");
+  });
+
+  it("immediately funded Change cancels the old session after the new one is confirmed", () => {
+    const imParent = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa24";
+    const imChild = "11111111-1111-1111-1111-111111111144";
+    seedHousehold(imParent, imChild, "America/Chicago", "Immediate");
+    useFree(imParent, imChild);
+    sql(`
+      insert into package_minute_ledger (account_id, minutes_delta, entry_type, reason, reference)
+      values ('${imParent}', 120, 'admin_adjustment', 'two halls', 'immed-120');
+    `);
+    const oldOut = book(imChild, "2026-09-27T17:00:00Z");
+    assert.match(oldOut, /prepaid|package/);
+    const oldId = sql(`select id from bookings where account_id='${imParent}' and scheduled_start='2026-09-27T17:00:00Z'`);
+    const newOut = book(imChild, "2026-09-27T19:00:00Z");
+    assert.match(newOut, /prepaid|package/);
+    const newId = sql(`select id from bookings where account_id='${imParent}' and scheduled_start='2026-09-27T19:00:00Z'`);
+    sql(`select attach_booking_replacement('${newId}'::uuid, '${oldId}'::uuid);`);
+    const fin = sql(`select finalize_booking_replacement('${newId}'::uuid);`);
+    assert.match(fin, /cancelled/);
+    assert.equal(sql(`select status from bookings where id='${newId}'`), "confirmed");
+    assert.equal(sql(`select status from bookings where id='${oldId}'`), "cancelled");
+    assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${imParent}'`), "60");
   });
 });

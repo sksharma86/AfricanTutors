@@ -63,10 +63,10 @@ async function cancelExisting(
   const { data, error } = await supabase.rpc("customer_cancel_booking", { p_booking: bookingId });
   if (error) return { ok: false, message: "We booked the new time but could not cancel the previous session." };
   const result = data as { status?: string };
-  if (result?.status !== "cancelled") {
-    return { ok: false, message: "We booked the new time but could not cancel the previous session." };
+  if (result?.status === "cancelled" || result?.status === "noop" || result?.status === "already_cancelled") {
+    return { ok: true };
   }
-  return { ok: true };
+  return { ok: false, message: "We booked the new time but could not cancel the previous session." };
 }
 
 async function scheduleOne(
@@ -98,6 +98,7 @@ async function scheduleOne(
         duration: 60,
         startISO: session.startISO,
         isFreeTrial: false,
+        replaceBookingId: session.replaceBookingId,
       },
       baseUrl,
     );

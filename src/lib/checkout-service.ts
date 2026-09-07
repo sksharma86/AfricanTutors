@@ -90,6 +90,8 @@ export async function createBookingCheckout(
     duration: 60;
     startISO: string | null;
     isFreeTrial: boolean;
+    /** Durable Change intent: cancel this booking only after the new one is confirmed. */
+    replaceBookingId?: string | null;
   },
   baseUrl: string,
 ): Promise<StartResult> {
@@ -128,6 +130,11 @@ export async function createBookingCheckout(
   }
   if (error) throw new Error(error.message);
 
+  const replaceBookingId =
+    typeof params.replaceBookingId === "string" && params.replaceBookingId.trim()
+      ? params.replaceBookingId.trim()
+      : null;
+
   const q = data as {
     booking_id: string;
     payment_id: string;
@@ -140,10 +147,31 @@ export async function createBookingCheckout(
     booking_status: string;
   };
 
+  if (replaceBookingId && q.booking_id) {
+    const attached = await supabase.rpc("attach_booking_replacement", {
+      p_new_booking: q.booking_id,
+      p_old_booking: replaceBookingId,
+    });
+    if (attached.error) {
+      if (q.stripe_cents_due > 0) {
+        const service = getServiceSupabase();
+        await rollbackReservation(
+          service,
+          q.payment_id,
+          "Replacement intent could not be recorded; reservation released",
+        );
+        throw new Error("We couldn't start the time change. Your current session is unchanged.");
+      }
+    }
+  }
+
   // Non-Stripe outcomes are already final in the DB transaction.
   // Await notify so Vercel keeps the invocation alive until Resend dispatch
   // finishes; never let email failure undo a committed booking.
   if (q.stripe_cents_due <= 0) {
+    if (replaceBookingId && q.booking_id) {
+      await supabase.rpc("finalize_booking_replacement", { p_new_booking: q.booking_id });
+    }
     if (q.funding !== "request") {
       try {
         await notifyBookingConfirmed(q.booking_id);
@@ -173,6 +201,13 @@ export async function createBookingCheckout(
     if (!isStripeConfigured) throw new Error("STRIPE_NOT_CONFIGURED");
     const customerId = await ensureStripeCustomer(service, user.id, user.email);
     const stripe = getStripe();
+    const metadata: Record<string, string> = {
+      kind: "booking",
+      payment_id: q.payment_id,
+      account_id: user.id,
+      booking_id: q.booking_id,
+    };
+    if (replaceBookingId) metadata.replaces_booking_id = replaceBookingId;
 
     const session = await stripe.checkout.sessions.create(
       {
@@ -189,9 +224,9 @@ export async function createBookingCheckout(
             },
           },
         ],
-        metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+        metadata,
         payment_intent_data: {
-          metadata: { kind: "booking", payment_id: q.payment_id, account_id: user.id, booking_id: q.booking_id },
+          metadata,
         },
         expires_at: stripeCheckoutExpiresAt(),
         success_url: `${baseUrl}/checkout/return?payment=${q.payment_id}`,

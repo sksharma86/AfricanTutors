@@ -35,6 +35,14 @@ A failed booking (no Guide, past time, outside paid window) never writes a usage
 
 Cancel does not restore the 365 day. The parent cannot cancel 4 PM and rebook 7 PM on 365 the same local date. Prepaid / credit / PAYG remain available as a separate request.
 
+## Change (Plan My Week replacement)
+
+Immediate (free / 365 / prepaid / credit): book the new session first, then cancel the old one with `customer_cancel_booking` / `finalize_booking_replacement` economics.
+
+PAYG Change: persist `bookings.replaces_booking_id` before returning Stripe Checkout. Do **not** cancel the original because a checkout URL exists. `fulfill_booking_payment` confirms the new booking, then cancels the original. Abandoned, expired, or failed payment leaves the original intact. Duplicate webhooks are idempotent. Success URL is not authority.
+
+Ordinary (non-Change) PAYG checkout does not set `replaces_booking_id`.
+
 ## Prepaid cancellation
 
 Unchanged: `customer_cancel_booking` + `restore_booking_value`. Early (≥24h or unscheduled) restores package minutes. Late (<24h) does not. 365 usage is not part of that restore.
