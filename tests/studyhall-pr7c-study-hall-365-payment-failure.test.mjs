@@ -344,7 +344,8 @@ describe("PR7C — architecture, isolation, Hours portal CTA", () => {
     assert.match(portal, /billingPortal\.sessions\.create/);
     assert.match(portal, /\/dashboard\/student\/packages/);
     assert.doesNotMatch(portal, /https:\/\/billing\.stripe\.com/);
-    assert.match(card, /hasMembership/);
+    assert.match(card, /studyHall365HoursCtas/);
+    assert.match(card, /openMembership/);
     assert.match(card, /\/api\/billing\/portal/);
     assert.match(card, /Manage billing/);
   });

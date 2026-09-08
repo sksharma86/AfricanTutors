@@ -14,6 +14,7 @@ import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPaymentPurposeLabel, parentPaymentStatusLabel } from "@/lib/parent-portal.mjs";
 import { parseParentMembership } from "@/lib/parent-week.mjs";
 import { customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
+import { parseOpenMembershipFlag } from "@/lib/study-hall-365/hours-ctas.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default async function PackagesPage() {
   const { data: authUser } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   const uid = authUser?.user?.id ?? null;
 
-  const [{ data: packages }, balancesRes, paymentsRes, membershipRes] = await Promise.all([
+  const [{ data: packages }, balancesRes, paymentsRes, membershipRes, openMembershipRes] = await Promise.all([
     supabase!
       .from("package_products")
       .select("id, code, name, minutes, price_cents")
@@ -52,6 +53,11 @@ export default async function PackagesPage() {
           .rpc("get_study_hall_365_membership", { p_account: uid })
           .then((r) => r, () => ({ data: null, error: null }))
       : Promise.resolve({ data: null }),
+    uid
+      ? supabase!
+          .rpc("study_hall_365_has_open_membership", { p_account: uid })
+          .then((r) => r, () => ({ data: null, error: { message: "open_membership_rpc_failed" } }))
+      : Promise.resolve({ data: null, error: { message: "no_account" } }),
   ]);
 
   const balances = (balancesRes.data ?? {}) as { package_minutes?: number; dollar_credit_cents?: number };
@@ -75,6 +81,7 @@ export default async function PackagesPage() {
         periodEnd: membershipParsed.periodEnd ?? "",
       }
     : null;
+  const openMembership = parseOpenMembershipFlag(openMembershipRes);
 
   return (
     <ParentPage wide>
@@ -114,7 +121,7 @@ export default async function PackagesPage() {
           $149/month. One Study Hall each local calendar day. Cancel anytime — access continues through the paid period.
         </p>
         <div className="mt-4 max-w-md">
-          <StudyHall365Card membership={membership} />
+          <StudyHall365Card membership={membership} openMembership={openMembership} />
         </div>
       </div>
 
