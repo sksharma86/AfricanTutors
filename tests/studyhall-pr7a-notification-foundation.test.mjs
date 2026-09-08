@@ -65,10 +65,10 @@ describe("PR7A — event catalog foundation (unwired)", () => {
     assert.ok(!CHANNEL_POLICY.sms.includes("study_hall_365_started"));
   });
 
-  it("does not wire customer-no-show sends yet", () => {
+  it("PR7D wires customer-no-show email after the Guide RPC; Stripe webhook stays silent", () => {
     const notify = read("src/lib/notify.ts");
-    assert.doesNotMatch(notify, /notifyCustomerNoShow/);
-    assert.doesNotMatch(read("src/app/api/tutor/customer-no-show/route.ts"), /notify/);
+    assert.match(notify, /notifyCustomerNoShow/);
+    assert.match(read("src/app/api/tutor/customer-no-show/route.ts"), /notifyCustomerNoShow/);
     const stripe = read("src/app/api/stripe/webhook/route.ts");
     assert.doesNotMatch(stripe, /notifyCustomerNoShow|STUDY_HALL_365_STARTED/);
   });

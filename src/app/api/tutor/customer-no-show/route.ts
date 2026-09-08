@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { notifyCustomerNoShow } from "@/lib/notify";
+import { shouldNotifyCustomerNoShowAfterRpc } from "@/lib/notifications/customer-no-show.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -53,5 +55,16 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase.rpc("guide_mark_customer_no_show", { p_booking: body.bookingId });
   if (error) return mapError(error.message || "");
+
+  // Notifications are a side effect of the committed PR6 transition.
+  // Failure here must not change the JSON the Guide already earned.
+  try {
+    if (shouldNotifyCustomerNoShowAfterRpc({ data, error })) {
+      await notifyCustomerNoShow(body.bookingId);
+    }
+  } catch {
+    /* notifications are side effects */
+  }
+
   return NextResponse.json(data);
 }

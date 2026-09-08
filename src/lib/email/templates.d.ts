@@ -150,4 +150,14 @@ export function studyHall365CancellationScheduled(ctx: {
 }): RenderedEmail;
 export function studyHall365Resumed(ctx: { appUrl?: string | null }): RenderedEmail;
 export function studyHall365PaymentFailure(ctx: { appUrl?: string | null }): RenderedEmail;
+export function studyHallCustomerNoShowParent(ctx: {
+  whenISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
+export function studyHallCustomerNoShowGuide(ctx: {
+  whenISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
 export function studyHall365Ended(ctx: { appUrl?: string | null }): RenderedEmail;

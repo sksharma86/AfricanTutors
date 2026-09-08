@@ -434,10 +434,9 @@ describe("PR7B — architecture / failure isolation / no extra slices", () => {
     assert.doesNotMatch(migration, /alter table/i);
   });
 
-  it("does not start PR7D/PR7E/PR7F or change providers", () => {
-    assert.doesNotMatch(notify, /notifyCustomerNoShow/);
+  it("does not start PR7E/PR7F or change providers", () => {
     assert.doesNotMatch(webhook, /notifyCustomerNoShow/);
-    assert.doesNotMatch(read("src/app/api/tutor/customer-no-show/route.ts"), /notify/);
+    assert.doesNotMatch(notify, /stale-delivery|sender branding/i);
     assert.doesNotMatch(migration, /resend|twilio|daily\.co/i);
     assert.doesNotMatch(migration, /create table|alter table/i);
   });

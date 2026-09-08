@@ -34,6 +34,10 @@ import {
   shouldNotifyStudyHall365PaymentFailure,
   studyHall365PaymentFailureKey,
 } from "@/lib/notifications/study-hall-365-payment-failure.mjs";
+import {
+  customerNoShowGuideDedupeKey,
+  customerNoShowParentDedupeKey,
+} from "@/lib/notifications/customer-no-show.mjs";
 
 /**
  * Central, idempotent transactional-notification service (Study Hall PR8).
@@ -788,6 +792,52 @@ export async function notifyStudyHall365PaymentFailure(opts: {
       accountId,
       rendered: T.studyHall365PaymentFailure({ appUrl: APP_URL }),
     });
+  } catch {
+    return { status: "failed" };
+  }
+}
+
+/**
+ * Parent + Guide email after an authoritative PR6 customer no-show.
+ * Call only after `guide_mark_customer_no_show` has committed. Re-reads the
+ * booking and requires `status === no_show`. Parent email only (SMS deferred
+ * to PR7F). Guide email only — no Guide SMS/WhatsApp, no Management success
+ * email. Never throws; never rolls back no-show, funding, or earnings.
+ */
+export async function notifyCustomerNoShow(bookingId: string): Promise<{ status: string }> {
+  try {
+    if (!bookingId) return { status: "skipped" };
+    const service = getServiceSupabase();
+    const b = await loadBooking(service, bookingId);
+    if (!b || b.status !== "no_show") return { status: "skipped" };
+
+    await deliver({
+      key: customerNoShowParentDedupeKey(bookingId),
+      type: NOTIFICATION_EVENTS.CUSTOMER_NO_SHOW_PARENT,
+      accountId: b.account_id,
+      bookingId,
+      rendered: T.studyHallCustomerNoShowParent({
+        whenISO: b.scheduled_start,
+        tz: b.studentTz,
+        appUrl: APP_URL,
+      }),
+    });
+
+    if (b.tutor_id) {
+      await deliver({
+        key: customerNoShowGuideDedupeKey(bookingId),
+        type: NOTIFICATION_EVENTS.CUSTOMER_NO_SHOW_GUIDE,
+        accountId: b.tutor_id,
+        bookingId,
+        rendered: T.studyHallCustomerNoShowGuide({
+          whenISO: b.scheduled_start,
+          tz: b.tutorTz,
+          appUrl: APP_URL,
+        }),
+      });
+    }
+
+    return { status: "ok" };
   } catch {
     return { status: "failed" };
   }
