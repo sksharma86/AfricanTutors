@@ -16,7 +16,6 @@ import {
   shouldNotifyCustomerNoShowAfterRpc,
 } from "../src/lib/notifications/customer-no-show.mjs";
 import { joinMustWithholdToken, joinPresenceRpcName } from "../src/lib/http-session-join.mjs";
-import { hasSupabaseEnv, isCanonicalDemoProject } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const APP = "https://app.studyhall.test";
@@ -129,9 +128,10 @@ describe("PR7D — rejected PR6 outcomes never notify", () => {
       false,
     );
     const api = read("src/app/api/tutor/customer-no-show/route.ts");
-    const rpcIdx = api.indexOf("guide_mark_customer_no_show");
-    const errorReturn = api.indexOf("if (error) return mapError");
-    const notifyIdx = api.indexOf("notifyCustomerNoShow");
+    const post = api.slice(api.indexOf("export async function POST"));
+    const rpcIdx = post.indexOf("guide_mark_customer_no_show");
+    const errorReturn = post.indexOf("if (error) return mapError");
+    const notifyIdx = post.indexOf("notifyCustomerNoShow");
     assert.ok(rpcIdx >= 0 && errorReturn > rpcIdx && notifyIdx > errorReturn);
     assert.match(read("supabase/migrations/0043_guide_customer_no_show.sql"), /now\(\) < v_bk\.scheduled_start \+ interval '15 minutes'/);
   });
@@ -323,7 +323,6 @@ describe("PR7D — identifiers, CTAs, and production-safety bounds", () => {
     assert.doesNotMatch(read("src/app/api/admin/booking/route.ts"), /notifyCustomerNoShow/);
     assert.doesNotMatch(read("src/app/api/stripe/webhook/route.ts"), /notifyCustomerNoShow|customer_no_show/);
     assert.match(notify, /claim_email_delivery/);
-    assert.equal(typeof hasSupabaseEnv, "function");
-    assert.equal(typeof isCanonicalDemoProject, "function");
+    assert.doesNotMatch(body, /Date\.now\(\)/);
   });
 });
