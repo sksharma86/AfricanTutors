@@ -153,7 +153,7 @@ describe("Study Hall camera presence — room wiring", () => {
     assert.equal(ROOM_PARTICIPANT_PROPERTIES.enable_recording, "cloud");
     const room = read("src/components/session/session-room.tsx");
     assert.match(room, /CallParentControl/);
-    assert.match(room, /Guide expectations/);
+    assert.match(room, /GuideOperatingMethod/);
     assert.match(room, /recorded for quality assurance/);
     assert.match(room, /Ready to join 5 minutes before start/);
     const service = read("src/lib/session-service.ts");

@@ -67,6 +67,21 @@ describe("PR5 — Parent Portal transformation", () => {
     assert.notEqual(parentWeekDayKind([awaiting], { isToday: false, nowMs: NOW_MS }), "completed");
   });
 
+  it("customer no-show is Missed Study Hall, not Completed or No Study Hall", () => {
+    const missed = booking({
+      id: "tue",
+      status: "no_show",
+      scheduled_start: "2026-09-08T23:00:00.000Z",
+      scheduled_end: "2026-09-09T00:00:00.000Z",
+    });
+    const days = parentWeekStrip([missed], TZ, NOW_MS);
+    const tue = days.find((d) => d.localDate === "2026-09-08");
+    assert.equal(tue?.kind, "missed");
+    assert.notEqual(tue?.kind, "completed");
+    assert.notEqual(tue?.kind, "none");
+    assert.equal(parentWeekDayKind([missed]), "missed");
+  });
+
   it("4. multiple Study Halls in the current week scan Monday–Sunday", () => {
     const rows = [
       booking({

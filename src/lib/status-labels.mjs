@@ -27,7 +27,7 @@ export function customerBookingStatus(status, paymentStatus) {
     case "cancelled":
       return { label: "Cancelled", tone: "neutral" };
     case "no_show":
-      return { label: "Missed session", tone: "danger" };
+      return { label: "Missed Study Hall", tone: "neutral" };
     case "expired":
       return { label: "Booking expired", tone: "neutral" };
     default:

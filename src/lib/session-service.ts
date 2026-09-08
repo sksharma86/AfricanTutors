@@ -3,6 +3,7 @@ import "server-only";
 import { computeSessionAccessWindow } from "@/lib/daily/access-window.mjs";
 import { DailyUnavailableError, createMeetingToken, ensureRoom, roomUrl, updateRoomBounds } from "@/lib/daily/client";
 import { isDailyConfigured } from "@/lib/daily/config";
+import { joinMustWithholdToken, joinPresenceRpcName } from "@/lib/http-session-join.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
@@ -54,9 +55,13 @@ export interface JoinResult {
 /**
  * Authorize the caller for this booking's session, then (only if the window is
  * OPEN) create/reuse the Daily room and mint a short-lived, room-scoped token.
- * Records the participant's join presence. Never mutates booking/payment/earning
- * state; a Daily failure surfaces as a temporary 503-style error and is safe to
- * retry (room + presence are idempotent).
+ * Then finalize HTTP join presence under a booking row lock. If the booking is
+ * no longer joinable (customer no-show / cancel / complete), do not return the
+ * token. Daily mint may have already happened; an unreturned token is inert.
+ * Never mutates payment/earning state. A Daily failure surfaces as a temporary
+ * 503-style error and is safe to retry (room + presence are idempotent).
+ * Does not revoke tokens, delete rooms, or force a Guide already in the room
+ * to leave.
  */
 export async function joinSession(bookingId: string): Promise<JoinResult> {
   const { supabase, user } = await authed();
@@ -102,9 +107,17 @@ export async function joinSession(bookingId: string): Promise<JoinResult> {
 
     // Record which Daily room backs this booking (opaque; observability only).
     await service.from("bookings").update({ daily_room_name: roomName }).eq("id", bookingId).is("daily_room_name", null);
-    // Record join presence for student/tutor (admins are support, not attendees).
+    // HTTP join presence is authoritative. Inspect { data, error } — never
+    // fire-and-forget. If the booking finalized as no_show (or otherwise
+    // non-joinable) while Daily minted, withhold the token.
     if (info.role === "student" || info.role === "tutor") {
-      await service.rpc("record_session_presence", { p_booking: bookingId, p_role: info.role, p_event: "join" });
+      const presence = await service.rpc(joinPresenceRpcName(), {
+        p_booking: bookingId,
+        p_role: info.role,
+      });
+      if (joinMustWithholdToken(presence)) {
+        throw new SessionError("not_joinable");
+      }
     }
 
     return {

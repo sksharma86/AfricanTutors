@@ -110,7 +110,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
     const avail = read("src/app/dashboard/tutor/availability/page.tsx");
     const halls = read("src/app/dashboard/tutor/study-halls/page.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
-    const guide = read("src/components/dashboard/guide-guidance.tsx");
+    const guide = read("src/lib/guide-operating-method.mjs") + read("src/components/dashboard/guide-operating-method.tsx");
     const next = read("src/components/dashboard/guide-next-study-hall.tsx");
     assert.match(page, /Guide workspace/);
     assert.match(today, /Today'?s schedule|Upcoming Study Halls/);

@@ -68,11 +68,13 @@ export function parentWeekDayKind(bookingsOnDay, { isToday = false, nowMs = Date
       (booking.status === "pending" || booking.status === "confirmed") && !awaitingPayment(booking),
   );
   const awaiting = rows.filter(awaitingPayment);
+  const missed = rows.filter((booking) => booking.status === "no_show");
 
   if (isToday && open.length > 0) return "today";
   if (completed.length > 0) return "completed";
   if (paidPlan.length > 0) return "scheduled";
   if (awaiting.length > 0) return "payment_needed";
+  if (missed.length > 0) return "missed";
   return "none";
 }
 
@@ -81,6 +83,7 @@ export function parentWeekDayLabel(kind, { compact = false } = {}) {
   if (kind === "completed") return compact ? "Done" : "COMPLETED";
   if (kind === "scheduled") return compact ? "Set" : "SCHEDULED";
   if (kind === "payment_needed") return compact ? "Pay" : "PAYMENT NEEDED";
+  if (kind === "missed") return compact ? "Missed" : "MISSED STUDY HALL";
   return compact ? "—" : "NO STUDY HALL";
 }
 

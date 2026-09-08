@@ -1,8 +1,10 @@
 import { GuideConfirmAttendance } from "@/components/dashboard/guide-confirm-attendance";
 import { GuideJoinControl } from "@/components/dashboard/guide-join-control";
 import { GuideSurface } from "@/components/dashboard/guide-surface";
+import { GuideCustomerNoShowControl } from "@/components/session/guide-customer-no-show-control";
 import { LinkButton } from "@/components/ui/button";
 import { activeConfirmationBlock, guideAttendanceState, guideConfirmBlockState } from "@/lib/guide-attendance.mjs";
+import { customerNoShowUiState } from "@/lib/guide-customer-no-show.mjs";
 import { guideChildName, guideChildrenCaption, guideStartsInLabel } from "@/lib/guide-portal.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
@@ -71,6 +73,12 @@ export function GuideNextStudyHall({
   }
 
   const join = guideJoinUiState(next.status, next.scheduled_start, next.scheduled_end, nowMs);
+  const noShow = customerNoShowUiState({
+    status: next.status,
+    scheduledStart: next.scheduled_start,
+    studentJoinedAt: next.student_first_joined_at ?? null,
+    nowMs,
+  });
   const confirmBlock = activeConfirmationBlock(bookings.length ? bookings : [next], { nowMs });
   const block = confirmBlock.block?.length ? confirmBlock.block : [next];
   const blockState = guideConfirmBlockState({ bookings: block, nowMs });
@@ -141,6 +149,12 @@ export function GuideNextStudyHall({
             {join.kind === "opens_at" && confirmKind !== "awaiting" ? (
               <p className="mt-1 text-[13px] text-white/55">Be ready 5 minutes before start time.</p>
             ) : null}
+            {join.kind === "join" && noShow.kind === "waiting" ? (
+              <p className="mt-2 text-sm text-white/70">Join, stay present, and wait for the child.</p>
+            ) : null}
+            {join.kind === "join" && noShow.kind === "eligible" ? (
+              <p className="mt-2 text-sm text-gold-200">The child has not joined. You may mark a customer no-show.</p>
+            ) : null}
             {confirmKind === "awaiting" ? (
               <p className="mt-3 text-[11px] font-semibold tracking-[0.14em] text-gold-300 uppercase">
                 Attendance confirmation required
@@ -178,6 +192,17 @@ export function GuideNextStudyHall({
               nowMs={nowMs}
             />
           )}
+          {noShow.kind === "waiting" || noShow.kind === "eligible" || noShow.kind === "recorded" ? (
+            <GuideCustomerNoShowControl
+              bookingId={next.id}
+              status={next.status}
+              scheduledStart={next.scheduled_start}
+              studentJoinedAt={next.student_first_joined_at ?? null}
+              nowMs={nowMs}
+              callParentEnabled={join.kind === "join"}
+              variant="home"
+            />
+          ) : null}
         </div>
       </div>
     </GuideSurface>

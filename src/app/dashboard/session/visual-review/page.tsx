@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
+import { GuideCustomerNoShowControl } from "@/components/session/guide-customer-no-show-control";
+import { GuideOperatingMethod } from "@/components/dashboard/guide-operating-method";
 import { requireUser } from "@/lib/auth";
 import { cameraWarningCopy } from "@/lib/daily/camera-presence.mjs";
 
@@ -25,6 +27,11 @@ export default async function SessionCameraVisualReviewPage({
   const scene = params.scene ?? "normal";
   const guide = cameraWarningCopy("tutor");
   const student = cameraWarningCopy("student");
+  const methodStart = new Date(Date.now() - 20 * 60000).toISOString();
+  const methodEnd = new Date(Date.now() + 40 * 60000).toISOString();
+  const waitStart = new Date(Date.now() - 8 * 60000).toISOString();
+  const noshowStart = new Date(Date.now() - 16 * 60000).toISOString();
+  const showMethod = scene === "method" || scene === "wait" || scene === "noshow";
 
   return (
     <div className="min-h-full bg-[#0b0d10] px-4 py-8 sm:px-6">
@@ -39,6 +46,21 @@ export default async function SessionCameraVisualReviewPage({
           </div>
         </div>
         <div className="p-5 sm:p-6">
+          {showMethod ? (
+            <div className="mb-4 space-y-3">
+              <GuideOperatingMethod scheduledStart={methodStart} scheduledEnd={methodEnd} tone="session" ladderOpen />
+              <GuideCustomerNoShowControl
+                bookingId="fixture-session"
+                status="confirmed"
+                scheduledStart={scene === "noshow" ? noshowStart : waitStart}
+                studentJoinedAt={null}
+                callParentEnabled
+                includeCallParent
+                variant="session"
+                nowMs={Date.now()}
+              />
+            </div>
+          ) : null}
           {scene === "guide-warning" ? (
             <div className="mb-4">
               <CameraRequiredBanner title={guide.title} body={guide.body} variant="guide" />

@@ -35,6 +35,6 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
   confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
-  no_show: "No-show",
+  no_show: "Customer no-show",
   expired: "Expired",
 };

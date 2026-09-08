@@ -5,6 +5,7 @@ import { SessionRoom } from "@/components/session/session-room";
 import { Container } from "@/components/ui/container";
 import { requireUser } from "@/lib/auth";
 import { getSessionInfo, type SessionInfo } from "@/lib/session-service";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Study Hall Session" };
 export const dynamic = "force-dynamic";
@@ -20,6 +21,17 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
     info = { authorized: false, reason: "error" };
   }
 
+  let studentJoinedAt: string | null = null;
+  if (info.authorized && info.role === "tutor") {
+    const supabase = await createSupabaseServerClient();
+    const presence = await supabase
+      ?.from("session_presence")
+      .select("student_first_joined_at")
+      .eq("booking_id", bookingId)
+      .maybeSingle();
+    studentJoinedAt = (presence?.data?.student_first_joined_at as string | null | undefined) ?? null;
+  }
+
   const backHref = info.role === "tutor" ? "/dashboard/tutor" : info.role === "admin" ? `/dashboard/admin/study-halls/${bookingId}` : "/dashboard/student";
 
   return (
@@ -30,7 +42,7 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
         </Link>
         <div className="mt-4">
           {info.authorized ? (
-            <SessionRoom bookingId={bookingId} info={info} />
+            <SessionRoom bookingId={bookingId} info={info} studentJoinedAt={studentJoinedAt} />
           ) : (
             <div className="rounded-2xl border border-ink-700 bg-ink-800 p-8 text-center">
               <h1 className="font-display text-2xl font-semibold text-white">Session unavailable</h1>

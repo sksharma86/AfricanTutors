@@ -33,7 +33,7 @@ describe("Phase 8 — customer status language (no raw enums)", () => {
     assert.deepEqual(customerBookingStatus("pending"), { label: "Awaiting confirmation", tone: "warning" });
     assert.deepEqual(customerBookingStatus("completed"), { label: "Completed", tone: "neutral" });
     assert.deepEqual(customerBookingStatus("cancelled"), { label: "Cancelled", tone: "neutral" });
-    assert.deepEqual(customerBookingStatus("no_show"), { label: "Missed session", tone: "danger" });
+    assert.deepEqual(customerBookingStatus("no_show"), { label: "Missed Study Hall", tone: "neutral" });
     assert.deepEqual(customerBookingStatus("expired"), { label: "Booking expired", tone: "neutral" });
   });
 

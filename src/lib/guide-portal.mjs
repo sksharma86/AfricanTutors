@@ -93,7 +93,7 @@ export function guideRowStatus(booking, nowMs = Date.now()) {
   if (join.kind === "opens_at") return "Ready";
   if (join.kind === "awaiting") return "Awaiting confirmation";
   if (booking.status === "completed") return "Completed";
-  if (booking.status === "no_show") return "No-show";
+  if (booking.status === "no_show") return "Customer no-show";
   if (booking.status === "cancelled" || booking.status === "expired") return "Cancelled";
   if (join.kind === "ended") return "Ended";
   return "Scheduled";

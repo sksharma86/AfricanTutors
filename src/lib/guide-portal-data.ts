@@ -72,6 +72,25 @@ export async function loadGuideWorkspace(supabase: SB, tutorId: string) {
         b.attendance = currentAssignmentForBooking(rows, b) as GuideAttendanceAssignment | null;
       }
     }
+    const presenceRes = await supabase
+      .from("session_presence")
+      .select("booking_id, student_first_joined_at")
+      .in("booking_id", bookingIds)
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      );
+    if (!presenceRes.error) {
+      const byId = new Map(
+        ((presenceRes.data ?? []) as { booking_id: string; student_first_joined_at?: string | null }[]).map((row) => [
+          row.booking_id,
+          row.student_first_joined_at ?? null,
+        ]),
+      );
+      for (const b of bookings) {
+        b.student_first_joined_at = byId.get(b.id) ?? null;
+      }
+    }
   }
 
   return {

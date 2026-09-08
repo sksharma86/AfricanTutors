@@ -29,6 +29,7 @@ export function GuideHomeBoard({
   nowMs,
   currency = "USD",
   profileStatus,
+  ladderOpen = false,
 }: {
   firstName: string;
   bookings: GuideBooking[];
@@ -41,6 +42,7 @@ export function GuideHomeBoard({
   nowMs: number;
   currency?: string;
   profileStatus?: string | null;
+  ladderOpen?: boolean;
 }) {
   const lists = guideStudyHallLists(bookings, nowMs, timeZone);
   const today = guideDaySchedule(bookings, nowMs, timeZone);
@@ -83,7 +85,12 @@ export function GuideHomeBoard({
           <GuideEarningsCard outstanding={pay.outstanding} paidMonth={pay.paidMonth} currency={pay.currency} />
         </div>
         <div className="gp-home-guide">
-          <GuideGuidance />
+          <GuideGuidance
+            scheduledStart={lists.next?.scheduled_start}
+            scheduledEnd={lists.next?.scheduled_end}
+            nowMs={nowMs}
+            ladderOpen={ladderOpen}
+          />
         </div>
       </div>
     </div>

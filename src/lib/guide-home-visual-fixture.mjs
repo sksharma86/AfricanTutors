@@ -76,7 +76,16 @@ export function guideHomeVisualFixture(now = new Date(), { reportNeeded = false,
     };
   }
   const blockScenes = scene === "block2" || scene === "block4" || scene === "block4confirmed" || scene === "replace2";
-  const nextOffsetMin = scene === "before" ? 120 : scene === "required" || scene === "confirmed" || scene === "missed" || blockScenes ? 27 : 2;
+  const nextOffsetMin =
+    scene === "wait"
+      ? -8
+      : scene === "noshow"
+        ? -16
+        : scene === "before"
+          ? 120
+          : scene === "required" || scene === "confirmed" || scene === "missed" || blockScenes
+            ? 27
+            : 2;
   const next = booking({
     id: "fixture-next",
     scheduled_start: new Date(now.getTime() + nextOffsetMin * 60000).toISOString(),

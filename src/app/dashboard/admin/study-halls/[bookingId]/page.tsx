@@ -14,7 +14,7 @@ import { BOOKING_STATUS_LABEL, type BookingStatus } from "@/lib/booking-config";
 import { bookingChildCount, bookingChildNames, firstNameOf } from "@/lib/household-children.mjs";
 import { formatCents } from "@/lib/pricing";
 import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
-import { currentStudyHallIssues, managementOperationalStatus } from "@/lib/management-ops.mjs";
+import { currentStudyHallIssues, managementCustomerNoShowRecord, managementOperationalStatus } from "@/lib/management-ops.mjs";
 import { attendanceHistoryTitle } from "@/lib/open-coverage.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -53,6 +53,7 @@ export default async function AdminStudyHallDetailPage({
     attRes,
     payRes,
     offerRes,
+    earnRes,
   ] = await Promise.all([
     supabase!.from("profiles").select("id, display_name, phone_e164").eq("id", raw.account_id).maybeSingle(),
     supabase!
@@ -104,6 +105,15 @@ export default async function AdminStudyHallDetailPage({
         (r) => r,
         () => ({ data: null, error: { message: "unavailable" } }),
       ),
+    supabase!
+      .from("tutor_earnings")
+      .select("id, amount_cents, status, reason")
+      .eq("booking_id", bookingId)
+      .maybeSingle()
+      .then(
+        (r) => r,
+        () => ({ data: null, error: { message: "unavailable" } }),
+      ),
   ]);
 
   const students = raw.students as { full_name?: string | null; timezone?: string | null } | null;
@@ -131,6 +141,10 @@ export default async function AdminStudyHallDetailPage({
     issues,
   });
   const canAct = raw.status === "confirmed" || raw.status === "pending";
+  const noShowRecord = managementCustomerNoShowRecord(raw as never, {
+    earning: (earnRes.data ?? null) as { status?: string | null } | null,
+    escalations: (escRes.data ?? []) as { status?: string | null; outcome?: string | null }[],
+  });
   const recordings = (recRes.data ?? []) as {
     id: string;
     status: string;
@@ -224,6 +238,38 @@ export default async function AdminStudyHallDetailPage({
         </Row>
       </dl>
 
+      {noShowRecord ? (
+        <section className="mt-8 rounded-xl border border-ink-100 bg-white px-4 py-4">
+          <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">{noShowRecord.title}</h2>
+          <p className="mt-2 text-sm text-ink-600">{noShowRecord.summary}</p>
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Guide pay</dt>
+              <dd className="mt-1 text-ink-800">
+                {noShowRecord.guidePay === "full_pay"
+                  ? `Full session pay recorded${earnRes.data?.amount_cents != null ? ` · ${formatCents(earnRes.data.amount_cents)}` : ""}`
+                  : "Pay recording deferred or missing — exception"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Customer funding</dt>
+              <dd className="mt-1 text-ink-800">Consumed — not restored</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">Call Parent</dt>
+              <dd className="mt-1 text-ink-800">
+                {noShowRecord.callParentAttempted
+                  ? `Attempted${noShowRecord.callParentStatus ? ` · ${noShowRecord.callParentStatus}` : ""}`
+                  : "No Call Parent attempt recorded"}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-sm text-ink-500">
+            Routine customer no-show is already settled. No Guide report is required. Handle only if pay or funding looks wrong.
+          </p>
+        </section>
+      ) : null}
+
       {raw.request_note ? (
         <p className="mt-5 text-sm text-ink-600">
           Parent note: {raw.request_note}
@@ -248,14 +294,20 @@ export default async function AdminStudyHallDetailPage({
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Guide report</h2>
         <p className="mt-2 text-sm text-ink-600">
-          {(reportRes.data ?? []).length > 0 ? "Report submitted." : "No report yet."}
+          {raw.status === "no_show"
+            ? "No Guide report is required for a customer no-show."
+            : (reportRes.data ?? []).length > 0
+              ? "Report submitted."
+              : "No report yet."}
         </p>
       </section>
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Recording</h2>
         <div className="mt-2 space-y-2 text-sm text-ink-600">
-          {recordings.length === 0 ? <p>No recording yet.</p> : recordings.map((r) => (
+          {recordings.length === 0 ? (
+            <p>{raw.status === "no_show" ? "No attended-session recording. An empty Guide-only room is not a completed Study Hall recording." : "No recording yet."}</p>
+          ) : recordings.map((r) => (
             <RecordingLine key={r.id} rec={r} />
           ))}
         </div>

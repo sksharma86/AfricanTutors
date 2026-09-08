@@ -30,7 +30,7 @@ export function GuideTodaySchedule({
         <ul className="mt-1 divide-y divide-[#1c1915]/[0.06]">
           {visible.map((booking) => {
             const status = guideRowStatus(booking, nowMs);
-            const done = status === "Completed" || status === "Ended" || status === "No-show";
+            const done = status === "Completed" || status === "Ended" || status === "Customer no-show" || status === "No-show";
             const next = booking.id === nextId;
             return (
               <li
