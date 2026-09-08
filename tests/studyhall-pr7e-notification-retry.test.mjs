@@ -14,6 +14,8 @@ import {
   leasedRetryRows,
   nextRetryAt,
   parseDeliveryIdentity,
+  HISTORICAL_RETRY_TYPES,
+  CURRENT_STATE_RETRY_TYPES,
   retryClassForType,
 } from "../src/lib/notifications/retry-policy.mjs";
 import { decideRetryAction, reminderStillTimely } from "../src/lib/notifications/retry-revalidate.mjs";
@@ -36,6 +38,7 @@ function delivery(overrides = {}) {
     updated_at: "2026-09-08T21:00:00.000Z",
     to_email: "parent@example.test",
     error: "resend 500 timeout",
+    auto_retry_eligible: true,
     notification_type: "welcome",
     idempotency_key: "welcome:acct",
     subject: "Hello",
@@ -81,9 +84,12 @@ describe("PR7E — failed retry eligibility", () => {
 
   it("4. retry keeps the same idempotency identity (source)", () => {
     const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
-    assert.doesNotMatch(sql, /insert into public\.email_deliveries/);
+    assert.match(sql, /on conflict \(idempotency_key\) do nothing/);
     assert.match(sql, /claim_email_delivery_retry_batch/);
     assert.match(sql, /for update skip locked/);
+    const batchStart = sql.indexOf("claim_email_delivery_retry_batch");
+    assert.ok(batchStart >= 0);
+    assert.doesNotMatch(sql.slice(batchStart), /insert into public\.email_deliveries/);
   });
 
   it("5. max attempts is terminal", () => {
@@ -422,7 +428,196 @@ describe("PR7E — admin, cron, channels", () => {
   it("stale pending SQL requires no provider_message_id", () => {
     const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
     assert.match(sql, /provider_message_id is null/);
+    assert.match(sql, /auto_retry_eligible is true/);
     assert.match(sql, /for update skip locked/);
     assert.match(sql, /to_email not like 'sms:%'/);
+  });
+});
+
+describe("PR7E — fail-closed allowlist", () => {
+  it("1. null notification_type skips", () => {
+    const row = delivery({ notification_type: null });
+    assert.equal(retryClassForType(null), "unsupported");
+    assert.equal(decideRetryAction({ delivery: row, nowMs: NOW }).ok, false);
+    assert.equal(decideRetryAction({ delivery: row, nowMs: NOW }).reason, "unknown_notification_type");
+    assert.equal(isRetryEligible(row, NOW), false);
+  });
+
+  it("2. empty notification_type skips", () => {
+    const row = delivery({ notification_type: "  " });
+    assert.equal(decideRetryAction({ delivery: row, nowMs: NOW }).reason, "unknown_notification_type");
+    assert.equal(isRetryEligible(row, NOW), false);
+  });
+
+  it("3. unknown type skips", () => {
+    const row = delivery({ notification_type: "legacy_mystery_event" });
+    assert.equal(retryClassForType("legacy_mystery_event"), "unsupported");
+    assert.equal(decideRetryAction({ delivery: row, nowMs: NOW }).reason, "unsupported_retry_type");
+    assert.equal(isRetryEligible(row, NOW), false);
+  });
+
+  it("4. deprecated type skips", () => {
+    const row = delivery({ notification_type: "recording_failure" });
+    assert.equal(retryClassForType("recording_failure"), "unsupported");
+    assert.equal(decideRetryAction({ delivery: row, nowMs: NOW }).reason, "unsupported_retry_type");
+  });
+
+  it("5. reminder_24h is unsupported and skips", () => {
+    assert.equal(retryClassForType("reminder_24h"), "unsupported");
+    assert.ok(!CURRENT_STATE_RETRY_TYPES.includes("reminder_24h"));
+    const row = delivery({ notification_type: "reminder_24h", idempotency_key: `reminder-24h:${BID}:customer` });
+    assert.equal(decideRetryAction({ delivery: row, booking: confirmedBooking(), nowMs: NOW }).reason, "unsupported_retry_type");
+  });
+
+  it("6. malformed reminder identity skips", () => {
+    const rem = delivery({
+      notification_type: "reminder_1h",
+      idempotency_key: "not-a-reminder-key",
+      booking_id: BID,
+    });
+    const r = decideRetryAction({ delivery: rem, booking: confirmedBooking(), nowMs: NOW });
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, "malformed_identity");
+  });
+
+  it("7. allowed historical welcome can retry", () => {
+    assert.ok(HISTORICAL_RETRY_TYPES.includes("welcome"));
+    const row = delivery({ notification_type: "welcome", idempotency_key: "welcome:acct" });
+    assert.equal(decideRetryAction({ delivery: row, profileExists: true, nowMs: NOW }).ok, true);
+  });
+
+  it("8. allowed current-state type revalidates before send", () => {
+    assert.ok(CURRENT_STATE_RETRY_TYPES.includes("reminder_1h"));
+    const rem = delivery({
+      notification_type: "reminder_1h",
+      idempotency_key: `reminder-1h:${BID}:customer`,
+      booking_id: BID,
+    });
+    assert.equal(decideRetryAction({ delivery: rem, booking: confirmedBooking(), nowMs: NOW }).ok, true);
+  });
+
+  it("9. stale current-state event skips", () => {
+    const rem = delivery({
+      notification_type: "reminder_1h",
+      idempotency_key: `reminder-1h:${BID}:customer`,
+    });
+    assert.equal(
+      decideRetryAction({
+        delivery: rem,
+        booking: confirmedBooking({ status: "cancelled" }),
+        nowMs: NOW,
+      }).ok,
+      false,
+    );
+  });
+
+  it("10. admin retry uses the same fail-closed decision", () => {
+    const admin = read("src/app/api/admin/notifications/retry/route.ts");
+    assert.match(admin, /evaluateEmailDeliveryRetry/);
+    const unknown = decideRetryAction({
+      delivery: delivery({ notification_type: "not_a_real_type" }),
+      nowMs: NOW,
+    });
+    assert.equal(unknown.reason, "unsupported_retry_type");
+  });
+
+  it("11. admin retry of stale current-state skips", () => {
+    const pay = delivery({
+      notification_type: "payment_failure",
+      idempotency_key: "365-payment-failure:in_old",
+    });
+    const recovered = decideRetryAction({
+      delivery: pay,
+      membership: { status: "active", ended_at: null },
+      nowMs: NOW,
+    });
+    assert.equal(recovered.ok, false);
+    assert.match(read("src/app/api/admin/notifications/retry/route.ts"), /evaluateEmailDeliveryRetry/);
+  });
+
+  it("no generic historical fallthrough send", () => {
+    assert.match(read("src/lib/notifications/retry-revalidate.mjs"), /unsupported_retry_type/);
+    assert.doesNotMatch(
+      read("src/lib/notifications/retry-revalidate.mjs"),
+      /if \(klass === RETRY_CLASS\.HISTORICAL\) return \{ ok: true \};\s*return \{ ok: true \}/,
+    );
+    assert.match(read("src/lib/notifications/retry-revalidate.mjs"), /return skip\("unsupported_retry_type"\)/);
+  });
+
+  it("5b. unhandled current-state type skips (every allowlisted type has a handler)", () => {
+    const src = read("src/lib/notifications/retry-revalidate.mjs");
+    for (const type of CURRENT_STATE_RETRY_TYPES) {
+      assert.match(src, new RegExp(`type === "${type}"`));
+    }
+    assert.match(src, /return skip\("unsupported_retry_type"\)/);
+  });
+});
+
+describe("PR7E — prospective activation", () => {
+  it("12. migration does not backfill old failed rows as due", () => {
+    const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
+    assert.match(sql, /Intentionally no UPDATE of existing failed\/pending rows/);
+    assert.doesNotMatch(sql, /update public\.email_deliveries\s+set next_retry_at = now\(\)\s+where status = 'failed'/i);
+    assert.match(sql, /auto_retry_eligible boolean not null default false/);
+    assert.match(sql, /values \(p_key, p_type, p_account, p_to, p_booking, 'pending', 1, p_subject, p_html, p_text, true\)/);
+  });
+
+  it("13. pre-PR7E failed rows do not automatically retry", () => {
+    const legacy = delivery({ next_retry_at: null, auto_retry_eligible: false, error: "resend 500" });
+    assert.equal(isRetryEligible(legacy, NOW), false);
+  });
+
+  it("14-15. new transient failure is due and retryable", () => {
+    const row = delivery({ error: "resend 503", next_retry_at: "2026-09-08T21:00:00.000Z", attempts: 1 });
+    assert.equal(isRetryEligible(row, NOW), true);
+    const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
+    assert.match(sql, /if p_status = 'failed' and not v_permanent and coalesce\(v_attempts, 0\) < 5/);
+    assert.match(sql, /next_retry_at = v_next/);
+  });
+
+  it("16. retry success is terminal sent", () => {
+    assert.equal(isRetryEligible(delivery({ status: "sent", error: null }), NOW), false);
+  });
+
+  it("17. max attempts remains enforced", () => {
+    assert.equal(isRetryEligible(delivery({ attempts: 5, error: "resend 500" }), NOW), false);
+    const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
+    assert.match(sql, /attempts < p_max_attempts/);
+  });
+
+  it("18-19. pre-PR7E pending does not wake; post-PR7E stale pending can", () => {
+    const stale = {
+      status: "pending",
+      updated_at: new Date(NOW - 16 * 60_000).toISOString(),
+      provider_message_id: null,
+      to_email: "parent@example.test",
+      notification_type: "welcome",
+      attempts: 1,
+      error: null,
+    };
+    assert.equal(isRetryEligible({ ...stale, auto_retry_eligible: false }, NOW), false);
+    assert.equal(isRetryEligible({ ...stale, auto_retry_eligible: true }, NOW), true);
+    const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
+    assert.match(sql, /auto_retry_eligible is true/);
+  });
+
+  it("20. post-PR7E pending younger than 15 minutes is not stolen", () => {
+    const fresh = delivery({
+      status: "pending",
+      auto_retry_eligible: true,
+      provider_message_id: null,
+      updated_at: new Date(NOW - 60_000).toISOString(),
+    });
+    assert.equal(isRetryEligible(fresh, NOW), false);
+  });
+
+  it("21. concurrency protections remain intact", () => {
+    const sql = read("supabase/migrations/0045_notification_retry_hardening.sql");
+    assert.match(sql, /for update skip locked/);
+  });
+
+  it("22. Resend delivery UUID remains the idempotency key", () => {
+    assert.match(read("src/lib/email/transport.ts"), /Idempotency-Key/);
+    assert.match(read("src/lib/notifications/retry-send.ts"), /idempotencyKey: typeof delivery\.id === "string" \? delivery\.id/);
   });
 });

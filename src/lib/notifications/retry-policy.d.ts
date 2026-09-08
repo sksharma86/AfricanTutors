@@ -6,9 +6,14 @@ export const RETRY_CLASS: Readonly<{
   HISTORICAL: "historical";
   CURRENT_STATE: "current_state";
   NON_EMAIL: "non_email";
+  UNSUPPORTED: "unsupported";
 }>;
+export const CURRENT_STATE_RETRY_TYPES: readonly string[];
+export const HISTORICAL_RETRY_TYPES: readonly string[];
 
-export function retryClassForType(notificationType: unknown): "historical" | "current_state" | "non_email";
+export function retryClassForType(
+  notificationType: unknown,
+): "historical" | "current_state" | "non_email" | "unsupported";
 export function isEmailRecipient(toEmail: unknown): boolean;
 export function isPermanentFailure(error: unknown): boolean;
 export function backoffMinutesForAttempt(attempts: unknown): number;
@@ -32,4 +37,5 @@ export function parseDeliveryIdentity(row: {
   stripeSubscriptionId: string | null;
   reportId: string | null;
   searchKey: string | null;
+  keyKind: string | null;
 };

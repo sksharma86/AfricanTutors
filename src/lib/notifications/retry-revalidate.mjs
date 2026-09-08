@@ -1,12 +1,16 @@
 /**
- * PR7E — revalidate current-state notifications before retrying stored HTML.
- * Inputs are already-loaded authoritative rows. Never parses email HTML.
+ * PR7E — revalidate before retrying stored HTML. Allowlist only. Never parses HTML.
  */
 
 import { STUDY_HALL_365_PAYMENT_PROBLEM_STATUSES } from "./study-hall-365-payment-failure.mjs";
 import { snapshotEntitled } from "./study-hall-365-lifecycle.mjs";
 import { reminderStillValid } from "./reminder-policy.mjs";
-import { parseDeliveryIdentity, RETRY_CLASS, retryClassForType, isEmailRecipient } from "./retry-policy.mjs";
+import {
+  parseDeliveryIdentity,
+  RETRY_CLASS,
+  retryClassForType,
+  isEmailRecipient,
+} from "./retry-policy.mjs";
 
 export function reminderStillTimely(booking, nowMs = Date.now()) {
   if (!booking?.scheduled_start) return false;
@@ -19,17 +23,6 @@ function skip(reason) {
 }
 
 /**
- * @param {{
- *   delivery: object,
- *   booking?: object | null,
- *   membership?: object | null,
- *   profileExists?: boolean,
- *   reportExists?: boolean | null,
- *   packageMinutes?: number | null,
- *   attendanceAwaiting?: boolean | null,
- *   coverageOfferOpen?: boolean | null,
- *   nowMs?: number,
- * }} input
  * @returns {{ ok: true } | { ok: false, reason: string }}
  */
 export function decideRetryAction({
@@ -49,19 +42,26 @@ export function decideRetryAction({
     return skip("missing_content");
   }
 
-  const klass = retryClassForType(delivery.notification_type);
+  const type = String(delivery.notification_type ?? "").trim();
+  if (!type) return skip("unknown_notification_type");
+
+  const klass = retryClassForType(type);
   if (klass === RETRY_CLASS.NON_EMAIL) return skip("non_email_channel");
+  if (klass === RETRY_CLASS.UNSUPPORTED) return skip("unsupported_retry_type");
 
   const identity = parseDeliveryIdentity(delivery);
-  const type = identity.type || String(delivery.notification_type || "");
 
   if (type === "reminder_1h" || type === "session_reminder_1h" || type === "guide_session_reminder") {
-    const role = identity.tutorId ? "tutor" : "customer";
-    const tutorId = identity.tutorId || booking?.tutor_id || null;
-    if (role === "tutor" && identity.tutorId && booking?.tutor_id !== identity.tutorId) {
+    if (identity.keyKind !== "reminder_tutor" && identity.keyKind !== "reminder_parent") {
+      return skip("malformed_identity");
+    }
+    const role = identity.keyKind === "reminder_tutor" ? "tutor" : "customer";
+    const tutorId = identity.tutorId || null;
+    if (role === "tutor" && (!identity.tutorId || !booking)) return skip("malformed_identity");
+    if (role === "tutor" && booking?.tutor_id !== identity.tutorId) {
       return skip("guide_reassigned");
     }
-    if (!reminderStillValid(booking, { role, tutorId })) {
+    if (!reminderStillValid(booking, { role, tutorId: tutorId || booking?.tutor_id || null })) {
       return skip("reminder_no_longer_valid");
     }
     if (!reminderStillTimely(booking, nowMs)) return skip("reminder_expired");
@@ -96,10 +96,24 @@ export function decideRetryAction({
     return { ok: true };
   }
 
+  if (type === "study_hall_365_ended") {
+    if (membership && snapshotEntitled(membership, nowMs)) return skip("membership_no_longer_ended");
+    return { ok: true };
+  }
+
   if (type === "tutor_new_session" || type === "guide_assignment") {
+    if (type === "tutor_new_session" && identity.keyKind !== "tutor_new_session") {
+      return skip("malformed_identity");
+    }
     if (!booking) return skip("assignment_no_longer_valid");
     if (!["confirmed", "pending"].includes(booking.status)) return skip("assignment_no_longer_valid");
     if (identity.tutorId && booking.tutor_id !== identity.tutorId) return skip("guide_reassigned");
+    return { ok: true };
+  }
+
+  if (type === "tutor_removed") {
+    if (!booking) return skip("assignment_no_longer_valid");
+    if (identity.tutorId && booking.tutor_id === identity.tutorId) return skip("guide_reassigned");
     return { ok: true };
   }
 
@@ -115,18 +129,31 @@ export function decideRetryAction({
     return { ok: true };
   }
 
+  if (type === "guide_reassignment_failed") {
+    if (!booking) return skip("assignment_no_longer_valid");
+    if (booking.status === "confirmed") return skip("assignment_no_longer_valid");
+    return { ok: true };
+  }
+
+  if (type === "coverage_cancellation") {
+    if (!booking) return skip("booking_missing");
+    if (booking.status !== "cancelled" && booking.status !== "expired") return skip("coverage_no_longer_valid");
+    return { ok: true };
+  }
+
   if (type === "customer_no_show_parent" || type === "customer_no_show_guide") {
     if (!booking || booking.status !== "no_show") return skip("no_show_no_longer_valid");
     return { ok: true };
   }
 
   if (type === "welcome") {
+    if (!identity.accountId && !delivery.recipient_account_id) return skip("malformed_identity");
     if (!profileExists) return skip("welcome_account_missing");
     return { ok: true };
   }
 
   if (type === "session_report_ready") {
-    if (reportExists === false) return skip("report_missing");
+    if (reportExists !== true) return skip("report_missing");
     return { ok: true };
   }
 
@@ -159,5 +186,6 @@ export function decideRetryAction({
   }
 
   if (klass === RETRY_CLASS.HISTORICAL) return { ok: true };
-  return { ok: true };
+
+  return skip("unsupported_retry_type");
 }

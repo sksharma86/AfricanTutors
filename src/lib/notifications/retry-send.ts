@@ -77,7 +77,8 @@ async function loadContext(service: Service, delivery: DeliveryRow) {
   const needsMembership =
     type === "payment_failure" ||
     type === "study_hall_365_cancellation_scheduled" ||
-    type === "study_hall_365_resumed";
+    type === "study_hall_365_resumed" ||
+    type === "study_hall_365_ended";
   if (needsMembership) {
     if (type === "payment_failure" && identity.invoiceId) {
       const { data } = await service
