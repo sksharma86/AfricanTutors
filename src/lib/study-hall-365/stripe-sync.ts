@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { STUDY_HALL_365_KIND } from "@/lib/study-hall-365/catalog.mjs";
 import { invoiceSubscriptionId, stripeId, subscriptionPaidPeriod } from "@/lib/study-hall-365/stripe-period.mjs";
 import { getStripe } from "@/lib/stripe/client";
+import { notifyStudyHall365Lifecycle } from "@/lib/notify";
 
 type Service = SupabaseClient;
 
@@ -16,6 +17,34 @@ function iso(d: Date | null | undefined): string | null {
 function unixOrNull(seconds: number | null | undefined): string | null {
   if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) return null;
   return new Date(seconds * 1000).toISOString();
+}
+
+type UpsertResult = {
+  status: string;
+  id?: string;
+  account_id?: string;
+  previous?: unknown;
+  current?: unknown;
+};
+
+/**
+ * Parent-email side effect after the membership row is committed.
+ * Must never throw: webhook/local cancel must still succeed if email fails.
+ */
+async function notifyAfterAuthoritativeUpsert(opts: {
+  accountId: string;
+  stripeSubscriptionId: string;
+  upsert: unknown;
+}): Promise<void> {
+  try {
+    await notifyStudyHall365Lifecycle({
+      accountId: opts.accountId,
+      stripeSubscriptionId: opts.stripeSubscriptionId,
+      upsert: opts.upsert,
+    });
+  } catch {
+    /* notifications are side effects */
+  }
 }
 
 export async function upsertSubscriptionFromStripe(
@@ -57,7 +86,13 @@ export async function upsertSubscriptionFromStripe(
     p_payment_id: params.paymentId ?? null,
   });
   if (error) throw new Error(error.message);
-  return data as { status: string; id?: string };
+  const upsert = data as UpsertResult;
+  await notifyAfterAuthoritativeUpsert({
+    accountId: params.accountId,
+    stripeSubscriptionId: params.subscription.id,
+    upsert,
+  });
+  return upsert;
 }
 
 export async function syncSubscriptionById(
@@ -115,6 +150,11 @@ export async function syncSubscriptionById(
       p_payment_id: params.paymentId ?? null,
     });
     if (error) throw new Error(error.message);
+    await notifyAfterAuthoritativeUpsert({
+      accountId,
+      stripeSubscriptionId: subscription.id,
+      upsert: data,
+    });
     return data;
   }
 
