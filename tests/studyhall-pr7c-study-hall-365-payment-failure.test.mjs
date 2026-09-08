@@ -294,7 +294,7 @@ describe("PR7C — email copy, billing link, channels", () => {
     assert.ok(!(CHANNEL_POLICY.whatsapp || []).includes("payment_failure"));
 
     const notify = read("src/lib/notify.ts");
-    const start = notify.indexOf("export async function notifyStudyHall365PaymentFailure");
+    const start = notify.indexOf("Parent-email Study Hall 365 payment failure");
     const end = notify.indexOf("export async function notifyAccountCreditApplied");
     const body = notify.slice(start, end > start ? end : undefined);
     assert.match(body, /deliver\(/);
