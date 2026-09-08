@@ -105,6 +105,12 @@ describe("PR5 — Parent Portal transformation", () => {
     assert.match(week, /Plan my week/);
   });
 
+  it("zero-completed week copy names the calendar, not a 0 of N score", () => {
+    const copy = parentWeekCompletionCopy({ scheduled: 5, completed: 0 });
+    assert.equal(copy.headline, "5 Study Halls on the calendar this week.");
+    assert.equal(copy.body, "The week is on the calendar.");
+  });
+
   it("6. Plan my week is a contextual CTA, not a sixth nav item", () => {
     const ctas = parentHomeCtas();
     assert.equal(ctas.primary.href, PLAN_MY_WEEK_HREF);

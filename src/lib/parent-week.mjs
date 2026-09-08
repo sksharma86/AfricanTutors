@@ -138,7 +138,7 @@ export function parentWeekCompletionCopy(completion) {
   }
   if (completed === 0) {
     return {
-      headline: `0 of ${scheduled} scheduled Study Halls completed this week.`,
+      headline: `${scheduled} Study Halls on the calendar this week.`,
       body: "The week is on the calendar.",
     };
   }
