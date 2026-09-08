@@ -101,6 +101,7 @@ export function StudyHall365Card({ membership }: { membership: StudyHall365Membe
   }
 
   const active = Boolean(membership?.entitled);
+  const hasMembership = Boolean(membership);
 
   return (
     <Card className="flex flex-col p-6">
@@ -136,9 +137,16 @@ export function StudyHall365Card({ membership }: { membership: StudyHall365Membe
             )}
           </>
         ) : (
-          <Button onClick={join} disabled={busy !== null} variant="secondary" className="w-full">
-            {busy === "join" ? "Starting…" : "Join Study Hall 365"}
-          </Button>
+          <>
+            {hasMembership ? (
+              <Button onClick={portal} disabled={busy !== null} variant="outline" className="w-full">
+                {busy === "portal" ? "Opening…" : "Manage billing"}
+              </Button>
+            ) : null}
+            <Button onClick={join} disabled={busy !== null} variant="secondary" className="w-full">
+              {busy === "join" ? "Starting…" : "Join Study Hall 365"}
+            </Button>
+          </>
         )}
       </div>
     </Card>

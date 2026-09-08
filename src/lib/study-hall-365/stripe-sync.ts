@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { STUDY_HALL_365_KIND } from "@/lib/study-hall-365/catalog.mjs";
 import { invoiceSubscriptionId, stripeId, subscriptionPaidPeriod } from "@/lib/study-hall-365/stripe-period.mjs";
 import { getStripe } from "@/lib/stripe/client";
-import { notifyStudyHall365Lifecycle } from "@/lib/notify";
+import { notifyStudyHall365Lifecycle, notifyStudyHall365PaymentFailure } from "@/lib/notify";
 
 type Service = SupabaseClient;
 
@@ -40,6 +40,27 @@ async function notifyAfterAuthoritativeUpsert(opts: {
     await notifyStudyHall365Lifecycle({
       accountId: opts.accountId,
       stripeSubscriptionId: opts.stripeSubscriptionId,
+      upsert: opts.upsert,
+    });
+  } catch {
+    /* notifications are side effects */
+  }
+}
+
+/**
+ * Payment-failure parent email after invoice-driven membership sync.
+ * Must never throw: webhook/local cancel must still succeed if email fails.
+ */
+async function notifyPaymentFailureAfterInvoiceSync(opts: {
+  accountId?: string | null;
+  invoice: Stripe.Invoice;
+  upsert: unknown;
+}): Promise<void> {
+  try {
+    await notifyStudyHall365PaymentFailure({
+      accountId: opts.accountId,
+      invoiceId: stripeId(opts.invoice.id),
+      invoice: opts.invoice,
       upsert: opts.upsert,
     });
   } catch {
@@ -212,13 +233,20 @@ export async function syncFromInvoice(
   };
   const accountId =
     invoiceRecord.subscription_details?.metadata?.account_id ?? invoice.metadata?.account_id ?? null;
-  return syncSubscriptionById(service, {
+  const upsert = await syncSubscriptionById(service, {
     subscriptionId,
     accountId,
     eventId: event.id,
     eventCreated: event.created,
     ended,
   });
+  const upsertRow = upsert as UpsertResult | undefined;
+  await notifyPaymentFailureAfterInvoiceSync({
+    accountId: accountId ?? upsertRow?.account_id ?? null,
+    invoice,
+    upsert,
+  });
+  return upsert;
 }
 
 export { iso };
