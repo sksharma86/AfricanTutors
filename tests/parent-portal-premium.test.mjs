@@ -22,14 +22,15 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(admin, /parent-app|--pp-canvas/);
   });
 
-  it("desktop uses a left rail and mobile keeps a scrollable destination bar", () => {
+  it("desktop uses a left rail and mobile wraps destination labels", () => {
     const shell = read("src/components/dashboard/customer-shell.tsx");
     assert.match(shell, /<aside/);
     assert.match(shell, /PARENT_NAV_ICONS/);
     assert.match(shell, /bg-\[#f3e6c4\]/);
-    assert.match(shell, /overflow-x-auto/);
-    assert.match(shell, /snap-x/);
+    assert.match(shell, /flex-wrap/);
+    assert.match(shell, /item\.shortLabel/);
     assert.doesNotMatch(shell, /hamburger|Menu2/);
+    assert.doesNotMatch(shell, /overflow-x-auto/);
   });
 
   it("Next Study Hall is a dark featured hero with gold join action", () => {
@@ -54,46 +55,36 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(greet, /Priya|notification|avatar/);
   });
 
-  it("Home uses a stable dashboard grid and a habit indicator that is not a quota", () => {
+  it("Home uses a stable dashboard grid for the week command center", () => {
     const home = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
-    const habit = read("src/components/dashboard/parent-habit.tsx");
     const css = read("src/app/globals.css");
     const shell = read("src/components/dashboard/customer-shell.tsx");
     assert.match(home, /ParentHomeBoard/);
     assert.match(board, /pp-home-grid/);
+    assert.match(board, /ParentStudyHallWeek/);
+    assert.match(board, /ParentHouseholdStatus/);
     assert.match(css, /grid-template-areas/);
-    assert.match(css, /pp-home-grid\.is-empty/);
-    assert.match(board, /is-empty/);
-    assert.match(habit, /This month/);
-    assert.doesNotMatch(habit, /Study Halls this month/);
-    assert.match(habit, /completedStudyHallsThisMonth/);
-    assert.match(habit, /parentHabitCopy/);
-    assert.match(habit, /pp-habit-track/);
-    assert.match(habit, /parentHabitStage/);
-    assert.doesNotMatch(habit, /pp-habit-cal|pp-habit-day|WEEKDAYS|firstWeekdaySunday/);
-    assert.doesNotMatch(habit, /of 20|Renews|hours remaining|progress ring|monthly quota|8 of 10|80%|Monthly target/i);
+    assert.match(css, /pp-home-week/);
+    assert.match(css, /pp-week-strip/);
+    assert.doesNotMatch(board, /ParentHabitCard|BalanceCards|ParentUpcomingList/);
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
     assert.doesNotMatch(home, /parent-home-visual-fixture|Priya|Jordan/);
   });
 
-  it("Parent Home mounts one habit surface and one slim hours row, and drops rejected modules", () => {
+  it("Parent Home drops competing habit and buy-hours modules", () => {
     const home = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
     const shell = read("src/components/dashboard/customer-shell.tsx");
-    const habit = read("src/components/dashboard/parent-habit.tsx");
     const css = read("src/app/globals.css");
-    assert.equal((board.match(/<ParentHabitCard /g) || []).length, 2);
-    assert.match(board, /hasRecent \? \(/);
+    assert.doesNotMatch(board, /ParentHabitCard/);
     assert.doesNotMatch(home, /ParentHabitCard/);
-    assert.equal((board.match(/<BalanceCards /g) || []).length, 2);
-    assert.match(board, /slim/);
+    assert.doesNotMatch(board, /BalanceCards/);
     assert.doesNotMatch(home, /BalanceCards/);
     assert.doesNotMatch(home, /ParentBrandStrip|A better homework routine|Focused time|Less parent friction/);
     assert.doesNotMatch(board, /ParentBrandStrip|A better homework routine|Calm, focused evenings/);
     assert.doesNotMatch(shell, /ParentSidebarAtmosphere|Calm, focused evenings/);
-    assert.match(habit, /copy\.body/);
     assert.doesNotMatch(css, /pp-habit-cal|pp-habit-day/);
     assert.match(shell, /sticky top-0/);
     assert.equal(existsSync(new URL("../src/components/dashboard/parent-brand-strip.tsx", import.meta.url)), false);
@@ -109,37 +100,30 @@ describe("Parent Portal premium visual system", () => {
     assert.doesNotMatch(home, /parentHomeVisualFixture|visual-review/);
   });
 
-  it("empty Next Study Hall Book action is gold, not black", () => {
+  it("empty Next Study Hall primary action is gold, not black", () => {
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     assert.match(next, /Nothing scheduled yet/);
-    assert.match(next, /A better homework routine starts here/);
-    assert.doesNotMatch(next, /Book your first Study Hall when you/);
-    assert.match(next, /Book a Study Hall/);
+    assert.match(next, /Plan a week of Study Halls/);
+    assert.match(next, /actions\.primary\.href/);
     assert.match(next, /Join Study Hall/);
     assert.match(next, /variant="secondary"/);
     assert.doesNotMatch(next, /variant="primary"/);
   });
 
-  it("Home copy removes only redundant Study Hall repeats inside small cards", () => {
+  it("Home copy centers the week and keeps unused habit helpers off Home", () => {
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
-    const habit = read("src/components/dashboard/parent-habit.tsx");
-    const upcoming = read("src/components/dashboard/parent-upcoming-list.tsx");
+    const week = read("src/components/dashboard/parent-study-hall-week.tsx");
+    const logic = read("src/lib/parent-week.mjs");
     const board = read("src/components/dashboard/parent-home-board.tsx");
     const shell = read("src/components/dashboard/customer-shell.tsx");
     const portal = read("src/lib/parent-portal.mjs");
     assert.match(portal, /label: "Study Halls"/);
     assert.match(shell, /Book a Study Hall/);
     assert.match(next, /Next Study Hall/);
-    assert.match(habit, />\s*This month\s*</);
-    assert.match(habit, /Study Hall\{month\.count === 1 \? "" : "s"\} completed/);
-    assert.equal(parentHabitCopy(0).body, "Regular sessions can help turn homework time into a more predictable routine.");
-    assert.match(upcoming, /Upcoming Study Halls/);
-    assert.match(upcoming, /parentUpcomingEmptyCopy/);
-    assert.match(portal, /Nothing scheduled yet/);
-    assert.match(portal, /No additional Study Halls scheduled/);
-    assert.match(upcoming, /Book one →/);
-    assert.doesNotMatch(upcoming, /Book a Study Hall →/);
-    assert.match(board, /Your first Study Hall is on us — 60 minutes free, no credit card required/);
+    assert.match(week, /Your Study Hall Week/);
+    assert.match(logic, /Your first Study Hall is on us — 60 minutes free, no credit card required/);
+    assert.match(board, /ParentStudyHallWeek/);
+    assert.doesNotMatch(board, /ParentHabitCard|ParentUpcomingList|BalanceCards/);
   });
 
   it("counts completed Study Halls in the current calendar month only", () => {

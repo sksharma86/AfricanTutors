@@ -9,6 +9,7 @@ declare module "@/lib/parent-next-step.mjs" {
     last?: { id?: string; is_free_trial?: boolean; status?: string } | null;
     report?: unknown;
     minutes?: number;
+    entitled365?: boolean;
     nowMs?: number;
   }): {
     kind: "free_available" | "free_convert" | "repeat" | "none";

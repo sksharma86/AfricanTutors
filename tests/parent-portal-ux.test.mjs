@@ -92,16 +92,15 @@ describe("Parent portal UX — routes and authorization", () => {
     assert.match(roles, /student:\s*"\/dashboard\/student"/);
   });
 
-  it("shell marks the active destination and keeps all five labels on mobile", () => {
+  it("shell marks the active destination and keeps five destinations on mobile", () => {
     const shell = read("src/components/dashboard/customer-shell.tsx");
     assert.match(shell, /aria-current=\{isActive\(item\.href\) \? "page"/);
     assert.match(shell, /parent-app/);
     assert.match(shell, /<aside/);
     assert.match(shell, /PARENT_NAV_ICONS/);
     assert.match(shell, /lg:hidden/);
-    assert.match(shell, /whitespace-nowrap/);
-    assert.match(shell, /overflow-x-auto/);
-    assert.match(shell, /snap-x/);
+    assert.match(shell, /item\.shortLabel/);
+    assert.match(shell, /flex-wrap/);
     assert.doesNotMatch(shell, /hamburger|Menu2|md:hidden[\s\S]{0,40}hidden/);
   });
 
@@ -116,24 +115,25 @@ describe("Parent portal UX — routes and authorization", () => {
 });
 
 describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
-  it("Home is a three-second dashboard: next, hours, last activity, book/join", () => {
+  it("Home is a household week dashboard: next, week strip, status, last activity", () => {
     const home = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
     const recent = read("src/components/dashboard/parent-recent-activity.tsx");
+    const week = read("src/components/dashboard/parent-study-hall-week.tsx");
     const surface = read("src/components/dashboard/parent-surface.tsx");
     assert.match(home, /ParentHomeBoard/);
     assert.match(board, /ParentNextStudyHall/);
-    assert.match(board, /BalanceCards/);
-    assert.match(board, /slim/);
+    assert.match(board, /ParentStudyHallWeek/);
+    assert.match(board, /ParentHouseholdStatus/);
     assert.match(board, /ParentRecentActivity/);
-    assert.match(board, /ParentUpcomingList/);
+    assert.doesNotMatch(board, /BalanceCards|ParentUpcomingList|ParentHabitCard/);
     assert.match(home, /firstName/);
     assert.match(read("src/components/dashboard/parent-greeting.tsx"), /sm:text-\[1\.55rem\]/);
     assert.doesNotMatch(home, /Your household|Your Study Hall account/);
     assert.match(next, /Next Study Hall/);
     assert.match(next, /Nothing scheduled yet/);
-    assert.match(next, /Book a Study Hall/);
+    assert.match(week, /Plan my week/);
     assert.match(next, /ParentSurface featured/);
     assert.match(next, /sm:text-\[1\.85rem\]/);
     assert.match(next, /bookingChildNames/);
@@ -182,7 +182,7 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.doesNotMatch(next, /opens_at|JOIN_OPEN|webhook|Daily room|payment_status/);
   });
 
-  it("prepaid hours stay visible but secondary; Buy hours deep-links to #prepaid", () => {
+  it("prepaid hours stay on Hours, not as Home buy-hours pressure", () => {
     assert.equal(formatPrepaidHoursLabel(0), "0 hours");
     assert.equal(formatPrepaidHoursLabel(60), "1 hour");
     assert.equal(formatPrepaidHoursLabel(720), "12 hours");
@@ -192,7 +192,7 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.match(balance, /packages#prepaid/);
     const home = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
-    assert.match(board, /slim/);
+    assert.doesNotMatch(board, /Buy hours|BalanceCards/);
     assert.doesNotMatch(home, /PackageStore|SingleSessionCards/);
   });
 
@@ -212,11 +212,15 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
   it("free-trial copy stays on Home without becoming a wallet", () => {
     const home = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
-    assert.match(board, /Your first Study Hall is on us/);
-    assert.match(board, /Book free session/);
-    assert.match(board, /After your free session/);
+    const status = read("src/components/dashboard/parent-household-status.tsx");
+    const logic = read("src/lib/parent-week.mjs");
+    assert.match(logic, /Your first Study Hall is on us/);
+    assert.match(status, /Book free session/);
+    assert.match(logic, /Book free session/);
+    assert.match(board, /preferFreeSession/);
     assert.match(home, /preferFreeSession=\{freeTrialAvailable\}/);
     assert.doesNotMatch(home, /A better homework routine|Calm, focused evenings/);
+    assert.doesNotMatch(board, /After your free session/);
   });
 });
 
@@ -330,7 +334,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
 
   it("Hours keeps package math, PAYG $12, and #prepaid; hides Stripe jargon", () => {
     const hours = read("src/app/dashboard/student/packages/page.tsx");
-    assert.match(hours, /Hours never expire/);
+    assert.match(hours, /How your household funds Study Hall|Hours never expire/);
     assert.match(hours, /10 Study Halls \/ \$100/);
     assert.match(hours, /Study Hall 365/);
     assert.match(hours, /\$149\/month/);

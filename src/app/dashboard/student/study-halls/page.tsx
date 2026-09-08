@@ -23,12 +23,18 @@ export default async function ParentStudyHallsPage() {
   return (
     <ParentPage>
       <h1 className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">Study Halls</h1>
-      <p className="mt-2">
+      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
         <Link
           href="/dashboard/student/plan-week"
           className="text-sm font-medium text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline"
         >
           Plan my week
+        </Link>
+        <Link
+          href="/dashboard/student/book"
+          className="text-sm font-medium text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline"
+        >
+          Book one Study Hall
         </Link>
       </p>
       <div className="mt-6">

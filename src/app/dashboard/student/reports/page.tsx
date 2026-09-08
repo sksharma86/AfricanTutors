@@ -45,7 +45,7 @@ export default async function ParentReportsPage() {
               <div>
                 <p className="font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">None yet.</p>
                 <p className="mt-1.5 text-sm text-[var(--pp-muted)]">
-                  Recaps appear here after a Study Hall is completed.
+                  Reports and recordings appear here after a completed Study Hall. If nothing is listed, nothing is missing.
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { LogoutButton } from "@/components/dashboard/logout-button";
@@ -15,16 +15,6 @@ import { cn } from "@/lib/utils";
  */
 export function CustomerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const mobileNavRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const active = mobileNavRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
-    active?.scrollIntoView({
-      inline: "center",
-      block: "nearest",
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-    });
-  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard/student") {
@@ -92,30 +82,15 @@ export function CustomerShell({ children }: { children: ReactNode }) {
               href="/dashboard/student"
               variant="product"
               size={24}
-              className="shrink-0"
+              className="min-w-0 shrink"
               textClassName="text-[13px] sm:text-[14px]"
             />
-            <div className="flex shrink-0 items-center gap-1.5">
-              <Link
-                href="/dashboard/student/plan-week"
-                className="inline-flex min-h-11 items-center whitespace-nowrap rounded-[12px] px-2.5 text-sm font-medium text-[#3d3932] hover:bg-[#ebe4d6] hover:text-[#1c1915] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"
-              >
-                Plan week
-              </Link>
-              <Link
-                href="/dashboard/student/book"
-                className="inline-flex min-h-11 items-center whitespace-nowrap rounded-[12px] bg-[#c9a227] px-3.5 text-sm font-semibold text-[#1c1915] hover:bg-[#b8921f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]"
-              >
-                Book
-              </Link>
-              <LogoutButton quiet className="px-2.5 text-[13px]" />
-            </div>
+            <LogoutButton quiet className="shrink-0 px-2.5 text-[13px]" />
           </div>
-          <div className="relative border-t border-[#1c1915]/[0.05] lg:hidden">
+          <div className="border-t border-[#1c1915]/[0.05]">
             <nav
-              ref={mobileNavRef}
               aria-label="Parent account"
-              className="flex flex-nowrap gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 pr-10 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex flex-wrap gap-1.5 px-4 py-2.5"
             >
               {PARENT_PORTAL_NAV.map((item) => (
                 <Link
@@ -123,21 +98,17 @@ export function CustomerShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={cn(
-                    "pp-nav-link inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium",
+                    "pp-nav-link inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-medium",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a227]",
                     isActive(item.href)
                       ? "bg-[#f3e6c4] text-[#5c4310] shadow-[inset_0_0_0_1px_rgba(201,162,39,0.28)]"
                       : "bg-white/60 text-[#3d3932]",
                   )}
                 >
-                  {item.label}
+                  {item.shortLabel}
                 </Link>
               ))}
             </nav>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#f6f1e8] to-transparent"
-            />
           </div>
         </header>
 

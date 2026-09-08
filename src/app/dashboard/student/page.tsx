@@ -45,10 +45,9 @@ export default async function StudentDashboardPage() {
     last,
     report: lastReport,
     minutes: data.minutes,
+    entitled365: Boolean(data.membership?.entitled),
   });
   const firstName = (user.displayName ?? "").split(" ")[0];
-  const householdTz =
-    data.bookings.find((booking) => booking.students?.timezone)?.students?.timezone || "America/Chicago";
 
   return (
     <ParentPage compose>
@@ -61,11 +60,12 @@ export default async function StudentDashboardPage() {
         lastRecording={last ? data.recordingByBooking.get(last.id) ?? null : null}
         later={later}
         bookings={data.bookings}
-        householdTz={householdTz}
+        householdTz={data.householdTz}
         minutes={data.minutes}
         creditCents={data.creditCents}
         preferFreeSession={freeTrialAvailable}
         showPhoneNudge={!data.parentPhone}
+        membership={data.membership}
       />
 
       {nextStep.kind === "free_convert" || nextStep.kind === "repeat" ? (

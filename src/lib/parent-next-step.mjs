@@ -21,10 +21,11 @@ function hasPaidBooking(bookings) {
  *   last?: { id?: string, is_free_trial?: boolean, status?: string } | null,
  *   report?: unknown,
  *   minutes?: number,
+ *   entitled365?: boolean,
  *   nowMs?: number,
  * }} input
  */
-export function parentPostSessionOffer({ bookings = [], last = null, report = null, minutes = 0, nowMs = Date.now() } = {}) {
+export function parentPostSessionOffer({ bookings = [], last = null, report = null, minutes = 0, entitled365 = false, nowMs = Date.now() } = {}) {
   const freeUsed = accountFreeTrialUsed(bookings);
   const resolvedLast = last ?? lastCompletedStudyHall(bookings, nowMs);
   const { next } = parentStudyHallLists(bookings, nowMs);
@@ -46,7 +47,7 @@ export function parentPostSessionOffer({ bookings = [], last = null, report = nu
       body: FREE_CONVERT_BODY,
       bookLabel: BOOK_ANOTHER_LABEL,
       bookHref: "/dashboard/student/book",
-      showBuyHours: Number(minutes) === 0,
+      showBuyHours: Number(minutes) === 0 && !entitled365,
     };
   }
 
@@ -57,7 +58,7 @@ export function parentPostSessionOffer({ bookings = [], last = null, report = nu
       body: null,
       bookLabel: BOOK_ANOTHER_LABEL,
       bookHref: "/dashboard/student/book",
-      showBuyHours: Number(minutes) === 0,
+      showBuyHours: Number(minutes) === 0 && !entitled365,
     };
   }
 

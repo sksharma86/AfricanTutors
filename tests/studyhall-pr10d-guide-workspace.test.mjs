@@ -172,7 +172,7 @@ describe("Study Hall PR10D — Guide workspace + applicant UX + admin cleanup", 
   it("PR10C parent portal markers remain intact", () => {
     const parent = read("src/app/dashboard/student/page.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
-    assert.match(parent + board, /Prepaid Hours|Buy hours|Book a Study Hall|BalanceCards/);
+    assert.match(parent + board, /Book a Study Hall|ParentHomeBoard|membership/);
     const pr10c = read("tests/studyhall-pr10c-parent-portal.test.mjs");
     assert.match(pr10c, /Prepaid Hours|Buy hours/);
   });

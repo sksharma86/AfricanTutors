@@ -1,9 +1,15 @@
 import { ParentIconCalendar } from "@/components/dashboard/parent-icons";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { LinkButton } from "@/components/ui/button";
-import { formatDuration } from "@/lib/format.mjs";
 import { bookingChildNames } from "@/lib/household-children.mjs";
-import { childFirstName, parentGuideLabel, parentJoinHint, parentSessionMinutes } from "@/lib/parent-portal.mjs";
+import {
+  childFirstName,
+  parentCanCancel,
+  parentGuideLabel,
+  parentJoinHint,
+  parentStatusLabel,
+} from "@/lib/parent-portal.mjs";
+import { parentHomeCtas, type ParentHomeCtas } from "@/lib/parent-week.mjs";
 import { formatDayHeading, formatTime } from "@/lib/timezone";
 import type { ParentBooking } from "@/lib/parent-portal-types";
 
@@ -38,9 +44,13 @@ function HeroAtmosphere() {
 
 export function ParentNextStudyHall({
   next,
+  ctas,
 }: {
   next: ParentBooking | null;
+  ctas?: ParentHomeCtas;
 }) {
+  const actions = ctas ?? parentHomeCtas();
+
   if (!next) {
     return (
       <ParentSurface featured className="min-h-[17rem]">
@@ -57,22 +67,22 @@ export function ParentNextStudyHall({
                   Nothing scheduled yet
                 </p>
                 <p className="mt-1 text-sm leading-6 text-white/62">
-                  A better homework routine starts here.
+                  Plan a week of Study Halls, or book one when you need it.
                 </p>
               </div>
             </div>
           </div>
           <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <LinkButton href="/dashboard/student/book" variant="secondary" size="lg">
-              Book a Study Hall
+            <LinkButton href={actions.primary.href} variant="secondary" size="lg">
+              {actions.primary.label}
             </LinkButton>
             <LinkButton
-              href="/dashboard/student/plan-week"
+              href={actions.secondary.href}
               variant="ghost"
               size="sm"
               className="px-0 text-white/70 hover:bg-transparent hover:text-white"
             >
-              Plan my week
+              {actions.secondary.label}
             </LinkButton>
           </div>
         </div>
@@ -84,7 +94,8 @@ export function ParentNextStudyHall({
   const join = parentJoinHint(next);
   const child = bookingChildNames(next, childFirstName(next.students?.full_name, "Your child"));
   const guide = parentGuideLabel(next);
-  const minutes = parentSessionMinutes(next);
+  const status = parentStatusLabel(next);
+  const canChange = parentCanCancel(next);
   const day = next.scheduled_start ? formatDayHeading(next.scheduled_start, tz) : "Time to confirm";
   const time = next.scheduled_start ? formatTime(next.scheduled_start, tz) : "";
 
@@ -103,12 +114,10 @@ export function ParentNextStudyHall({
               Time to confirm
             </p>
           )}
-          <p className="mt-1.5 text-[14px] text-white/68">
-            {day}
-            {minutes ? ` · ${formatDuration(minutes)}` : ""}
-          </p>
+          <p className="mt-1.5 text-[14px] text-white/68">{day}</p>
           <div className="mt-4 border-t border-white/12 pt-3.5">
             <p className="text-[1.15rem] font-medium tracking-[-0.02em] text-white">{child}</p>
+            <p className="mt-0.5 text-sm text-white/70">{status}</p>
             {guide ? (
               <p className="mt-0.5 text-sm text-white/60">
                 with Guide <span className="font-medium text-white/86">{guide}</span>
@@ -126,6 +135,16 @@ export function ParentNextStudyHall({
             </LinkButton>
           ) : (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {canChange ? (
+                <LinkButton
+                  href="/dashboard/student/plan-week"
+                  variant="ghost"
+                  size="sm"
+                  className="px-0 text-white/70 hover:bg-transparent hover:text-white"
+                >
+                  Change
+                </LinkButton>
+              ) : null}
               <LinkButton
                 href={`/dashboard/student/study-halls/${next.id}`}
                 variant="ghost"
@@ -133,14 +152,6 @@ export function ParentNextStudyHall({
                 className="px-0 text-white/70 hover:bg-transparent hover:text-white"
               >
                 View Study Hall
-              </LinkButton>
-              <LinkButton
-                href="/dashboard/student/plan-week"
-                variant="ghost"
-                size="sm"
-                className="px-0 text-white/70 hover:bg-transparent hover:text-white"
-              >
-                Plan my week
               </LinkButton>
             </div>
           )}

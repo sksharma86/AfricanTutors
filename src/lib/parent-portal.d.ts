@@ -1,5 +1,5 @@
 declare module "@/lib/parent-portal.mjs" {
-  export const PARENT_PORTAL_NAV: readonly { label: string; href: string }[];
+  export const PARENT_PORTAL_NAV: readonly { label: string; shortLabel: string; href: string }[];
   export function childFirstName(fullName: string | null | undefined, fallback?: string): string;
   export function parentGuideLabel(booking: { tutor_display_name?: string | null; status?: string } | null | undefined): string | null;
   export function parentStatusLabel(booking: { status?: string; payment_status?: string; tutor_display_name?: string | null } | null | undefined): string;
