@@ -7,7 +7,8 @@
  *
  * PR7B wires Study Hall 365 parent-email lifecycle after membership upsert.
  * PR7C wires payment_failure parent email after 365 invoice sync (email only).
- * customer-no-show identifiers stay catalog-only until later slices.
+ * PR7D wires customer no-show parent + Guide email after the PR6 RPC commits.
+ * Parent SMS for no-show stays catalog-only until PR7F (consent).
  */
 
 export const NOTIFICATION_EVENTS = Object.freeze({
@@ -45,9 +46,9 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   STUDY_HALL_365_CANCELLATION_SCHEDULED: "study_hall_365_cancellation_scheduled",
   STUDY_HALL_365_RESUMED: "study_hall_365_resumed",
   STUDY_HALL_365_ENDED: "study_hall_365_ended",
-  /** PR7 later — parent email now in policy; parent SMS later. */
+  /** PR7D — parent email after authoritative customer no-show. SMS later (PR7F). */
   CUSTOMER_NO_SHOW_PARENT: "customer_no_show_parent",
-  /** PR7 later — Guide short email; never a management success email. */
+  /** PR7D — Guide email after authoritative customer no-show. Never a management success email. */
   CUSTOMER_NO_SHOW_GUIDE: "customer_no_show_guide",
 });
 
@@ -102,7 +103,7 @@ export const CHANNEL_POLICY = Object.freeze({
     "coverage_failure_protection",
     // Successful Guide reassignment must NEVER SMS the parent.
     // Catalog allows payment_failure SMS; PR7C does not send it (no consent/opt-out).
-    // PR7F owns phone consent. customer no-show parent SMS stays later.
+    // Catalog allows customer_no_show_parent SMS; PR7D does not send it (PR7F consent).
     "payment_failure",
     "customer_no_show_parent",
   ],
@@ -119,8 +120,9 @@ export const CHANNEL_POLICY = Object.freeze({
   }),
   /**
    * PR7 recipient matrix. 365 parent email is wired in PR7B. PR7C wires
-   * payment_failure parent email only (SMS cataloged, not sent). Customer
-   * no-show remains unwired. Management must not get no-show success.
+   * payment_failure parent email only (SMS cataloged, not sent). PR7D wires
+   * customer no-show parent + Guide email (parent SMS cataloged, not sent).
+   * Management must not get no-show success.
    */
   pr7_lifecycle: Object.freeze({
     study_hall_365_started: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
@@ -131,5 +133,14 @@ export const CHANNEL_POLICY = Object.freeze({
     payment_failure: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
     customer_no_show_parent: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
     customer_no_show_guide: Object.freeze({ parent: [], guide: ["email"], manager: [] }),
+  }),
+  /**
+   * PR7D shipped channels. Catalog still lists parent SMS; this slice sends
+   * email only. No Guide SMS/WhatsApp. No Management success email.
+   */
+  pr7d_customer_no_show: Object.freeze({
+    parent: ["email"],
+    guide: ["email"],
+    manager: [],
   }),
 });

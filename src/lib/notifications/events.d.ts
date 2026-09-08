@@ -21,5 +21,10 @@ declare module "@/lib/notifications/events.mjs" {
         }>
       >
     >;
+    pr7d_customer_no_show?: Readonly<{
+      parent: string[];
+      guide: string[];
+      manager: string[];
+    }>;
   }>;
 }

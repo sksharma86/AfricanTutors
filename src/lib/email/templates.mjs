@@ -628,6 +628,14 @@ function hoursHref(appUrl) {
   return absoluteAppHref(appUrl, "/dashboard/student/packages");
 }
 
+function parentStudyHallsHref(appUrl) {
+  return absoluteAppHref(appUrl, "/dashboard/student/study-halls");
+}
+
+function guideStudyHallsHref(appUrl) {
+  return absoluteAppHref(appUrl, "/dashboard/tutor/study-halls");
+}
+
 /** Parent: first successful Study Hall 365 membership. */
 export function studyHall365Started(ctx) {
   const portal = parentPortalHref(ctx.appUrl);
@@ -718,6 +726,54 @@ export function studyHall365PaymentFailure(ctx) {
       hours ? { href: hours, label: "Update billing" } : null,
     ),
     text: textJoin([...lines, "", hours || ""]),
+  };
+}
+
+/**
+ * Parent: authoritative customer no-show (PR7D). Parent-friendly wording.
+ * Does not blame the child, invent refunds, or promise a session report.
+ */
+export function studyHallCustomerNoShowParent(ctx) {
+  const when = formatWhen(ctx.whenISO, ctx.tz);
+  const halls = parentStudyHallsHref(ctx.appUrl);
+  const lines = [
+    `The Study Hall scheduled for ${when} was missed.`,
+    "The Guide waited through the attendance window, and the Study Hall was not completed.",
+    "No session report is expected for a missed Study Hall.",
+    "Because the Study Hall was reserved and the Guide was present for the attendance window, this Study Hall remains used.",
+  ];
+  return {
+    subject: "Study Hall missed",
+    html: layout(
+      "Study Hall missed",
+      lines.map(p).join(""),
+      halls ? { href: halls, label: "View Study Halls" } : null,
+    ),
+    text: textJoin([...lines, "", halls || ""]),
+  };
+}
+
+/**
+ * Guide: authoritative customer no-show confirmed (PR7D). Confirms no report
+ * is required and that full compensation applies. Does not include the amount
+ * (earnings stay owned by PR6 `try_full_earning`) or parent contact details.
+ */
+export function studyHallCustomerNoShowGuide(ctx) {
+  const when = formatWhen(ctx.whenISO, ctx.tz);
+  const halls = guideStudyHallsHref(ctx.appUrl);
+  const lines = [
+    `The Study Hall scheduled for ${when} was recorded as a customer no-show.`,
+    "No session report is required.",
+    "You receive full compensation for this Study Hall.",
+  ];
+  return {
+    subject: "Customer no-show confirmed",
+    html: layout(
+      "Customer no-show confirmed",
+      lines.map(p).join(""),
+      halls ? { href: halls, label: "Open Study Halls" } : null,
+    ),
+    text: textJoin([...lines, "", halls || ""]),
   };
 }
 
