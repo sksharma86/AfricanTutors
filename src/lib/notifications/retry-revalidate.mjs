@@ -24,7 +24,7 @@ function skip(reason) {
  *   booking?: object | null,
  *   membership?: object | null,
  *   profileExists?: boolean,
- *   reportExists?: boolean,
+ *   reportExists?: boolean | null,
  *   packageMinutes?: number | null,
  *   attendanceAwaiting?: boolean | null,
  *   coverageOfferOpen?: boolean | null,

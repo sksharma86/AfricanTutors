@@ -176,10 +176,10 @@ export async function evaluateEmailDeliveryRetry(delivery: DeliveryRow) {
     booking: ctx.booking,
     membership: ctx.membership,
     profileExists: ctx.profileExists,
-    reportExists: ctx.reportExists,
+    reportExists: ctx.reportExists ?? undefined,
     packageMinutes: ctx.packageMinutes,
-    attendanceAwaiting: ctx.attendanceAwaiting,
-    coverageOfferOpen: ctx.coverageOfferOpen,
+    attendanceAwaiting: ctx.attendanceAwaiting ?? undefined,
+    coverageOfferOpen: ctx.coverageOfferOpen ?? undefined,
   });
 }
 
@@ -202,10 +202,10 @@ export async function sendLeasedEmailDelivery(
       booking: ctx.booking,
       membership: ctx.membership,
       profileExists: ctx.profileExists,
-      reportExists: ctx.reportExists,
+      reportExists: ctx.reportExists ?? undefined,
       packageMinutes: ctx.packageMinutes,
-      attendanceAwaiting: ctx.attendanceAwaiting,
-      coverageOfferOpen: ctx.coverageOfferOpen,
+      attendanceAwaiting: ctx.attendanceAwaiting ?? undefined,
+      coverageOfferOpen: ctx.coverageOfferOpen ?? undefined,
     });
     if (!decision.ok) {
       await complete(service, key, "skipped", { error: decision.reason });
