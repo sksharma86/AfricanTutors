@@ -333,9 +333,9 @@ describe("PR7C — architecture, isolation, Hours portal CTA", () => {
     assert.match(lifecycle, /notifyStudyHall365Lifecycle/);
   });
 
-  it("does not start PR7E/PR7F from the 365 payment-failure path", () => {
+  it("does not start PR7F from the 365 payment-failure path", () => {
     assert.match(notify, /notifyStudyHall365PaymentFailure/);
-    assert.doesNotMatch(sync, /consent|sender branding|stale-delivery/i);
+    assert.doesNotMatch(sync, /consent|sender branding/i);
     assert.doesNotMatch(webhook, /customer_no_show/);
     assert.doesNotMatch(webhook, /notifyCustomerNoShow/);
   });

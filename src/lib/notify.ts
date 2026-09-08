@@ -98,12 +98,24 @@ async function deliver(opts: {
       await service.rpc("complete_email_delivery", { p_key: opts.key, p_status: "skipped", p_error: "no recipient email" });
       return { status: "skipped" };
     }
+    let deliveryId: string | null = null;
+    try {
+      const { data: claimedRow } = await service
+        .from("email_deliveries")
+        .select("id")
+        .eq("idempotency_key", opts.key)
+        .maybeSingle();
+      deliveryId = typeof claimedRow?.id === "string" ? claimedRow.id : null;
+    } catch {
+      /* provider idempotency is best-effort */
+    }
     const result = await sendEmail({
       to,
       subject: opts.rendered.subject,
       html: opts.rendered.html,
       text: opts.rendered.text,
       type: opts.type,
+      idempotencyKey: deliveryId,
     });
     await service.rpc("complete_email_delivery", {
       p_key: opts.key,

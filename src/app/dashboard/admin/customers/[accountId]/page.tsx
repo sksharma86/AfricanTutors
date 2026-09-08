@@ -10,6 +10,7 @@ import { lookupEmail } from "@/lib/admin-service";
 import { requireRole } from "@/lib/auth";
 import { bookingChildNames } from "@/lib/household-children.mjs";
 import { formatCents } from "@/lib/pricing";
+import { deliveryOpsLabel } from "@/lib/notifications/retry-policy.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Customer · Management" };
@@ -92,7 +93,7 @@ export default async function AdminCustomerDetailPage({
         .limit(12),
       supabase!
         .from("email_deliveries")
-        .select("id, notification_type, status, to_email, error, updated_at")
+        .select("id, notification_type, status, to_email, error, updated_at, attempts")
         .eq("recipient_account_id", accountId)
         .order("updated_at", { ascending: false })
         .limit(20),
@@ -245,12 +246,20 @@ export default async function AdminCustomerDetailPage({
           {((deliveries ?? []) as { id: string; notification_type: string; status: string; to_email: string | null; error: string | null }[]).length === 0 ? (
             <li className="py-2 text-ink-500">No messages recorded for this parent.</li>
           ) : (
-            ((deliveries ?? []) as { id: string; notification_type: string; status: string; to_email: string | null; error: string | null }[]).map((n) => (
+            ((deliveries ?? []) as {
+              id: string;
+              notification_type: string;
+              status: string;
+              to_email: string | null;
+              error: string | null;
+              attempts?: number | null;
+              next_retry_at?: string | null;
+            }[]).map((n) => (
               <li key={n.id} className="py-2">
                 {n.status === "failed" ? "Parent wasn't notified" : n.notification_type.replace(/_/g, " ")}
                 <span className="text-ink-400">
                   {" · "}
-                  {n.status}
+                  {deliveryOpsLabel(n)}
                   {n.to_email ? ` · ${n.to_email}` : ""}
                   {n.error ? ` · ${n.error}` : ""}
                 </span>

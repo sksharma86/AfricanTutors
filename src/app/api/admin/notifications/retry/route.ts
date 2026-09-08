@@ -1,18 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { adminApiContext } from "@/lib/admin-service";
-import { sendEmail } from "@/lib/email/transport";
+import { isEmailRecipient } from "@/lib/notifications/retry-policy.mjs";
+import {
+  evaluateEmailDeliveryRetry,
+  sendLeasedEmailDelivery,
+} from "@/lib/notifications/retry-send";
 import { getServiceSupabase } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Admin-only retry of a FAILED email delivery. Re-sends the stored rendered
- * content to the original recipient; it NEVER re-runs the underlying business
- * operation and never touches money/bookings/credits. `retry_email_delivery`
- * atomically flips 'failed' → 'pending' and bumps attempts, so two concurrent
- * retries cannot both send.
+ * Admin-only retry of a FAILED email delivery.
+ * Revalidates current-state events before leasing so a skip does not increment
+ * attempts. Then retry_email_delivery leases failed→pending (existing concurrency
+ * guard) and stored content is sent. Never re-runs the business operation.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -27,19 +30,39 @@ export async function POST(request: NextRequest) {
   }
 
   const service = getServiceSupabase();
+  const { data: existing } = await service
+    .from("email_deliveries")
+    .select("*")
+    .eq("id", body.deliveryId)
+    .maybeSingle();
+  if (!existing) return NextResponse.json({ error: "Delivery not found." }, { status: 404 });
+  if (!isEmailRecipient(existing.to_email)) {
+    return NextResponse.json({ retried: false, reason: "Only email deliveries can be retried here." }, { status: 409 });
+  }
+  if (existing.status !== "failed") {
+    return NextResponse.json({ retried: false, reason: "Not a failed delivery (already sent or being retried)." }, { status: 409 });
+  }
+
+  const decision = await evaluateEmailDeliveryRetry(existing);
+  if (!decision.ok) {
+    await service.rpc("complete_email_delivery", {
+      p_key: existing.idempotency_key,
+      p_status: "skipped",
+      p_error: decision.reason,
+    });
+    return NextResponse.json({ retried: true, status: "skipped", reason: decision.reason });
+  }
+
   const { data, error } = await service.rpc("retry_email_delivery", { p_delivery_id: body.deliveryId });
   if (error) return NextResponse.json({ error: "Retry failed." }, { status: 400 });
-  const r = data as { retried: boolean; key?: string; to?: string; subject?: string; html?: string; text?: string };
+  const r = data as { retried: boolean; key?: string };
   if (!r.retried) {
     return NextResponse.json({ retried: false, reason: "Not a failed delivery (already sent or being retried)." }, { status: 409 });
   }
 
-  const result = await sendEmail({ to: r.to ?? "", subject: r.subject ?? "", html: r.html ?? "", text: r.text ?? "" });
-  await service.rpc("complete_email_delivery", {
-    p_key: r.key,
-    p_status: result.status,
-    p_provider_message_id: result.id ?? null,
-    p_error: result.error ?? null,
-  });
-  return NextResponse.json({ retried: true, status: result.status });
+  const { data: leased } = await service.from("email_deliveries").select("*").eq("id", body.deliveryId).maybeSingle();
+  if (!leased) return NextResponse.json({ retried: false, reason: "Delivery not found after lease." }, { status: 409 });
+
+  const result = await sendLeasedEmailDelivery(leased, { countAttempt: false });
+  return NextResponse.json({ retried: true, status: result.status, reason: result.reason ?? null });
 }
