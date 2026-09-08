@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { CallParentControl } from "@/components/session/call-parent-control";
+import { GuideCustomerNoShowControl } from "@/components/session/guide-customer-no-show-control";
+import { GuideOperatingMethod } from "@/components/dashboard/guide-operating-method";
 import {
   classifyCameraError,
   classifyLocalVideoTrack,
@@ -46,7 +48,15 @@ function formatWhen(iso?: string | null): string {
   }
 }
 
-export function SessionRoom({ bookingId, info }: { bookingId: string; info: SessionInfo }) {
+export function SessionRoom({
+  bookingId,
+  info,
+  studentJoinedAt = null,
+}: {
+  bookingId: string;
+  info: SessionInfo;
+  studentJoinedAt?: string | null;
+}) {
   const router = useRouter();
   const [state, setState] = useState(info.join_state ?? "not_joinable");
   const [busy, setBusy] = useState(false);
@@ -228,15 +238,30 @@ export function SessionRoom({ bookingId, info }: { bookingId: string; info: Sess
       </div>
       <div className="p-5 sm:p-6">
         {isGuide ? (
-          <div className="rounded-lg border border-forest-700/50 bg-forest-950/40 p-3 text-xs leading-5 text-ink-200">
-            <p className="font-medium text-forest-200">Guide expectations</p>
-            <p className="mt-1">
-              Stay present, encourage focus, redirect gently, and keep a calm study environment. Stay visible on camera
-              for the whole Study Hall. Do not tutor, teach lessons, or give homework answers. If you need a parent to
-              check in physically, use Call Parent — you will never see their phone number.
-            </p>
-            <div className="mt-3 max-w-sm">
-              <CallParentControl bookingId={bookingId} enabled={state === "open" || inCall} />
+          <div className="space-y-3">
+            <GuideOperatingMethod
+              scheduledStart={info.scheduled_start}
+              scheduledEnd={info.scheduled_end}
+              tone="session"
+            />
+            <div className="rounded-lg border border-forest-700/50 bg-forest-950/40 p-3">
+              <p className="text-[12.5px] leading-5 text-ink-300">
+                Stay visible on camera. If a parent is needed, use Call Parent — you will never see their number.
+              </p>
+              <div className="mt-3 max-w-sm">
+                <CallParentControl bookingId={bookingId} enabled={state === "open" || inCall} />
+              </div>
+              <div className="mt-3">
+                <GuideCustomerNoShowControl
+                  bookingId={bookingId}
+                  status={info.status ?? ""}
+                  scheduledStart={info.scheduled_start ?? null}
+                  studentJoinedAt={studentJoinedAt}
+                  callParentEnabled={state === "open" || inCall}
+                  includeCallParent={false}
+                  variant="session"
+                />
+              </div>
             </div>
           </div>
         ) : null}

@@ -403,6 +403,10 @@ body {
   background: rgba(161, 92, 26, 0.1);
 }
 
+.parent-app .pp-week-day.is-missed {
+  background: rgba(28, 25, 21, 0.06);
+}
+
 .parent-app .pp-week-day.is-none {
   color: var(--pp-muted);
 }

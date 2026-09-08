@@ -19,20 +19,20 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
     const next = read("src/components/dashboard/guide-next-study-hall.tsx");
     const today = read("src/components/dashboard/guide-today-schedule.tsx");
-    const guide = read("src/components/dashboard/guide-guidance.tsx");
+    const guide = read("src/lib/guide-operating-method.mjs") + read("src/components/dashboard/guide-guidance.tsx");
     assert.match(page, /Guide workspace/);
     assert.match(today, /Today'?s schedule|Upcoming Study Halls/);
     assert.match(next, /Join Study Hall|GuideJoinControl/);
-    assert.match(guide, /presence, focus, accountability/i);
+    assert.match(guide, /presence, encouragement, redirection, and accountability/i);
     assert.doesNotMatch(page, /Your tutor account|Approved subjects|Tutor Dashboard/i);
     // Role copy may say "not … teach lessons / subject tutor" — that is intentional framing.
-    assert.match(guide, /not expected to teach lessons|not tutoring/i);
+    assert.match(guide, /not tutoring or homework answers/i);
     assert.doesNotMatch(page, /Book a tutoring|Tutor Dashboard|subject specialty prep/i);
   });
 
   it("Guide dashboard does not introduce subject matching or specialty prep", () => {
     const page = read("src/app/dashboard/tutor/page.tsx");
-    const guide = read("src/components/dashboard/guide-guidance.tsx");
+    const guide = read("src/lib/guide-operating-method.mjs") + read("src/components/dashboard/guide-guidance.tsx");
     assert.doesNotMatch(page, /tutor_subjects|Approved subjects|specialty/i);
     assert.match(guide, /not tutoring or homework answers/i);
   });
@@ -60,8 +60,8 @@ describe("Study Hall PR5 — Guide workspace (source)", () => {
 
   it("Guide session room reminds supervision role and keeps T−5 copy", () => {
     const room = read("src/components/session/session-room.tsx");
-    assert.match(room, /Guide expectations/);
-    assert.match(room, /Do not tutor|not expected to teach|Do not tutor/i);
+    assert.match(room, /GuideOperatingMethod/);
+    assert.match(room, /CallParentControl/);
     assert.match(room, /Join Study Hall/);
     assert.match(room, /5\s*minutes before/);
   });

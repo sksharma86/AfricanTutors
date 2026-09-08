@@ -18,6 +18,20 @@ export function isStudyHallLive(
 export function isOpenStudyHall(status: string): boolean;
 export function isFinishedStatus(status: string): boolean;
 export function isCancelledStatus(status: string): boolean;
+export function managementCustomerNoShowRecord(
+  booking: { status?: string } | null | undefined,
+  extras?: {
+    earning?: { status?: string | null } | null;
+    escalations?: Array<{ status?: string | null; outcome?: string | null }>;
+  },
+): {
+  title: string;
+  summary: string;
+  guidePay: "full_pay" | "deferred_or_missing";
+  funding: "consumed";
+  callParentAttempted: boolean;
+  callParentStatus: string | null;
+} | null;
 export type StudyHallIssue = {
   kind: string;
   title: string;

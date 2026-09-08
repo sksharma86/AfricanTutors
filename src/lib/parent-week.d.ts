@@ -19,7 +19,7 @@ declare module "@/lib/parent-week.mjs" {
     timeZone?: string,
   ): ParentBooking[];
 
-  export type ParentWeekDayKind = "today" | "completed" | "scheduled" | "payment_needed" | "none";
+  export type ParentWeekDayKind = "today" | "completed" | "scheduled" | "payment_needed" | "missed" | "none";
 
   export function parentWeekDayKind(
     bookingsOnDay: Array<{

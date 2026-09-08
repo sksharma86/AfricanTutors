@@ -15,6 +15,7 @@ export interface GuideBooking {
   status: BookingStatus;
   is_free_trial: boolean;
   attendance?: GuideAttendanceAssignment | null;
+  student_first_joined_at?: string | null;
 }
 
 export interface GuideAttendanceAssignment {

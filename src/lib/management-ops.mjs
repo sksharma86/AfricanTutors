@@ -97,6 +97,25 @@ export function isFinishedStatus(status) {
   return status === "completed" || status === "no_show";
 }
 
+/**
+ * Routine customer no-show is already mechanically settled.
+ * Management reads the result; it does not recalculate pay or funding.
+ */
+export function managementCustomerNoShowRecord(booking, extras = {}) {
+  if (booking?.status !== "no_show") return null;
+  const earning = extras.earning ?? null;
+  const escalations = extras.escalations ?? [];
+  const latestCall = escalations[0] ?? null;
+  return {
+    title: "Customer no-show",
+    summary: "The Guide waited. The child did not join.",
+    guidePay: earning && (earning.status === "earned" || earning.status === "paid") ? "full_pay" : "deferred_or_missing",
+    funding: "consumed",
+    callParentAttempted: escalations.length > 0,
+    callParentStatus: latestCall?.status ?? latestCall?.outcome ?? null,
+  };
+}
+
 export function isCancelledStatus(status) {
   return status === "cancelled" || status === "expired";
 }

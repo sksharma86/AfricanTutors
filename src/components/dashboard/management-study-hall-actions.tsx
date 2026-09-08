@@ -94,7 +94,7 @@ export function ManagementStudyHallActions({
           Mark complete
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => run("no_show")} disabled={busy != null}>
-          Mark no-show
+          Mark customer no-show
         </Button>
         <Button type="button" variant="destructive" size="sm" onClick={() => run("release")} disabled={busy != null}>
           Cancel Study Hall

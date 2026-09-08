@@ -6,6 +6,7 @@ import {
   collectNeedsAttention,
   currentStudyHallIssues,
   isStudyHallLive,
+  managementCustomerNoShowRecord,
   managementGreeting,
   managementOperationalStatus,
   matchesStudyHallSearch,
@@ -90,6 +91,17 @@ describe("Management Control Center — operational status", () => {
     assert.equal(managementOperationalStatus({ status: "no_show" }), "completed");
     assert.equal(managementOperationalStatus({ status: "cancelled" }), "cancelled");
     assert.equal(managementOperationalStatus({ status: "expired" }), "cancelled");
+  });
+
+  it("customer no-show is identifiable without becoming a Needs Attention incident", () => {
+    const rec = managementCustomerNoShowRecord(
+      { status: "no_show", tutor_display_name: "Amara" },
+      { earning: { status: "earned" }, escalations: [] },
+    );
+    assert.equal(rec?.title, "Customer no-show");
+    assert.equal(rec?.guidePay, "full_pay");
+    assert.equal(rec?.funding, "consumed");
+    assert.equal(currentStudyHallIssues({ status: "no_show", scheduled_start: start, scheduled_end: end }).length, 0);
   });
 
   it("needs a Guide when coverage is missing", () => {

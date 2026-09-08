@@ -83,7 +83,11 @@ export function GuideHomeBoard({
           <GuideEarningsCard outstanding={pay.outstanding} paidMonth={pay.paidMonth} currency={pay.currency} />
         </div>
         <div className="gp-home-guide">
-          <GuideGuidance />
+          <GuideGuidance
+            scheduledStart={lists.next?.scheduled_start}
+            scheduledEnd={lists.next?.scheduled_end}
+            nowMs={nowMs}
+          />
         </div>
       </div>
     </div>
