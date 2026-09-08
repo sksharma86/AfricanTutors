@@ -25,6 +25,10 @@ import {
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { sendGuideWhatsApp, sendParentAttentionSms } from "@/lib/telephony/client";
+import {
+  classifyStudyHall365Transitions,
+  parseUpsertLifecycleSnapshot,
+} from "@/lib/notifications/study-hall-365-lifecycle.mjs";
 
 /**
  * Central, idempotent transactional-notification service (Study Hall PR8).
@@ -668,6 +672,73 @@ export async function notifyWelcome(accountId: string, name?: string | null) {
     accountId,
     rendered: T.welcome({ name: firstName(name), appUrl: `${APP_URL}/dashboard` }),
   });
+}
+
+const STUDY_HALL_365_TEMPLATE = {
+  study_hall_365_started: (ctx: { appUrl: string; periodEndISO: string | null; tz: string }) =>
+    T.studyHall365Started({ appUrl: ctx.appUrl }),
+  study_hall_365_renewed: (ctx: { appUrl: string; periodEndISO: string | null; tz: string }) =>
+    T.studyHall365Renewed({ periodEndISO: ctx.periodEndISO, tz: ctx.tz, appUrl: ctx.appUrl }),
+  study_hall_365_cancellation_scheduled: (ctx: { appUrl: string; periodEndISO: string | null; tz: string }) =>
+    T.studyHall365CancellationScheduled({ periodEndISO: ctx.periodEndISO, tz: ctx.tz, appUrl: ctx.appUrl }),
+  study_hall_365_resumed: (ctx: { appUrl: string; periodEndISO: string | null; tz: string }) =>
+    T.studyHall365Resumed({ appUrl: ctx.appUrl }),
+  study_hall_365_ended: (ctx: { appUrl: string; periodEndISO: string | null; tz: string }) =>
+    T.studyHall365Ended({ appUrl: ctx.appUrl }),
+} as const;
+
+/**
+ * Parent-email Study Hall 365 lifecycle. Call only after upsert_study_hall_365_subscription
+ * has written authoritative membership state. Never throws; never rolls back sync.
+ * Parent email only — no SMS, WhatsApp, Guide, or Management send.
+ */
+export async function notifyStudyHall365Lifecycle(opts: {
+  accountId?: string | null;
+  stripeSubscriptionId?: string | null;
+  upsert?: unknown;
+}): Promise<{ status: string; sent: string[] }> {
+  try {
+    const parsed = parseUpsertLifecycleSnapshot(opts.upsert);
+    const accountId = opts.accountId || parsed?.accountId || null;
+    const stripeSubscriptionId = opts.stripeSubscriptionId || null;
+    if (!accountId || !stripeSubscriptionId || !parsed) {
+      return { status: "skipped", sent: [] };
+    }
+
+    const transitions = classifyStudyHall365Transitions({
+      applyStatus: parsed.applyStatus,
+      stripeSubscriptionId,
+      previous: parsed.previous,
+      current: parsed.current,
+    });
+    if (!transitions.length) return { status: "skipped", sent: [] };
+
+    const service = getServiceSupabase();
+    let tz = "UTC";
+    try {
+      const { data } = await service.rpc("resolve_account_timezone", { p_account: accountId });
+      if (typeof data === "string" && data) tz = data;
+    } catch {
+      /* household zone is display-only */
+    }
+
+    const periodEndISO = parsed.current?.current_period_end ?? null;
+    const sent: string[] = [];
+    for (const event of transitions) {
+      const render = STUDY_HALL_365_TEMPLATE[event.type as keyof typeof STUDY_HALL_365_TEMPLATE];
+      if (!render) continue;
+      await deliver({
+        key: event.key,
+        type: event.type,
+        accountId,
+        rendered: render({ appUrl: APP_URL, periodEndISO, tz }),
+      });
+      sent.push(event.type);
+    }
+    return { status: sent.length ? "ok" : "skipped", sent };
+  } catch {
+    return { status: "failed", sent: [] };
+  }
 }
 
 /** Positive account-credit grant (admin adjustment). Idempotent per ledger reference. */

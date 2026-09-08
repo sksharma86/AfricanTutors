@@ -65,13 +65,12 @@ describe("PR7A — event catalog foundation (unwired)", () => {
     assert.ok(!CHANNEL_POLICY.sms.includes("study_hall_365_started"));
   });
 
-  it("does not wire 365 / payment-failure / no-show sends yet", () => {
+  it("does not wire payment-failure / customer-no-show sends yet", () => {
     const notify = read("src/lib/notify.ts");
-    assert.doesNotMatch(notify, /notifyStudyHall365|notifyCustomerNoShow|notifyPaymentFailure/);
-    assert.doesNotMatch(read("src/lib/study-hall-365/stripe-sync.ts"), /from ["']@\/lib\/notify["']/);
+    assert.doesNotMatch(notify, /notifyCustomerNoShow|notifyPaymentFailure/);
     assert.doesNotMatch(read("src/app/api/tutor/customer-no-show/route.ts"), /notify/);
     const stripe = read("src/app/api/stripe/webhook/route.ts");
-    assert.doesNotMatch(stripe, /notifyPaymentFailure|notifyStudyHall365|STUDY_HALL_365_STARTED/);
+    assert.doesNotMatch(stripe, /notifyPaymentFailure|notifyCustomerNoShow|STUDY_HALL_365_STARTED/);
   });
 
   it("does not add recording-ready, Guide SMS, or extra reminder cadences", () => {

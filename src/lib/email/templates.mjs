@@ -597,6 +597,116 @@ export function packageBalanceLow(ctx) {
   };
 }
 
+function formatMembershipWhen(iso, tz) {
+  if (!iso) return null;
+  const timeZone = tz || "UTC";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    }).format(new Date(iso));
+  } catch {
+    return formatWhen(iso, tz);
+  }
+}
+
+function parentPortalHref(appUrl) {
+  return absoluteAppHref(appUrl, "/dashboard/student");
+}
+
+function planWeekHref(appUrl) {
+  return absoluteAppHref(appUrl, "/dashboard/student/plan-week");
+}
+
+/** Parent: first successful Study Hall 365 membership. */
+export function studyHall365Started(ctx) {
+  const portal = parentPortalHref(ctx.appUrl);
+  const plan = planWeekHref(ctx.appUrl);
+  const lines = [
+    "Your Study Hall 365 membership is active.",
+    "Your household can book one 60-minute Study Hall on each household calendar day. Unused days do not roll over.",
+    "Plan the week from your Parent Portal whenever you are ready.",
+  ];
+  return {
+    subject: "Welcome to Study Hall 365",
+    html: layout(
+      "Welcome to Study Hall 365",
+      lines.map(p).join(""),
+      plan ? { href: plan, label: "Plan my week" } : portal ? { href: portal, label: "Open Parent Portal" } : null,
+    ),
+    text: textJoin([...lines, "", plan || portal || ""]),
+  };
+}
+
+/** Parent: paid billing period advanced. */
+export function studyHall365Renewed(ctx) {
+  const through = formatMembershipWhen(ctx.periodEndISO, ctx.tz);
+  const portal = parentPortalHref(ctx.appUrl);
+  const lines = [
+    "Your Study Hall 365 membership renewed successfully.",
+    through ? `This membership period continues through ${through}.` : "Your daily Study Hall routine continues as usual.",
+    "Nothing else is required — keep booking from your Parent Portal.",
+  ];
+  return {
+    subject: "Your Study Hall 365 membership renewed",
+    html: layout("Membership renewed", lines.filter(Boolean).map(p).join(""), portal ? { href: portal, label: "Open Parent Portal" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}
+
+/** Parent: cancel at period end was scheduled; access continues. */
+export function studyHall365CancellationScheduled(ctx) {
+  const through = formatMembershipWhen(ctx.periodEndISO, ctx.tz);
+  const portal = parentPortalHref(ctx.appUrl);
+  const lines = [
+    "Your Study Hall 365 cancellation is scheduled.",
+    through
+      ? `Study Hall 365 stays active through ${through}. Access does not end today.`
+      : "Study Hall 365 stays active through the end of your current membership period. Access does not end today.",
+    "You can keep your membership before then from your Parent Portal if you change your mind.",
+  ];
+  return {
+    subject: "Your Study Hall 365 cancellation is scheduled",
+    html: layout("Cancellation scheduled", lines.map(p).join(""), portal ? { href: portal, label: "Open Parent Portal" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}
+
+/** Parent: scheduled cancellation was reversed. */
+export function studyHall365Resumed(ctx) {
+  const portal = parentPortalHref(ctx.appUrl);
+  const lines = [
+    "The scheduled cancellation was removed. Study Hall 365 will continue.",
+    "Your membership remains active, and billing continues normally.",
+  ];
+  return {
+    subject: "Study Hall 365 will continue",
+    html: layout("Membership continues", lines.map(p).join(""), portal ? { href: portal, label: "Open Parent Portal" } : null),
+    text: textJoin(lines),
+  };
+}
+
+/** Parent: membership actually ended (not a scheduled-cancel notice). */
+export function studyHall365Ended(ctx) {
+  const portal = parentPortalHref(ctx.appUrl);
+  const lines = [
+    "Your Study Hall 365 membership has ended.",
+    "Prepaid Study Hall hours and account credit on the household, if any, are unchanged.",
+    "You can still book from your Parent Portal with prepaid hours, account credit, or pay-as-you-go.",
+  ];
+  return {
+    subject: "Your Study Hall 365 membership has ended",
+    html: layout("Membership ended", lines.map(p).join(""), portal ? { href: portal, label: "Open Parent Portal" } : null),
+    text: textJoin(lines.filter(Boolean)),
+  };
+}
+
 /** Parent: admin (or system) applied account credit. */
 export function accountCreditApplied(ctx) {
   const lines = [

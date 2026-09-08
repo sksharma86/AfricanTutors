@@ -137,3 +137,16 @@ export function accountCreditApplied(ctx: {
   reason?: string | null;
   appUrl?: string | null;
 }): RenderedEmail;
+export function studyHall365Started(ctx: { appUrl?: string | null }): RenderedEmail;
+export function studyHall365Renewed(ctx: {
+  periodEndISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
+export function studyHall365CancellationScheduled(ctx: {
+  periodEndISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
+}): RenderedEmail;
+export function studyHall365Resumed(ctx: { appUrl?: string | null }): RenderedEmail;
+export function studyHall365Ended(ctx: { appUrl?: string | null }): RenderedEmail;

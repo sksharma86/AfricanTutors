@@ -5,8 +5,8 @@
  * Historical files/comments may say "PR8" for this spine. Original product
  * roadmap PR7 extends this catalog — do not rename historical migrations.
  *
- * PR7A: 365 / payment-failure / customer-no-show identifiers are catalog-only.
- * They must not be wired to production sends until a later PR7 slice.
+ * PR7B wires Study Hall 365 parent-email lifecycle after membership upsert.
+ * payment-failure / customer-no-show identifiers stay catalog-only until later slices.
  */
 
 export const NOTIFICATION_EVENTS = Object.freeze({
@@ -38,7 +38,7 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
   GUIDE_ATTENDANCE_CRITICAL: "guide_attendance_critical",
   GUIDE_OPEN_COVERAGE: "guide_open_coverage",
-  /** PR7 later — catalog only in PR7A. Parent email. */
+  /** PR7B — parent email after authoritative 365 membership sync. */
   STUDY_HALL_365_STARTED: "study_hall_365_started",
   STUDY_HALL_365_RENEWED: "study_hall_365_renewed",
   STUDY_HALL_365_CANCELLATION_SCHEDULED: "study_hall_365_cancellation_scheduled",
@@ -75,7 +75,7 @@ export const CHANNEL_POLICY = Object.freeze({
     "guide_open_coverage",
     "coverage_cancellation",
     "coverage_failure_protection",
-    // PR7A catalog only — not wired to notify.ts / webhooks yet.
+    // PR7B: parent email after 365 membership upsert. Still not SMS/WhatsApp.
     "study_hall_365_started",
     "study_hall_365_renewed",
     "study_hall_365_cancellation_scheduled",
@@ -116,8 +116,8 @@ export const CHANNEL_POLICY = Object.freeze({
     manager: [], // audit/log only; no routine alert
   }),
   /**
-   * Planned PR7 recipient matrix (identifiers only). Do not treat presence
-   * here as authorization to send. Management must not get no-show success.
+   * PR7 recipient matrix. 365 parent email is wired in PR7B. payment_failure
+   * and customer no-show remain unwired. Management must not get no-show success.
    */
   pr7_lifecycle: Object.freeze({
     study_hall_365_started: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
