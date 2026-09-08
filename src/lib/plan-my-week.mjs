@@ -304,3 +304,255 @@ export function formatPlanSessionLine(iso, timeZone) {
       : `${from.clock} ${from.dayPeriod}–${to.clock} ${to.dayPeriod}`.replace(/\s+/g, " ").trim();
   return `${weekday} ${monthDay} — ${range}`;
 }
+
+/** Local weekdays, not UTC +168h. */
+export const COPY_NEXT_WEEK_LOCAL_DAYS = 7;
+
+function localClockParts(iso, timeZone) {
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: safeTimeZone(timeZone),
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(date);
+  const get = (type) => Number(parts.find((p) => p.type === type)?.value);
+  let hour = get("hour");
+  if (hour === 24) hour = 0;
+  return { hour, minute: get("minute"), second: get("second") };
+}
+
+function sameInstant(a, b) {
+  const ta = new Date(a).getTime();
+  const tb = new Date(b).getTime();
+  return Number.isFinite(ta) && ta === tb;
+}
+
+/**
+ * Move an instant by whole local calendar days in `timeZone`.
+ * Keeps the civil clock (e.g. 6:00 PM → 6:00 PM) across DST.
+ */
+export function shiftLocalInstantByDays(iso, days, timeZone) {
+  if (!iso) return null;
+  const tz = safeTimeZone(timeZone);
+  const sourceDate = localDateForInstant(iso, tz);
+  const destDate = addLocalDays(sourceDate, Number(days) || 0, tz);
+  const destParts = parseLocalDate(destDate);
+  const clock = localClockParts(iso, tz);
+  if (!destParts || !clock) return null;
+  return utcInstantForLocalParts(
+    destParts.year,
+    destParts.month,
+    destParts.day,
+    clock.hour,
+    clock.minute,
+    clock.second,
+    tz,
+  ).toISOString();
+}
+
+/**
+ * Source times for Copy to next week, matching what the parent currently sees.
+ *
+ * Per this-week local date:
+ * 1. Active bookings (pending/confirmed) win. A pending Change uses the
+ *    replacement time, not the original.
+ * 2. Else an unsaved new-session draft for that date.
+ * Cancelled, expired, and completed rows are ignored.
+ *
+ * @param {{
+ *   bookings?: object[],
+ *   drafts?: Record<string, string>,
+ *   replacements?: Record<string, string>,
+ *   thisWeekDays?: Array<{ localDate?: string }>,
+ *   timeZone?: string,
+ * }} [input]
+ */
+export function collectCopySourceSessions(input = {}) {
+  const bookings = input.bookings ?? [];
+  const drafts = input.drafts ?? {};
+  const replacements = input.replacements ?? {};
+  const thisWeekDays = input.thisWeekDays ?? [];
+  const tz = safeTimeZone(input.timeZone);
+  const byDate = bookingsByLocalDate(bookings, tz);
+  const sources = [];
+  const seen = new Set();
+
+  for (const day of thisWeekDays) {
+    const localDate = day?.localDate;
+    if (!localDate) continue;
+    const existing = byDate.get(localDate) ?? [];
+    if (existing.length > 0) {
+      for (const booking of existing) {
+        const replacement = replacements?.[booking.id];
+        const startISO =
+          typeof replacement === "string" && replacement ? replacement : booking.scheduled_start;
+        if (!startISO || seen.has(startISO)) continue;
+        seen.add(startISO);
+        sources.push({
+          sourceLocalDate: localDate,
+          startISO,
+          kind: replacement ? "replacement" : "booking",
+          bookingId: booking.id,
+        });
+      }
+      continue;
+    }
+    const draft = drafts?.[localDate];
+    if (typeof draft === "string" && draft && !seen.has(draft)) {
+      seen.add(draft);
+      sources.push({ sourceLocalDate: localDate, startISO: draft, kind: "draft" });
+    }
+  }
+  return sources;
+}
+
+function skipRow(source, destISO, destLocalDate, status, message) {
+  return {
+    sourceLocalDate: source.sourceLocalDate,
+    startISO: destISO ?? "",
+    localDate: destLocalDate,
+    status,
+    message,
+  };
+}
+
+export function formatCopyToNextWeekMessage(copiedCount, skipped = []) {
+  const copied = Number(copiedCount) || 0;
+  const unavailable = skipped.filter((row) => row.status === "unavailable").length;
+  const kept = skipped.filter((row) => row.status === "already_scheduled" || row.status === "draft_exists").length;
+
+  if (copied < 1 && skipped.length < 1) {
+    return "Nothing to copy. Add Study Halls this week first.";
+  }
+
+  const parts = [];
+  if (copied > 0) {
+    parts.push(`${copied} Study Hall${copied === 1 ? "" : "s"} copied to next week.`);
+    parts.push("Review to schedule them.");
+  } else {
+    parts.push("No Study Halls were copied.");
+  }
+  if (unavailable > 0) {
+    parts.push(`${unavailable} time${unavailable === 1 ? " was" : "s were"} unavailable.`);
+  }
+  if (kept > 0) {
+    parts.push(
+      kept === 1
+        ? "1 day already had a next-week time, so it was left as-is."
+        : `${kept} days already had a next-week time, so they were left as-is.`,
+    );
+  }
+  return parts.join(" ");
+}
+
+/**
+ * Build next-week DRAFTS from this week's visible routine. Does not book.
+ *
+ * Destination merge (never overwrite):
+ * - next-week local date already has an active booking → skip
+ * - next-week draft already exists for that date → skip
+ * - destination instant missing from get_available_slots (filtered by
+ *   slotsForLocalDate / canScheduleStart) → skip unavailable
+ * Multiple sources mapping to the same next-week date: first eligible wins.
+ *
+ * @param {{
+ *   weekOffset?: number,
+ *   bookings?: object[],
+ *   drafts?: Record<string, string>,
+ *   replacements?: Record<string, string>,
+ *   slotStarts?: string[],
+ *   timeZone?: string,
+ *   nowMs?: number,
+ *   noticeMinutes?: number,
+ * }} [input]
+ */
+export function planCopyToNextWeek(input = {}) {
+  const weekOffset = input.weekOffset ?? 0;
+  const bookings = input.bookings ?? [];
+  const drafts = input.drafts ?? {};
+  const replacements = input.replacements ?? {};
+  const slotStarts = input.slotStarts ?? [];
+  const nowMs = input.nowMs ?? Date.now();
+  const noticeMinutes = input.noticeMinutes ?? PLAN_WEEK_NOTICE_MINUTES;
+  const tz = safeTimeZone(input.timeZone);
+  const now = new Date(nowMs);
+  if (Number(weekOffset) !== 0) {
+    return {
+      ok: false,
+      inapplicable: true,
+      drafts: {},
+      copied: [],
+      skipped: [],
+      message: "Copy to next week is only available while viewing this week.",
+    };
+  }
+
+  const thisWeek = planningWeek(tz, now, 0);
+  const nextWeek = planningWeek(tz, now, 1);
+  const sources = collectCopySourceSessions({
+    bookings,
+    drafts,
+    replacements,
+    thisWeekDays: thisWeek.days,
+    timeZone: tz,
+  });
+
+  if (sources.length === 0) {
+    return {
+      ok: true,
+      inapplicable: false,
+      drafts: {},
+      copied: [],
+      skipped: [],
+      message: formatCopyToNextWeekMessage(0, []),
+    };
+  }
+
+  const destByDate = bookingsByLocalDate(bookings, tz);
+  const copied = [];
+  const skipped = [];
+  const newDrafts = {};
+
+  for (const source of sources) {
+    const destISO = shiftLocalInstantByDays(source.startISO, COPY_NEXT_WEEK_LOCAL_DAYS, tz);
+    const destLocalDate = destISO ? localDateForInstant(destISO, tz) : null;
+    if (
+      !destISO ||
+      !destLocalDate ||
+      destLocalDate < nextWeek.monday ||
+      destLocalDate > nextWeek.sunday
+    ) {
+      skipped.push(skipRow(source, destISO, destLocalDate, "unavailable", "That time could not be copied because it is unavailable."));
+      continue;
+    }
+    if (drafts[destLocalDate] || newDrafts[destLocalDate]) {
+      skipped.push(skipRow(source, destISO, destLocalDate, "draft_exists", "Next week already has a time for that day."));
+      continue;
+    }
+    const destExisting = destByDate.get(destLocalDate) ?? [];
+    if (destExisting.length > 0 || startAlreadyBooked(bookings, destISO)) {
+      skipped.push(skipRow(source, destISO, destLocalDate, "already_scheduled", "Already on your schedule."));
+      continue;
+    }
+    const daySlots = slotsForLocalDate(slotStarts, destLocalDate, tz, nowMs, noticeMinutes);
+    const inSlots = daySlots.some((slot) => sameInstant(slot, destISO));
+    if (!inSlots || !canScheduleStart(destISO, tz, nowMs, noticeMinutes)) {
+      skipped.push(skipRow(source, destISO, destLocalDate, "unavailable", "That time could not be copied because it is unavailable."));
+      continue;
+    }
+    newDrafts[destLocalDate] = destISO;
+    copied.push({ localDate: destLocalDate, startISO: destISO, sourceLocalDate: source.sourceLocalDate });
+  }
+
+  return {
+    ok: true,
+    inapplicable: false,
+    drafts: newDrafts,
+    copied,
+    skipped,
+    message: formatCopyToNextWeekMessage(copied.length, skipped),
+  };
+}

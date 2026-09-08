@@ -22,6 +22,7 @@ import {
   PLAN_WEEK_DURATION_MINUTES,
   bookingsByLocalDate,
   formatPlanSessionLine,
+  planCopyToNextWeek,
   planningWeek,
   slotsForLocalDate,
 } from "@/lib/plan-my-week.mjs";
@@ -69,6 +70,7 @@ export function PlanMyWeek({
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const submittingRef = useRef(false);
+  const copyingRef = useRef(false);
   const requestIdRef = useRef(newRequestId());
 
   const [weekOffset, setWeekOffset] = useState(0);
@@ -86,6 +88,7 @@ export function PlanMyWeek({
   const [results, setResults] = useState<SessionResult[] | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [removeNote, setRemoveNote] = useState<string | null>(null);
+  const [copyNote, setCopyNote] = useState<string | null>(null);
 
   const week = useMemo(() => planningWeek(timeZone, new Date(nowMs), weekOffset), [timeZone, nowMs, weekOffset]);
   const byDate = useMemo(
@@ -114,9 +117,9 @@ export function PlanMyWeek({
     return items.sort((a, b) => a.startISO.localeCompare(b.startISO));
   }, [drafts, replacements, timeZone]);
 
-  async function ensureSlots() {
-    if (!supabase) return;
-    if (slots.length || slotsLoading) return;
+  async function fetchSlots(): Promise<{ list: string[]; error: string | null }> {
+    if (!supabase) return { list: [], error: "Something went wrong. Please try again." };
+    if (slots.length) return { list: slots, error: null };
     setSlotsLoading(true);
     setSlotsError(null);
     const from = new Date(nowMs + MIN_BOOKING_NOTICE_MINUTES * 60_000).toISOString();
@@ -129,14 +132,58 @@ export function PlanMyWeek({
     });
     setSlotsLoading(false);
     if (e) {
-      setSlotsError(friendly(e.message));
-      return;
+      const message = friendly(e.message);
+      setSlotsError(message);
+      return { list: [], error: message };
     }
-    setSlots(
-      (data ?? [])
-        .map((row: { slot_start: string }) => row.slot_start)
-        .filter((iso: string) => isHalfHourInstant(iso, timeZone)),
-    );
+    const list = (data ?? [])
+      .map((row: { slot_start: string }) => row.slot_start)
+      .filter((iso: string) => isHalfHourInstant(iso, timeZone));
+    setSlots(list);
+    return { list, error: null };
+  }
+
+  async function ensureSlots() {
+    if (slots.length || slotsLoading) return;
+    await fetchSlots();
+  }
+
+  async function copyToNextWeek() {
+    if (copyingRef.current || submittingRef.current || weekOffset !== 0) return;
+    copyingRef.current = true;
+    setBusy(true);
+    setError(null);
+    setCopyNote(null);
+    try {
+      const fetched = await fetchSlots();
+      if (fetched.error && fetched.list.length === 0) {
+        setCopyNote("We couldn't check next week's times. Please try again.");
+        return;
+      }
+      const result = planCopyToNextWeek({
+        weekOffset,
+        bookings,
+        drafts,
+        replacements,
+        slotStarts: fetched.list,
+        timeZone,
+        nowMs,
+      });
+      if (result.inapplicable) {
+        setCopyNote(result.message);
+        return;
+      }
+      if (Object.keys(result.drafts).length > 0) {
+        setDrafts((prev) => ({ ...prev, ...result.drafts }));
+        setWeekOffset(1);
+      }
+      setCopyNote(result.message);
+    } catch {
+      setCopyNote("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+      copyingRef.current = false;
+    }
   }
 
   async function openPicker(localDate: string, replaceBookingId?: string) {
@@ -350,13 +397,18 @@ export function PlanMyWeek({
             <p className="mt-1 font-display text-xl font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">{week.label}</p>
             <p className="mt-1 text-xs text-[var(--pp-muted)]">Times in {tzAbbreviation(new Date(nowMs).toISOString(), timeZone)}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" disabled={!week.canGoBack} onClick={() => setWeekOffset(0)}>
               This week
             </Button>
             <Button type="button" variant="outline" size="sm" disabled={!week.canGoForward} onClick={() => setWeekOffset(1)}>
               Next week
             </Button>
+            {week.weekOffset === 0 ? (
+              <Button type="button" variant="outline" size="sm" onClick={copyToNextWeek} disabled={busy}>
+                Copy to next week
+              </Button>
+            ) : null}
           </div>
         </div>
       </ParentSurface>
@@ -401,6 +453,7 @@ export function PlanMyWeek({
       )}
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {copyNote ? <p className="text-sm text-[var(--pp-muted)]">{copyNote}</p> : null}
       {removeNote ? <p className="text-sm text-[var(--pp-muted)]">{removeNote}</p> : null}
 
       <div className="space-y-2 pb-24">

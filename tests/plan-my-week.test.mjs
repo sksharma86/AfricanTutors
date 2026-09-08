@@ -272,5 +272,8 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(ui, /Who is joining these Study Halls\?/);
     assert.match(ui, /Every Study Hall is 60 minutes/);
     assert.match(ui, /benefits and balance will be applied automatically/);
+    assert.match(ui, /Copy to next week/);
+    assert.match(ui, /planCopyToNextWeek/);
+    assert.match(ui, /week\.weekOffset === 0/);
   });
 });
