@@ -41,7 +41,8 @@ describe("Parent Home — Next vs additional Upcoming Study Halls", () => {
     const upcoming = read("src/components/dashboard/parent-upcoming-list.tsx");
     const board = read("src/components/dashboard/parent-home-board.tsx");
     assert.match(upcoming, /parentUpcomingEmptyCopy\(hasNext\)/);
-    assert.match(board, /hasNext=\{Boolean\(next\)\}/);
+    assert.match(board, /ParentStudyHallWeek/);
+    assert.doesNotMatch(board, /ParentUpcomingList/);
     assert.doesNotMatch(upcoming, /I have nothing scheduled/);
   });
 
