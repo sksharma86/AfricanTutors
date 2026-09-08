@@ -95,3 +95,61 @@ export function normalizePlanWeekRequest(
 
 export function planWeekResultMessage(errorMessage: string | null | undefined): string;
 export function formatPlanSessionLine(iso: string, timeZone: string): string;
+
+export const COPY_NEXT_WEEK_LOCAL_DAYS: 7;
+
+export function shiftLocalInstantByDays(iso: string, days: number, timeZone?: string): string | null;
+
+export type CopySourceSession = {
+  sourceLocalDate: string;
+  startISO: string;
+  kind: "booking" | "draft" | "replacement";
+  bookingId?: string;
+};
+
+export function collectCopySourceSessions(input?: {
+  bookings?: Array<{ id?: string; status?: string; scheduled_start?: string | null }>;
+  drafts?: Record<string, string>;
+  replacements?: Record<string, string>;
+  thisWeekDays?: Array<{ localDate?: string }>;
+  timeZone?: string;
+}): CopySourceSession[];
+
+export type CopyToNextWeekSkip = {
+  sourceLocalDate: string;
+  startISO: string;
+  localDate: string | null;
+  status: "unavailable" | "already_scheduled" | "draft_exists";
+  message: string;
+};
+
+export type CopyToNextWeekCopied = {
+  localDate: string;
+  startISO: string;
+  sourceLocalDate: string;
+};
+
+export type CopyToNextWeekResult = {
+  ok: boolean;
+  inapplicable: boolean;
+  drafts: Record<string, string>;
+  copied: CopyToNextWeekCopied[];
+  skipped: CopyToNextWeekSkip[];
+  message: string;
+};
+
+export function formatCopyToNextWeekMessage(
+  copiedCount: number,
+  skipped?: Array<{ status?: string }>,
+): string;
+
+export function planCopyToNextWeek(input?: {
+  weekOffset?: number;
+  bookings?: Array<{ id?: string; status?: string; scheduled_start?: string | null }>;
+  drafts?: Record<string, string>;
+  replacements?: Record<string, string>;
+  slotStarts?: string[];
+  timeZone?: string;
+  nowMs?: number;
+  noticeMinutes?: number;
+}): CopyToNextWeekResult;
