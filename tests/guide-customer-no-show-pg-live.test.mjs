@@ -258,4 +258,92 @@ describe("PR6 — throwaway Postgres customer no-show", { skip: !havePsql, concu
     `);
     assert.equal(r.ok, false);
   });
+
+  it("A. HTTP join presence commits first, then Guide no-show is rejected", () => {
+    seedBooking("10000000-0000-4000-8000-000000000016", { startOffsetMin: -16 });
+    const fin = sql(`select finalize_http_session_join('10000000-0000-4000-8000-000000000016', 'student');`);
+    assert.match(fin, /"ok"\s*:\s*true/);
+    assert.equal(
+      sql(`select (student_first_joined_at is not null)::text from session_presence where booking_id = '10000000-0000-4000-8000-000000000016'`),
+      "true",
+    );
+    const again = sql(`select finalize_http_session_join('10000000-0000-4000-8000-000000000016', 'student');`);
+    assert.match(again, /"ok"\s*:\s*true/);
+    const r = sqlOk(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000016');`));
+    assert.equal(r.ok, false);
+    assert.match(r.out, /already joined/);
+    assert.equal(sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000016'`), "confirmed");
+  });
+
+  it("B. no-show wins: HTTP join finalize rejects and does not write student presence", () => {
+    seedBooking("10000000-0000-4000-8000-000000000017", { startOffsetMin: -16 });
+    sql(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000017');`));
+    assert.equal(sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000017'`), "no_show");
+    const r = sqlOk(`select finalize_http_session_join('10000000-0000-4000-8000-000000000017', 'student');`);
+    assert.equal(r.ok, false);
+    assert.match(r.out, /not joinable/);
+    assert.equal(
+      sql(`select coalesce(student_first_joined_at is not null, false)::text from session_presence where booking_id = '10000000-0000-4000-8000-000000000017'`),
+      "false",
+    );
+  });
+
+  it("C. both orderings are A or B only — never no_show plus student join presence from HTTP finalize", () => {
+    seedBooking("10000000-0000-4000-8000-000000000018", { startOffsetMin: -16 });
+    sql(`select finalize_http_session_join('10000000-0000-4000-8000-000000000018', 'student');`);
+    sqlOk(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000018');`));
+    const aStatus = sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000018'`);
+    const aJoined = sql(
+      `select (student_first_joined_at is not null)::text from session_presence where booking_id = '10000000-0000-4000-8000-000000000018'`,
+    );
+    assert.equal(aStatus, "confirmed");
+    assert.equal(aJoined, "true");
+
+    seedBooking("10000000-0000-4000-8000-000000000019", { startOffsetMin: -16 });
+    sql(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000019');`));
+    sqlOk(`select finalize_http_session_join('10000000-0000-4000-8000-000000000019', 'student');`);
+    const bStatus = sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000019'`);
+    const bJoined = sql(
+      `select coalesce((select student_first_joined_at is not null from session_presence where booking_id = '10000000-0000-4000-8000-000000000019'), false)::text`,
+    );
+    assert.equal(bStatus, "no_show");
+    assert.equal(bJoined, "false");
+  });
+
+  it("E. late record_session_presence after no_show is a harmless no-op", () => {
+    seedBooking("10000000-0000-4000-8000-000000000020", { startOffsetMin: -16 });
+    sql(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000020');`));
+    sql(`select record_session_presence('10000000-0000-4000-8000-000000000020', 'student', 'join');`);
+    assert.equal(sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000020'`), "no_show");
+    assert.equal(
+      sql(`select coalesce((select student_first_joined_at is not null from session_presence where booking_id = '10000000-0000-4000-8000-000000000020'), false)::text`),
+      "false",
+    );
+  });
+
+  it("F. Guide HTTP join presence does not eject or change no-show economics", () => {
+    seedBooking("10000000-0000-4000-8000-000000000021", { startOffsetMin: -16 });
+    sql(`select finalize_http_session_join('10000000-0000-4000-8000-000000000021', 'tutor');`);
+    assert.equal(
+      sql(`select (tutor_first_joined_at is not null)::text from session_presence where booking_id = '10000000-0000-4000-8000-000000000021'`),
+      "true",
+    );
+    sql(asGuide(GUIDE, `select guide_mark_customer_no_show('10000000-0000-4000-8000-000000000021');`));
+    assert.equal(sql(`select status::text from bookings where id = '10000000-0000-4000-8000-000000000021'`), "no_show");
+    assert.equal(sql(`select count(*) from tutor_earnings where booking_id = '10000000-0000-4000-8000-000000000021'`), "1");
+  });
+
+  it("ACL: anon cannot execute finalize_http_session_join", () => {
+    seedBooking("10000000-0000-4000-8000-000000000022", { startOffsetMin: -16 });
+    const grants = sql(`
+      select has_function_privilege('anon', 'public.finalize_http_session_join(uuid, text)', 'execute')::text
+        || ',' || has_function_privilege('authenticated', 'public.finalize_http_session_join(uuid, text)', 'execute')::text
+    `);
+    assert.equal(grants, "false,true");
+    const r = sqlOk(`
+      set role anon;
+      select finalize_http_session_join('10000000-0000-4000-8000-000000000022', 'student');
+    `);
+    assert.equal(r.ok, false);
+  });
 });

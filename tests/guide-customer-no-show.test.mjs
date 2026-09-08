@@ -19,6 +19,7 @@ import { GUIDE_PORTAL_NAV, guideNeedsReport, guideRowStatus } from "../src/lib/g
 import { managementCustomerNoShowRecord, managementOperationalStatus } from "../src/lib/management-ops.mjs";
 import { parentWeekDayKind, parentWeekDayLabel } from "../src/lib/parent-week.mjs";
 import { customerBookingStatus } from "../src/lib/status-labels.mjs";
+import { joinMustWithholdToken, joinPresenceRpcName } from "../src/lib/http-session-join.mjs";
 import { JOIN_OPEN_LEAD_MIN, JOIN_CLOSE_GRACE_MIN } from "../src/lib/session-window.mjs";
 import { guideJoinUiState } from "../src/lib/tutor-schedule.mjs";
 
@@ -243,6 +244,62 @@ describe("PR6 — source regressions", () => {
     const m43 = read("supabase/migrations/0043_guide_customer_no_show.sql");
     assert.doesNotMatch(m43, /weekly planning|report-ready|recording-ready|marketing notification/i);
     assert.doesNotMatch(m43, /stripe|webhook replay/i);
+  });
+});
+
+describe("PR6 — HTTP join vs no-show race gate", () => {
+  it("D. joinSession inspects { data, error } and withholds the token on RPC failure", () => {
+    const service = read("src/lib/session-service.ts");
+    assert.match(service, /joinMustWithholdToken/);
+    assert.match(service, /joinPresenceRpcName/);
+    assert.match(service, /finalize_http_session_join|joinPresenceRpcName\(\)/);
+    assert.match(service, /throw new SessionError\("not_joinable"\)/);
+    const joinBody = service.slice(service.indexOf("export async function joinSession"));
+    const returnIdx = joinBody.indexOf("return {");
+    const withholdIdx = joinBody.indexOf("joinMustWithholdToken");
+    assert.ok(withholdIdx >= 0 && returnIdx > withholdIdx, "token return is after the presence gate");
+    assert.doesNotMatch(joinBody.slice(0, returnIdx), /await service\.rpc\("record_session_presence"/);
+    assert.match(read("src/app/api/session/[bookingId]/join/route.ts"), /not_joinable: 409/);
+  });
+
+  it("D. supabase-js error object withholds the token; ok:true does not", () => {
+    assert.equal(joinPresenceRpcName(), "finalize_http_session_join");
+    assert.equal(joinMustWithholdToken({ error: { message: "This Study Hall is not joinable" } }), true);
+    assert.equal(joinMustWithholdToken({ data: null, error: { message: "not joinable" } }), true);
+    assert.equal(joinMustWithholdToken({ data: { ok: false } }), true);
+    assert.equal(joinMustWithholdToken({ data: {} }), true);
+    assert.equal(joinMustWithholdToken(null), true);
+    assert.equal(joinMustWithholdToken({ data: { ok: true, status: "confirmed" }, error: null }), false);
+  });
+
+  it("C. impossible outcome is no_show plus a returned student token", () => {
+    assert.equal(
+      joinMustWithholdToken({ error: { message: "This Study Hall is not joinable" }, data: null }),
+      true,
+    );
+    const sql = read("supabase/migrations/0043_guide_customer_no_show.sql");
+    assert.match(sql, /finalize_http_session_join/);
+    assert.match(sql, /This Study Hall is not joinable/);
+    assert.match(sql, /v_bk\.status is distinct from 'confirmed'/);
+    assert.match(sql, /from public\.bookings/);
+    assert.match(sql, /for update/);
+  });
+
+  it("E. webhook still uses silent record_session_presence, not HTTP finalize", () => {
+    const hook = read("src/app/api/daily/webhook/route.ts");
+    assert.match(hook, /record_session_presence/);
+    assert.doesNotMatch(hook, /finalize_http_session_join/);
+    const sql = read("supabase/migrations/0043_guide_customer_no_show.sql");
+    assert.match(sql, /if v_status is null or v_status not in \('pending', 'confirmed'\) then\s+return;/);
+    assert.match(sql, /Webhooks must keep using record_session_presence/);
+  });
+
+  it("F. Guide room is not torn down on no-show", () => {
+    const service = read("src/lib/session-service.ts");
+    const sql = read("supabase/migrations/0043_guide_customer_no_show.sql");
+    assert.doesNotMatch(service, /deleteRoom\(|kickFromRoom/);
+    assert.doesNotMatch(sql, /deleteRoom|kickFromRoom/);
+    assert.match(service, /unreturned token is inert/);
   });
 });
 
