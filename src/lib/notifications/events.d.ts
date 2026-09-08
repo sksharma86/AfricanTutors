@@ -11,5 +11,15 @@ declare module "@/lib/notifications/events.mjs" {
       removedGuide: string[];
       manager: string[];
     }>;
+    pr7_lifecycle?: Readonly<
+      Record<
+        string,
+        Readonly<{
+          parent: string[];
+          guide: string[];
+          manager: string[];
+        }>
+      >
+    >;
   }>;
 }

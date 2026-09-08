@@ -1,5 +1,6 @@
 import { formatChildNames, possessiveStudyHall } from "../household-children.mjs";
 import { t30DeadlineIso } from "../guide-attendance.mjs";
+import { bookingFundingLine } from "../notifications/funding.mjs";
 import { formatTime, tzAbbreviation } from "../timezone-format.mjs";
 
 /**
@@ -171,17 +172,11 @@ export function welcome(ctx) {
 export function bookingConfirmed(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   const url = sessionUrl(ctx.appUrl, ctx.bookingId);
-  const free = ctx.isFreeTrial;
+  const free = Boolean(ctx.isFreeTrial) || ctx.funding === "free_trial";
   const hall = studyHallPhrase(ctx);
   const hours =
     ctx.durationMinutes === 60 ? "1 hour" : ctx.durationMinutes === 120 ? "2 hours" : ctx.durationMinutes === 180 ? "3 hours" : `${ctx.durationMinutes || 60} minutes`;
-  const fundingLine = free
-    ? "Payment: free introductory session — no charge."
-    : ctx.funding === "package"
-      ? "Payment: covered by your prepaid Study Hall hours."
-      : ctx.funding === "credit"
-        ? "Payment: covered by your account credit."
-        : null;
+  const fundingLine = bookingFundingLine(free && !ctx.funding ? "free_trial" : ctx.funding);
   const lines = [
     free
       ? `${hall} (free 1-hour) is confirmed. No payment method was required.`

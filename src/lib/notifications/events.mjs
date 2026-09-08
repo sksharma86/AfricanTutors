@@ -1,6 +1,12 @@
 /**
- * Canonical Study Hall notification event types (PR8).
+ * Canonical Study Hall notification event types.
  * Used for documentation, tests, and future audit tagging.
+ *
+ * Historical files/comments may say "PR8" for this spine. Original product
+ * roadmap PR7 extends this catalog — do not rename historical migrations.
+ *
+ * PR7A: 365 / payment-failure / customer-no-show identifiers are catalog-only.
+ * They must not be wired to production sends until a later PR7 slice.
  */
 
 export const NOTIFICATION_EVENTS = Object.freeze({
@@ -32,6 +38,16 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
   GUIDE_ATTENDANCE_CRITICAL: "guide_attendance_critical",
   GUIDE_OPEN_COVERAGE: "guide_open_coverage",
+  /** PR7 later — catalog only in PR7A. Parent email. */
+  STUDY_HALL_365_STARTED: "study_hall_365_started",
+  STUDY_HALL_365_RENEWED: "study_hall_365_renewed",
+  STUDY_HALL_365_CANCELLATION_SCHEDULED: "study_hall_365_cancellation_scheduled",
+  STUDY_HALL_365_RESUMED: "study_hall_365_resumed",
+  STUDY_HALL_365_ENDED: "study_hall_365_ended",
+  /** PR7 later — parent email now in policy; parent SMS later. */
+  CUSTOMER_NO_SHOW_PARENT: "customer_no_show_parent",
+  /** PR7 later — Guide short email; never a management success email. */
+  CUSTOMER_NO_SHOW_GUIDE: "customer_no_show_guide",
 });
 
 export const CHANNEL_POLICY = Object.freeze({
@@ -59,6 +75,14 @@ export const CHANNEL_POLICY = Object.freeze({
     "guide_open_coverage",
     "coverage_cancellation",
     "coverage_failure_protection",
+    // PR7A catalog only — not wired to notify.ts / webhooks yet.
+    "study_hall_365_started",
+    "study_hall_365_renewed",
+    "study_hall_365_cancellation_scheduled",
+    "study_hall_365_resumed",
+    "study_hall_365_ended",
+    "customer_no_show_parent",
+    "customer_no_show_guide",
   ],
   /**
    * Optional / later Guide operational alerts. V1 does not require WhatsApp.
@@ -76,6 +100,9 @@ export const CHANNEL_POLICY = Object.freeze({
     "coverage_cancellation",
     "coverage_failure_protection",
     // Successful Guide reassignment must NEVER SMS the parent.
+    // PR7 later (not wired in PR7A): payment failure + customer no-show parent SMS.
+    "payment_failure",
+    "customer_no_show_parent",
   ],
   voice: ["call_parent_escalation"],
   /**
@@ -87,5 +114,19 @@ export const CHANNEL_POLICY = Object.freeze({
     newGuide: ["email"],
     removedGuide: ["email"],
     manager: [], // audit/log only; no routine alert
+  }),
+  /**
+   * Planned PR7 recipient matrix (identifiers only). Do not treat presence
+   * here as authorization to send. Management must not get no-show success.
+   */
+  pr7_lifecycle: Object.freeze({
+    study_hall_365_started: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
+    study_hall_365_renewed: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
+    study_hall_365_cancellation_scheduled: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
+    study_hall_365_resumed: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
+    study_hall_365_ended: Object.freeze({ parent: ["email"], guide: [], manager: [] }),
+    payment_failure: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
+    customer_no_show_parent: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
+    customer_no_show_guide: Object.freeze({ parent: [], guide: ["email"], manager: [] }),
   }),
 });

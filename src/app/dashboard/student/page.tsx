@@ -25,15 +25,6 @@ export default async function StudentDashboardPage() {
   }
   const supabase = await createSupabaseServerClient();
 
-  try {
-    const { notifyWelcome } = await import("@/lib/notify");
-    void notifyWelcome(user.id, user.displayName ?? user.email ?? null).catch(() => {
-      /* best-effort — never block dashboard */
-    });
-  } catch {
-    /* best-effort — never block dashboard */
-  }
-
   const data = await loadParentWorkspace(supabase!, user.id);
   const freeTrialAvailable = !accountFreeTrialUsed(data.bookings);
   const { next, upcoming } = parentStudyHallLists(data.bookings);

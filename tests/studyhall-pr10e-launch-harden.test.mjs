@@ -53,7 +53,8 @@ describe("PR10E — email confirmation + role routing (source)", () => {
   });
 
   it("signup sets emailRedirectTo via auth callback", () => {
-    assert.match(signup, /emailRedirectTo:\s*authCallbackUrl/);
+    const signupApi = read("src/app/api/auth/signup/route.ts");
+    assert.match(signupApi, /emailRedirectTo:\s*authCallbackUrl/);
     assert.match(signup, /\/dashboard\/applicant/);
     assert.match(resend, /emailRedirectTo:\s*authCallbackUrl/);
     assert.match(forgot, /\/auth\/callback\?next=/);
