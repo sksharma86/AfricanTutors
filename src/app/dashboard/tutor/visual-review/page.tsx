@@ -143,6 +143,7 @@ export default async function GuideHomeVisualReviewPage({
         nowMs={fixture.nowMs}
         currency={fixture.currency}
         profileStatus={fixture.profileStatus}
+        ladderOpen
       />
     </GuidePage>
   );

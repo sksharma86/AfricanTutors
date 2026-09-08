@@ -5,10 +5,19 @@ export function GuideGuidance({
   scheduledStart,
   scheduledEnd,
   nowMs,
+  ladderOpen = false,
 }: {
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
   nowMs?: number;
+  ladderOpen?: boolean;
 }) {
-  return <GuideOperatingMethod scheduledStart={scheduledStart} scheduledEnd={scheduledEnd} nowMs={nowMs} />;
+  return (
+    <GuideOperatingMethod
+      scheduledStart={scheduledStart}
+      scheduledEnd={scheduledEnd}
+      nowMs={nowMs}
+      ladderOpen={ladderOpen}
+    />
+  );
 }

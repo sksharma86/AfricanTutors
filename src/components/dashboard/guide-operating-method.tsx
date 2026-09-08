@@ -6,11 +6,13 @@ export function GuideOperatingMethod({
   scheduledEnd,
   nowMs,
   tone = "home",
+  ladderOpen = false,
 }: {
   scheduledStart?: string | null;
   scheduledEnd?: string | null;
   nowMs?: number;
   tone?: "home" | "session";
+  ladderOpen?: boolean;
 }) {
   const phase = guideMethodPhase(scheduledStart, scheduledEnd, nowMs ?? Date.now());
   const copy = guideMethodCopy();
@@ -42,7 +44,7 @@ export function GuideOperatingMethod({
           );
         })}
       </ul>
-      <details className="mt-3">
+      <details className="mt-3" open={ladderOpen || undefined}>
         <summary className={`cursor-pointer text-[12.5px] font-medium ${ink}`}>If they say there is no homework</summary>
         <p className={`mt-1.5 text-[12.5px] leading-5 ${muted}`}>{copy.stay}</p>
         <ol className="mt-2 space-y-2">

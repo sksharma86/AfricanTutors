@@ -48,13 +48,13 @@ export default async function SessionCameraVisualReviewPage({
         <div className="p-5 sm:p-6">
           {showMethod ? (
             <div className="mb-4 space-y-3">
-              <GuideOperatingMethod scheduledStart={methodStart} scheduledEnd={methodEnd} tone="session" />
+              <GuideOperatingMethod scheduledStart={methodStart} scheduledEnd={methodEnd} tone="session" ladderOpen />
               <GuideCustomerNoShowControl
                 bookingId="fixture-session"
                 status="confirmed"
                 scheduledStart={scene === "noshow" ? noshowStart : waitStart}
                 studentJoinedAt={null}
-                callParentEnabled={false}
+                callParentEnabled
                 includeCallParent
                 variant="session"
                 nowMs={Date.now()}
