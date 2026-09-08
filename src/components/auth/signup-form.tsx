@@ -8,23 +8,8 @@ import { AuthNotConfiguredNotice } from "@/components/auth/auth-not-configured-n
 import { ResendConfirmationForm } from "@/components/auth/resend-confirmation-form";
 import { Button } from "@/components/ui/button";
 import { ANALYTICS_EVENTS, track } from "@/lib/analytics";
-import { authCallbackUrl } from "@/lib/auth-redirect";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { RequestableRole } from "@/lib/roles";
-
-function friendlySignupError(message: string): string {
-  if (/already registered|already been registered|User already registered/i.test(message)) {
-    return "An account with that email already exists. Sign in, or reset your password.";
-  }
-  if (/password/i.test(message) && /weak|least|characters/i.test(message)) {
-    return "Choose a stronger password (at least 8 characters).";
-  }
-  if (/rate limit|too many/i.test(message)) {
-    return "Too many attempts. Please wait a minute and try again.";
-  }
-  return "We couldn’t create your account right now. Please try again.";
-}
 
 export function SignupForm({
   defaultRole = "student",
@@ -44,9 +29,6 @@ export function SignupForm({
     event.preventDefault();
     if (submittingRef.current) return;
 
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) return;
-
     submittingRef.current = true;
     setStatus("submitting");
     setErrorMessage(null);
@@ -57,29 +39,26 @@ export function SignupForm({
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
-    // `requested_role` is only a signal for onboarding. Actual tutor access
-    // is granted by an administrator, never by this signup form.
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: displayName, requested_role: role },
-        emailRedirectTo: authCallbackUrl(window.location.origin, "/dashboard"),
-      },
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ displayName, email, password, requestedRole: role }),
     });
+    const data = await res.json().catch(() => null);
 
-    if (error) {
+    if (!res.ok) {
       submittingRef.current = false;
       setStatus("error");
-      setErrorMessage(friendlySignupError(error.message));
+      setErrorMessage(typeof data?.error === "string" ? data.error : "We couldn’t create your account right now. Please try again.");
       return;
     }
 
     track(ANALYTICS_EVENTS.signupCompleted, { role });
 
-    if (data.session) {
-      // Applicants keep profiles.role=student until approval.
-      router.push(role === "tutor" ? "/dashboard/applicant" : "/dashboard/student");
+    if (data?.status === "authenticated") {
+      const fallback = role === "tutor" ? "/dashboard/applicant" : "/dashboard/student";
+      const next = typeof data.redirect === "string" ? data.redirect : fallback;
+      router.push(next);
       router.refresh();
       return;
     }

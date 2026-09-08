@@ -39,12 +39,13 @@ describe("Auth login reliability — source wiring", () => {
     assert.match(login, /sanitizeNextPath/);
   });
 
-  it("Parent Home does not await welcome email", () => {
+  it("Parent Home does not send welcome; signup does after successful parent creation", () => {
     const page = read("src/app/dashboard/student/page.tsx");
-    assert.match(page, /notifyWelcome/);
-    assert.match(page, /void notifyWelcome/);
+    assert.doesNotMatch(page, /notifyWelcome/);
     assert.match(page, /getGuideApplicantInfo/);
-    assert.doesNotMatch(page, /await notifyWelcome/);
+    const signup = read("src/app/api/auth/signup/route.ts");
+    assert.match(signup, /notifyWelcome/);
+    assert.match(signup, /parentWelcomeEligible/);
   });
 
   it("email transport cannot hang forever on Resend", () => {

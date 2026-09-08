@@ -4,9 +4,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import * as T from "@/lib/email/templates.mjs";
 import { sendEmail } from "@/lib/email/transport";
+import { isPrepaidFunding, resolveNotificationFunding } from "@/lib/notifications/funding.mjs";
 import { packageHoursLabel } from "@/lib/notifications/package-labels.mjs";
 import { reassignmentRecipients, reassignmentOutcome } from "@/lib/notifications/reassignment-policy.mjs";
-import { shouldSendReminder } from "@/lib/notifications/reminder-policy.mjs";
+import {
+  reminderEmailIdempotencyKey,
+  reminderStillValid,
+  shouldSendReminder,
+} from "@/lib/notifications/reminder-policy.mjs";
 import { attendanceNotifyKey, coverageRestorationLine, missedNotifyKey, protectNotifyKey, t30DeadlineIso } from "@/lib/guide-attendance.mjs";
 import { guideAttendanceWhatsApp, guideOpenCoverageWhatsApp } from "@/lib/notifications/whatsapp-copy.mjs";
 import { openCoverageEmailNotifyKey, openCoverageNotifyKey, openCoveragePath, openCoverageUrl } from "@/lib/open-coverage.mjs";
@@ -236,9 +241,8 @@ async function deliverGuideWhatsApp(opts: {
 async function resolveFunding(
   service: SupabaseClient,
   bookingId: string,
-  isFreeTrial: boolean | null | undefined,
+  booking: { is_free_trial?: boolean | null; funding_source?: string | null },
 ): Promise<string | null> {
-  if (isFreeTrial) return "free_trial";
   const { data: pay } = await service
     .from("payments")
     .select("stripe_paid_cents, credit_applied_cents, status, purpose")
@@ -248,19 +252,20 @@ async function resolveFunding(
     .order("fulfilled_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (!pay) return null;
-  const stripe = Number(pay.stripe_paid_cents) || 0;
-  const credit = Number(pay.credit_applied_cents) || 0;
-  if (stripe > 0) return "stripe";
-  if (credit > 0) return "credit";
-  return "package";
+  return resolveNotificationFunding({
+    isFreeTrial: booking.is_free_trial,
+    fundingSource: booking.funding_source,
+    stripePaidCents: pay?.stripe_paid_cents,
+    creditAppliedCents: pay?.credit_applied_cents,
+    hasPaymentRow: Boolean(pay),
+  });
 }
 
 async function loadBooking(service: SupabaseClient, bookingId: string) {
   const householdSelect =
-    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name, student_first_names";
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, funding_source, status, payment_status, tutor_display_name, student_first_name, student_first_names";
   const legacySelect =
-    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, status, payment_status, tutor_display_name, student_first_name";
+    "id, account_id, student_id, tutor_id, subject_name, other_subject_text, scheduled_start, scheduled_end, duration_minutes, is_free_trial, funding_source, status, payment_status, tutor_display_name, student_first_name";
   const first = await service.from("bookings").select(householdSelect).eq("id", bookingId).maybeSingle();
   const retry = first.data
     ? null
@@ -276,6 +281,7 @@ async function loadBooking(service: SupabaseClient, bookingId: string) {
     scheduled_end: string | null;
     duration_minutes: number | null;
     is_free_trial: boolean | null;
+    funding_source: string | null;
     status: string | null;
     payment_status: string | null;
     tutor_display_name: string | null;
@@ -325,7 +331,7 @@ export async function notifyBookingConfirmed(bookingId: string) {
     return { status: "skipped" };
   }
 
-  const funding = await resolveFunding(service, bookingId, b.is_free_trial);
+  const funding = await resolveFunding(service, bookingId, b);
 
   await deliver({
     key: `booking-confirmed:${bookingId}`,
@@ -367,8 +373,8 @@ export async function notifyBookingConfirmed(bookingId: string) {
     });
   }
 
-  // Prepaid balance alerts — only after package-funded bookings, once per booking.
-  if (funding === "package" && b.account_id) {
+  // Prepaid balance alerts — only after prepaid-funded bookings, once per booking.
+  if (isPrepaidFunding(funding) && b.account_id) {
     await maybeNotifyPackageBalanceAfterBooking(service, b.account_id, bookingId);
   }
 
@@ -654,6 +660,7 @@ export async function notifyTutorApproved(tutorId: string, name?: string | null)
   });
 }
 
+/** One welcome email per account. Invoked from POST /api/auth/signup after parent creation — never from Parent Home. */
 export async function notifyWelcome(accountId: string, name?: string | null) {
   await deliver({
     key: `welcome:${accountId}`,
@@ -692,14 +699,25 @@ export async function notifyReminder(bookingId: string, role: "customer" | "tuto
   }
   const service = getServiceSupabase();
   const b = await loadBooking(service, bookingId);
-  if (!b || !b.scheduled_start) return { status: "skipped" };
-  if (b.status !== "confirmed") return { status: "skipped" };
+  if (!b) return { status: "skipped" };
+  const assignedTutorId = role === "tutor" ? b.tutor_id ?? null : null;
+  if (!reminderStillValid(b, { role, tutorId: assignedTutorId })) {
+    return { status: "skipped" };
+  }
 
-  const accountId = role === "customer" ? b.account_id : b.tutor_id;
+  const accountId = role === "customer" ? b.account_id : assignedTutorId;
   if (!accountId) return { status: "skipped" };
 
+  const key = reminderEmailIdempotencyKey({
+    kind,
+    bookingId,
+    role,
+    tutorId: assignedTutorId,
+  });
+  if (!key) return { status: "skipped" };
+
   const emailResult = await deliver({
-    key: `reminder-${kind}:${bookingId}:${role}`,
+    key,
     type: `reminder_${kind}`,
     accountId,
     bookingId,

@@ -47,11 +47,14 @@ describe("Admin timezone display", () => {
 });
 
 describe("Welcome + balance notification wiring", () => {
-  it("student dashboard wires notifyWelcome; applicants redirected first", () => {
+  it("student dashboard does not trigger welcome; applicants redirected first", () => {
     const page = read("src/app/dashboard/student/page.tsx");
     assert.match(page, /getGuideApplicantInfo/);
     assert.match(page, /redirect\("\/dashboard\/applicant"\)/);
-    assert.match(page, /notifyWelcome/);
+    assert.doesNotMatch(page, /notifyWelcome/);
+    const signup = read("src/app/api/auth/signup/route.ts");
+    assert.match(signup, /notifyWelcome/);
+    assert.match(signup, /parentWelcomeEligible/);
   });
 
   it("welcome + balance templates use Study Hall (at home); no Study Hall at Home", () => {

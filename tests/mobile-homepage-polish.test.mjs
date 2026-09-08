@@ -97,8 +97,9 @@ describe("Homepage long-term value + product accuracy", () => {
     assert.match(page, /Create your parent account/);
     assert.match(signup, /Full name/);
     assert.match(signup, /name="displayName"/);
-    assert.match(signup, /requested_role: role/);
+    assert.match(signup, /requestedRole: role/);
     assert.match(signup, /\/guides\/apply/);
+    assert.match(read("src/app/api/auth/signup/route.ts"), /requested_role: requestedRole/);
     assert.match(apply, /defaultRole="tutor"/);
     assert.match(apply, /Submit Application/);
     assert.doesNotMatch(signup, /Display name|platform users|I'm a parent|Become a Guide/);

@@ -196,13 +196,13 @@ describe("Study Hall PR8 — email templates", () => {
       durationMinutes: 60,
       studentName: "Maya",
       tutorName: "Amina",
-      funding: "package",
+      funding: "prepaid",
       appUrl: APP,
       bookingId: BID,
     });
     assert.match(prepaid.text, /Maya/);
     assert.match(prepaid.text, /1 hour/);
-    assert.match(prepaid.text, /prepaid Study Hall hours/i);
+    assert.match(prepaid.text, /used a prepaid Study Hall/);
     assert.match(prepaid.text, /5 minutes before/i);
     assertNoLeaks(prepaid);
 
@@ -314,6 +314,8 @@ describe("Study Hall PR8 — architecture source contracts", () => {
     assert.match(notify, /reminder-1h-sms:/);
     assert.match(notify, /claim_email_delivery/);
     assert.match(notify, /shouldSendReminder/);
+    assert.match(notify, /reminderEmailIdempotencyKey/);
+    assert.match(notify, /reminderStillValid/);
     assert.match(notify, /awaiting_payment/);
     assert.match(notify, /notifyCallParentFailure/);
     assert.match(notify, /notifyRecordingFailure/);
@@ -393,6 +395,9 @@ describe("Study Hall PR8 — architecture source contracts", () => {
     assert.equal(NOTIFICATION_EVENTS.SESSION_REMINDER_1H, "session_reminder_1h");
     assert.equal(NOTIFICATION_EVENTS.PACKAGE_PURCHASED, "package_purchased");
     assert.equal(NOTIFICATION_EVENTS.GUIDE_REASSIGNMENT_FAILED, "guide_reassignment_failed");
+    assert.ok(CHANNEL_POLICY.sms.includes("session_reminder_1h"));
+    assert.ok(CHANNEL_POLICY.email.includes("study_hall_365_started"));
+    assert.ok(CHANNEL_POLICY.pr7_lifecycle);
     assert.ok(CHANNEL_POLICY.sms.includes("session_reminder_1h"));
     assert.ok(CHANNEL_POLICY.voice.includes("call_parent_escalation"));
     assert.ok(!CHANNEL_POLICY.sms.includes("package_purchased"));
