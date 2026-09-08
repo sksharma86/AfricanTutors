@@ -17,7 +17,7 @@ import {
   reminderStillValid,
   shouldSendReminder,
 } from "../src/lib/notifications/reminder-policy.mjs";
-import { hasSupabaseEnv } from "./helpers.mjs";
+import { hasSupabaseEnv, isCanonicalDemoProject } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const APP = "https://app.studyhall.test";
@@ -250,8 +250,9 @@ describe("PR7A — reminder policy and privacy regressions", () => {
 
 describe("PR7A — Guide reminder claim uniqueness (DB, when configured)", () => {
   it("Guide A and Guide B claims are independent; same Guide does not duplicate", async (t) => {
-    if (!hasSupabaseEnv) {
-      t.skip("Supabase env not configured");
+    const demoLocked = isCanonicalDemoProject() && process.env.ALLOW_DEMO_DB_WRITES !== "1";
+    if (!hasSupabaseEnv || demoLocked) {
+      t.skip("Supabase env not configured for live writes");
       return;
     }
     const { adminClient, createUser, cleanupAll } = await import("./helpers.mjs");
