@@ -91,6 +91,7 @@ export function parentHomeVisualFixture(now = new Date(), { scene = null } = {})
       minutes: 0,
       creditCents: 0,
       preferFreeSession: true,
+      membership: null,
     };
   }
 
@@ -123,6 +124,7 @@ export function parentHomeVisualFixture(now = new Date(), { scene = null } = {})
       minutes: 660,
       creditCents: 0,
       preferFreeSession: false,
+      membership: null,
     };
   }
 
@@ -155,6 +157,45 @@ export function parentHomeVisualFixture(now = new Date(), { scene = null } = {})
       minutes: 720,
       creditCents: 0,
       preferFreeSession: false,
+      membership: null,
+    };
+  }
+
+  if (scene === "member-365") {
+    return {
+      firstName: "Priya",
+      next,
+      last: recent,
+      lastReport: {
+        id: "fixture-report",
+        booking_id: recent.id,
+        submitted_at: recent.scheduled_end,
+        focus_rating: "good_focus",
+        work_summary: "Homework stayed on track.",
+        redirection_level: "a_little",
+        guide_note: null,
+      },
+      lastRecording: {
+        id: "fixture-rec",
+        booking_id: recent.id,
+        status: "completed",
+        retention_until: at(now, 60),
+        deleted_at: null,
+        daily_recording_id: "fixture",
+        completed_at: recent.scheduled_end,
+      },
+      later: [laterA, laterB],
+      bookings: [next, laterA, laterB, recent, ...completed],
+      householdTz: "America/Chicago",
+      minutes: 0,
+      creditCents: 0,
+      preferFreeSession: false,
+      membership: {
+        entitled: true,
+        cancelAtPeriodEnd: false,
+        periodEnd: at(now, 20),
+        customerStatus: "active",
+      },
     };
   }
 
@@ -186,5 +227,6 @@ export function parentHomeVisualFixture(now = new Date(), { scene = null } = {})
     minutes: 660,
     creditCents: 0,
     preferFreeSession: false,
+    membership: null,
   };
 }

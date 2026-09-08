@@ -64,11 +64,11 @@ export function ParentStudyHalls({ bookings }: { bookings: ParentBooking[] }) {
             )}
             {view === "upcoming" ? (
               <div className="mt-5 flex flex-wrap gap-3">
-                <LinkButton href="/dashboard/student/book" variant="primary" size="md">
-                  Book a Study Hall
-                </LinkButton>
-                <LinkButton href="/dashboard/student/plan-week" variant="outline" size="md">
+                <LinkButton href="/dashboard/student/plan-week" variant="primary" size="md">
                   Plan my week
+                </LinkButton>
+                <LinkButton href="/dashboard/student/book" variant="outline" size="md">
+                  Book one Study Hall
                 </LinkButton>
               </div>
             ) : null}

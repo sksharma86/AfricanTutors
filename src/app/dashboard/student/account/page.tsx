@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ParentCommunicationSafety } from "@/components/dashboard/parent-communication-safety";
@@ -37,6 +38,13 @@ export default async function ParentAccountPage() {
             <dt className="text-[var(--pp-muted)]">Email</dt>
             <dd className="mt-0.5 font-medium text-[var(--pp-ink)]">{user.email ?? "—"}</dd>
           </div>
+          <div>
+            <dt className="text-[var(--pp-muted)]">Household timezone</dt>
+            <dd className="mt-0.5 font-medium text-[var(--pp-ink)]">{data.householdTz}</dd>
+            <p className="mt-1 text-[13px] text-[var(--pp-muted)]">
+              Your Study Hall week runs Monday–Sunday in this timezone.
+            </p>
+          </div>
         </dl>
       </ParentSurface>
 
@@ -58,6 +66,18 @@ export default async function ParentAccountPage() {
             ))}
           </ul>
         )}
+      </ParentSurface>
+
+      <ParentSurface className="mt-5">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Billing</p>
+        <p className="mt-2 text-sm text-[var(--pp-muted)]">
+          Membership and prepaid Study Halls are managed on Hours.
+        </p>
+        <p className="mt-2">
+          <Link href="/dashboard/student/packages" className="text-sm font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+            Hours →
+          </Link>
+        </p>
       </ParentSurface>
 
       <section className="mt-5">

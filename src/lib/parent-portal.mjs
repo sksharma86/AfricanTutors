@@ -8,11 +8,11 @@ import { customerJoinState } from "./session-window.mjs";
 import { customerBookingStatus } from "./status-labels.mjs";
 
 export const PARENT_PORTAL_NAV = [
-  { label: "Home", href: "/dashboard/student" },
-  { label: "Study Halls", href: "/dashboard/student/study-halls" },
-  { label: "Reports & Recordings", href: "/dashboard/student/reports" },
-  { label: "Hours", href: "/dashboard/student/packages" },
-  { label: "Account", href: "/dashboard/student/account" },
+  { label: "Home", shortLabel: "Home", href: "/dashboard/student" },
+  { label: "Study Halls", shortLabel: "Study Halls", href: "/dashboard/student/study-halls" },
+  { label: "Reports & Recordings", shortLabel: "Reports", href: "/dashboard/student/reports" },
+  { label: "Hours", shortLabel: "Hours", href: "/dashboard/student/packages" },
+  { label: "Account", shortLabel: "Account", href: "/dashboard/student/account" },
 ];
 
 export function childFirstName(fullName, fallback = "Your child") {

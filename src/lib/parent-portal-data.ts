@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isRecordingPlayable } from "@/lib/recording-retention.mjs";
+import { parseParentMembership, type ParentMembership } from "@/lib/parent-week.mjs";
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   ParentBooking,
@@ -41,6 +42,8 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
     phoneRes,
     escalationsRes,
     paymentsRes,
+    membershipRes,
+    tzRes,
   ] = await Promise.all([
     bookingsQuery,
     supabase.from("students").select("id, full_name, grade_level").order("created_at").limit(50),
@@ -63,6 +66,8 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
       .order("created_at", { ascending: false })
       .limit(20)
       .then((r) => r, () => ({ data: null, error: null })),
+    supabase.rpc("get_study_hall_365_membership", { p_account: uid }).then((r) => r, () => ({ data: null, error: null })),
+    supabase.rpc("resolve_account_timezone", { p_account: uid }).then((r) => r, () => ({ data: null, error: null })),
   ]);
 
   const bookings = (bookingsRes.data ?? []) as unknown as ParentBooking[];
@@ -133,6 +138,11 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
 
   const balances = (balancesRes.data ?? {}) as { package_minutes?: number; dollar_credit_cents?: number };
   const phone = (phoneRes.data as { phone_e164?: string | null; display_name?: string | null } | null) ?? null;
+  const membership = parseParentMembership(membershipRes && "data" in membershipRes ? membershipRes.data : null);
+  const householdTz =
+    (typeof tzRes?.data === "string" && tzRes.data.trim()) ||
+    bookings.find((booking) => booking.students?.timezone)?.students?.timezone ||
+    "America/Chicago";
 
   return {
     bookings,
@@ -141,6 +151,8 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
     creditCents: balances.dollar_credit_cents ?? 0,
     parentPhone: phone?.phone_e164 ?? null,
     parentName: phone?.display_name ?? null,
+    membership: membership as ParentMembership,
+    householdTz,
     recordingByBooking,
     reportByBooking,
     issueByBooking,

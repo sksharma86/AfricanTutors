@@ -13,6 +13,7 @@ export function BalanceCards({
   preferFreeSession = false,
   compact = false,
   slim = false,
+  showBuyHours,
 }: {
   minutes: number;
   creditCents: number;
@@ -20,15 +21,17 @@ export function BalanceCards({
   preferFreeSession?: boolean;
   compact?: boolean;
   slim?: boolean;
+  showBuyHours?: boolean;
 }) {
   const hours = minutes > 0 ? formatPrepaidHoursLabel(minutes) : "0 hours";
   const wholeHours = Math.max(0, Math.floor((Number(minutes) || 0) / 60));
   const remainder = Math.max(0, Math.round(Number(minutes) || 0) % 60);
-  const buy = preferFreeSession && minutes === 0 ? null : (
+  const allowBuy = showBuyHours ?? !(preferFreeSession && minutes === 0);
+  const buy = allowBuy ? (
     <PortalTextLink href="/dashboard/student/packages#prepaid" className="shrink-0 text-[13px]">
       Buy hours &amp; save →
     </PortalTextLink>
-  );
+  ) : null;
 
   if (slim) {
     return (
@@ -81,15 +84,15 @@ export function BalanceCards({
             {hours} remaining
           </span>
         </p>
-        {preferFreeSession && minutes === 0 ? (
-          <p className="mt-3 text-sm text-[var(--pp-muted)]">
-            Start with your free 60-minute Study Hall — no card needed. Prepaid packages are optional later.
-          </p>
-        ) : (
+        {allowBuy ? (
           <p className="mt-3">
             <PortalTextLink href="/dashboard/student/packages#prepaid">Buy hours &amp; save</PortalTextLink>
           </p>
-        )}
+        ) : preferFreeSession && minutes === 0 ? (
+          <p className="mt-3 text-sm text-[var(--pp-muted)]">
+            Start with your free 60-minute Study Hall — no card needed. Prepaid packages are optional later.
+          </p>
+        ) : null}
         <p className="mt-2 text-xs text-[#8a8376]">Prepaid hours never expire.</p>
       </div>
       {creditCents > 0 ? (

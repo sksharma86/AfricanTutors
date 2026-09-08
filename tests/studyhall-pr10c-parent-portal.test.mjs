@@ -28,10 +28,10 @@ describe("PR10C — parent portal usability (source)", () => {
     assert.doesNotMatch(helpers, /label:\s*"Dashboard"/);
   });
 
-  it("dashboard hierarchy emphasizes Next Study Hall and Book CTA", () => {
+  it("dashboard hierarchy emphasizes Next Study Hall and week CTAs", () => {
     assert.match(dash, /ParentHomeBoard|ParentNextStudyHall/);
     assert.match(next, /Next Study Hall/);
-    assert.match(next, /Book a Study Hall/);
+    assert.match(next, /actions\.primary/);
     assert.match(balance, /Prepaid Hours/);
     assert.match(helpers, /Ready to join 5 minutes before start/);
     assert.doesNotMatch(next, /Join opens 5 minutes/);
@@ -42,8 +42,10 @@ describe("PR10C — parent portal usability (source)", () => {
 
   it("free session offer only renders when eligible", () => {
     assert.match(dash, /freeTrialAvailable/);
-    assert.match(board, /Your first Study Hall is on us/);
-    assert.match(board, /Book free session/);
+    const logic = read("src/lib/parent-week.mjs");
+    assert.match(logic, /Your first Study Hall is on us/);
+    assert.match(logic, /Book free session/);
+    assert.match(board, /preferFreeSession/);
   });
 
   it("Prepaid Hours + Buy hours & save deep-links to prepaid packages", () => {

@@ -12,6 +12,7 @@ import { requireRole } from "@/lib/auth";
 import { formatMoneyCents } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPaymentPurposeLabel, parentPaymentStatusLabel } from "@/lib/parent-portal.mjs";
+import { parseParentMembership } from "@/lib/parent-week.mjs";
 import { customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -64,33 +65,58 @@ export default async function PackagesPage() {
     created_at: string;
   }[];
   const offerPackages = customerFacingPrepaidPackages((packages ?? []) as PackageRow[]);
-  const membershipPayload = membershipRes && "data" in membershipRes ? membershipRes.data : null;
-  const mem =
-    membershipPayload && typeof membershipPayload === "object" && "membership" in membershipPayload
-      ? (membershipPayload as { membership: Record<string, unknown> | null }).membership
-      : membershipPayload && typeof membershipPayload === "object" && "entitled" in (membershipPayload as object)
-        ? (membershipPayload as Record<string, unknown>)
-        : null;
-  const membership = mem
+  const membershipParsed = parseParentMembership(membershipRes && "data" in membershipRes ? membershipRes.data : null);
+  const entitled365 = Boolean(membershipParsed?.entitled);
+  const membership = membershipParsed
     ? {
-        status: String(mem.customer_status ?? (mem.entitled ? "active" : "inactive")),
-        entitled: Boolean(mem.entitled),
-        cancelAtPeriodEnd: Boolean(mem.cancel_at_period_end),
-        periodEnd: String(mem.current_period_end ?? ""),
+        status: membershipParsed.customerStatus,
+        entitled: membershipParsed.entitled,
+        cancelAtPeriodEnd: membershipParsed.cancelAtPeriodEnd,
+        periodEnd: membershipParsed.periodEnd ?? "",
       }
     : null;
 
   return (
     <ParentPage wide>
       <h1 className="font-display text-3xl font-semibold tracking-[-0.035em] text-[var(--pp-ink)]">Hours</h1>
-      <p className="mt-2 text-sm text-[var(--pp-muted)]">Pricing &amp; Study Hall options. Hours never expire.</p>
+      <p className="mt-2 text-sm text-[var(--pp-muted)]">
+        {entitled365
+          ? "Your household uses Study Hall 365 for one Study Hall each day. Prepaid hours are optional for an extra same-day session."
+          : "How your household funds Study Hall. Hours never expire."}
+      </p>
 
-      <ParentSurface className="mt-8">
-        <h2 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Available hours</h2>
-        <div className="mt-3">
-          <BalanceCards minutes={minutes} creditCents={creditCents} />
+      {entitled365 ? (
+        <ParentSurface className="mt-8">
+          <h2 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Study Hall 365</h2>
+          <p className="mt-2 text-sm font-medium text-[var(--pp-ink)]">Active · one Study Hall per day</p>
+          {membership?.cancelAtPeriodEnd && membership.periodEnd ? (
+            <p className="mt-1 text-sm text-[var(--pp-muted)]">
+              Access continues through the paid period.
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-[var(--pp-muted)]">
+              Daily membership covers your regular Study Hall. You do not need prepaid hours for that.
+            </p>
+          )}
+        </ParentSurface>
+      ) : (
+        <ParentSurface className="mt-8">
+          <h2 className="text-[11px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Available hours</h2>
+          <div className="mt-3">
+            <BalanceCards minutes={minutes} creditCents={creditCents} />
+          </div>
+        </ParentSurface>
+      )}
+
+      <div id="study-hall-365" className={`pp-commerce scroll-mt-24 ${entitled365 ? "mt-8" : "mt-10"}`}>
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Study Hall 365</h2>
+        <p className="mt-1 text-sm text-[var(--pp-muted)]">
+          $149/month. One Study Hall each local calendar day. Cancel anytime — access continues through the paid period.
+        </p>
+        <div className="mt-4 max-w-md">
+          <StudyHall365Card membership={membership} />
         </div>
-      </ParentSurface>
+      </div>
 
       <div className="pp-commerce mt-10">
         <p className="mb-3 text-sm text-[var(--pp-muted)]">Pay as you go · $12 for one 60-minute Study Hall</p>
@@ -98,22 +124,25 @@ export default async function PackagesPage() {
       </div>
 
       <div id="prepaid" className="pp-commerce mt-10 scroll-mt-24">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Save with prepaid hours</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">
+          {entitled365 ? "Extra same-day Study Halls" : "Save with prepaid hours"}
+        </h2>
         <p className="mt-1 text-sm text-[var(--pp-muted)]">
-          10 Study Halls / $100 · $10 each. Purchased Study Halls never expire.
+          {entitled365
+            ? "10 Study Halls / $100 · $10 each. Useful if you want a second Study Hall on the same day. Purchased Study Halls never expire."
+            : "10 Study Halls / $100 · $10 each. Purchased Study Halls never expire."}
         </p>
+        {entitled365 && minutes === 0 ? (
+          <p className="mt-3 text-sm text-[var(--pp-muted)]">
+            No prepaid Study Halls on file — that’s expected for ordinary daily membership use.
+          </p>
+        ) : entitled365 ? (
+          <div className="mt-4">
+            <BalanceCards minutes={minutes} creditCents={creditCents} showBuyHours={false} />
+          </div>
+        ) : null}
         <div className="mt-4">
           <PackageStore packages={offerPackages} creditCents={creditCents} />
-        </div>
-      </div>
-
-      <div id="study-hall-365" className="pp-commerce mt-10 scroll-mt-24">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--pp-ink)]">Study Hall 365</h2>
-        <p className="mt-1 text-sm text-[var(--pp-muted)]">
-          $149/month. One Study Hall each local calendar day. Cancel anytime — access continues through the paid period.
-        </p>
-        <div className="mt-4 max-w-md">
-          <StudyHall365Card membership={membership} />
         </div>
       </div>
 
@@ -135,7 +164,10 @@ export default async function PackagesPage() {
         </section>
       ) : null}
 
-      <p className="mt-8">
+      <p className="mt-8 flex flex-wrap gap-3">
+        <LinkButton href="/dashboard/student/plan-week" variant="primary" size="sm">
+          Plan my week
+        </LinkButton>
         <LinkButton href="/dashboard/student/book" variant="outline" size="sm">
           Book a Study Hall
         </LinkButton>

@@ -1,15 +1,13 @@
-import Link from "next/link";
-
-import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { ParentGreeting } from "@/components/dashboard/parent-greeting";
-import { ParentHabitCard } from "@/components/dashboard/parent-habit";
+import { ParentHouseholdStatus } from "@/components/dashboard/parent-household-status";
 import { ParentNextStudyHall } from "@/components/dashboard/parent-next-study-hall";
 import { ParentRecentActivity } from "@/components/dashboard/parent-recent-activity";
-import { ParentUpcomingList } from "@/components/dashboard/parent-upcoming-list";
+import { ParentStudyHallWeek } from "@/components/dashboard/parent-study-hall-week";
+import { parentHomeCtas, type ParentMembership } from "@/lib/parent-week.mjs";
 import type { ParentBooking, ParentRecording, ParentReport } from "@/lib/parent-portal-types";
 
 /**
- * Stable Parent Home composition. Missing data changes content, not the desktop grid.
+ * Parent Home: Your Study Hall Week + next action. Not a finance dashboard.
  */
 export function ParentHomeBoard({
   firstName,
@@ -17,77 +15,73 @@ export function ParentHomeBoard({
   last,
   lastReport,
   lastRecording,
-  later,
+  later: _later,
   bookings,
   householdTz,
   minutes,
   creditCents,
   preferFreeSession,
   showPhoneNudge = false,
+  membership = null,
+  nowMs,
 }: {
   firstName: string;
   next: ParentBooking | null;
   last: ParentBooking | null;
   lastReport: ParentReport | null;
   lastRecording: ParentRecording | null;
-  later: ParentBooking[];
+  later?: ParentBooking[];
   bookings: ParentBooking[];
   householdTz: string;
   minutes: number;
   creditCents: number;
   preferFreeSession: boolean;
   showPhoneNudge?: boolean;
+  membership?: ParentMembership;
+  nowMs?: number;
 }) {
-  const hasRecent = Boolean(last);
+  void _later;
+  const entitled365 = Boolean(membership?.entitled);
+  const ctas = parentHomeCtas({ entitled365, freeTrialAvailable: preferFreeSession });
 
   return (
     <div className="pp-home">
       <ParentGreeting firstName={firstName} />
 
-      <div className={`pp-home-grid${hasRecent ? "" : " is-empty"}`}>
+      <div className="pp-home-grid">
         <div className="pp-home-hero">
-          <ParentNextStudyHall next={next} />
+          <ParentNextStudyHall next={next} ctas={ctas} />
         </div>
-        <div className="pp-home-secondary">
-          {hasRecent ? (
+        <div className="pp-home-week">
+          <ParentStudyHallWeek bookings={bookings} timeZone={householdTz} nowMs={nowMs} ctas={ctas} />
+        </div>
+        <div className="pp-home-status">
+          <ParentHouseholdStatus
+            membership={membership}
+            minutes={minutes}
+            creditCents={creditCents}
+            freeTrialAvailable={preferFreeSession}
+            timeZone={householdTz}
+          />
+        </div>
+        <div className="pp-home-recent">
+          {last ? (
             <ParentRecentActivity booking={last} report={lastReport} recording={lastRecording} />
           ) : (
-            <ParentHabitCard bookings={bookings} timeZone={householdTz} />
-          )}
-        </div>
-        <div className="pp-home-upcoming">
-          <ParentUpcomingList bookings={later} showEmpty hasNext={Boolean(next)} />
-        </div>
-        <div className="pp-home-utility">
-          {hasRecent ? (
-            <ParentHabitCard bookings={bookings} timeZone={householdTz} />
-          ) : (
-            <BalanceCards minutes={minutes} creditCents={creditCents} preferFreeSession={preferFreeSession} slim />
+            <p className="px-1 text-[13px] leading-5 text-[var(--pp-muted)]">
+              Reports appear after a completed Study Hall.
+            </p>
           )}
         </div>
       </div>
 
-      {hasRecent ? (
-        <BalanceCards minutes={minutes} creditCents={creditCents} preferFreeSession={preferFreeSession} slim />
-      ) : null}
-
-      {preferFreeSession ? (
-        <p className="pp-home-note">
-          Your first Study Hall is on us — 60 minutes free, no credit card required.{" "}
-          <Link href="/dashboard/student/book" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
-            Book free session
-          </Link>
-          <span className="mt-0.5 block">After your free session, you can book pay-as-you-go or save with prepaid hours.</span>
-        </p>
-      ) : null}
-
       {showPhoneNudge ? (
         <p className="pp-home-note">
           Add a number in{" "}
-          <Link href="/dashboard/student/account" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
+          <a href="/dashboard/student/account" className="font-medium text-[var(--pp-ink)] underline-offset-4 hover:underline">
             Account
-          </Link>
-          .
+          </a>{" "}
+          so we can reach you during Study Hall if needed.
         </p>
       ) : null}
     </div>

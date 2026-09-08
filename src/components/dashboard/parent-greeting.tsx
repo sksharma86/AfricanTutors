@@ -47,7 +47,7 @@ export function ParentGreeting({ firstName }: { firstName: string }) {
         </span>
       </h1>
       <p className="mt-1 max-w-lg text-[13px] leading-5 text-[var(--pp-muted)]">
-        We’re here to help your kids stay focused and make progress.
+        Here’s what’s happening with Study Hall this week.
       </p>
     </header>
   );
