@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { STUDY_HALL_365_MONTHLY_USD } from "@/lib/study-hall-365/catalog.mjs";
+import { studyHall365HoursCtas } from "@/lib/study-hall-365/hours-ctas.mjs";
 
 export type StudyHall365Membership = {
   status: string;
@@ -21,7 +22,13 @@ function periodLabel(iso: string) {
   }
 }
 
-export function StudyHall365Card({ membership }: { membership: StudyHall365Membership }) {
+export function StudyHall365Card({
+  membership,
+  openMembership,
+}: {
+  membership: StudyHall365Membership;
+  openMembership: boolean | null;
+}) {
   const [busy, setBusy] = useState<"join" | "portal" | "cancel" | "resume" | null>(null);
   const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +107,12 @@ export function StudyHall365Card({ membership }: { membership: StudyHall365Membe
     }
   }
 
-  const active = Boolean(membership?.entitled);
+  const ctas = studyHall365HoursCtas({
+    entitled: Boolean(membership?.entitled),
+    openMembership,
+    hasMembership: Boolean(membership),
+    cancelAtPeriodEnd: Boolean(membership?.cancelAtPeriodEnd),
+  });
 
   return (
     <Card className="flex flex-col p-6">
@@ -109,37 +121,46 @@ export function StudyHall365Card({ membership }: { membership: StudyHall365Membe
       <p className="mt-1 text-sm text-ink-500">
         One 60-minute Study Hall each local calendar day while the membership is active. Unused days do not roll over.
       </p>
-      {active ? (
+      {ctas.kind === "entitled" ? (
         <p className="mt-3 text-sm text-ink-600">
           {membership?.cancelAtPeriodEnd
             ? `Cancellation scheduled. Access continues through ${periodLabel(membership.periodEnd)}.`
             : `Membership is active through ${periodLabel(membership!.periodEnd)}.`}
         </p>
       ) : null}
+      {ctas.showAttentionCopy ? (
+        <div className="mt-3 rounded-lg border border-ink-100 bg-ink-50 p-3 text-sm text-ink-700">
+          <p className="font-medium">{ctas.attentionTitle}</p>
+          <p className="mt-1 text-ink-600">{ctas.attentionBody}</p>
+        </div>
+      ) : null}
+      {ctas.unknownStatus && ctas.unknownMessage ? (
+        <div className="mt-3 rounded-lg border border-ink-100 bg-ink-50 p-3 text-sm text-ink-700">{ctas.unknownMessage}</div>
+      ) : null}
       {error ? (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       ) : null}
       <div className="mt-auto flex flex-col gap-2 pt-5">
-        {active ? (
-          <>
-            <Button onClick={portal} disabled={busy !== null} variant="outline" className="w-full">
-              {busy === "portal" ? "Opening…" : "Manage billing"}
-            </Button>
-            {membership?.cancelAtPeriodEnd ? (
-              <Button onClick={() => setCancel("resume")} disabled={busy !== null} variant="outline" className="w-full">
-                {busy === "resume" ? "Updating…" : "Keep membership"}
-              </Button>
-            ) : (
-              <Button onClick={() => setCancel("cancel")} disabled={busy !== null} variant="outline" className="w-full">
-                {busy === "cancel" ? "Updating…" : "Cancel at period end"}
-              </Button>
-            )}
-          </>
-        ) : (
+        {ctas.showManageBilling ? (
+          <Button onClick={portal} disabled={busy !== null} variant="outline" className="w-full">
+            {busy === "portal" ? "Opening…" : "Manage billing"}
+          </Button>
+        ) : null}
+        {ctas.showKeepMembership ? (
+          <Button onClick={() => setCancel("resume")} disabled={busy !== null} variant="outline" className="w-full">
+            {busy === "resume" ? "Updating…" : "Keep membership"}
+          </Button>
+        ) : null}
+        {ctas.showCancelAtPeriodEnd ? (
+          <Button onClick={() => setCancel("cancel")} disabled={busy !== null} variant="outline" className="w-full">
+            {busy === "cancel" ? "Updating…" : "Cancel at period end"}
+          </Button>
+        ) : null}
+        {ctas.showJoin ? (
           <Button onClick={join} disabled={busy !== null} variant="secondary" className="w-full">
             {busy === "join" ? "Starting…" : "Join Study Hall 365"}
           </Button>
-        )}
+        ) : null}
       </div>
     </Card>
   );

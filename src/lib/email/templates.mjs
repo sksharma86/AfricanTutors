@@ -624,6 +624,10 @@ function planWeekHref(appUrl) {
   return absoluteAppHref(appUrl, "/dashboard/student/plan-week");
 }
 
+function hoursHref(appUrl) {
+  return absoluteAppHref(appUrl, "/dashboard/student/packages");
+}
+
 /** Parent: first successful Study Hall 365 membership. */
 export function studyHall365Started(ctx) {
   const portal = parentPortalHref(ctx.appUrl);
@@ -689,6 +693,31 @@ export function studyHall365Resumed(ctx) {
     subject: "Study Hall 365 will continue",
     html: layout("Membership continues", lines.map(p).join(""), portal ? { href: portal, label: "Open Parent Portal" } : null),
     text: textJoin(lines),
+  };
+}
+
+/**
+ * Parent: Study Hall 365 payment could not be completed (past_due / unpaid).
+ * Not a membership-ended notice. CTA is Hours, where billing portal sessions
+ * are created dynamically — never a hardcoded Stripe Customer Portal URL.
+ */
+export function studyHall365PaymentFailure(ctx) {
+  const hours = hoursHref(ctx.appUrl);
+  const lines = [
+    "We couldn't complete the latest Study Hall 365 payment.",
+    "Your billing information needs attention. You can update it from Hours in your Parent Portal.",
+    "Study Hall 365 access is currently unavailable until billing is resolved.",
+    "Prepaid Study Hall hours and account credit on the household, if any, are unchanged.",
+    "This is a billing issue, not a membership cancellation.",
+  ];
+  return {
+    subject: "Payment needed for Study Hall 365",
+    html: layout(
+      "Payment needed",
+      lines.map(p).join(""),
+      hours ? { href: hours, label: "Update billing" } : null,
+    ),
+    text: textJoin([...lines, "", hours || ""]),
   };
 }
 

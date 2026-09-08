@@ -149,4 +149,5 @@ export function studyHall365CancellationScheduled(ctx: {
   appUrl?: string | null;
 }): RenderedEmail;
 export function studyHall365Resumed(ctx: { appUrl?: string | null }): RenderedEmail;
+export function studyHall365PaymentFailure(ctx: { appUrl?: string | null }): RenderedEmail;
 export function studyHall365Ended(ctx: { appUrl?: string | null }): RenderedEmail;

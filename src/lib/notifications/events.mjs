@@ -6,7 +6,8 @@
  * roadmap PR7 extends this catalog — do not rename historical migrations.
  *
  * PR7B wires Study Hall 365 parent-email lifecycle after membership upsert.
- * payment-failure / customer-no-show identifiers stay catalog-only until later slices.
+ * PR7C wires payment_failure parent email after 365 invoice sync (email only).
+ * customer-no-show identifiers stay catalog-only until later slices.
  */
 
 export const NOTIFICATION_EVENTS = Object.freeze({
@@ -100,7 +101,8 @@ export const CHANNEL_POLICY = Object.freeze({
     "coverage_cancellation",
     "coverage_failure_protection",
     // Successful Guide reassignment must NEVER SMS the parent.
-    // PR7 later (not wired in PR7A): payment failure + customer no-show parent SMS.
+    // Catalog allows payment_failure SMS; PR7C does not send it (no consent/opt-out).
+    // PR7F owns phone consent. customer no-show parent SMS stays later.
     "payment_failure",
     "customer_no_show_parent",
   ],
@@ -116,8 +118,9 @@ export const CHANNEL_POLICY = Object.freeze({
     manager: [], // audit/log only; no routine alert
   }),
   /**
-   * PR7 recipient matrix. 365 parent email is wired in PR7B. payment_failure
-   * and customer no-show remain unwired. Management must not get no-show success.
+   * PR7 recipient matrix. 365 parent email is wired in PR7B. PR7C wires
+   * payment_failure parent email only (SMS cataloged, not sent). Customer
+   * no-show remains unwired. Management must not get no-show success.
    */
   pr7_lifecycle: Object.freeze({
     study_hall_365_started: Object.freeze({ parent: ["email"], guide: [], manager: [] }),

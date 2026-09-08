@@ -25,10 +25,15 @@ import {
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { sendGuideWhatsApp, sendParentAttentionSms } from "@/lib/telephony/client";
+import { NOTIFICATION_EVENTS } from "@/lib/notifications/events.mjs";
 import {
   classifyStudyHall365Transitions,
   parseUpsertLifecycleSnapshot,
 } from "@/lib/notifications/study-hall-365-lifecycle.mjs";
+import {
+  shouldNotifyStudyHall365PaymentFailure,
+  studyHall365PaymentFailureKey,
+} from "@/lib/notifications/study-hall-365-payment-failure.mjs";
 
 /**
  * Central, idempotent transactional-notification service (Study Hall PR8).
@@ -738,6 +743,53 @@ export async function notifyStudyHall365Lifecycle(opts: {
     return { status: sent.length ? "ok" : "skipped", sent };
   } catch {
     return { status: "failed", sent: [] };
+  }
+}
+
+/**
+ * Parent-email Study Hall 365 payment failure. Call only after invoice-driven
+ * membership upsert. One claim per Stripe invoice id. Parent email only —
+ * no SMS (deferred to PR7F), WhatsApp, Guide, or Management send.
+ * Never throws; never rolls back Stripe sync.
+ */
+export async function notifyStudyHall365PaymentFailure(opts: {
+  accountId?: string | null;
+  invoiceId?: string | null;
+  invoice?: unknown;
+  upsert?: unknown;
+}): Promise<{ status: string }> {
+  try {
+    const parsed = parseUpsertLifecycleSnapshot(opts.upsert);
+    const accountId = opts.accountId || parsed?.accountId || null;
+    const invoiceId =
+      (typeof opts.invoiceId === "string" && opts.invoiceId) ||
+      (opts.invoice && typeof opts.invoice === "object" && "id" in opts.invoice
+        ? String((opts.invoice as { id?: unknown }).id || "")
+        : "") ||
+      null;
+    if (!accountId || !invoiceId || !parsed || !opts.invoice || typeof opts.invoice !== "object") {
+      return { status: "skipped" };
+    }
+    if (
+      !shouldNotifyStudyHall365PaymentFailure({
+        applyStatus: parsed.applyStatus,
+        previous: parsed.previous,
+        current: parsed.current,
+        invoice: opts.invoice,
+      })
+    ) {
+      return { status: "skipped" };
+    }
+    const key = studyHall365PaymentFailureKey(invoiceId);
+    if (!key) return { status: "skipped" };
+    return deliver({
+      key,
+      type: NOTIFICATION_EVENTS.PAYMENT_FAILURE,
+      accountId,
+      rendered: T.studyHall365PaymentFailure({ appUrl: APP_URL }),
+    });
+  } catch {
+    return { status: "failed" };
   }
 }
 
