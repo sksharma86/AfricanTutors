@@ -35,7 +35,7 @@ export function ParentJoinControl({
     if (nowMs != null) return;
     const tick = () => setLiveNow(Date.now());
     const interval = window.setInterval(tick, 15_000);
-    let timeout: ReturnType<typeof window.setTimeout> | undefined;
+    let timeout: number | undefined;
     if (scheduledStart) {
       const openAt = Date.parse(scheduledStart) - JOIN_OPEN_LEAD_MIN * 60_000;
       const delay = openAt - Date.now();

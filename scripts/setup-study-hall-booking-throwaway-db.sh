@@ -27,5 +27,13 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "
       tstzrange(scheduled_start, scheduled_end) with &&
     ) where (tutor_id is not null and scheduled_start is not null
              and status in ('pending','confirmed','completed'));
+  insert into public.profiles (id, role, display_name, timezone)
+  select ('b8b8ffff-0000-4000-8000-' || lpad(g::text, 12, '0'))::uuid, 'tutor', 'Throwaway Guide ' || g, 'Africa/Lagos'
+  from generate_series(1, 16) as g
+  on conflict (id) do update set role = 'tutor';
+  insert into public.tutor_profiles (profile_id, status, timezone)
+  select ('b8b8ffff-0000-4000-8000-' || lpad(g::text, 12, '0'))::uuid, 'approved', 'Africa/Lagos'
+  from generate_series(1, 16) as g
+  on conflict (profile_id) do update set status = 'approved';
 "
 echo "THROWAWAY_BOOKING_DB_READY ${DB_NAME}"

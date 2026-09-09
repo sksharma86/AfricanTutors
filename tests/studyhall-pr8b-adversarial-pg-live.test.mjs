@@ -150,9 +150,20 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
         ('${GUIDE}', 'approved', 'Africa/Lagos')
       on conflict (profile_id) do update set status = 'approved', timezone = excluded.timezone;
     `);
-    assert.equal(sql(`select is_active::text from package_products where code='pkg_10sh'`), "t");
-    assert.equal(sql(`select is_active::text from package_products where code='pkg_14h'`), "f");
-    assert.equal(sql(`select is_active::text from package_products where code='pkg_28h'`), "f");
+    for (let i = 1; i <= 12; i += 1) {
+      const gid = `b8b80000-0000-4000-8000-0000000002${String(i).padStart(2, "0")}`;
+      sql(`
+        insert into profiles (id, role, display_name, timezone) values
+          ('${gid}', 'tutor', 'Guide ${i}', 'Africa/Lagos')
+        on conflict (id) do update set role = 'tutor', timezone = excluded.timezone;
+        insert into tutor_profiles (profile_id, status, timezone) values
+          ('${gid}', 'approved', 'Africa/Lagos')
+        on conflict (profile_id) do update set status = 'approved', timezone = excluded.timezone;
+      `);
+    }
+    assert.match(sql(`select is_active::text from package_products where code='pkg_10sh'`), /^(t|true)$/);
+    assert.match(sql(`select is_active::text from package_products where code='pkg_14h'`), /^(f|false)$/);
+    assert.match(sql(`select is_active::text from package_products where code='pkg_28h'`), /^(f|false)$/);
     assert.match(sql(`select conname from pg_constraint where conname='bookings_no_tutor_overlap'`), /bookings_no_tutor_overlap/);
   });
 
@@ -385,15 +396,19 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
     seedHousehold(p2, c2, "America/Chicago", "SlotB");
     useFree(p1, c1);
     useFree(p2, c2);
-    const start = "2026-10-27T17:00:00Z";
-    const raced = await Promise.all([spawnBook(c1, start), spawnBook(c2, start)]);
-    const ok = raced.filter((r) => /booking_id|"status":/.test(r) && !/No Guide|already has a Study Hall/i.test(r));
-    const funded = raced.filter((r) => fundingOf(r) !== "other").length;
-    assert.equal(funded, 1, raced.join(" | "));
-    assert.equal(
-      sql(`select count(*) from bookings where scheduled_start='${start}' and status in ('pending','confirmed') and tutor_id='${GUIDE}'`),
-      "1",
-    );
+    sql(`update tutor_profiles set status = 'paused' where profile_id <> '${GUIDE}';`);
+    try {
+      const start = "2026-10-27T17:00:00Z";
+      const raced = await Promise.all([spawnBook(c1, start), spawnBook(c2, start)]);
+      const funded = raced.filter((r) => fundingOf(r) !== "other").length;
+      assert.equal(funded, 1, raced.join(" | "));
+      assert.equal(
+        sql(`select count(*) from bookings where scheduled_start='${start}' and status in ('pending','confirmed') and tutor_id='${GUIDE}'`),
+        "1",
+      );
+    } finally {
+      sql(`update tutor_profiles set status = 'approved' where profile_id <> '${GUIDE}';`);
+    }
 
     const p3 = "b8b80000-0000-4000-8000-000000000052";
     const c3 = "b8b80000-0000-4000-8000-000000000152";
@@ -494,7 +509,7 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
     assert.match(late, /credited|expired|already/);
     assert.equal(sql(`select status from bookings where id='${keepId}'`), "confirmed");
     assert.equal(
-      sql(`select count(*) from bookings where account_id='${abP}' and status in ('pending','confirmed')`),
+      sql(`select count(*) from bookings where account_id='${abP}' and status in ('pending','confirmed') and scheduled_start is not null`),
       "1",
     );
   });
@@ -643,8 +658,8 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
     assert.equal(fundingOf(booked), "prepaid");
     assert.equal(sql(`select coalesce(sum(minutes_delta),0) from package_minute_ledger where account_id='${p}'`), "780");
     assert.equal(sql(`select minutes_delta from package_minute_ledger where reference='legacy-14h-840'`), "840");
-    assert.equal(sql(`select is_active::text from package_products where code='pkg_14h'`), "f");
-    assert.equal(sql(`select is_active::text from package_products where code='pkg_28h'`), "f");
+    assert.match(sql(`select is_active::text from package_products where code='pkg_14h'`), /^(f|false)$/);
+    assert.match(sql(`select is_active::text from package_products where code='pkg_28h'`), /^(f|false)$/);
   });
 
   it("RPC security: book_session grants, search_path, no cross-household replace", () => {

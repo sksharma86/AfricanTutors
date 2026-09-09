@@ -142,7 +142,7 @@ describe("Portal affordance — action hierarchy", () => {
     assert.match(join, /variant="secondary"/);
     assert.match(guideHalls, /Finish report/);
     assert.match(guideHalls, /variant="primary"/);
-    assert.match(parentHalls, /Book a Study Hall/);
+    assert.match(parentHalls, /Book one Study Hall|Plan my week/);
     assert.match(actions, /Assign Guide/);
     assert.match(actions, /variant="primary"/);
   });

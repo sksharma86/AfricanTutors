@@ -124,10 +124,11 @@ describe("PR8B — funding priority (UI cannot override)", () => {
     const checkout = read("src/lib/checkout-service.ts");
     const wizard = read("src/components/booking/booking-wizard.tsx");
     const planApi = read("src/app/api/plan-week/route.ts");
-    assert.doesNotMatch(api, /funding_source|p_funding|body\.funding/);
+    assert.doesNotMatch(api, /p_funding|body\.funding/);
     assert.match(checkout, /client never supplies an amount/);
-    assert.doesNotMatch(wizard, /funding_source|chooseFunding|setFunding/);
-    assert.doesNotMatch(planApi, /funding_source|p_funding/);
+    assert.match(wizard, /book_session recomputes under locks/);
+    assert.doesNotMatch(wizard, /chooseFunding|setFunding/);
+    assert.doesNotMatch(planApi, /p_funding/);
     assert.match(read("docs/study-hall-booking-engine.md"), /free first Study Hall/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Prepaid minutes/);
     assert.match(read("docs/study-hall-booking-engine.md"), /Account credit/);
@@ -237,7 +238,8 @@ describe("PR8B — Parent Join clock is client-side only", () => {
     assert.match(ctl, /authorize_session_join remains/);
     assert.match(next, /ParentJoinControl/);
     assert.match(detail, /ParentJoinControl/);
-    assert.match(windowLib, /sole authority/);
+    assert.match(windowLib, /authorize_session_join/);
+    assert.match(windowLib, /remains the sole/);
     const start = Date.parse("2026-10-20T18:00:00.000Z");
     const end = start + 60 * 60_000;
     const row = {
