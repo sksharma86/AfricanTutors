@@ -137,7 +137,7 @@ describe("PR10E — role isolation + notifications + room access (source)", () =
   const cancelApi = read("src/app/api/tutor/cancellation-request/route.ts");
   const notify = read("src/lib/notify.ts");
   const callParent = read("src/components/session/call-parent-control.tsx");
-  const phone = read("src/components/dashboard/parent-phone-form.tsx");
+  const phone = read("src/components/dashboard/parent-phone-form.tsx") + read("src/lib/notifications/parent-sms-consent.mjs");
   const studentBook = read("src/app/dashboard/student/book/page.tsx");
   const studentPkgs = read("src/app/dashboard/student/packages/page.tsx");
   const guideCancel = read("src/components/dashboard/tutor-cancel-request.tsx");
@@ -161,7 +161,7 @@ describe("PR10E — role isolation + notifications + room access (source)", () =
     assert.match(callParent, /Never displays a phone number/);
     assert.doesNotMatch(callParent, /phone_e164|parentPhone|\+1/);
     assert.match(phone, /Guides never see your phone number|never shared with Guides/i);
-    assert.match(phone, /important Study Hall communication/i);
+    assert.match(phone, /reach you about your Study Halls|important Study Hall communication/i);
     assert.doesNotMatch(phone, /keep this portal open/i);
     assert.match(callParent, /submittingRef/);
   });

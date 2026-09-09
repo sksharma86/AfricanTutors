@@ -92,6 +92,8 @@ const NON_EMAIL_TYPES = new Set([
   "cancellation_sms",
   "coverage_cancellation_sms",
   "coverage_failure_protection_sms",
+  "payment_failure_sms",
+  "customer_no_show_parent_sms",
   "guide_attendance_whatsapp",
   "sms",
 ]);

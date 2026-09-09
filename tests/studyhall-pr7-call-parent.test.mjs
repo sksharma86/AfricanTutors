@@ -132,8 +132,9 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Phone number/);
     assert.match(read("src/components/dashboard/parent-phone-form.tsx"), /Guides never see your phone number|never shared with Guides/i);
     assert.match(read("src/app/dashboard/student/account/page.tsx"), /ParentPhoneForm/);
-    assert.match(read("src/app/(marketing)/privacy/page.tsx"), /call or text you/i);
-    assert.match(read("src/app/(marketing)/terms/page.tsx"), /automated phone call or SMS/i);
+    assert.match(read("src/app/(marketing)/privacy/page.tsx"), /Transactional text alerts are sent only if you opt in/i);
+    assert.match(read("src/app/(marketing)/terms/page.tsx"), /automated voice call/i);
+    assert.match(read("src/app/(marketing)/terms/page.tsx"), /opt in to Study Hall text alerts/i);
     assert.match(read("src/app/(marketing)/privacy/page.tsx"), /attorney review/i);
   });
 

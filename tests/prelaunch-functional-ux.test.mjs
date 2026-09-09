@@ -40,7 +40,7 @@ describe("Pre-launch functional UX — brand + confirmation", () => {
 describe("Pre-launch functional UX — phone + packages + applicant gates", () => {
   it("phone form explains Call Parent, privacy, and no third-party sale", () => {
     const phone = read("src/components/dashboard/parent-phone-form.tsx");
-    assert.match(phone, /We’ll only use your number for important Study Hall communication\. Guides never see your phone number\./);
+    assert.match(phone, /PARENT_SMS_PHONE_PURPOSE|reach you about your Study Halls/);
     assert.doesNotMatch(phone, /including Call Parent/);
     assert.doesNotMatch(phone, /keep this portal open/i);
     assert.match(phone, /router\.refresh\(\)/);

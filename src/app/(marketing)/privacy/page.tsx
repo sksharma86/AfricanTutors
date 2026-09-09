@@ -25,11 +25,17 @@ export default function PrivacyPage() {
             attorney review before public launch.
           </p>
           <p>
-            If you provide a phone number for Study Hall alerts, we may use it to call or text you when
-            a Guide needs immediate parental attention during an active session. Guides never see your
-            phone number. These messages are operational (not marketing). Phone verification will be
-            added before broad public launch — this disclosure should receive attorney review before
-            public launch.
+            If you provide a phone number, we use it to reach you about your Study Halls, including
+            if you are needed during a live session. We do not sell your phone number. Telephony and
+            email service providers process the number as needed to deliver those operational
+            messages. Guides never see your phone number.
+          </p>
+          <p>
+            Transactional text alerts are sent only if you opt in. They may include reminders, missed
+            Study Hall notices, billing attention, and urgent session-related messages. They are not
+            marketing. You can turn text alerts off in Account or by texting STOP. Email
+            notifications continue either way. Attorney review of this wording is recommended
+            before public launch.
           </p>
           <p>
             If you have a question about how your information is handled before our full policy is

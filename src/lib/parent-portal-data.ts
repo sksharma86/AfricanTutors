@@ -54,7 +54,12 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
       .select("id, submitted_at, focus_rating, work_summary, redirection_level, guide_note, booking_id")
       .order("submitted_at", { ascending: false })
       .then((r) => r, () => ({ data: null, error: null })),
-    supabase.from("profiles").select("phone_e164, display_name").eq("id", uid).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("phone_e164, display_name, sms_transactional_opt_in")
+      .eq("id", uid)
+      .maybeSingle()
+      .then((r) => r, () => ({ data: null, error: { message: "sms_transactional_opt_in" } })),
     supabase
       .from("parent_escalation_requests")
       .select("booking_id")
@@ -137,7 +142,19 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
   );
 
   const balances = (balancesRes.data ?? {}) as { package_minutes?: number; dollar_credit_cents?: number };
-  const phone = (phoneRes.data as { phone_e164?: string | null; display_name?: string | null } | null) ?? null;
+  let phone = (phoneRes.data as {
+    phone_e164?: string | null;
+    display_name?: string | null;
+    sms_transactional_opt_in?: boolean | null;
+  } | null) ?? null;
+  let smsPreferenceAvailable = !phoneRes.error;
+  if (phoneRes.error && /sms_transactional_opt_in/i.test(phoneRes.error.message || "")) {
+    smsPreferenceAvailable = false;
+    const fallback = await supabase.from("profiles").select("phone_e164, display_name").eq("id", uid).maybeSingle();
+    phone = (fallback.data as { phone_e164?: string | null; display_name?: string | null } | null) ?? null;
+  } else if (phoneRes.error) {
+    smsPreferenceAvailable = false;
+  }
   const membership = parseParentMembership(membershipRes && "data" in membershipRes ? membershipRes.data : null);
   const householdTz =
     (typeof tzRes?.data === "string" && tzRes.data.trim()) ||
@@ -151,6 +168,8 @@ export async function loadParentWorkspace(supabase: SB, uid: string) {
     creditCents: balances.dollar_credit_cents ?? 0,
     parentPhone: phone?.phone_e164 ?? null,
     parentName: phone?.display_name ?? null,
+    smsTransactionalOptIn: phone?.sms_transactional_opt_in === true,
+    smsPreferenceAvailable,
     membership: membership as ParentMembership,
     householdTz,
     recordingByBooking,

@@ -6,6 +6,7 @@ export const CUSTOMER_NO_SHOW_PARENT_CTA_PATH: "/dashboard/student/study-halls";
 export const CUSTOMER_NO_SHOW_GUIDE_CTA_PATH: "/dashboard/tutor/study-halls";
 
 export function customerNoShowParentDedupeKey(bookingId: string): string;
+export function customerNoShowParentSmsKey(bookingId: string): string;
 export function customerNoShowGuideDedupeKey(bookingId: string): string;
 
 export function shouldNotifyCustomerNoShow(rpcResult: unknown): boolean;

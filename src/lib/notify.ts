@@ -20,8 +20,12 @@ import {
   parentCancellationSms,
   parentCoverageCancellationSms,
   parentCoverageFailureProtectionSms,
+  parentNoShowSms,
+  parentPaymentFailureSms,
   parentSessionReminderSms,
 } from "@/lib/notifications/sms-copy.mjs";
+import { parentTransactionalSmsEligible } from "@/lib/notifications/parent-sms-consent.mjs";
+import { loadParentSmsProfile } from "@/lib/notifications/parent-sms-profile";
 import { formatChildNames, possessiveStudyHall } from "@/lib/household-children.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { sendGuideWhatsApp, sendParentAttentionSms } from "@/lib/telephony/client";
@@ -33,10 +37,12 @@ import {
 import {
   shouldNotifyStudyHall365PaymentFailure,
   studyHall365PaymentFailureKey,
+  studyHall365PaymentFailureSmsKey,
 } from "@/lib/notifications/study-hall-365-payment-failure.mjs";
 import {
   customerNoShowGuideDedupeKey,
   customerNoShowParentDedupeKey,
+  customerNoShowParentSmsKey,
 } from "@/lib/notifications/customer-no-show.mjs";
 
 /**
@@ -49,9 +55,11 @@ import {
  * Channel policy (summary):
  *   Email     — confirmations, purchases, reports, schedule changes, and V1
  *               Guide attendance / emergency coverage (Resend).
- *   SMS       — parent 1h reminder; cancel; Call Parent (elsewhere). No Guide SMS.
+ *   SMS       — parent transactional texts only with explicit consent
+ *               (reminders, cancel, coverage, payment failure, no-show,
+ *               Call Parent SMS fallback). No Guide SMS. No marketing.
  *   WhatsApp  — optional / later Guide alerts. Missing config must not block V1.
- *   Voice     — Call Parent only (PR7; unchanged)
+ *   Voice     — Call Parent only (PR7; independent of SMS preference)
  */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -136,7 +144,8 @@ async function deliver(opts: {
 
 /**
  * Idempotent parent SMS via the same claim table. Never stores the raw phone in
- * `to_email` (uses channel marker). Missing phone → skipped, never throws.
+ * `to_email` (uses channel marker). Missing phone or missing transactional SMS
+ * consent → skipped, never throws. Email is independent.
  */
 async function deliverParentSms(opts: {
   key: string;
@@ -147,8 +156,9 @@ async function deliverParentSms(opts: {
 }): Promise<{ status: string }> {
   const service = getServiceSupabase();
   try {
-    const { data: profile } = await service.from("profiles").select("phone_e164").eq("id", opts.accountId).maybeSingle();
+    const profile = await loadParentSmsProfile(service, opts.accountId);
     const phone = typeof profile?.phone_e164 === "string" ? profile.phone_e164.trim() : "";
+    const eligibility = parentTransactionalSmsEligible(profile);
 
     const claim = await service.rpc("claim_email_delivery", {
       p_key: opts.key,
@@ -163,11 +173,11 @@ async function deliverParentSms(opts: {
     if (claim.error) return { status: "error" };
     if (claim.data !== true) return { status: "duplicate" };
 
-    if (!phone) {
+    if (!eligibility.ok) {
       await service.rpc("complete_email_delivery", {
         p_key: opts.key,
         p_status: "skipped",
-        p_error: "no phone_e164",
+        p_error: eligibility.reason,
       });
       return { status: "skipped" };
     }
@@ -486,7 +496,7 @@ export async function notifyCancellation(
       restoredCreditCents: info.restoredCreditCents ?? null,
     }),
   });
-  // Parent SMS for immediate awareness (idempotent; skipped if no phone).
+  // Parent SMS for immediate awareness (idempotent; skipped without consent).
   if (b.account_id) {
     await deliverParentSms({
       key: `cancellation-sms:${bookingId}`,
@@ -763,10 +773,10 @@ export async function notifyStudyHall365Lifecycle(opts: {
 }
 
 /**
- * Parent-email Study Hall 365 payment failure. Call only after invoice-driven
- * membership upsert. One claim per Stripe invoice id. Parent email only —
- * no SMS (deferred to PR7F), WhatsApp, Guide, or Management send.
- * Never throws; never rolls back Stripe sync.
+ * Parent Study Hall 365 payment failure. Call only after invoice-driven
+ * membership upsert. One email claim and one SMS claim per Stripe invoice id.
+ * Parent SMS is sent only when transactional consent is active. Never throws;
+ * never rolls back Stripe sync.
  */
 export async function notifyStudyHall365PaymentFailure(opts: {
   accountId?: string | null;
@@ -798,12 +808,22 @@ export async function notifyStudyHall365PaymentFailure(opts: {
     }
     const key = studyHall365PaymentFailureKey(invoiceId);
     if (!key) return { status: "skipped" };
-    return deliver({
+    const emailResult = await deliver({
       key,
       type: NOTIFICATION_EVENTS.PAYMENT_FAILURE,
       accountId,
       rendered: T.studyHall365PaymentFailure({ appUrl: APP_URL }),
     });
+    const smsKey = studyHall365PaymentFailureSmsKey(invoiceId);
+    if (smsKey) {
+      await deliverParentSms({
+        key: smsKey,
+        type: "payment_failure_sms",
+        accountId,
+        body: parentPaymentFailureSms({ appUrl: APP_URL }),
+      });
+    }
+    return emailResult;
   } catch {
     return { status: "failed" };
   }
@@ -812,9 +832,9 @@ export async function notifyStudyHall365PaymentFailure(opts: {
 /**
  * Parent + Guide email after an authoritative PR6 customer no-show.
  * Call only after `guide_mark_customer_no_show` has committed. Re-reads the
- * booking and requires `status === no_show`. Parent email only (SMS deferred
- * to PR7F). Guide email only — no Guide SMS/WhatsApp, no Management success
- * email. Never throws; never rolls back no-show, funding, or earnings.
+ * booking and requires `status === no_show`. Parent SMS is consent-gated.
+ * Guide email only — no Guide SMS/WhatsApp, no Management success email.
+ * Never throws; never rolls back no-show, funding, or earnings.
  */
 export async function notifyCustomerNoShow(bookingId: string): Promise<{ status: string }> {
   try {
@@ -834,6 +854,16 @@ export async function notifyCustomerNoShow(bookingId: string): Promise<{ status:
         appUrl: APP_URL,
       }),
     });
+
+    if (b.account_id) {
+      await deliverParentSms({
+        key: customerNoShowParentSmsKey(bookingId),
+        type: "customer_no_show_parent_sms",
+        accountId: b.account_id,
+        bookingId,
+        body: parentNoShowSms(),
+      });
+    }
 
     if (b.tutor_id) {
       await deliver({
@@ -921,7 +951,7 @@ export async function notifyReminder(bookingId: string, role: "customer" | "tuto
     }),
   });
 
-  // Parent 1h SMS (separate idempotency key). Missing phone → skipped, never fails booking.
+  // Parent 1h SMS (separate idempotency key). Missing consent/phone → skipped, never fails booking.
   if (role === "customer" && kind === "1h" && b.account_id) {
     await deliverParentSms({
       key: `reminder-1h-sms:${bookingId}`,

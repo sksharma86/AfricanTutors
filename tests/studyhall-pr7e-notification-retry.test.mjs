@@ -297,6 +297,8 @@ describe("PR7E — admin, cron, channels", () => {
     assert.equal(isEmailRecipient("whatsapp:guide"), false);
     assert.equal(isRetryEligible(delivery({ to_email: "sms:parent", notification_type: "reminder_1h_sms" }), NOW), false);
     assert.equal(retryClassForType("reminder_1h_sms"), "non_email");
+    assert.equal(retryClassForType("payment_failure_sms"), "non_email");
+    assert.equal(retryClassForType("customer_no_show_parent_sms"), "non_email");
   });
 
   it("late reminder after start is expired", () => {

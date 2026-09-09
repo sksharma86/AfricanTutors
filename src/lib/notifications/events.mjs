@@ -6,9 +6,11 @@
  * roadmap PR7 extends this catalog — do not rename historical migrations.
  *
  * PR7B wires Study Hall 365 parent-email lifecycle after membership upsert.
- * PR7C wires payment_failure parent email after 365 invoice sync (email only).
+ * PR7C wires payment_failure parent email after 365 invoice sync.
  * PR7D wires customer no-show parent + Guide email after the PR6 RPC commits.
- * Parent SMS for no-show stays catalog-only until PR7F (consent).
+ * PR7F adds explicit parent transactional SMS consent and sends opted-in
+ * parent SMS for payment_failure, customer_no_show_parent, reminders, and
+ * other existing parent SMS paths. Guide SMS is still not a channel.
  * PR7E hardens delivery retry/stale recovery without new event types.
  */
 
@@ -47,7 +49,7 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   STUDY_HALL_365_CANCELLATION_SCHEDULED: "study_hall_365_cancellation_scheduled",
   STUDY_HALL_365_RESUMED: "study_hall_365_resumed",
   STUDY_HALL_365_ENDED: "study_hall_365_ended",
-  /** PR7D — parent email after authoritative customer no-show. SMS later (PR7F). */
+  /** PR7D — parent email after authoritative customer no-show. PR7F consent-gates SMS. */
   CUSTOMER_NO_SHOW_PARENT: "customer_no_show_parent",
   /** PR7D — Guide email after authoritative customer no-show. Never a management success email. */
   CUSTOMER_NO_SHOW_GUIDE: "customer_no_show_guide",
@@ -102,9 +104,7 @@ export const CHANNEL_POLICY = Object.freeze({
     "booking_cancelled",
     "coverage_cancellation",
     "coverage_failure_protection",
-    // Successful Guide reassignment must NEVER SMS the parent.
-    // Catalog allows payment_failure SMS; PR7C does not send it (no consent/opt-out).
-    // Catalog allows customer_no_show_parent SMS; PR7D does not send it (PR7F consent).
+    // Catalog + PR7F: parent SMS only when transactional consent is active.
     "payment_failure",
     "customer_no_show_parent",
   ],
@@ -120,9 +120,8 @@ export const CHANNEL_POLICY = Object.freeze({
     manager: [], // audit/log only; no routine alert
   }),
   /**
-   * PR7 recipient matrix. 365 parent email is wired in PR7B. PR7C wires
-   * payment_failure parent email only (SMS cataloged, not sent). PR7D wires
-   * customer no-show parent + Guide email (parent SMS cataloged, not sent).
+   * PR7 recipient matrix. 365 parent email is wired in PR7B. PR7C/PR7D
+   * wired parent email. PR7F sends listed parent SMS only with consent.
    * Management must not get no-show success.
    */
   pr7_lifecycle: Object.freeze({
@@ -136,12 +135,22 @@ export const CHANNEL_POLICY = Object.freeze({
     customer_no_show_guide: Object.freeze({ parent: [], guide: ["email"], manager: [] }),
   }),
   /**
-   * PR7D shipped channels. Catalog still lists parent SMS; this slice sends
-   * email only. No Guide SMS/WhatsApp. No Management success email.
+   * PR7D shipped channels (email only). Kept for historical tests.
+   * PR7F shipped parent SMS is in pr7f_shipped.
    */
   pr7d_customer_no_show: Object.freeze({
     parent: ["email"],
     guide: ["email"],
     manager: [],
+  }),
+  /**
+   * PR7F shipped channels. Parent SMS requires transactional consent.
+   * Guide SMS / WhatsApp and routine Management SMS are not sent.
+   */
+  pr7f_shipped: Object.freeze({
+    payment_failure: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
+    customer_no_show_parent: Object.freeze({ parent: ["email", "sms"], guide: [], manager: [] }),
+    customer_no_show_guide: Object.freeze({ parent: [], guide: ["email"], manager: [] }),
+    session_reminder_1h: Object.freeze({ parent: ["email", "sms"], guide: ["email"], manager: [] }),
   }),
 });

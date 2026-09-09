@@ -66,7 +66,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "What if my child needs me during Study Hall?",
-    a: "A Guide can Call Parent through the platform. Guides never see your phone number.",
+    a: "A Guide can Call Parent through the platform. Guides never see your phone number. Optional Study Hall text alerts (reminders and other operational updates, not marketing) can be turned on in Account.",
   },
   {
     q: "Do prepaid Study Halls expire?",
