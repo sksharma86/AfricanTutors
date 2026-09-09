@@ -39,12 +39,13 @@ describe("PR3 booking engine — duration", () => {
 });
 
 describe("PR3 booking engine — funding priority", () => {
-  it("uses free first, then 365, then prepaid, then PAYG", () => {
+  it("uses free first, then 365, then prepaid, then credit, then PAYG", () => {
     assert.equal(
       chooseBookingSource({
         freeTrialEligible: true,
         studyHall365: { entitled: true, reason: "available" },
         prepaidMinutes: 600,
+        creditCents: 5000,
       }).source,
       "free_trial",
     );
@@ -53,6 +54,7 @@ describe("PR3 booking engine — funding priority", () => {
         freeTrialEligible: false,
         studyHall365: { entitled: true, reason: "available" },
         prepaidMinutes: 600,
+        creditCents: 5000,
       }).source,
       "study_hall_365",
     );
@@ -61,6 +63,7 @@ describe("PR3 booking engine — funding priority", () => {
         freeTrialEligible: false,
         studyHall365: { entitled: false, reason: "already_consumed" },
         prepaidMinutes: 600,
+        creditCents: 5000,
       }).source,
       "prepaid",
     );
@@ -69,6 +72,16 @@ describe("PR3 booking engine — funding priority", () => {
         freeTrialEligible: false,
         studyHall365: { entitled: false, reason: "already_consumed" },
         prepaidMinutes: 0,
+        creditCents: 1200,
+      }).source,
+      "credit",
+    );
+    assert.equal(
+      chooseBookingSource({
+        freeTrialEligible: false,
+        studyHall365: { entitled: false, reason: "already_consumed" },
+        prepaidMinutes: 0,
+        creditCents: 0,
       }).source,
       "payg",
     );
@@ -78,6 +91,7 @@ describe("PR3 booking engine — funding priority", () => {
     assert.equal(customerFundingLabel("free_trial"), "First Study Hall free");
     assert.equal(customerFundingLabel("study_hall_365"), "Included with Study Hall 365");
     assert.equal(customerFundingLabel("prepaid"), "Uses 1 prepaid Study Hall");
+    assert.equal(customerFundingLabel("credit"), "Covered by account credit");
     assert.equal(customerFundingLabel("payg"), "$12");
     assert.equal(formatPrepaidStudyHallBalance(540), "9 Study Halls remaining");
     assert.equal(formatPrepaidStudyHallBalance(420), "7 Study Halls remaining");

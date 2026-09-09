@@ -38,7 +38,8 @@ describe("Parent Portal premium visual system", () => {
     const surface = read("src/components/dashboard/parent-surface.tsx");
     assert.match(next, /ParentSurface featured/);
     assert.match(next, /variant="secondary"/);
-    assert.match(next, /Join Study Hall/);
+    assert.match(next, /ParentJoinControl/);
+    assert.match(read("src/components/dashboard/parent-join-control.tsx"), /Join Study Hall/);
     assert.match(surface, /before:bg-gold-400/);
     assert.match(surface, /pp-hero/);
   });
@@ -105,7 +106,7 @@ describe("Parent Portal premium visual system", () => {
     assert.match(next, /Nothing scheduled yet/);
     assert.match(next, /Plan a week of Study Halls/);
     assert.match(next, /actions\.primary\.href/);
-    assert.match(next, /Join Study Hall/);
+    assert.match(next, /ParentJoinControl/);
     assert.match(next, /variant="secondary"/);
     assert.doesNotMatch(next, /variant="primary"/);
   });

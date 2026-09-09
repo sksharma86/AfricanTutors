@@ -42,7 +42,7 @@ async function stripeBooking(acct, stu, subject, afterMs) {
   return { bookingId: r.data.booking_id, paymentId: r.data.payment_id };
 }
 async function packagePurchase(acct) {
-  const { data: pkg } = await svc.from("package_products").select("id, price_cents").eq("code", "pkg_14h").single();
+  const { data: pkg } = await svc.from("package_products").select("id, price_cents").eq("code", "pkg_10sh").single();
   const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: acct.id });
   await svc.rpc("fulfill_package_payment", { p_payment_id: r.data.payment_id, p_amount_cents: pkg.price_cents, p_charge_id: "pi_pkg" });
   return r.data.payment_id;

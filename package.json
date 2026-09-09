@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --test-concurrency=1 --test-reporter=spec \"tests/**/*.test.mjs\""
+    "test": "node --test --test-concurrency=1 --test-reporter=spec \"tests/**/*.test.mjs\"",
+    "test:pr8b": "bash scripts/run-pr8b-hardening.sh"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.87.0",

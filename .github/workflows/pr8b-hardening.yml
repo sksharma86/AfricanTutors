@@ -1,0 +1,46 @@
+# Launch-critical booking/entitlement concurrency. Fails if Postgres is missing.
+# Does not use production Supabase, Stripe, Daily, Twilio, or Resend.
+name: PR8B throwaway Postgres
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pr8b-hardening:
+    name: PR8B throwaway Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install local PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql postgresql-contrib
+          sudo service postgresql start
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            sudo -u postgres pg_isready -q && break
+            sleep 1
+          done
+          sudo -u postgres pg_isready -q
+          sudo -u postgres createuser -s "$USER" || true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run PR8B hardening suite
+        run: |
+          set -o pipefail
+          npm run test:pr8b | tee pr8b-ci.log
+          grep -q 'PR8B_PG_EXECUTED' pr8b-ci.log
+          grep -E 'ℹ skipped 0|skipped 0' pr8b-ci.log

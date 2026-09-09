@@ -320,16 +320,12 @@ describe("Study Hall PR6 — live session_reports (requires migration 0023)", { 
 
     const { data: pkgs } = await svc
       .from("package_products")
-      .select("code, minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
-    assert.deepEqual(
-      (pkgs ?? []).map((r) => [r.code, r.minutes, r.price_cents]),
-      [
-        ["pkg_14h", 840, 14000],
-        ["pkg_28h", 1680, 25200],
-      ],
-    );
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
+    const by = Object.fromEntries((pkgs ?? []).map((r) => [r.code, r]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.equal(by.pkg_14h.is_active, false);
+    assert.equal(by.pkg_28h.is_active, false);
   });
 
   it("Guide can submit for own completed session; required fields + optional note", async (t) => {

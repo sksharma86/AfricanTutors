@@ -266,26 +266,26 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
   it("package purchase fully funded by credit: minutes issued once, no Stripe", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyCredit" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a.id, pkg.price_cents);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.error, null, r.error && r.error.message);
     assert.deepEqual([r.data.funding, r.data.status, r.data.stripe_cents_due], ["credit", "completed", 0]);
-    assert.equal(await minutes(a.id), pkg.minutes); // 840
+    assert.equal(await minutes(a.id), pkg.minutes);
     assert.equal(await credit(a.id), 0);
     const p = await getPayment(r.data.payment_id);
-    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", pkg.price_cents]); // 14000
+    assert.deepEqual([p.status, p.credit_applied_cents], ["succeeded", pkg.price_cents]);
   });
 
   // ---- Package purchase: partial credit + Stripe --------------------------
   it("package purchase partial credit: minutes issued only after webhook", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyPartial" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     assert.equal(r.error, null, r.error && r.error.message);
-    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents - 5000]); // 9000
+    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents - 5000]);
     assert.equal(await minutes(a.id), 0, "minutes NOT issued before Stripe verification");
     assert.equal(await credit(a.id), 0, "credit reserved");
     // wrong amount rejected, then correct amount fulfills once
@@ -302,12 +302,12 @@ describe("Phase 4B — checkout & payment fulfillment (live)", { skip: !hasSupab
   it("package purchase Stripe-only (no credit): minutes only after webhook", async () => {
     const a = await createUser({ requestedRole: "student", displayName: "PkgBuyStripe" });
     accounts.push(a.id);
-    const pkg = await pkgId("pkg_28h");
+    const pkg = await pkgId("pkg_10sh");
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
-    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents]); // 25200
+    assert.deepEqual([r.data.funding, r.data.stripe_cents_due], ["stripe", pkg.price_cents]);
     assert.equal(await minutes(a.id), 0);
     await svc.rpc("fulfill_package_payment", { p_payment_id: r.data.payment_id, p_amount_cents: pkg.price_cents });
-    assert.equal(await minutes(a.id), pkg.minutes); // 1680
+    assert.equal(await minutes(a.id), pkg.minutes);
   });
   it("inactive packages cannot be purchased", async () => {
     const r = await svc.rpc("purchase_package", { p_package_id: inactivePkg, p_account: parent.id });

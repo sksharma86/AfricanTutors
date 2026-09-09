@@ -208,6 +208,9 @@ describe("PR5 — Parent Portal transformation", () => {
     const zero = parentHomeFundingCopy({ minutes: 0 });
     assert.equal(zero.showZeroPrepaid, true);
     assert.match(zero.line, /Pay as you go is \$12/);
+    const creditCovers = parentHomeFundingCopy({ minutes: 0, creditCents: 1200 });
+    assert.equal(creditCovers.kind, "credit");
+    assert.doesNotMatch(creditCovers.line, /Pay as you go/);
     const memberZero = parentHomeFundingCopy({ entitled365: true, minutes: 0 });
     assert.equal(memberZero.showZeroPrepaid, false);
     assert.equal(memberZero.line, null);

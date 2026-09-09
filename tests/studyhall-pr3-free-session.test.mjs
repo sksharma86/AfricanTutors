@@ -89,19 +89,15 @@ describe("Study Hall PR3 — live 60-minute free session", { skip: !hasSupabaseE
     assert.equal(q.data.session_price_cents, 1200);
   });
 
-  it("active packages remain 14h/$140 and 28h/$252", async () => {
+  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async () => {
     const { data } = await svc
       .from("package_products")
-      .select("minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
-    assert.deepEqual(
-      (data ?? []).map((r) => [r.minutes, r.price_cents]),
-      [
-        [840, 14000],
-        [1680, 25200],
-      ],
-    );
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
+    const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.equal(by.pkg_14h.is_active, false);
+    assert.equal(by.pkg_28h.is_active, false);
   });
 
   it("first free session can be 60 minutes at $0; balances untouched; second rejected", async () => {

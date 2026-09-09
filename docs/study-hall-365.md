@@ -145,10 +145,10 @@ Production is **not** ready until those Dashboard items exist. Code does not har
 ## Cutover
 
 1. Apply `0036_study_hall_365.sql` and `0037_study_hall_365_parent_privacy.sql`. Existing balances unchanged.
-2. Confirm `pkg_10sh` is active (600 / $100). Leave `pkg_14h` / `pkg_28h` **`is_active=true`** until live `purchase_package` tests are updated and production 10-pack Checkout is verified.
-3. Parent Hours UI (`customerFacingPrepaidPackages`): if `pkg_10sh` is present, list **only** that SKU. Parents do not see 14h + 28h + 10-pack together. If `pkg_10sh` is missing, fall back to remaining active rows.
-4. `purchase_package` can still sell 14h/28h by id while they stay active (API, not Hours UI).
-5. Set `pkg_14h` / `pkg_28h` `is_active=false` in a **later** migration after: (a) `0036` is in production, (b) 10-pack webhook credit is verified live, (c) phase4/PR2 live tests that buy `pkg_14h` are updated. Do **not** delete those rows.
+2. Confirm `pkg_10sh` is the current customer prepaid offer (600 minutes / $100 / 10 one-hour Study Halls; hours never expire).
+3. Parent Hours UI (`customerFacingPrepaidPackages`) lists **only** `pkg_10sh`. Legacy 14h/28h are never re-offered, even as a fallback.
+4. `0047_deactivate_legacy_prepaid_packages.sql` is the intended catalog cutover: `pkg_14h` / `pkg_28h` `is_active=false`. `purchase_package` then refuses those SKUs (`Package is not available`). **Do not delete those rows.** Historical purchases and remaining minutes stay usable through the existing prepaid ledger.
+5. Do **not** apply `0047` to production until this cutover is approved to merge. After it lands, live tests must expect `pkg_10sh` as the only active customer prepaid offer.
 6. Historical `pkg_10h` ($190 / 600 min, inactive) stays inactive forever.
 
 ## Deferred to PR3+

@@ -64,9 +64,31 @@ begin
 end;
 $$;
 
-create or replace function public.household_students_overlap(p_ids uuid[], p_start timestamptz, p_end timestamptz, p_ignore uuid)
-returns boolean language sql stable as $$
-  select false;
+create extension if not exists btree_gist;
+
+create or replace function public.household_students_overlap(
+  p_ids uuid[],
+  p_start timestamptz,
+  p_end timestamptz,
+  p_except uuid default null
+) returns boolean
+language sql stable as $$
+  select exists (
+    select 1
+      from public.bookings b
+     where b.status in ('pending', 'confirmed')
+       and b.scheduled_start is not null
+       and b.scheduled_end is not null
+       and (p_except is null or b.id is distinct from p_except)
+       and tstzrange(b.scheduled_start, b.scheduled_end, '[)') && tstzrange(p_start, p_end, '[)')
+       and (
+         b.student_id = any(p_ids)
+         or exists (
+           select 1 from public.booking_children bc
+            where bc.booking_id = b.id and bc.student_id = any(p_ids)
+         )
+       )
+  );
 $$;
 
 create or replace function public.tutor_is_available(p_tutor uuid, p_tz text, p_start timestamptz, p_end timestamptz)
@@ -75,8 +97,38 @@ returns boolean language sql stable as $$
 $$;
 
 create or replace function public.release_expired_holds()
-returns void language sql as $$
-  select 1;
+returns integer
+language plpgsql security definer set search_path = public as $$
+declare v_count integer := 0; r record; p record;
+begin
+  for r in
+    select id from public.bookings
+     where status = 'pending'
+       and payment_status = 'awaiting_payment'
+       and payment_hold_expires_at is not null
+       and payment_hold_expires_at < now()
+     for update skip locked
+  loop
+    update public.bookings set status = 'expired' where id = r.id;
+
+    for p in
+      select id, account_id, credit_applied_cents
+        from public.payments
+       where booking_id = r.id and purpose = 'booking' and status = 'requires_payment'
+       for update
+    loop
+      if p.credit_applied_cents > 0 then
+        insert into public.dollar_credit_ledger (account_id, amount_cents, entry_type, payment_id, booking_id, reason, reference, created_by)
+          values (p.account_id, p.credit_applied_cents, 'restoration', p.id, r.id, 'reserved credit released (payment hold expired)', 'restore:' || p.id::text, null)
+          on conflict (reference) do nothing;
+      end if;
+      update public.payments set status = 'canceled', note = 'Payment hold expired; booking released.' where id = p.id;
+    end loop;
+
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end;
 $$;
 
 create or replace function public.account_has_used_free_trial(p_account uuid)
@@ -162,3 +214,34 @@ begin
   return jsonb_build_object('status', 'cancelled', 'early', v_early) || v_res;
 end;
 $$;
+
+-- Throwaway replica of the production is_active gate (0007/0008/0012).
+-- Full Stripe checkout is out of PR8B. This exists so adversarial tests can
+-- prove pkg_14h/pkg_28h cannot be newly purchased after 0047.
+create or replace function public.purchase_package(p_package_id uuid, p_account uuid default null)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_prod record;
+begin
+  select id, minutes, price_cents, is_active into v_prod
+    from public.package_products
+   where id = p_package_id;
+  if v_prod.id is null then raise exception 'Package not found'; end if;
+  if not v_prod.is_active then raise exception 'Package is not available'; end if;
+  return jsonb_build_object(
+    'ok', true,
+    'package_id', v_prod.id,
+    'minutes', v_prod.minutes,
+    'price_cents', v_prod.price_cents
+  );
+end;
+$$;
+
+alter table public.bookings drop constraint if exists bookings_no_tutor_overlap;
+alter table public.bookings add constraint bookings_no_tutor_overlap
+  exclude using gist (
+    tutor_id with =,
+    tstzrange(scheduled_start, scheduled_end) with &&
+  ) where (tutor_id is not null and scheduled_start is not null
+           and status in ('pending','confirmed','completed'));

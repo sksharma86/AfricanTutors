@@ -45,5 +45,6 @@ export function evaluateStudyHall365Day(input: {
 export function chooseBookingSource(input: {
   studyHall365?: ReturnType<typeof evaluateStudyHall365Day> | null;
   prepaidMinutes?: number;
+  creditCents?: number;
   freeTrialEligible?: boolean;
-}): { source: "study_hall_365" | "free_trial" | "prepaid" | "payg"; entitled: boolean; reason: string };
+}): { source: "study_hall_365" | "free_trial" | "prepaid" | "credit" | "payg"; entitled: boolean; reason: string };

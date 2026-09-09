@@ -278,7 +278,7 @@ describe("Study Hall 365 — household / siblings / funding choice", () => {
     assert.doesNotMatch(sql, /p_student_id|p_child_count|p_student_ids/);
   });
 
-  it("prefers unused free first, then 365, then prepaid, then PAYG", () => {
+  it("prefers unused free first, then 365, then prepaid, then credit, then PAYG", () => {
     assert.equal(
       chooseBookingSource({
         studyHall365: { entitled: true, reason: "available" },
@@ -308,6 +308,20 @@ describe("Study Hall 365 — household / siblings / funding choice", () => {
         prepaidMinutes: 600,
       }).source,
       "prepaid",
+    );
+    assert.equal(
+      chooseBookingSource({
+        prepaidMinutes: 0,
+        creditCents: 1200,
+      }).source,
+      "credit",
+    );
+    assert.equal(
+      chooseBookingSource({
+        prepaidMinutes: 30,
+        creditCents: 1200,
+      }).source,
+      "credit",
     );
     assert.equal(chooseBookingSource({ prepaidMinutes: 0 }).source, "payg");
   });
@@ -428,7 +442,7 @@ describe("Study Hall 365 — architecture / safety static checks", () => {
       { code: "pkg_14h" },
       { code: "pkg_28h" },
     ]);
-    assert.deepEqual(fallback.map((p) => p.code), ["pkg_14h", "pkg_28h"]);
+    assert.deepEqual(fallback.map((p) => p.code), []);
   });
 
   it("parent-facing membership path never selects raw Stripe identifiers", () => {

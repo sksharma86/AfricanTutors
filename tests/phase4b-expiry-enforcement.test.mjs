@@ -106,7 +106,7 @@ describe("Phase 4B — self-enforcing expiry at fulfillment (live)", { skip: !ha
   // 2 — package paid after deadline, NO sweeper first
   it("package: late Stripe payment after expires_at (no sweeper) → credited, no minutes", async () => {
     const a = await acct("PkgUnswept");
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const due = pkg.price_cents - 5000;
@@ -130,7 +130,7 @@ describe("Phase 4B — self-enforcing expiry at fulfillment (live)", { skip: !ha
     assert.equal(okb.data.status, "confirmed");
     assert.equal((await getBooking(rb.data.booking_id)).status, "confirmed");
 
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     const rp = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const okp = await svc.rpc("fulfill_package_payment", { p_payment_id: rp.data.payment_id, p_amount_cents: pkg.price_cents });
     assert.equal(okp.data.status, "completed");
@@ -171,7 +171,7 @@ describe("Phase 4B — self-enforcing expiry at fulfillment (live)", { skip: !ha
 
     // package
     const a2 = await acct("ConcurPkg");
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a2.id, 5000);
     const rp = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a2.id });
     const due = pkg.price_cents - 5000;
@@ -187,7 +187,7 @@ describe("Phase 4B — self-enforcing expiry at fulfillment (live)", { skip: !ha
   // 6 — duplicate late webhook after the unswept-expiry path → no double credit
   it("duplicate late webhook after unswept expiry → value credited exactly once", async () => {
     const a = await acct("DupLate");
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a.id, 5000);
     const r = await svc.rpc("purchase_package", { p_package_id: pkg.id, p_account: a.id });
     const due = pkg.price_cents - 5000;

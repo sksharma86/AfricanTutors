@@ -3,9 +3,9 @@ import { notFound, redirect } from "next/navigation";
 
 import { CustomerBookingActions } from "@/components/dashboard/customer-booking-actions";
 import { ParentCompletedHeader, ParentSessionRecap } from "@/components/dashboard/parent-session-recap";
+import { ParentJoinControl } from "@/components/dashboard/parent-join-control";
 import { ParentPage } from "@/components/dashboard/parent-page";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
-import { LinkButton } from "@/components/ui/button";
 import { PortalTextLink } from "@/components/ui/portal-text-link";
 import { requireRole } from "@/lib/auth";
 import { formatDuration } from "@/lib/format.mjs";
@@ -148,15 +148,16 @@ export default async function ParentStudyHallDetailPage({
           </dl>
           <p className="mt-4 text-xs text-white/40">Booking reference {booking.public_reference}</p>
 
-          {join.state === "join" ? (
-            <div className="mt-6">
-              <LinkButton href={`/dashboard/session/${booking.id}`} variant="secondary" size="lg">
-                Join Study Hall
-              </LinkButton>
-            </div>
-          ) : join.state === "opens_at" && join.label ? (
-            <p className="mt-6 text-sm font-medium text-gold-200">{join.label}</p>
-          ) : null}
+          <div className="mt-6">
+            <ParentJoinControl
+              bookingId={booking.id}
+              status={booking.status}
+              scheduledStart={booking.scheduled_start ?? null}
+              scheduledEnd={booking.scheduled_end ?? null}
+              showSecondary={false}
+              prominent
+            />
+          </div>
 
           {booking.request_note ? <p className="mt-5 text-sm text-white/70">{booking.request_note}</p> : null}
 

@@ -179,6 +179,10 @@ describe("Parent portal UX — Home, Next Study Hall, primary CTA", () => {
     assert.equal(parentJoinHint(row, START - 5 * 60000).label, "Join Study Hall");
     assert.equal(parentJoinHint(row, END + 1).label, "Join Study Hall");
     const next = read("src/components/dashboard/parent-next-study-hall.tsx");
+    const joinCtl = read("src/components/dashboard/parent-join-control.tsx");
+    assert.match(next, /ParentJoinControl/);
+    assert.match(joinCtl, /setInterval/);
+    assert.match(joinCtl, /authorize_session_join remains/);
     assert.doesNotMatch(next, /opens_at|JOIN_OPEN|webhook|Daily room|payment_status/);
   });
 
@@ -307,7 +311,8 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
     assert.match(detail, /CustomerBookingActions/);
     assert.match(detail, /Booking reference/);
     assert.match(detail, /parentPaymentLineLabel|Paid or covered by hours|Free session/);
-    assert.match(detail, /Join Study Hall/);
+    assert.match(detail, /ParentJoinControl/);
+    assert.match(read("src/components/dashboard/parent-join-control.tsx"), /Join Study Hall/);
     assert.match(read("src/components/dashboard/parent-session-recap.tsx"), /Available for 60 days after the Study Hall/);
     assert.doesNotMatch(detail, /daily_room|share_token|webhook|CRON|comp_rate/);
   });

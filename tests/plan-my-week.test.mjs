@@ -159,7 +159,8 @@ describe("Plan My Week — parent portal entry and authorization", () => {
     assert.match(page, /Plan My Week/);
     assert.match(page, /PlanMyWeek/);
     assert.match(page, /resolve_account_timezone/);
-    assert.match(next, /\/dashboard\/student\/plan-week/);
+    assert.match(next, /ParentJoinControl/);
+    assert.match(read("src/components/dashboard/parent-join-control.tsx"), /\/dashboard\/student\/plan-week/);
     assert.match(upcoming, /Plan my week/);
     assert.match(halls, /Plan my week/);
     assert.match(hallsPage, /\/dashboard\/student\/plan-week/);

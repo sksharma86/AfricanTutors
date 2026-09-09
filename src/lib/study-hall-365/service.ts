@@ -42,6 +42,7 @@ export async function getStudyHall365Entitlement(params: {
   asOf?: Date;
   bookingStart?: Date | string | null;
   prepaidMinutes?: number;
+  creditCents?: number;
   freeTrialEligible?: boolean;
   client?: SupabaseClient;
 }) {
@@ -82,9 +83,22 @@ export async function getStudyHall365Entitlement(params: {
     bookingStart: params.bookingStart,
   });
 
+  let prepaidMinutes = params.prepaidMinutes;
+  let creditCents = params.creditCents;
+  if (prepaidMinutes == null || creditCents == null) {
+    const balRes = await db.rpc("get_customer_balances", { p_account: params.accountId });
+    const bal = (!balRes.error && balRes.data ? balRes.data : {}) as {
+      package_minutes?: number;
+      dollar_credit_cents?: number;
+    };
+    if (prepaidMinutes == null) prepaidMinutes = Number(bal.package_minutes) || 0;
+    if (creditCents == null) creditCents = Number(bal.dollar_credit_cents) || 0;
+  }
+
   const combined = chooseBookingSource({
     studyHall365: evaluated,
-    prepaidMinutes: params.prepaidMinutes,
+    prepaidMinutes,
+    creditCents,
     freeTrialEligible: params.freeTrialEligible,
   });
 

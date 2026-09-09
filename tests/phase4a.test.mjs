@@ -58,15 +58,15 @@ describe("Phase 4A — financial foundation (live)", { skip: !hasSupabaseEnv }, 
     assert.deepEqual([by.pkg_40h.minutes, by.pkg_40h.price_cents], [2400, 68000]);
     assert.ok(data.every((p) => Number.isInteger(p.price_cents)));
 
-    // Active purchasable packages after Study Hall PR2.
+    // Current customer prepaid offer after 0047. Historical 14h/28h remain but are not sold.
     const { data: active } = await svc
       .from("package_products")
-      .select("code, minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const activeBy = Object.fromEntries((active ?? []).map((p) => [p.code, p]));
-    assert.deepEqual([activeBy.pkg_14h.minutes, activeBy.pkg_14h.price_cents], [840, 14000]);
-    assert.deepEqual([activeBy.pkg_28h.minutes, activeBy.pkg_28h.price_cents], [1680, 25200]);
+    assert.deepEqual([activeBy.pkg_10sh.minutes, activeBy.pkg_10sh.price_cents, activeBy.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([activeBy.pkg_14h.minutes, activeBy.pkg_14h.price_cents, activeBy.pkg_14h.is_active], [840, 14000, false]);
+    assert.deepEqual([activeBy.pkg_28h.minutes, activeBy.pkg_28h.price_cents, activeBy.pkg_28h.is_active], [1680, 25200, false]);
   });
 
   it("package minutes: issuance is idempotent and balance derives from the ledger", async () => {
