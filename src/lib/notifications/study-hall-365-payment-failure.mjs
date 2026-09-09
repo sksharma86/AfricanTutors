@@ -28,6 +28,12 @@ export function studyHall365PaymentFailureKey(invoiceId) {
   return `365-payment-failure:${id}`;
 }
 
+/** Distinct from the email key so SMS and email never share a delivery row. */
+export function studyHall365PaymentFailureSmsKey(invoiceId) {
+  const key = studyHall365PaymentFailureKey(invoiceId);
+  return key ? `sms:${key}` : null;
+}
+
 /**
  * Invoice still needs collection (not paid / voided). Used so invoice.paid
  * recovery syncs cannot emit a failure email.

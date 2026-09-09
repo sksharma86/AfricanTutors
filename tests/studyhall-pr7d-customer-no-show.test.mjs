@@ -246,11 +246,15 @@ describe("PR7D — parent and Guide copy", () => {
 });
 
 describe("PR7D — channels", () => {
-  it("12. no parent SMS in PR7D (catalog may list it; shipped policy is email only)", () => {
+  it("12. parent SMS is consent-gated; catalog lists it; Guide SMS is not sent", () => {
     assert.ok(CHANNEL_POLICY.sms.includes("customer_no_show_parent"));
     assert.deepEqual(CHANNEL_POLICY.pr7d_customer_no_show.parent, ["email"]);
+    assert.deepEqual(CHANNEL_POLICY.pr7f_shipped.customer_no_show_parent.parent, ["email", "sms"]);
     const body = notifyCustomerNoShowSource();
-    assert.doesNotMatch(body, /deliverParentSms|sendParentAttentionSms|parentNoShowSms/);
+    assert.match(body, /deliverParentSms/);
+    assert.match(body, /parentNoShowSms/);
+    assert.match(body, /customer_no_show_parent_sms/);
+    assert.doesNotMatch(body, /sendParentAttentionSms/);
   });
 
   it("13. no Guide SMS or WhatsApp", () => {
@@ -258,7 +262,7 @@ describe("PR7D — channels", () => {
     assert.ok(!(CHANNEL_POLICY.whatsapp || []).includes("customer_no_show_guide"));
     assert.ok(!(CHANNEL_POLICY.whatsapp || []).includes("customer_no_show_parent"));
     const body = notifyCustomerNoShowSource();
-    assert.doesNotMatch(body, /deliverGuideWhatsApp|sendGuideWhatsApp|deliverParentSms/);
+    assert.doesNotMatch(body, /deliverGuideWhatsApp|sendGuideWhatsApp/);
   });
 
   it("14. no routine Management notification", () => {
@@ -316,10 +320,9 @@ describe("PR7D — identifiers, CTAs, and production-safety bounds", () => {
     assert.doesNotMatch(parent.html + guide.html, /daily\.co|resend\.com|twilio\.com|billing\.stripe/);
   });
 
-  it("does not start PR7F, does not touch admin_no_show, and skips live providers", () => {
+  it("does not start PR8, does not touch admin_no_show, and skips live providers", () => {
     const notify = read("src/lib/notify.ts");
     const body = notifyCustomerNoShowSource();
-    assert.doesNotMatch(body, /consent|sender branding|opt-out/i);
     assert.doesNotMatch(read("src/app/api/admin/booking/route.ts"), /notifyCustomerNoShow/);
     assert.doesNotMatch(read("src/app/api/stripe/webhook/route.ts"), /notifyCustomerNoShow|customer_no_show/);
     assert.match(notify, /claim_email_delivery/);

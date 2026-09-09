@@ -62,7 +62,7 @@ describe("Study Hall PR8 — reminder policy (pure)", () => {
 describe("Study Hall PR8 — SMS copy (pure)", () => {
   it("parent 1h reminder matches preferred direction and never exposes phone", () => {
     const sms = parentSessionReminderSms({ studentName: "Maya", whenISO: ISO, tz: "America/New_York" });
-    assert.match(sms, /Study Hall \(at home\) reminder: Maya's Study Hall starts at/);
+    assert.match(sms, /^Study Hall: Maya's Study Hall starts at/);
     assert.match(sms, /ready at her workspace/);
     assert.match(sms, /room opens 5 minutes before/i);
     assert.doesNotMatch(sms, /\+1|phone|twilio/i);
@@ -71,8 +71,8 @@ describe("Study Hall PR8 — SMS copy (pure)", () => {
   it("cancel SMS is concise; material-impact SMS never says Guide changed for routine swap", () => {
     const c = parentCancellationSms({ studentName: "Maya", whenISO: ISO, tz: "UTC" });
     const r = parentReassignmentSms({ studentName: "Maya", whenISO: ISO, tz: "UTC" });
-    assert.match(c, /^Study Hall \(at home\):/);
-    assert.match(r, /^Study Hall \(at home\):/);
+    assert.match(c, /^Study Hall:/);
+    assert.match(r, /^Study Hall:/);
     assert.match(c, /cancelled/i);
     assert.match(r, /session at .* was updated/i);
     assert.doesNotMatch(r, /Guide changed/i);
@@ -81,19 +81,21 @@ describe("Study Hall PR8 — SMS copy (pure)", () => {
 });
 
 describe("Study Hall PR8 — customer-facing brand lock-in", () => {
-  it("notification sources use Study Hall (at home); no Study Hall at Home; no email-config diagnostic", () => {
+  it("notification bodies use Study Hall (at home); inbox sender is Study Hall at Home", () => {
     const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
     const templates = read("src/lib/email/templates.mjs");
     const transport = read("src/lib/email/transport.ts");
+    const from = read("src/lib/email/from.mjs");
     const sms = read("src/lib/notifications/sms-copy.mjs");
     const callParent = read("src/lib/call-parent.mjs");
-    for (const src of [templates, transport, sms, callParent]) {
-      assert.doesNotMatch(src, /Study Hall at Home/);
+    for (const src of [templates, sms, callParent]) {
       assert.doesNotMatch(src, /\[email-config\]/);
     }
     assert.match(templates, /const BRAND = "Study Hall \(at home\)"/);
-    assert.match(transport, /Study Hall \(at home\) </);
-    assert.match(sms, /Study Hall \(at home\) reminder:/);
+    assert.doesNotMatch(templates, /Study Hall at Home/);
+    assert.match(from, /Study Hall at Home/);
+    assert.match(transport, /resolveEmailFrom/);
+    assert.match(sms, /Study Hall:/);
     assert.match(callParent, /Study Hall \(at home\) needs your attention/);
     const branded = T.bookingConfirmed({
       whenISO: ISO,

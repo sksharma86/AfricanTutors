@@ -26,5 +26,15 @@ declare module "@/lib/notifications/events.mjs" {
       guide: string[];
       manager: string[];
     }>;
+    pr7f_shipped?: Readonly<
+      Record<
+        string,
+        Readonly<{
+          parent: string[];
+          guide: string[];
+          manager: string[];
+        }>
+      >
+    >;
   }>;
 }

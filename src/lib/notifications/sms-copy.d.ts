@@ -32,3 +32,6 @@ export function parentReassignmentSms(ctx: {
   whenISO?: string | null;
   tz?: string | null;
 }): string;
+
+export function parentPaymentFailureSms(ctx?: { appUrl?: string | null }): string;
+export function parentNoShowSms(ctx?: { appUrl?: string | null }): string;

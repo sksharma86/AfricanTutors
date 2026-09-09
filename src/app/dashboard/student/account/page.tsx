@@ -49,7 +49,11 @@ export default async function ParentAccountPage() {
       </ParentSurface>
 
       <section className="mt-5">
-        <ParentPhoneForm initialPhone={data.parentPhone} />
+        <ParentPhoneForm
+          initialPhone={data.parentPhone}
+          initialSmsOptIn={data.smsTransactionalOptIn}
+          smsPreferenceAvailable={data.smsPreferenceAvailable}
+        />
       </section>
 
       <ParentSurface className="mt-5">

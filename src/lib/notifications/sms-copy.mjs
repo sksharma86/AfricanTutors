@@ -22,9 +22,9 @@ export function parentSessionReminderSms(ctx) {
   const when = formatWhen(ctx.whenISO, ctx.tz);
   if (names.length === 1) {
     const name = names[0];
-    return `Study Hall (at home) reminder: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
+    return `Study Hall: ${name}'s Study Hall starts at ${when}. Please have her ready at her workspace. The room opens 5 minutes before.`;
   }
-  return `Study Hall (at home) reminder: ${possessiveStudyHall(names)} starts at ${when}. Please have them ready at their workspace. The room opens 5 minutes before.`;
+  return `Study Hall: ${possessiveStudyHall(names)} starts at ${when}. Please have them ready at their workspace. The room opens 5 minutes before.`;
 }
 
 /**
@@ -35,9 +35,9 @@ export function parentCancellationSms(ctx) {
   const names = namesOf(ctx);
   const when = formatWhen(ctx.whenISO, ctx.tz);
   if (names.length === 1) {
-    return `Study Hall (at home): ${names[0]}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
+    return `Study Hall: ${names[0]}'s session (${when}) was cancelled. Check your email or dashboard for details.`;
   }
-  return `Study Hall (at home): ${possessiveStudyHall(names)} (${when}) was cancelled. Check your email or dashboard for details.`;
+  return `Study Hall: ${possessiveStudyHall(names)} (${when}) was cancelled. Check your email or dashboard for details.`;
 }
 
 /**
@@ -51,19 +51,33 @@ export function parentCancellationSms(ctx) {
  */
 export function parentCoverageCancellationSms(ctx = {}) {
   void ctx;
-  return "Study Hall (at home): we're unable to provide a Guide for today's Study Hall. Your session value has been restored. We apologize for the disruption.";
+  return "Study Hall: we're unable to provide a Guide for today's Study Hall. Your session value has been restored. We apologize for the disruption.";
 }
 
 export function parentCoverageFailureProtectionSms(ctx = {}) {
   void ctx;
-  return "Study Hall (at home): we weren't able to confirm Guide coverage for your upcoming Study Hall, so we cancelled it. Your booking is restored and we've added a complimentary hour. You can book again anytime.";
+  return "Study Hall: we weren't able to confirm Guide coverage for your upcoming Study Hall, so we cancelled it. Your booking is restored and we've added a complimentary hour. You can book again anytime.";
 }
 
 export function parentReassignmentSms(ctx) {
   const names = namesOf(ctx);
   const when = formatWhen(ctx.whenISO, ctx.tz);
   if (names.length === 1) {
-    return `Study Hall (at home): ${names[0]}'s session at ${when} was updated. Check your email or dashboard for details.`;
+    return `Study Hall: ${names[0]}'s session at ${when} was updated. Check your email or dashboard for details.`;
   }
-  return `Study Hall (at home): ${possessiveStudyHall(names)} at ${when} was updated. Check your email or dashboard for details.`;
+  return `Study Hall: ${possessiveStudyHall(names)} at ${when} was updated. Check your email or dashboard for details.`;
+}
+
+export function parentPaymentFailureSms(ctx = {}) {
+  const appUrl = typeof ctx.appUrl === "string" ? ctx.appUrl.replace(/\/+$/, "") : "";
+  const hours = appUrl ? `${appUrl}/dashboard/student/packages` : "";
+  if (hours) {
+    return `Study Hall: We couldn't process your Study Hall 365 payment. Review billing: ${hours}`;
+  }
+  return "Study Hall: We couldn't process your Study Hall 365 payment. Please review your billing in your account.";
+}
+
+export function parentNoShowSms(ctx = {}) {
+  void ctx;
+  return "Study Hall: Today's scheduled Study Hall was marked missed. Details are available in your Parent account.";
 }

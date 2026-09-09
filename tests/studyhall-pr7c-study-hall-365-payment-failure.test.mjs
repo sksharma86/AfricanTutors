@@ -284,7 +284,7 @@ describe("PR7C — email copy, billing link, channels", () => {
     assertNoLeaks(mail);
   });
 
-  it("PR7C sends parent email only; SMS remains deferred to PR7F", () => {
+  it("PR7F sends parent email plus consent-gated SMS; no Guide/Management send", () => {
     const life = CHANNEL_POLICY.pr7_lifecycle;
     assert.deepEqual(life.payment_failure.parent, ["email", "sms"]);
     assert.deepEqual(life.payment_failure.guide, []);
@@ -292,14 +292,16 @@ describe("PR7C — email copy, billing link, channels", () => {
     assert.ok(CHANNEL_POLICY.email.includes("payment_failure"));
     assert.ok(CHANNEL_POLICY.sms.includes("payment_failure"));
     assert.ok(!(CHANNEL_POLICY.whatsapp || []).includes("payment_failure"));
+    assert.deepEqual(CHANNEL_POLICY.pr7f_shipped.payment_failure.parent, ["email", "sms"]);
 
     const notify = read("src/lib/notify.ts");
-    const start = notify.indexOf("Parent-email Study Hall 365 payment failure");
-    const end = notify.indexOf("export async function notifyAccountCreditApplied");
+    const start = notify.indexOf("export async function notifyStudyHall365PaymentFailure");
+    const end = notify.indexOf("export async function notifyCustomerNoShow");
     const body = notify.slice(start, end > start ? end : undefined);
     assert.match(body, /deliver\(/);
-    assert.doesNotMatch(body, /deliverParentSms|deliverGuideWhatsApp|notifyAdminAlert/);
-    assert.match(body, /PR7F/);
+    assert.match(body, /deliverParentSms/);
+    assert.match(body, /payment_failure_sms/);
+    assert.doesNotMatch(body, /deliverGuideWhatsApp|notifyAdminAlert/);
   });
 });
 
@@ -333,9 +335,8 @@ describe("PR7C — architecture, isolation, Hours portal CTA", () => {
     assert.match(lifecycle, /notifyStudyHall365Lifecycle/);
   });
 
-  it("does not start PR7F from the 365 payment-failure path", () => {
+  it("does not start PR8 / customer no-show from the 365 payment-failure path", () => {
     assert.match(notify, /notifyStudyHall365PaymentFailure/);
-    assert.doesNotMatch(sync, /consent|sender branding/i);
     assert.doesNotMatch(webhook, /customer_no_show/);
     assert.doesNotMatch(webhook, /notifyCustomerNoShow/);
   });

@@ -31,7 +31,7 @@ export const CALL_PARENT_VOICE_MESSAGE =
   "Study Hall (at home) needs your attention. Please check on your child now.";
 
 export const CALL_PARENT_SMS_MESSAGE =
-  "Study Hall (at home) needs your attention. Please check on your child.";
+  "Study Hall: we need your attention. Please check on your child.";
 
 /**
  * @param {string | null | undefined} value

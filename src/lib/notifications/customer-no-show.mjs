@@ -10,9 +10,9 @@
  * first-transition and already-no_show retries both safe: the first
  * successful send wins, later invocations claim-skip.
  *
- * Parent SMS is catalogued in PR7A but deferred to PR7F (no consent /
- * opt-out infrastructure exists). Guide SMS / WhatsApp and routine
- * Management notifications are not part of PR7D.
+ * Parent SMS is gated by PR7F transactional consent (never inferred from
+ * phone). Guide SMS / WhatsApp and routine Management notifications are not
+ * sent.
  */
 
 export const CUSTOMER_NO_SHOW_PARENT_EVENT = "customer_no_show_parent";
@@ -23,6 +23,10 @@ export const CUSTOMER_NO_SHOW_GUIDE_DEDUPE_PREFIX = "customer-no-show-guide:";
 
 export function customerNoShowParentDedupeKey(bookingId) {
   return `${CUSTOMER_NO_SHOW_PARENT_DEDUPE_PREFIX}${bookingId}`;
+}
+
+export function customerNoShowParentSmsKey(bookingId) {
+  return `sms:${customerNoShowParentDedupeKey(bookingId)}`;
 }
 
 export function customerNoShowGuideDedupeKey(bookingId) {

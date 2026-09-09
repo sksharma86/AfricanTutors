@@ -5,6 +5,8 @@ import {
   CALL_PARENT_VOICE_MESSAGE,
 } from "@/lib/call-parent.mjs";
 import { notifyCallParentFailure } from "@/lib/notify";
+import { parentTransactionalSmsEligible } from "@/lib/notifications/parent-sms-consent.mjs";
+import { loadParentSmsProfile } from "@/lib/notifications/parent-sms-profile";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import { isTwilioConfigured } from "@/lib/telephony/config";
 import { placeParentAttentionCall, sendParentAttentionSms } from "@/lib/telephony/client";
@@ -128,8 +130,9 @@ export async function fulfillParentEscalation(escalationId: string): Promise<Cal
     return resultOf(escalationId, "contacting");
   }
 
-  // Could not place the call at all → SMS fallback immediately (sync).
-  return sendSmsFallbackForEscalation(service, escalationId, phone, call.status, call.error ?? null);
+  // Could not place the call at all → SMS fallback immediately if consented.
+  // Voice already used the number on file; SMS still requires transactional opt-in.
+  return sendSmsFallbackForEscalation(service, escalationId, row.account_id, phone, call.status, call.error ?? null);
 }
 
 /**
@@ -200,12 +203,7 @@ async function deliverClaimedSmsFallback(
 
   if (!row) return { ok: true, action: "missing_row" };
 
-  const { data: profile } = await service
-    .from("profiles")
-    .select("phone_e164")
-    .eq("id", row.account_id)
-    .maybeSingle();
-
+  const profile = await loadParentSmsProfile(service, row.account_id);
   const phone = typeof profile?.phone_e164 === "string" ? profile.phone_e164.trim() : "";
   if (!phone) {
     await complete(service, row.id, {
@@ -223,6 +221,19 @@ async function deliverClaimedSmsFallback(
       /* best-effort admin alert */
     }
     return { ok: true, action: "sms_no_phone" };
+  }
+
+  if (!parentTransactionalSmsEligible(profile).ok) {
+    await complete(service, row.id, {
+      p_status: "failed",
+      p_outcome: "sms_not_opted_in",
+      p_call_status: callStatus,
+      p_answered_by: answeredBy,
+      p_sms_status: "skipped",
+      p_error_detail: "parent has not opted in to transactional SMS",
+      p_sms_attempted: false,
+    });
+    return { ok: true, action: "sms_not_opted_in" };
   }
 
   const sms = await sendParentAttentionSms({
@@ -267,10 +278,26 @@ async function deliverClaimedSmsFallback(
 async function sendSmsFallbackForEscalation(
   service: ReturnType<typeof getServiceSupabase>,
   escalationId: string,
+  accountId: string,
   phone: string,
   callStatus: string,
   callError: string | null,
 ): Promise<CallParentResult> {
+  const profile = await loadParentSmsProfile(service, accountId);
+  if (!parentTransactionalSmsEligible(profile).ok) {
+    await complete(service, escalationId, {
+      p_status: "failed",
+      p_outcome: "sms_not_opted_in",
+      p_call_provider: "twilio",
+      p_call_status: callStatus,
+      p_sms_status: "skipped",
+      p_error_detail: [callError, "parent has not opted in to transactional SMS"].filter(Boolean).join("; "),
+      p_call_attempted: true,
+      p_sms_attempted: false,
+    });
+    return resultOf(escalationId, "unable_to_contact");
+  }
+
   const sms = await sendParentAttentionSms({
     toE164: phone,
     body: CALL_PARENT_SMS_MESSAGE,
