@@ -247,6 +247,16 @@ export function parentHomeFundingCopy({
       creditCents: credit,
     };
   }
+  const creditCoversHall = credit >= 1200;
+  if (Number(minutes) < 60 && creditCoversHall) {
+    return {
+      kind: "credit",
+      line: "Account credit can cover this Study Hall.",
+      showZeroPrepaid: false,
+      showBuyHours: false,
+      creditCents: credit,
+    };
+  }
   return {
     kind: "prepaid",
     line: minutes > 0 ? prepaid : "Pay as you go is $12 for one 60-minute Study Hall.",

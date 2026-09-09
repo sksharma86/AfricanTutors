@@ -5,7 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if ! command -v pg_isready >/dev/null 2>&1 || ! pg_isready -q; then
+pg_ready() {
+  pg_isready -q 2>/dev/null || sudo -u postgres pg_isready -q 2>/dev/null
+}
+if ! command -v pg_isready >/dev/null 2>&1 || ! pg_ready; then
   echo "PR8B launch-critical suite requires Postgres; pg_isready failed." >&2
   echo "Critical concurrency tests did not execute." >&2
   exit 1

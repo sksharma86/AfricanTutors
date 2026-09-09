@@ -145,14 +145,17 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
     assert.equal(qf.data.funding, "free_trial");
   });
 
-  it("active prepaid packages are $140 / $252 (14h / 28h)", async () => {
+  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are historical (0047)", async () => {
     const { data } = await svc
       .from("package_products")
-      .select("minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
-    const rows = (data ?? []).map((r) => [r.minutes, r.price_cents]);
-    assert.deepEqual(rows, [[840, 14000], [1680, 25200]]);
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
+    const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.equal(by.pkg_14h.is_active, false);
+    assert.equal(by.pkg_28h.is_active, false);
+    assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents], [840, 14000]);
+    assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents], [1680, 25200]);
   });
 
   it("historical 10/20/40h package rows remain inactive with original prices", async () => {

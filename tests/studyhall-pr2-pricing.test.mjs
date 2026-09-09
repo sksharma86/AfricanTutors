@@ -88,18 +88,16 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
     assert.equal(q.data.stripe_cents_due, 1200);
   });
 
-  it("2–5. Active packages are exactly 14h/$140 and 28h/$252", async () => {
+  it("2–5. Active customer offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async () => {
     const { data, error } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
-      .eq("is_active", true)
-      .order("sort_order");
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
-    const rows = (data ?? []).map((r) => [r.code, r.minutes, r.price_cents]);
-    assert.ok(rows.some((r) => r[0] === "pkg_14h" && r[1] === 840 && r[2] === 14000));
-    assert.ok(rows.some((r) => r[0] === "pkg_28h" && r[1] === 1680 && r[2] === 25200));
-    const ten = rows.find((r) => r[0] === "pkg_10sh");
-    if (ten) assert.deepEqual(ten, ["pkg_10sh", 600, 10000]);
+    const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents, by.pkg_14h.is_active], [840, 14000, false]);
+    assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents, by.pkg_28h.is_active], [1680, 25200, false]);
   });
 
   it("6. Dollar account credit applies correctly against the $12 session", async () => {

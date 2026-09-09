@@ -14,7 +14,12 @@ const havePsql = (() => {
     execSync("pg_isready -q", { stdio: "ignore" });
     return true;
   } catch {
-    return false;
+    try {
+      execSync("sudo -u postgres pg_isready -q", { stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
   }
 })();
 

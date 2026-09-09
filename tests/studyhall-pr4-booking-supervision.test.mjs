@@ -274,7 +274,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     await cleanupAll();
   });
 
-  it("PR2: packages remain 14h/$140 and 28h/$252; $12/hour rate for 60 min", async () => {
+  it("PR2/PR8B: current offer is pkg_10sh; pkg_14h/pkg_28h remain historical; $12/hour for 60 min", async () => {
     const q60 = await svc.rpc("booking_quote", {
       p_account: parent.id,
       p_duration: 60,
@@ -285,17 +285,13 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
 
     const { data, error } = await svc
       .from("package_products")
-      .select("code, minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
-    assert.deepEqual(
-      (data ?? []).map((r) => [r.code, r.minutes, r.price_cents]),
-      [
-        ["pkg_14h", 840, 14000],
-        ["pkg_28h", 1680, 25200],
-      ],
-    );
+    const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.equal(by.pkg_14h.is_active, false);
+    assert.equal(by.pkg_28h.is_active, false);
   });
 
   it("PR3: one-hour free session quote remains $0", async () => {

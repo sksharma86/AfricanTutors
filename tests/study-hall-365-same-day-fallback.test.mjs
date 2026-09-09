@@ -68,6 +68,15 @@ describe("Same-day 365 extra Study Hall — intended hierarchy", () => {
         freeTrialEligible: false,
         studyHall365: { entitled: false, reason: "already_consumed" },
         prepaidMinutes: 0,
+        creditCents: 1200,
+      }).source,
+      "credit",
+    );
+    assert.equal(
+      chooseBookingSource({
+        freeTrialEligible: false,
+        studyHall365: { entitled: false, reason: "already_consumed" },
+        prepaidMinutes: 0,
       }).source,
       "payg",
     );

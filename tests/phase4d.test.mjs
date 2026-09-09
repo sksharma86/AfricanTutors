@@ -198,7 +198,7 @@ describe("Phase 4D — hardening: concurrency, boundaries, state integrity (live
   // ---- Concurrency: package purchase double-submit dedupe ----
   it("duplicate package checkout submissions reserve credit once (dedupe)", async () => {
     const a = await acct("PkgDouble");
-    const pkg = await pkgId("pkg_14h");
+    const pkg = await pkgId("pkg_10sh");
     await issueCredit(a.id, 5000);
     const c = await clientFor(a);
     const [r1, r2] = await Promise.all([

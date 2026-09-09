@@ -59,16 +59,14 @@ describe("Pricing page — single sessions before packages", () => {
 
 describe("Pricing page — prepaid packages (live)", { skip: !hasSupabaseEnv }, () => {
   const svc = adminClient();
-  it("active packages are 14h/$140 and 28h/$252 (Study Hall PR2)", async () => {
+  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async () => {
     const { data } = await svc
       .from("package_products")
-      .select("minutes, price_cents")
-      .eq("is_active", true)
-      .order("sort_order");
-    const rows = (data ?? []).map((r) => [r.minutes, r.price_cents]);
-    assert.ok(rows.some((r) => r[0] === 840 && r[1] === 14000));
-    assert.ok(rows.some((r) => r[0] === 1680 && r[1] === 25200));
-    const ten = rows.find((r) => r[0] === 600 && r[1] === 10000);
-    if (ten) assert.deepEqual(ten, [600, 10000]);
+      .select("code, minutes, price_cents, is_active")
+      .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
+    const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents, by.pkg_14h.is_active], [840, 14000, false]);
+    assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents, by.pkg_28h.is_active], [1680, 25200, false]);
   });
 });

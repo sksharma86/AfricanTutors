@@ -25,6 +25,7 @@ import {
   localDateForInstant,
   utcInstantForLocalParts,
 } from "../src/lib/study-hall-365/calendar.mjs";
+import { parentHomeFundingCopy } from "../src/lib/parent-week.mjs";
 import { chooseBookingSource } from "../src/lib/study-hall-365/entitlement.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
@@ -41,6 +42,10 @@ describe("PR8B — launch-critical suite is required, not skip-pass", () => {
     assert.match(live, /STUDY_HALL_PR8B_REQUIRE_PG/);
     assert.match(live, /Critical tests did not execute/);
     assert.match(live, /PR8B_PG_EXECUTED/);
+    const workflow = read(".github/workflows/pr8b-hardening.yml");
+    assert.match(workflow, /npm run test:pr8b/);
+    assert.match(workflow, /postgresql/);
+    assert.doesNotMatch(workflow, /STRIPE_|DAILY_|TWILIO_|RESEND_|SUPABASE_SERVICE/);
   });
 });
 
@@ -115,11 +120,48 @@ describe("PR8B — funding priority (UI cannot override)", () => {
     assert.equal(
       chooseBookingSource({
         freeTrialEligible: false,
+        studyHall365: { entitled: false, reason: "already_consumed" },
+        prepaidMinutes: 30,
+        creditCents: 1200,
+      }).source,
+      "credit",
+    );
+    assert.equal(
+      chooseBookingSource({
+        freeTrialEligible: false,
         prepaidMinutes: 0,
         creditCents: 0,
       }).source,
       "payg",
     );
+  });
+
+  it("getStudyHall365Entitlement passes credit into chooseBookingSource", () => {
+    const service = read("src/lib/study-hall-365/service.ts");
+    assert.match(service, /creditCents\?: number/);
+    assert.match(service, /get_customer_balances/);
+    assert.match(service, /creditCents,/);
+    assert.match(service, /chooseBookingSource/);
+  });
+
+  it("home funding copy does not advertise PAYG when credit would cover the Study Hall", () => {
+    const creditOnly = parentHomeFundingCopy({ minutes: 0, creditCents: 1200 });
+    assert.equal(creditOnly.kind, "credit");
+    assert.match(creditOnly.line, /Account credit can cover/);
+    assert.doesNotMatch(creditOnly.line, /Pay as you go/);
+    const leftoverPrepaid = parentHomeFundingCopy({ minutes: 30, creditCents: 2500 });
+    assert.equal(leftoverPrepaid.kind, "credit");
+    const prepaidWins = parentHomeFundingCopy({ minutes: 60, creditCents: 5000 });
+    assert.match(prepaidWins.line, /1 Study Hall remaining/);
+    const payg = parentHomeFundingCopy({ minutes: 0, creditCents: 500 });
+    assert.match(payg.line, /Pay as you go is \$12/);
+    const many = chooseBookingSource({
+      freeTrialEligible: false,
+      studyHall365: { entitled: false },
+      prepaidMinutes: 0,
+      creditCents: 5000,
+    });
+    assert.equal(many.source, "credit");
   });
 
   it("checkout API and wizard cannot supply funding_source", () => {
