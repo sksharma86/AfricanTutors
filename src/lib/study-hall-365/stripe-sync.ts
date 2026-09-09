@@ -6,7 +6,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { STUDY_HALL_365_KIND } from "@/lib/study-hall-365/catalog.mjs";
 import { invoiceSubscriptionId, stripeId, subscriptionPaidPeriod } from "@/lib/study-hall-365/stripe-period.mjs";
 import { getStripe } from "@/lib/stripe/client";
-import { shouldFulfillStudyHall365PaymentForStatus } from "@/lib/stripe/webhook-dispatch.mjs";
+import {
+  correlatedStudyHall365PaymentId,
+  paymentMatchesStudyHall365Checkout,
+  shouldFulfillStudyHall365CheckoutPayment,
+} from "@/lib/stripe/study-hall-365-webhook-policy.mjs";
 import { notifyStudyHall365Lifecycle, notifyStudyHall365PaymentFailure } from "@/lib/notify";
 
 type Service = SupabaseClient;
@@ -112,6 +116,8 @@ export async function upsertSubscriptionFromStripe(
   await maybeFulfillStudyHall365CheckoutPayment(service, {
     subscription: params.subscription,
     paymentId: params.paymentId,
+    applyStatus: upsert.status,
+    accountId: params.accountId ?? upsert.account_id ?? null,
   });
   await notifyAfterAuthoritativeUpsert({
     accountId: params.accountId,
@@ -125,15 +131,48 @@ export async function upsertSubscriptionFromStripe(
  * invoice.paid / subscription.updated can arrive without checkout.session.completed.
  * Entitlement is the membership row; the Checkout payment row still needs to leave
  * requires_payment so the return page is not stuck on "confirming".
- * past_due / incomplete must not mark the first invoice as paid.
+ *
+ * Retrieve-on-stale: Stripe.retrieve() may return the *current* subscription even
+ * when `event.created` is older than last_stripe_event_created. SQL then returns
+ * skipped_stale. We must not fulfill from that live snapshot — doing so would
+ * mark Checkout paid from a temporally rejected event.
  */
 async function maybeFulfillStudyHall365CheckoutPayment(
   service: Service,
-  params: { subscription: Stripe.Subscription; paymentId?: string | null },
+  params: {
+    subscription: Stripe.Subscription;
+    paymentId?: string | null;
+    applyStatus?: string;
+    accountId?: string | null;
+  },
 ) {
-  if (!shouldFulfillStudyHall365PaymentForStatus(params.subscription.status)) return;
-  const paymentId = params.paymentId ?? params.subscription.metadata?.payment_id ?? null;
+  if (params.applyStatus === "skipped_stale" || params.applyStatus === "ignored") return;
+  const paymentId = correlatedStudyHall365PaymentId({
+    subscriptionPaymentId: params.subscription.metadata?.payment_id,
+    explicitPaymentId: params.paymentId,
+  });
   if (!paymentId) return;
+
+  const { data: payment, error: loadError } = await service
+    .from("payments")
+    .select("id, account_id, purpose, stripe_customer_id, stripe_checkout_session_id, status")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (loadError) throw new Error(loadError.message);
+
+  if (
+    !shouldFulfillStudyHall365CheckoutPayment({
+      applyStatus: params.applyStatus,
+      subscriptionStatus: params.subscription.status,
+      payment: payment ?? null,
+      accountId: params.accountId,
+      customerId: stripeId(params.subscription.customer),
+      paymentId,
+    })
+  ) {
+    return;
+  }
+
   const { error } = await service.rpc("fulfill_study_hall_365_payment", {
     p_payment_id: paymentId,
     p_amount_cents: null,
@@ -224,17 +263,39 @@ export async function fulfillStudyHall365Checkout(
   session: Stripe.Checkout.Session,
   event: Stripe.Event,
 ) {
-  const paymentId = session.metadata?.payment_id ?? null;
+  const subscriptionObject =
+    session.subscription && typeof session.subscription === "object"
+      ? (session.subscription as Stripe.Subscription)
+      : null;
+  const paymentId = correlatedStudyHall365PaymentId({
+    explicitPaymentId: session.metadata?.payment_id,
+    subscriptionPaymentId: subscriptionObject?.metadata?.payment_id,
+  });
   const accountId = session.metadata?.account_id ?? null;
   const subscriptionId = stripeId(session.subscription);
   if (paymentId) {
-    const { error } = await service.rpc("fulfill_study_hall_365_payment", {
-      p_payment_id: paymentId,
-      p_amount_cents: typeof session.amount_total === "number" ? session.amount_total : null,
-      p_charge_id: stripeId(session.payment_intent),
-      p_subscription_id: subscriptionId,
-    });
-    if (error) throw new Error(error.message);
+    const { data: payment, error: loadError } = await service
+      .from("payments")
+      .select("id, account_id, purpose, stripe_customer_id, stripe_checkout_session_id, status")
+      .eq("id", paymentId)
+      .maybeSingle();
+    if (loadError) throw new Error(loadError.message);
+    if (
+      paymentMatchesStudyHall365Checkout(payment, {
+        accountId,
+        customerId: stripeId(session.customer),
+        paymentId,
+        checkoutSessionId: session.id,
+      })
+    ) {
+      const { error } = await service.rpc("fulfill_study_hall_365_payment", {
+        p_payment_id: paymentId,
+        p_amount_cents: typeof session.amount_total === "number" ? session.amount_total : null,
+        p_charge_id: stripeId(session.payment_intent),
+        p_subscription_id: subscriptionId,
+      });
+      if (error) throw new Error(error.message);
+    }
   }
   if (subscriptionId) {
     await syncSubscriptionById(service, {

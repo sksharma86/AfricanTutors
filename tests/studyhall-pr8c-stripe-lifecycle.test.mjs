@@ -455,11 +455,12 @@ describe("PR8C — Study Hall 365 dispatch and entitlement", () => {
   it("invoice/subscription sync fulfills the 365 payment row only when entitled", () => {
     const sync = read("src/lib/study-hall-365/stripe-sync.ts");
     assert.match(sync, /maybeFulfillStudyHall365CheckoutPayment/);
-    assert.match(sync, /shouldFulfillStudyHall365PaymentForStatus/);
+    assert.match(sync, /shouldFulfillStudyHall365CheckoutPayment/);
     assert.match(sync, /fulfill_study_hall_365_payment/);
     const helper = sync.slice(sync.indexOf("async function maybeFulfillStudyHall365CheckoutPayment"));
+    assert.match(helper, /skipped_stale/);
     assert.match(helper, /metadata\?\.payment_id/);
-    assert.doesNotMatch(helper, /past_due/);
+    assert.doesNotMatch(helper, /latest pending|order by created_at desc/);
   });
 });
 
