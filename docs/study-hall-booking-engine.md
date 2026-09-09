@@ -8,6 +8,17 @@ Who → When → Confirm.
 
 Duration is not a customer choice. The server rejects any new scheduled Study Hall that is not 60 minutes. `?duration=` is ignored. `get_available_slots(null, …)` only accepts 60.
 
+## Authoritative timezone
+
+365's "one Study Hall per calendar day" is the **household** civil date.
+
+1. `resolve_account_timezone(account_id)` reads `profiles.timezone`, else the first household student timezone, else `America/Chicago`.
+2. `book_session` / `consume_study_hall_365_day` compute `local_date` as `(scheduled_start AT TIME ZONE that_zone)::date`.
+3. The Guide timezone (`tutor_profiles.timezone`, typically `Africa/Lagos`) is used only for Guide availability display. It does not redefine the household entitlement day.
+4. Server UTC midnight is not the 365 day boundary.
+
+JS helpers in `src/lib/study-hall-365/calendar.mjs` (`localDateForInstant`, `utcInstantForLocalParts`) mirror that math for Plan My Week and tests. They are not a second funding authority.
+
 ## Funding priority (server, one request = one source)
 
 1. **Unused free first Study Hall** — even if 365 is active. A new 365 member who has not used the free session still gets the free session first; that day’s 365 entitlement remains.

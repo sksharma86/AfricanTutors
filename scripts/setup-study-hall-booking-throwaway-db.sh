@@ -16,5 +16,16 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrat
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0040_same_day_365_funding_fallback.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0041_booking_replacement_finalization.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0042_same_day_365_replacement_transfer.sql"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0047_deactivate_legacy_prepaid_packages.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role;"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "
+  create extension if not exists btree_gist;
+  alter table public.bookings drop constraint if exists bookings_no_tutor_overlap;
+  alter table public.bookings add constraint bookings_no_tutor_overlap
+    exclude using gist (
+      tutor_id with =,
+      tstzrange(scheduled_start, scheduled_end) with &&
+    ) where (tutor_id is not null and scheduled_start is not null
+             and status in ('pending','confirmed','completed'));
+"
 echo "THROWAWAY_BOOKING_DB_READY ${DB_NAME}"

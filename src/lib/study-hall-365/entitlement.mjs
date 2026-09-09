@@ -146,12 +146,14 @@ export function evaluateStudyHall365Day(input) {
 
 /**
  * Combined future-booking hint. Unused free first Study Hall wins, then an
- * unused entitled 365 day, then prepaid minutes, then PAYG. A consumed 365
- * day does not block prepaid/PAYG. PAYG is always a fallback.
+ * unused entitled 365 day, then prepaid minutes, then account credit, then
+ * PAYG. A consumed 365 day does not block prepaid/credit/PAYG. This helper is
+ * presentational — book_session remains the funding authority.
  *
  * @param {{
  *   studyHall365?: ReturnType<typeof evaluateStudyHall365Day> | null,
  *   prepaidMinutes?: number,
+ *   creditCents?: number,
  *   freeTrialEligible?: boolean,
  * }} input
  */
@@ -164,6 +166,9 @@ export function chooseBookingSource(input) {
   }
   if ((Number(input.prepaidMinutes) || 0) >= 60) {
     return { source: "prepaid", entitled: true, reason: "prepaid_minutes" };
+  }
+  if ((Number(input.creditCents) || 0) >= 1200) {
+    return { source: "credit", entitled: true, reason: "account_credit" };
   }
   return { source: "payg", entitled: true, reason: "pay_as_you_go" };
 }

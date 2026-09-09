@@ -428,7 +428,7 @@ describe("Study Hall 365 — architecture / safety static checks", () => {
       { code: "pkg_14h" },
       { code: "pkg_28h" },
     ]);
-    assert.deepEqual(fallback.map((p) => p.code), ["pkg_14h", "pkg_28h"]);
+    assert.deepEqual(fallback.map((p) => p.code), []);
   });
 
   it("parent-facing membership path never selects raw Stripe identifiers", () => {

@@ -1,4 +1,5 @@
 import { ParentIconCalendar } from "@/components/dashboard/parent-icons";
+import { ParentJoinControl } from "@/components/dashboard/parent-join-control";
 import { ParentSurface } from "@/components/dashboard/parent-surface";
 import { LinkButton } from "@/components/ui/button";
 import { bookingChildNames } from "@/lib/household-children.mjs";
@@ -6,7 +7,6 @@ import {
   childFirstName,
   parentCanCancel,
   parentGuideLabel,
-  parentJoinHint,
   parentStatusLabel,
 } from "@/lib/parent-portal.mjs";
 import { parentHomeCtas, type ParentHomeCtas } from "@/lib/parent-week.mjs";
@@ -91,7 +91,6 @@ export function ParentNextStudyHall({
   }
 
   const tz = next.students?.timezone || DEFAULT_TZ;
-  const join = parentJoinHint(next);
   const child = bookingChildNames(next, childFirstName(next.students?.full_name, "Your child"));
   const guide = parentGuideLabel(next);
   const status = parentStatusLabel(next);
@@ -126,35 +125,14 @@ export function ParentNextStudyHall({
           </div>
         </div>
         <div className="mt-5">
-          {join.state !== "join" && join.label ? (
-            <p className="mb-3 text-sm font-medium text-gold-200">{join.label}</p>
-          ) : null}
-          {join.state === "join" ? (
-            <LinkButton href={`/dashboard/session/${next.id}`} variant="secondary" size="lg">
-              Join Study Hall →
-            </LinkButton>
-          ) : (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              {canChange ? (
-                <LinkButton
-                  href="/dashboard/student/plan-week"
-                  variant="ghost"
-                  size="sm"
-                  className="px-0 text-white/70 hover:bg-transparent hover:text-white"
-                >
-                  Change
-                </LinkButton>
-              ) : null}
-              <LinkButton
-                href={`/dashboard/student/study-halls/${next.id}`}
-                variant="ghost"
-                size="sm"
-                className="px-0 text-white/70 hover:bg-transparent hover:text-white"
-              >
-                View Study Hall
-              </LinkButton>
-            </div>
-          )}
+          <ParentJoinControl
+            bookingId={next.id}
+            status={next.status}
+            scheduledStart={next.scheduled_start ?? null}
+            scheduledEnd={next.scheduled_end ?? null}
+            canChange={canChange}
+            prominent
+          />
         </div>
       </div>
     </ParentSurface>

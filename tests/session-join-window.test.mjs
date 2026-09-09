@@ -97,8 +97,11 @@ describe("Session join window — parent dashboard uses partition + join state",
     const helpers = read("src/lib/parent-portal.mjs");
     assert.match(page, /ParentHomeBoard/);
     assert.match(board, /ParentNextStudyHall/);
-    assert.match(next, /parentJoinHint|parentPrimaryAction/);
-    assert.match(next, /Join Study Hall/);
+    assert.match(next, /ParentJoinControl/);
+    const joinCtl = read("src/components/dashboard/parent-join-control.tsx");
+    assert.match(joinCtl, /parentJoinHint/);
+    assert.match(joinCtl, /Join Study Hall/);
+    assert.match(joinCtl, /setInterval/);
     assert.match(helpers, /customerJoinState/);
     assert.match(helpers, /state === "join"/);
   });

@@ -136,7 +136,8 @@ describe("Portal affordance — action hierarchy", () => {
     const actions = read("src/components/dashboard/management-study-hall-actions.tsx");
     assert.match(parentNext, /LinkButton/);
     assert.match(parentNext, /variant="secondary"/);
-    assert.match(parentNext, /Join Study Hall|Book a Study Hall/);
+    assert.match(parentNext, /ParentJoinControl/);
+    assert.match(read("src/components/dashboard/parent-join-control.tsx"), /Join Study Hall/);
     assert.match(join, /LinkButton/);
     assert.match(join, /variant="secondary"/);
     assert.match(guideHalls, /Finish report/);

@@ -1,8 +1,17 @@
 /**
  * Timezone-safe civil-date helpers for Study Hall 365.
  *
- * Entitlement days are the household's local calendar dates, never the
- * server timezone and never a naive UTC date truncation.
+ * Authoritative 365 "one per calendar day" resolver:
+ *   1. SQL `public.resolve_account_timezone(account_id)`
+ *      — profiles.timezone, else the household's first student timezone,
+ *      else America/Chicago. Never the Guide timezone. Never the server TZ.
+ *   2. Local civil date = `(booking_start AT TIME ZONE account_tz)::date`
+ *      inside book_session / consume_study_hall_365_day.
+ *   3. These JS helpers (`localDateForInstant`, `utcInstantForLocalParts`)
+ *      mirror that civil-date math for UI, Plan My Week, and tests.
+ *
+ * Entitlement days are the household's local calendar dates, never UTC
+ * truncation and never a Guide's IANA zone.
  *
  * Fallback IANA zone when none is stored: America/Chicago.
  * That is a documented default, not a hardcoded product assumption —

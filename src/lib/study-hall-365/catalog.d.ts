@@ -3,6 +3,7 @@ export const PACKAGE_CODE_10_STUDY_HALLS: string;
 export const PACKAGE_10SH_MINUTES: number;
 export const PACKAGE_10SH_PRICE_CENTS: number;
 export const PACKAGE_10SH_STUDY_HALLS: number;
+export const LEGACY_PREPAID_PACKAGE_CODES: string[];
 export const LEGACY_ACTIVE_PACKAGE_CODES: string[];
 export const HISTORICAL_INACTIVE_PACKAGE_CODES: string[];
 export const CUSTOMER_PREPAID_OFFER_CODES: string[];
