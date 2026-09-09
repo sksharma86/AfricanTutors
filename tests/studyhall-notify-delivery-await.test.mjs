@@ -24,7 +24,8 @@ function assertAwaitedNotify(source, fnName, { tryCatch = true } = {}) {
 
 describe("Notify delivery hardening — await vs void (source)", () => {
   const checkout = read("src/lib/checkout-service.ts");
-  const stripeWh = read("src/app/api/stripe/webhook/route.ts");
+  const stripeWh =
+    read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
   const cancel = read("src/app/api/bookings/cancel/route.ts");
   const report = read("src/app/api/tutor/session-report/route.ts");
   const guideCancel = read("src/app/api/tutor/cancellation-request/route.ts");

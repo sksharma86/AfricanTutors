@@ -406,7 +406,8 @@ describe("PR7B — channel policy and templates", () => {
 
 describe("PR7B — architecture / failure isolation / no extra slices", () => {
   const sync = read("src/lib/study-hall-365/stripe-sync.ts");
-  const webhook = read("src/app/api/stripe/webhook/route.ts");
+  const webhook =
+    read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
   const notify = read("src/lib/notify.ts");
   const migration = read("supabase/migrations/0044_study_hall_365_lifecycle_snapshot.sql");
 

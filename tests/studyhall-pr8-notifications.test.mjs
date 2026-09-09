@@ -356,7 +356,8 @@ describe("Study Hall PR8 — architecture source contracts", () => {
     assert.doesNotMatch(checkout, /void\s+notifyBookingConfirmed/);
     assert.doesNotMatch(checkout, /void\s+notifyPackagePurchased/);
 
-    const wh = read("src/app/api/stripe/webhook/route.ts");
+    const wh =
+      read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
     assert.match(wh, /notifyPackagePurchased/);
     assert.match(wh, /notifyBookingConfirmed/);
     assert.match(wh, /result\?\.status === "confirmed"/);

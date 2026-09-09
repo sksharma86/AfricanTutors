@@ -307,7 +307,8 @@ describe("PR7C — email copy, billing link, channels", () => {
 
 describe("PR7C — architecture, isolation, Hours portal CTA", () => {
   const sync = read("src/lib/study-hall-365/stripe-sync.ts");
-  const webhook = read("src/app/api/stripe/webhook/route.ts");
+  const webhook =
+    read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
   const notify = read("src/lib/notify.ts");
   const card = read("src/components/booking/study-hall-365-card.tsx");
   const portal = read("src/app/api/billing/portal/route.ts");

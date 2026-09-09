@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 
 import { notifyBookingConfirmed, notifyPackagePurchased } from "@/lib/notify";
-import { getStripe } from "@/lib/stripe/client";
 import { STRIPE_WEBHOOK_SECRET, isStripeWebhookConfigured } from "@/lib/stripe/config";
+import { processVerifiedStripeEvent } from "@/lib/stripe/webhook-dispatch.mjs";
+import { verifyStripeWebhookEvent } from "@/lib/stripe/webhook-verify.mjs";
 import { getServiceSupabase } from "@/lib/supabase/service";
 import {
   fulfillStudyHall365Checkout,
@@ -18,7 +19,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Stripe webhook endpoint (foundation).
+ * Stripe webhook endpoint.
  *
  * Authoritative for Stripe payment state. Success redirects are never trusted;
  * only verified webhook events are. Signature is verified before any processing.
@@ -35,9 +36,7 @@ export const dynamic = "force-dynamic";
  *                     simultaneous deliveries fulfilling the same event twice).
  *
  * An event is only "completed" AFTER fulfillment succeeds, so a failure never
- * permanently suppresses retries. Phase 4B implements the fulfillment handlers
- * (issue package minutes, confirm booking, issue credit, record refunds — via
- * the atomic SECURITY DEFINER ledger functions).
+ * permanently suppresses retries.
  */
 export async function POST(request: NextRequest) {
   if (!isStripeWebhookConfigured) {
@@ -53,114 +52,34 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = getStripe().webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET as string);
+    event = verifyStripeWebhookEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
   } catch {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   const supabase = getServiceSupabase();
-
-  const { data: claim, error: claimError } = await supabase.rpc("begin_stripe_event", {
-    p_id: event.id,
-    p_type: event.type,
+  const result = await processVerifiedStripeEvent(event, {
+    beginStripeEvent: async (id, type) => {
+      const { data: claim, error } = await supabase.rpc("begin_stripe_event", { p_id: id, p_type: type });
+      if (error) throw new Error(error.message);
+      return claim as string;
+    },
+    completeStripeEvent: async (id) => {
+      await supabase.rpc("complete_stripe_event", { p_id: id });
+    },
+    failStripeEvent: async (id, error) => {
+      await supabase.rpc("fail_stripe_event", { p_id: id, p_error: error ?? "fulfillment_error" });
+    },
+    fulfillFromMetadata: (metadata, amount, paymentIntent) =>
+      fulfillFromMetadata(supabase, metadata as Meta, amount, paymentIntent as string | Stripe.PaymentIntent | null | undefined),
+    fulfillStudyHall365Checkout: (session, ev) => fulfillStudyHall365Checkout(supabase, session, ev),
+    isStudyHall365Session,
+    syncSubscriptionById: (params) => syncSubscriptionById(supabase, params),
+    syncFromInvoice: (invoice, ev) => syncFromInvoice(supabase, invoice, ev),
+    cancelFromMetadata: (metadata, reason) => cancelFromMetadata(supabase, metadata as Meta, reason),
   });
-  if (claimError) {
-    return NextResponse.json({ error: "Event processing failed." }, { status: 500 });
-  }
-  if (claim === "duplicate") {
-    return NextResponse.json({ received: true, duplicate: true });
-  }
-  if (claim === "in_progress") {
-    // Another delivery is fulfilling this event; ask Stripe to retry later.
-    return NextResponse.json({ received: false, inProgress: true }, { status: 409 });
-  }
 
-  // claim === "claimed": we own fulfillment.
-  try {
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        if (isStudyHall365Session(session)) {
-          // Subscription Checkout is paid when the first invoice collects;
-          // payment_status may be "paid" or "no_payment_required".
-          if (session.payment_status === "paid" || session.payment_status === "no_payment_required") {
-            await fulfillStudyHall365Checkout(supabase, session, event);
-          }
-          break;
-        }
-        // Only fulfill fully-paid sessions (async/pending payments fulfill later
-        // via payment_intent.succeeded or checkout.session.async_payment_succeeded).
-        if (session.payment_status === "paid") {
-          await fulfillFromMetadata(supabase, session.metadata, session.amount_total, session.payment_intent);
-        }
-        break;
-      }
-      case "checkout.session.async_payment_succeeded": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await fulfillFromMetadata(supabase, session.metadata, session.amount_total, session.payment_intent);
-        break;
-      }
-      case "payment_intent.succeeded": {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await fulfillFromMetadata(supabase, pi.metadata, pi.amount_received ?? pi.amount, pi.id);
-        break;
-      }
-      case "customer.subscription.created":
-      case "customer.subscription.updated": {
-        const sub = event.data.object as Stripe.Subscription;
-        await syncSubscriptionById(supabase, {
-          subscriptionId: sub.id,
-          accountId: sub.metadata?.account_id ?? null,
-          eventId: event.id,
-          eventCreated: event.created,
-        });
-        break;
-      }
-      case "customer.subscription.deleted": {
-        const sub = event.data.object as Stripe.Subscription;
-        await syncSubscriptionById(supabase, {
-          subscriptionId: sub.id,
-          accountId: sub.metadata?.account_id ?? null,
-          eventId: event.id,
-          eventCreated: event.created,
-          ended: true,
-        });
-        break;
-      }
-      case "invoice.paid": {
-        const invoice = event.data.object as Stripe.Invoice;
-        await syncFromInvoice(supabase, invoice, event);
-        break;
-      }
-      case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        await syncFromInvoice(supabase, invoice, event);
-        break;
-      }
-      case "checkout.session.expired":
-      case "checkout.session.async_payment_failed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await cancelFromMetadata(supabase, session.metadata, "Stripe checkout expired/failed");
-        break;
-      }
-      case "payment_intent.payment_failed": {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await cancelFromMetadata(supabase, pi.metadata, "Stripe payment failed");
-        break;
-      }
-      // Internal 15-minute expiry is authoritative and additionally swept by
-      // release_expired_checkouts (booking holds + package reservations).
-      default:
-        break;
-    }
-  } catch {
-    // Mark failed so Stripe's retry can reclaim and fulfill; do not leak internals.
-    await supabase.rpc("fail_stripe_event", { p_id: event.id, p_error: "fulfillment_error" });
-    return NextResponse.json({ error: "Fulfillment failed." }, { status: 500 });
-  }
-
-  await supabase.rpc("complete_stripe_event", { p_id: event.id });
-  return NextResponse.json({ received: true });
+  return NextResponse.json(result.body, { status: result.status });
 }
 
 type Meta = Stripe.Metadata | null | undefined;
