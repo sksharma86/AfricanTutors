@@ -76,6 +76,9 @@ describe("PR8B — legacy prepaid cutover (new purchases only)", () => {
     const hours = read("src/app/dashboard/student/packages/page.tsx");
     assert.match(hours, /customerFacingPrepaidPackages/);
     assert.match(hours, /\.eq\("is_active", true\)/);
+    const marketing = read("src/lib/marketing.ts");
+    assert.match(marketing, /pkg-10sh/);
+    assert.doesNotMatch(marketing, /pkg-14|pkg-28|14 Hour Routine|28 Hour Routine/);
   });
 });
 

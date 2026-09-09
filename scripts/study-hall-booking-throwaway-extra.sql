@@ -215,6 +215,29 @@ begin
 end;
 $$;
 
+-- Throwaway replica of the production is_active gate (0007/0008/0012).
+-- Full Stripe checkout is out of PR8B. This exists so adversarial tests can
+-- prove pkg_14h/pkg_28h cannot be newly purchased after 0047.
+create or replace function public.purchase_package(p_package_id uuid, p_account uuid default null)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_prod record;
+begin
+  select id, minutes, price_cents, is_active into v_prod
+    from public.package_products
+   where id = p_package_id;
+  if v_prod.id is null then raise exception 'Package not found'; end if;
+  if not v_prod.is_active then raise exception 'Package is not available'; end if;
+  return jsonb_build_object(
+    'ok', true,
+    'package_id', v_prod.id,
+    'minutes', v_prod.minutes,
+    'price_cents', v_prod.price_cents
+  );
+end;
+$$;
+
 alter table public.bookings drop constraint if exists bookings_no_tutor_overlap;
 alter table public.bookings add constraint bookings_no_tutor_overlap
   exclude using gist (

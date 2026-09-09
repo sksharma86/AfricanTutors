@@ -43,8 +43,7 @@ const FALLBACK_SUBJECTS: PublicSubjectCategory[] = [
 ];
 
 const FALLBACK_PACKAGES: { id: string; name: string; minutes: number; price_cents: number }[] = [
-  { id: "pkg-14", name: "14 Hour Routine", minutes: 840, price_cents: 14000 },
-  { id: "pkg-28", name: "28 Hour Routine", minutes: 1680, price_cents: 25200 },
+  { id: "pkg-10sh", name: "10 Study Halls", minutes: 600, price_cents: 10000 },
 ];
 
 /** Active subjects grouped by their real category (anon-readable catalog). */

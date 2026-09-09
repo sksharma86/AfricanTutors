@@ -431,7 +431,6 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
     useFree(p, c);
     subscribe365(p, "active", false, PERIOD_START, PERIOD_END, "e20");
     const mon = "2026-10-26T21:00:00Z";
-    const tue = "2026-10-27T21:00:00Z";
     const raced = await Promise.all([spawnBook(c, mon), spawnBook(c, mon)]);
     const wins = raced.filter((r) => fundingOf(r) !== "other").length;
     assert.equal(wins, 1, raced.join(" | "));
@@ -446,13 +445,11 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
       spawnBook(c2, "2026-10-28T21:00:00Z"),
       spawnBook(c2, "2026-10-29T21:00:00Z"),
     ]);
-    const day1 = overlap.filter((r) => fundingOf(r) === "study_hall_365" && /2026-10-28T21:00:00/.test(r) === false);
     const three65 = overlap.filter((r) => fundingOf(r) === "study_hall_365").length;
     assert.ok(three65 >= 1 && three65 <= 2, overlap.join(" | "));
     assert.equal(sql(`select count(*) from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-28'`), "1");
     const tueCount = sql(`select count(*) from study_hall_365_day_usage where account_id='${p2}' and local_date='2026-10-29'`);
     assert.ok(tueCount === "0" || tueCount === "1", tueCount);
-    void day1;
   });
 
   it("F22-F27. PAYG pending, duplicate, replacement, abandon, expiry, late fulfill", async () => {
@@ -660,6 +657,11 @@ describe("PR8B adversarial booking/entitlement — throwaway Postgres", { skip: 
     assert.equal(sql(`select minutes_delta from package_minute_ledger where reference='legacy-14h-840'`), "840");
     assert.match(sql(`select is_active::text from package_products where code='pkg_14h'`), /^(f|false)$/);
     assert.match(sql(`select is_active::text from package_products where code='pkg_28h'`), /^(f|false)$/);
+    const pkg14 = sql(`select id from package_products where code='pkg_14h'`);
+    const pkg28 = sql(`select id from package_products where code='pkg_28h'`);
+    assert.match(sqlCatch(`select purchase_package('${pkg14}'::uuid, '${p}'::uuid);`), /Package is not available/i);
+    assert.match(sqlCatch(`select purchase_package('${pkg28}'::uuid, '${p}'::uuid);`), /Package is not available/i);
+    assert.match(sql(`select is_active::text from package_products where code='pkg_10sh'`), /^(t|true)$/);
   });
 
   it("RPC security: book_session grants, search_path, no cross-household replace", () => {
