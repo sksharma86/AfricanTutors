@@ -855,13 +855,15 @@ export async function notifyCustomerNoShow(bookingId: string): Promise<{ status:
       }),
     });
 
-    await deliverParentSms({
-      key: customerNoShowParentSmsKey(bookingId),
-      type: "customer_no_show_parent_sms",
-      accountId: b.account_id,
-      bookingId,
-      body: parentNoShowSms(),
-    });
+    if (b.account_id) {
+      await deliverParentSms({
+        key: customerNoShowParentSmsKey(bookingId),
+        type: "customer_no_show_parent_sms",
+        accountId: b.account_id,
+        bookingId,
+        body: parentNoShowSms(),
+      });
+    }
 
     if (b.tutor_id) {
       await deliver({

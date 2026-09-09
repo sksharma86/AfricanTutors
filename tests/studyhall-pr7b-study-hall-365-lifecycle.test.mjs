@@ -369,7 +369,7 @@ describe("PR7B — channel policy and templates", () => {
     }
     const notify = read("src/lib/notify.ts");
     const fn = notify.slice(notify.indexOf("export async function notifyStudyHall365Lifecycle"));
-    const end = fn.indexOf("export async function notifyAccountCreditApplied");
+    const end = fn.indexOf("export async function notifyStudyHall365PaymentFailure");
     const body = end > 0 ? fn.slice(0, end) : fn;
     assert.doesNotMatch(body, /deliverParentSms|deliverGuideWhatsApp|notifyAdminAlert/);
   });

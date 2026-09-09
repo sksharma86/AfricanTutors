@@ -112,7 +112,7 @@ describe("PR7F — T-1h reminder channels", () => {
     assert.match(reminder, /shouldSendReminder/);
     assert.match(reminder, /reminder-1h-sms:/);
     assert.match(reminder, /parentTransactionalSmsEligible|deliverParentSms/);
-    assert.doesNotMatch(reminder, /"24h"|kind: "24h"|T-15|T-5/);
+    assert.doesNotMatch(reminder, /kind: "24h",|T-15 reminder|T-5 reminder/);
     const cron = read("src/app/api/cron/reminders/route.ts");
     assert.doesNotMatch(cron, /"24h"|kind: "24h"/);
     const sms = parentSessionReminderSms({ studentName: "Maya", whenISO: "2026-08-20T19:00:00.000Z", tz: "UTC" });

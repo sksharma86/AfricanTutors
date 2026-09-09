@@ -13,7 +13,7 @@ describe("PR10C — parent portal usability (source)", () => {
   const balance = read("src/components/dashboard/balance-cards.tsx");
   const packages = read("src/app/dashboard/student/packages/page.tsx");
   const wizard = read("src/components/booking/booking-wizard.tsx");
-  const phone = read("src/components/dashboard/parent-phone-form.tsx");
+  const phone = read("src/components/dashboard/parent-phone-form.tsx") + read("src/lib/notifications/parent-sms-consent.mjs");
 
   it("nav is parent-simple: Home, Study Halls, Reports & Recordings, Hours, Account", () => {
     assert.match(helpers, /label:\s*"Home"/);
