@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { STUDY_HALL_365_KIND } from "@/lib/study-hall-365/catalog.mjs";
 import { invoiceSubscriptionId, stripeId, subscriptionPaidPeriod } from "@/lib/study-hall-365/stripe-period.mjs";
 import { getStripe } from "@/lib/stripe/client";
+import { shouldFulfillStudyHall365PaymentForStatus } from "@/lib/stripe/webhook-dispatch.mjs";
 import { notifyStudyHall365Lifecycle, notifyStudyHall365PaymentFailure } from "@/lib/notify";
 
 type Service = SupabaseClient;
@@ -108,12 +109,38 @@ export async function upsertSubscriptionFromStripe(
   });
   if (error) throw new Error(error.message);
   const upsert = data as UpsertResult;
+  await maybeFulfillStudyHall365CheckoutPayment(service, {
+    subscription: params.subscription,
+    paymentId: params.paymentId,
+  });
   await notifyAfterAuthoritativeUpsert({
     accountId: params.accountId,
     stripeSubscriptionId: params.subscription.id,
     upsert,
   });
   return upsert;
+}
+
+/**
+ * invoice.paid / subscription.updated can arrive without checkout.session.completed.
+ * Entitlement is the membership row; the Checkout payment row still needs to leave
+ * requires_payment so the return page is not stuck on "confirming".
+ * past_due / incomplete must not mark the first invoice as paid.
+ */
+async function maybeFulfillStudyHall365CheckoutPayment(
+  service: Service,
+  params: { subscription: Stripe.Subscription; paymentId?: string | null },
+) {
+  if (!shouldFulfillStudyHall365PaymentForStatus(params.subscription.status)) return;
+  const paymentId = params.paymentId ?? params.subscription.metadata?.payment_id ?? null;
+  if (!paymentId) return;
+  const { error } = await service.rpc("fulfill_study_hall_365_payment", {
+    p_payment_id: paymentId,
+    p_amount_cents: null,
+    p_charge_id: null,
+    p_subscription_id: params.subscription.id,
+  });
+  if (error) throw new Error(error.message);
 }
 
 export async function syncSubscriptionById(

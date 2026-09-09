@@ -364,7 +364,8 @@ describe("Study Hall 365 — Stripe period extraction and catalog", () => {
 
 describe("Study Hall 365 — architecture / safety static checks", () => {
   const migration = read("supabase/migrations/0036_study_hall_365.sql");
-  const webhook = read("src/app/api/stripe/webhook/route.ts");
+  const webhook =
+    read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
   const checkout = read("src/lib/checkout-service.ts");
   const bookingRoute = read("src/app/api/checkout/booking/route.ts");
 
@@ -386,7 +387,7 @@ describe("Study Hall 365 — architecture / safety static checks", () => {
     assert.match(webhook, /customer\.subscription\.updated/);
     assert.match(webhook, /invoice\.paid/);
     assert.match(webhook, /skipped_stale|last_stripe_event_created|eventCreated/);
-    assert.doesNotMatch(webhook, /fulfill_package_payment[\s\S]*study_hall_365/);
+    assert.doesNotMatch(read("src/lib/stripe/webhook-dispatch.mjs"), /fulfill_package_payment/);
   });
 
   it("365 checkout is subscription mode and reuses the Stripe customer", () => {

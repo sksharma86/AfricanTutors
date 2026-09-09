@@ -9,7 +9,8 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const m41 = read("supabase/migrations/0041_booking_replacement_finalization.sql");
 const checkout = read("src/lib/checkout-service.ts");
 const planService = read("src/lib/plan-week-service.ts");
-const webhook = read("src/app/api/stripe/webhook/route.ts");
+const webhook =
+  read("src/app/api/stripe/webhook/route.ts") + "\n" + read("src/lib/stripe/webhook-dispatch.mjs");
 const bookingApi = read("src/app/api/checkout/booking/route.ts");
 const returnView = read("src/app/checkout/return/return-view.tsx");
 
