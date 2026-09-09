@@ -266,6 +266,8 @@ describe("PR8B — throwaway overlap/expiry infrastructure", () => {
     assert.match(extra, /release_expired_holds/);
     assert.match(extra, /returns integer/);
     assert.match(extra, /status = 'expired'/);
+    assert.match(extra, /purchase_package/);
+    assert.match(extra, /Package is not available/);
   });
 });
 
