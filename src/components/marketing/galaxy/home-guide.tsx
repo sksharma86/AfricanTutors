@@ -40,9 +40,11 @@ export function HomeGuide() {
             <p className="mt-4 max-w-xl text-[17px] leading-8 text-[var(--g1-muted)]">
               Their Guide stays with them during the Study Hall and helps keep the session structured and moving.
             </p>
-            <ul className="mt-8 space-y-2 text-[16px] leading-7 text-[var(--g1-ink)]">
+            <ul className="mt-8 space-y-3 text-[16px] leading-7 text-[var(--g1-ink)]">
               {DUTIES.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item} className="border-t border-[var(--g1-line)] pt-3 first:border-t-0 first:pt-0">
+                  {item}
+                </li>
               ))}
             </ul>
             <p className="mt-8 text-[15px] text-[var(--g1-subtle)]">Highly vetted Guides.</p>
