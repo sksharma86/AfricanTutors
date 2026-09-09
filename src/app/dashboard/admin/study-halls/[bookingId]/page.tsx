@@ -16,6 +16,7 @@ import { formatCents } from "@/lib/pricing";
 import { currentAssignmentForBooking } from "@/lib/guide-attendance.mjs";
 import { currentStudyHallIssues, managementCustomerNoShowRecord, managementOperationalStatus } from "@/lib/management-ops.mjs";
 import { attendanceHistoryTitle } from "@/lib/open-coverage.mjs";
+import { deliveryOpsLabel } from "@/lib/notifications/retry-policy.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Study Hall · Management" };
@@ -74,7 +75,7 @@ export default async function AdminStudyHallDetailPage({
       .then((r) => r, () => ({ data: null, error: null })),
     supabase!
       .from("email_deliveries")
-      .select("id, notification_type, to_email, status, error, updated_at")
+      .select("id, notification_type, to_email, status, error, updated_at, attempts")
       .eq("booking_id", bookingId)
       .order("updated_at", { ascending: false })
       .limit(20),
@@ -339,10 +340,18 @@ export default async function AdminStudyHallDetailPage({
         <h2 className="text-sm font-semibold tracking-wide text-ink-500 uppercase">Notifications</h2>
         <HistoryList
           empty="No messages recorded for this Study Hall."
-          rows={((notifyRes.data ?? []) as { id: string; notification_type: string; status: string; error: string | null; updated_at: string }[]).map((n) => ({
+          rows={((notifyRes.data ?? []) as {
+            id: string;
+            notification_type: string;
+            status: string;
+            error: string | null;
+            updated_at: string;
+            attempts?: number | null;
+            next_retry_at?: string | null;
+          }[]).map((n) => ({
             id: n.id,
             title: deliveryHistoryTitle(n.notification_type, n.status),
-            meta: n.error ?? n.status,
+            meta: `${deliveryOpsLabel(n)}${n.error ? ` · ${n.error}` : ""}`,
             at: n.updated_at,
             retryId: n.status === "failed" ? n.id : null,
           }))}

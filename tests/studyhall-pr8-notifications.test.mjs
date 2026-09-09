@@ -21,7 +21,7 @@ import {
   parentReassignmentSms,
   parentSessionReminderSms,
 } from "../src/lib/notifications/sms-copy.mjs";
-import { hasSupabaseEnv } from "./helpers.mjs";
+import { hasSupabaseEnv, isCanonicalDemoProject } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const APP = "https://app.studyhall.test";
@@ -418,8 +418,9 @@ describe("Study Hall PR8 — architecture source contracts", () => {
 
 describe("Study Hall PR8 — idempotency keys (DB, when configured)", () => {
   it("duplicate reminder email + SMS claims are rejected", async (t) => {
-    if (!hasSupabaseEnv) {
-      t.skip("Supabase env not configured");
+    const demoLocked = isCanonicalDemoProject() && process.env.ALLOW_DEMO_DB_WRITES !== "1";
+    if (!hasSupabaseEnv || demoLocked) {
+      t.skip("Supabase env not configured for live writes");
       return;
     }
     const { adminClient, createUser, cleanupAll } = await import("./helpers.mjs");

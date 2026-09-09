@@ -316,10 +316,10 @@ describe("PR7D — identifiers, CTAs, and production-safety bounds", () => {
     assert.doesNotMatch(parent.html + guide.html, /daily\.co|resend\.com|twilio\.com|billing\.stripe/);
   });
 
-  it("does not start PR7E/PR7F, does not touch admin_no_show, and skips live providers", () => {
+  it("does not start PR7F, does not touch admin_no_show, and skips live providers", () => {
     const notify = read("src/lib/notify.ts");
     const body = notifyCustomerNoShowSource();
-    assert.doesNotMatch(body, /stale-delivery|consent|sender branding|opt-out/i);
+    assert.doesNotMatch(body, /consent|sender branding|opt-out/i);
     assert.doesNotMatch(read("src/app/api/admin/booking/route.ts"), /notifyCustomerNoShow/);
     assert.doesNotMatch(read("src/app/api/stripe/webhook/route.ts"), /notifyCustomerNoShow|customer_no_show/);
     assert.match(notify, /claim_email_delivery/);

@@ -26,6 +26,11 @@ export async function sendEmail(msg: {
   text: string;
   /** Optional notification_type for ops logs (never the recipient address). */
   type?: string;
+  /**
+   * PR7E: Resend Idempotency-Key (delivery row id). Same key + same body
+   * returns the original message for ~24h instead of a second send.
+   */
+  idempotencyKey?: string | null;
 }): Promise<SendResult> {
   const type = msg.type || "untyped";
   if (!msg.to) return { status: "skipped", error: "no recipient" };
@@ -34,9 +39,15 @@ export async function sendEmail(msg: {
     return { status: "skipped", error: "provider not configured" };
   }
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    };
+    const idempotencyKey = typeof msg.idempotencyKey === "string" ? msg.idempotencyKey.trim() : "";
+    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey.slice(0, 256);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ from: EMAIL_FROM, to: msg.to, subject: msg.subject, html: msg.html, text: msg.text }),
       signal: AbortSignal.timeout(12_000),
     });

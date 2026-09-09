@@ -9,6 +9,7 @@
  * PR7C wires payment_failure parent email after 365 invoice sync (email only).
  * PR7D wires customer no-show parent + Guide email after the PR6 RPC commits.
  * Parent SMS for no-show stays catalog-only until PR7F (consent).
+ * PR7E hardens delivery retry/stale recovery without new event types.
  */
 
 export const NOTIFICATION_EVENTS = Object.freeze({
