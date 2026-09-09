@@ -17,11 +17,11 @@ describe("Pre-launch functional UX — brand + confirmation", () => {
     assert.doesNotMatch(constants, /Study Hall at Home/);
   });
 
-  it("FAQ brand question matches homepage filter", () => {
+  it("FAQ brand question remains on the FAQ page", () => {
     const faq = read("src/lib/faq.ts");
     const home = read("src/app/(marketing)/page.tsx");
     assert.match(faq, /What is Study Hall \(at home\)\?/);
-    assert.match(home, /What is Study Hall \(at home\)\?/);
+    assert.match(home, /one child|one-to-one|one on one/i);
     assert.doesNotMatch(faq, /What is Study Hall at Home\?/);
   });
 

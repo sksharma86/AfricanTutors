@@ -1,46 +1,33 @@
 import type { Metadata } from "next";
 
-import { CtaSection } from "@/components/marketing/cta-section";
-import { Faq } from "@/components/marketing/faq";
-import { HourChapter } from "@/components/marketing/hour-chapter";
-import { MethodChapter } from "@/components/marketing/method-chapter";
-import { PricingSection } from "@/components/marketing/pricing-section";
-import { Routine365 } from "@/components/marketing/routine-365";
-import { SiteHero } from "@/components/marketing/site-hero";
-import { TrustSafety } from "@/components/marketing/trust-safety";
-import { WhyStudyHall } from "@/components/marketing/why-african-tutors";
+import { HomeClose } from "@/components/marketing/galaxy/home-close";
+import { HomeEvening } from "@/components/marketing/galaxy/home-evening";
+import { HomeGuide } from "@/components/marketing/galaxy/home-guide";
+import { HomeHero } from "@/components/marketing/galaxy/home-hero";
+import { HomeOneToOne } from "@/components/marketing/galaxy/home-one-to-one";
+import { HomePlanWeek } from "@/components/marketing/galaxy/home-plan-week";
+import { HomePricing } from "@/components/marketing/galaxy/home-pricing";
+import { HomeRelief } from "@/components/marketing/galaxy/home-relief";
+import { HomeRoutine } from "@/components/marketing/galaxy/home-routine";
+import { HomeTrust } from "@/components/marketing/galaxy/home-trust";
 import { getCurrentUser } from "@/lib/auth";
-import { FAQ_ITEMS } from "@/lib/faq";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
-import { START_FREE_CTA } from "@/lib/public-offers";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
-  title: "Make Studying a Habit",
+  title: "Homework time. Handled.",
   description:
-    "A focused hour with a real human Guide to help your child show up, stay on task, and get the work done. First Study Hall free.",
+    "One child. One Guide. One private 60-minute Study Hall — focused on the homework they already have. First Study Hall free.",
   alternates: { canonical: "/" },
 };
-
-const HOME_FAQ = FAQ_ITEMS.filter((f) =>
-  [
-    "What is Study Hall (at home)?",
-    "Is this tutoring?",
-    "What if my child doesn’t have homework?",
-    "Does my child need to be struggling in school?",
-    "Do I have to use Study Hall every day?",
-    "Can siblings join the same Study Hall?",
-    "Are sessions recorded?",
-    "How does the first free Study Hall work?",
-  ].includes(f.q),
-);
 
 export default async function HomePage() {
   const user = await getCurrentUser();
   const applicant = user?.role === "student" ? await getGuideApplicantInfo(user.id) : null;
 
   const primary = !user
-    ? { href: "/signup", label: START_FREE_CTA }
+    ? { href: "/signup", label: FREE_TRIAL_CTA }
     : applicant
       ? { href: "/dashboard/applicant", label: "View application status" }
       : user.role === "student"
@@ -48,22 +35,17 @@ export default async function HomePage() {
         : { href: DASHBOARD_PATH_BY_ROLE[user.role], label: "Go to dashboard" };
 
   return (
-    <div className="mkt-atmosphere">
-      <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
-      <HourChapter />
-      <MethodChapter />
-      <WhyStudyHall />
-      <Routine365 />
-      <TrustSafety />
-      <PricingSection compact ctaHref={primary.href} ctaLabel={primary.label} />
-      <Faq id="faq" eyebrow="" title="Questions" items={HOME_FAQ} />
-      <CtaSection
-        title="Start with one free hour."
-        description="No credit card required."
-        primaryHref={primary.href}
-        primaryLabel={primary.label}
-        showFinePrint={false}
-      />
+    <div className="galaxy-home">
+      <HomeHero primaryHref={primary.href} primaryLabel={primary.label} />
+      <HomeOneToOne />
+      <HomeEvening />
+      <HomeRelief />
+      <HomeRoutine />
+      <HomeGuide />
+      <HomePlanWeek primaryHref={primary.href} primaryLabel={primary.label} />
+      <HomePricing ctaHref={primary.href} ctaLabel={primary.label} />
+      <HomeTrust />
+      <HomeClose primaryHref={primary.href} primaryLabel={primary.label} />
     </div>
   );
 }

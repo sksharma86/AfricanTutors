@@ -45,19 +45,18 @@ function marketingText() {
 
 describe("Household marketing — homepage placement and compact value", () => {
   it("siblings stay out of the hero and appear with 365 / pricing", () => {
-    const hero = read("src/components/marketing/site-hero.tsx");
     const page = read("src/app/(marketing)/page.tsx");
-    const routine = read("src/components/marketing/routine-365.tsx");
-    const pricing = read("src/components/marketing/pricing-section.tsx");
-    assert.match(hero, /Make studying a habit\./);
+    const routine = read("src/components/marketing/galaxy/home-routine.tsx");
+    const pricing = read("src/components/marketing/galaxy/home-pricing.tsx");
+    const hero = read("src/components/marketing/galaxy/home-hero.tsx");
+    assert.match(hero, /Homework time\. Handled\./);
     assert.doesNotMatch(hero, /HERO_HOUSEHOLD_CUE|sibling|365/);
     assert.equal(HERO_HOUSEHOLD_CUE, "Up to 3 siblings can join one Study Hall.");
-    assert.match(page, /<Routine365/);
-    assert.match(routine, /Up to three siblings/);
-    assert.match(pricing, /FAMILY_VALUE_EYEBROW/);
-    assert.match(pricing, /FAMILY_VALUE_BODY/);
-    const heroIdx = page.indexOf("<SiteHero");
-    const routineIdx = page.indexOf("<Routine365");
+    assert.match(page, /<HomeRoutine/);
+    assert.match(routine, /school week/);
+    assert.match(pricing, /PAYG_PRICE_USD/);
+    const heroIdx = page.indexOf("<HomeHero");
+    const routineIdx = page.indexOf("<HomeRoutine");
     assert.ok(heroIdx > -1 && heroIdx < routineIdx);
   });
 
@@ -119,7 +118,6 @@ describe("Household marketing — FAQ, How it works, booking", () => {
     assert.match(faq, /feedback for each child/);
     const siblingBlock = faq.slice(faq.indexOf("Can siblings join the same Study Hall?"), faq.indexOf("Can I cancel?"));
     assert.doesNotMatch(siblingBlock, /\$3|\$12|\$9\/hour/);
-    assert.match(read("src/app/(marketing)/page.tsx"), /Can siblings join the same Study Hall\?/);
   });
 
   it("How It Works mentions household participation concisely", () => {

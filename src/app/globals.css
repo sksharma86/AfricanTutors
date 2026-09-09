@@ -216,6 +216,78 @@ body {
   background: var(--background);
 }
 
+/* Galaxy 1A — public homepage design system (does not restyle portals) */
+.galaxy-home {
+  --g1-bg: #f3f3f1;
+  --g1-bg-warm: #f7f6f3;
+  --g1-ink: #111110;
+  --g1-muted: #5f5e58;
+  --g1-subtle: #8a8882;
+  --g1-surface: #ffffff;
+  --g1-line: rgba(17, 17, 16, 0.08);
+  --g1-dark: #161615;
+  --g1-dark-muted: rgba(255, 255, 255, 0.62);
+  --g1-shadow: 0 28px 80px -36px rgba(17, 17, 16, 0.38);
+  --g1-radius: 28px;
+  --g1-measure: 36rem;
+  background: var(--g1-bg);
+  color: var(--g1-ink);
+}
+
+.galaxy-home .g1-display {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.galaxy-home .g1-kicker {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--g1-muted);
+}
+
+.galaxy-home .g1-lede {
+  max-width: var(--g1-measure);
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--g1-muted);
+}
+
+.galaxy-home .g1-product {
+  overflow: hidden;
+  border-radius: var(--g1-radius);
+  background: var(--g1-surface);
+  box-shadow: var(--g1-shadow), 0 0 0 1px rgba(17, 17, 16, 0.05);
+  max-height: 28rem;
+}
+
+@media (min-width: 640px) {
+  .galaxy-home .g1-product {
+    max-height: 36rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .galaxy-home .g1-product {
+    max-height: 42rem;
+  }
+}
+
+.galaxy-home .g1-hairline {
+  height: 1px;
+  background: var(--g1-line);
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galaxy-home .sh-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Soft product depth — single ambient, not stacked shadows */
 .mkt-depth {
   box-shadow:

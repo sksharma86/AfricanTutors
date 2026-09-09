@@ -6,25 +6,27 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 const home = [
   "src/app/(marketing)/page.tsx",
-  "src/components/marketing/site-hero.tsx",
-  "src/components/marketing/hour-chapter.tsx",
-  "src/components/marketing/method-chapter.tsx",
-  "src/components/marketing/routine-365.tsx",
-  "src/components/marketing/why-african-tutors.tsx",
-  "src/components/marketing/pricing-section.tsx",
-  "src/components/marketing/trust-safety.tsx",
-  "src/components/marketing/cta-section.tsx",
+  "src/components/marketing/galaxy/home-hero.tsx",
+  "src/components/marketing/galaxy/home-one-to-one.tsx",
+  "src/components/marketing/galaxy/home-evening.tsx",
+  "src/components/marketing/galaxy/home-relief.tsx",
+  "src/components/marketing/galaxy/home-routine.tsx",
+  "src/components/marketing/galaxy/home-guide.tsx",
+  "src/components/marketing/galaxy/home-plan-week.tsx",
+  "src/components/marketing/galaxy/home-pricing.tsx",
+  "src/components/marketing/galaxy/home-trust.tsx",
+  "src/components/marketing/galaxy/home-close.tsx",
 ]
   .map(read)
   .join("\n");
 
 describe("Mobile homepage polish", () => {
   it("preserves a short hero and a short nav CTA", () => {
-    const hero = read("src/components/marketing/site-hero.tsx");
+    const hero = read("src/components/marketing/galaxy/home-hero.tsx");
     const nav = read("src/components/layout/navbar.tsx");
     const mobile = read("src/components/layout/mobile-menu.tsx");
-    assert.match(hero, /Make studying a habit\./);
-    assert.match(hero, /Start free|primaryLabel/);
+    assert.match(hero, /Homework time\. Handled\./);
+    assert.match(hero, /FREE_TRIAL_CTA|primaryLabel/);
     assert.match(nav, /START_FREE_CTA/);
     assert.match(mobile, /START_FREE_CTA/);
     assert.match(mobile, /lg:hidden/);
@@ -39,12 +41,11 @@ describe("Mobile homepage polish", () => {
     assert.doesNotMatch(home, /Ready to join 5 minutes|42:18/);
   });
 
-  it("week visual lives in the 365 chapter and adapts on small screens", () => {
-    const routine = read("src/components/marketing/routine-365.tsx");
-    assert.match(routine, /ROUTINE_WEEK/);
-    assert.match(routine, /grid-cols-7/);
-    assert.doesNotMatch(routine, /\bSet\b/);
-    assert.doesNotMatch(read("src/components/marketing/site-hero.tsx"), /ROUTINE_WEEK/);
+  it("week visual lives in the routine chapter", () => {
+    const routine = read("src/components/marketing/galaxy/home-routine.tsx");
+    assert.match(routine, /Mon/);
+    assert.match(routine, /Week 12/);
+    assert.doesNotMatch(read("src/components/marketing/galaxy/home-hero.tsx"), /ROUTINE_WEEK/);
   });
 
   it("parent portal mock uses current destinations, not the old dashboard tabs", () => {
@@ -67,10 +68,9 @@ describe("Mobile homepage polish", () => {
   });
 
   it("trust is a short list, not six equal cards", () => {
-    const trust = read("src/components/marketing/trust-safety.tsx");
+    const trust = read("src/components/marketing/galaxy/home-trust.tsx");
     assert.match(trust, /Highly vetted Guides/);
-    assert.match(trust, /Live camera presence/);
-    assert.match(trust, /AI can help a student find an answer/);
+    assert.match(trust, /Recorded Study Halls/);
     assert.doesNotMatch(trust, /grid-cols-2|grid-cols-3|sm:grid-cols-2/);
     assert.doesNotMatch(trust, /always reachable/i);
   });

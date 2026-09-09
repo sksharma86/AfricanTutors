@@ -17,19 +17,20 @@ describe("Visual product story — homepage contracts", () => {
     assert.doesNotMatch(hero, /Kenya|Study Hall \(at home\)|African Tutors/);
   });
 
-  it("homepage is seven chapters, not the old infographic stack", () => {
+  it("Galaxy 1A homepage is the editorial public overhaul", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
-      "SiteHero",
-      "HourChapter",
-      "MethodChapter",
-      "WhyStudyHall",
-      "Routine365",
-      "TrustSafety",
-      "PricingSection",
-      "Faq",
-      "CtaSection",
+      "HomeHero",
+      "HomeOneToOne",
+      "HomeEvening",
+      "HomeRelief",
+      "HomeRoutine",
+      "HomeGuide",
+      "HomePlanWeek",
+      "HomePricing",
+      "HomeTrust",
+      "HomeClose",
     ];
     let last = -1;
     for (const name of order) {
@@ -37,8 +38,9 @@ describe("Visual product story — homepage contracts", () => {
       assert.ok(i > last, `${name} must follow previous section`);
       last = i;
     }
-    assert.doesNotMatch(page, /HowStudyHallWorks|HouseholdValue|HabitBuilding|ProductShowcase/);
-    assert.doesNotMatch(page, /LiveStudyHallDemo|TrustRow|<Steps/);
+    assert.doesNotMatch(page, /HowStudyHallWorks|HouseholdValue|HabitBuilding|<SiteHero/);
+    assert.doesNotMatch(page, /LiveStudyHallDemo|TrustRow|<Steps|<MethodChapter/);
+    assert.match(read("src/components/marketing/galaxy/home-hero.tsx"), /ParentPortalPreview/);
   });
 
   it("how-it-works page is a short journey, not the hour page", () => {

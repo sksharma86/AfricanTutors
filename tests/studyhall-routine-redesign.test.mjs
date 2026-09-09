@@ -52,7 +52,7 @@ describe("Study Hall routine redesign — public positioning", () => {
   });
 
   it("replaces homework-supervision as the primary public promise", () => {
-    assert.match(read("src/components/marketing/site-hero.tsx"), /Make studying a habit\./);
+    assert.match(read("src/components/marketing/galaxy/home-hero.tsx"), /Homework time\. Handled\./);
     assert.doesNotMatch(PUBLIC, /Homework gets done/);
     assert.doesNotMatch(PUBLIC, /homework supervision/i);
     assert.doesNotMatch(read("src/app/(marketing)/page.tsx"), /African Tutors/);
@@ -66,7 +66,7 @@ describe("Study Hall routine redesign — public positioning", () => {
     const offers = read("src/lib/public-offers.ts");
     assert.match(offers, /PUBLIC_OFFER_CTA_HREF = "\/signup"/);
     assert.match(home, /href: "\/signup"/);
-    assert.match(home, /START_FREE_CTA/);
+    assert.match(home, /FREE_TRIAL_CTA/);
     assert.match(home, /\/dashboard\/student\/book/);
     assert.match(home, /getGuideApplicantInfo/);
   });
@@ -77,7 +77,8 @@ describe("Study Hall routine redesign — public positioning", () => {
     assert.match(pricing, /coming next/);
     assert.doesNotMatch(pricing, /Subscribe|Buy Study Hall 365|href=.*\/checkout/);
     assert.doesNotMatch(offers, /href: "\/checkout"|stripe|subscription/);
-    assert.doesNotMatch(PUBLIC, /Plan My Week|entitlement|Daily unit|Available state/);
+    assert.doesNotMatch(PUBLIC, /entitlement|Daily unit|Available state/);
+    assert.match(read("src/app/(marketing)/page.tsx"), /HomePlanWeek/);
     assert.doesNotMatch(read("src/app/dashboard/student/page.tsx"), /Routine365|HourChapter/);
   });
 
