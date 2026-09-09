@@ -21,7 +21,8 @@ describe("Visual product story — homepage contracts", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
     const order = [
-      "SiteHero",
+      "Phase1Hero",
+      "Phase1PersonalBeat",
       "HourChapter",
       "MethodChapter",
       "WhyStudyHall",

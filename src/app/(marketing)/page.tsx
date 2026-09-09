@@ -4,21 +4,23 @@ import { CtaSection } from "@/components/marketing/cta-section";
 import { Faq } from "@/components/marketing/faq";
 import { HourChapter } from "@/components/marketing/hour-chapter";
 import { MethodChapter } from "@/components/marketing/method-chapter";
+import { Phase1Hero } from "@/components/marketing/phase1/hero-prototype";
+import { Phase1PersonalBeat } from "@/components/marketing/phase1/personal-beat";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { Routine365 } from "@/components/marketing/routine-365";
-import { SiteHero } from "@/components/marketing/site-hero";
 import { TrustSafety } from "@/components/marketing/trust-safety";
 import { WhyStudyHall } from "@/components/marketing/why-african-tutors";
 import { getCurrentUser } from "@/lib/auth";
 import { FAQ_ITEMS } from "@/lib/faq";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { FREE_TRIAL_CTA } from "@/lib/pricing";
 import { START_FREE_CTA } from "@/lib/public-offers";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export const metadata: Metadata = {
-  title: "Make Studying a Habit",
+  title: "Homework time. Handled.",
   description:
-    "A focused hour with a real human Guide to help your child show up, stay on task, and get the work done. First Study Hall free.",
+    "One on one with a dedicated Study Hall Guide for the homework your child already has. First Study Hall free. No credit card required.",
   alternates: { canonical: "/" },
 };
 
@@ -40,7 +42,7 @@ export default async function HomePage() {
   const applicant = user?.role === "student" ? await getGuideApplicantInfo(user.id) : null;
 
   const primary = !user
-    ? { href: "/signup", label: START_FREE_CTA }
+    ? { href: "/signup", label: FREE_TRIAL_CTA }
     : applicant
       ? { href: "/dashboard/applicant", label: "View application status" }
       : user.role === "student"
@@ -48,8 +50,10 @@ export default async function HomePage() {
         : { href: DASHBOARD_PATH_BY_ROLE[user.role], label: "Go to dashboard" };
 
   return (
-    <div className="mkt-atmosphere">
-      <SiteHero primaryHref={primary.href} primaryLabel={primary.label} />
+    <div className="phase1-prototype">
+      <Phase1Hero primaryHref={primary.href} primaryLabel={primary.label} />
+      <Phase1PersonalBeat />
+      <div className="mkt-atmosphere">
       <HourChapter />
       <MethodChapter />
       <WhyStudyHall />
@@ -64,6 +68,7 @@ export default async function HomePage() {
         primaryLabel={primary.label}
         showFinePrint={false}
       />
+      </div>
     </div>
   );
 }

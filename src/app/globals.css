@@ -216,6 +216,148 @@ body {
   background: var(--background);
 }
 
+/* Galaxy Phase 1 — homepage hero prototype only */
+.phase1-prototype {
+  --phase1-canvas: #f4f5f7;
+  --phase1-ink: #0b0d10;
+  --phase1-muted: #4d4a44;
+  --phase1-subtle: #8a867c;
+  --phase1-line: rgba(11, 13, 16, 0.08);
+  --phase1-shadow: 0 32px 90px -48px rgba(11, 13, 16, 0.34);
+  --phase1-radius: 24px;
+  background: var(--phase1-canvas);
+  color: var(--phase1-ink);
+}
+
+.phase1-prototype .phase1-display {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.048em;
+  line-height: 0.98;
+}
+
+.phase1-prototype .phase1-kicker {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--phase1-muted);
+}
+
+.phase1-prototype .phase1-lede {
+  max-width: 34rem;
+  font-size: 1.125rem;
+  line-height: 1.62;
+  color: var(--phase1-muted);
+}
+
+.phase1-prototype .phase1-dot {
+  margin-inline: 0.55rem;
+  color: var(--phase1-subtle);
+}
+
+.phase1-hero {
+  padding: clamp(2.5rem, 5vw, 4.5rem) 0 clamp(2rem, 4vw, 3.5rem);
+}
+
+.phase1-hero__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.phase1-hero__copy {
+  width: 100%;
+  max-width: 40rem;
+}
+
+.phase1-hero__title {
+  margin-top: 1.25rem;
+  font-size: clamp(3rem, 7.4vw, 5.75rem);
+}
+
+.phase1-hero__lede {
+  margin: 1.5rem auto 0;
+}
+
+.phase1-hero__cta {
+  margin-top: 2rem;
+}
+
+.phase1-hero__facts {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--phase1-subtle);
+}
+
+.phase1-hero__product {
+  width: 100%;
+  max-width: 58rem;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  overflow: hidden;
+  border-radius: var(--phase1-radius);
+  background: #fff;
+  box-shadow: var(--phase1-shadow), 0 0 0 1px rgba(11, 13, 16, 0.05);
+  max-height: min(34rem, 72vh);
+}
+
+.phase1-personal {
+  padding: clamp(3rem, 7vw, 6rem) 0 clamp(3.5rem, 8vw, 7rem);
+  background: linear-gradient(180deg, var(--phase1-canvas) 0%, #eef0f3 58%, #fcfaf6 100%);
+}
+
+.phase1-personal__title {
+  max-width: 12ch;
+  font-size: clamp(2.35rem, 5.8vw, 4.5rem);
+}
+
+.phase1-personal__lede {
+  margin-top: 1.75rem;
+  max-width: 32rem;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--phase1-muted);
+}
+
+@media (min-width: 1024px) {
+  .phase1-hero__inner {
+    text-align: left;
+    align-items: stretch;
+  }
+
+  .phase1-hero__copy {
+    max-width: 36rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .phase1-hero__title {
+    max-width: 11ch;
+    margin-inline: auto;
+  }
+
+  .phase1-hero__lede {
+    margin-inline: auto;
+  }
+
+  .phase1-personal__title {
+    max-width: 13ch;
+  }
+}
+
+body:has(.phase1-prototype) header {
+  border-color: rgba(11, 13, 16, 0.06);
+  background: rgba(244, 245, 247, 0.82);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase1-prototype .sh-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Soft product depth — single ambient, not stacked shadows */
 .mkt-depth {
   box-shadow:
