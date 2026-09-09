@@ -4,19 +4,24 @@ set -euo pipefail
 DB_NAME="${STUDY_HALL_BOOKING_TEST_DB:-studyhall_booking_throwaway}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+apply_sql() {
+  # stdin so the postgres OS user does not need to read the workspace (GitHub Actions).
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" < "$1"
+}
+
 sudo -u postgres psql -v ON_ERROR_STOP=1 -c "SELECT 1" >/dev/null
 sudo -u postgres psql -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS ${DB_NAME};"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE ${DB_NAME};"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/scripts/study-hall-365-throwaway-bootstrap.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/scripts/study-hall-booking-throwaway-extra.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0036_study_hall_365.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0037_study_hall_365_parent_privacy.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0038_one_hour_booking_engine.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0039_study_hall_365_security_hardening.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0040_same_day_365_funding_fallback.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0041_booking_replacement_finalization.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0042_same_day_365_replacement_transfer.sql"
-sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0047_deactivate_legacy_prepaid_packages.sql"
+apply_sql "$ROOT/scripts/study-hall-365-throwaway-bootstrap.sql"
+apply_sql "$ROOT/scripts/study-hall-booking-throwaway-extra.sql"
+apply_sql "$ROOT/supabase/migrations/0036_study_hall_365.sql"
+apply_sql "$ROOT/supabase/migrations/0037_study_hall_365_parent_privacy.sql"
+apply_sql "$ROOT/supabase/migrations/0038_one_hour_booking_engine.sql"
+apply_sql "$ROOT/supabase/migrations/0039_study_hall_365_security_hardening.sql"
+apply_sql "$ROOT/supabase/migrations/0040_same_day_365_funding_fallback.sql"
+apply_sql "$ROOT/supabase/migrations/0041_booking_replacement_finalization.sql"
+apply_sql "$ROOT/supabase/migrations/0042_same_day_365_replacement_transfer.sql"
+apply_sql "$ROOT/supabase/migrations/0047_deactivate_legacy_prepaid_packages.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role;"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "
   create extension if not exists btree_gist;
