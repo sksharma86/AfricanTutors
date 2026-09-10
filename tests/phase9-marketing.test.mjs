@@ -96,7 +96,7 @@ describe("Phase 9 — CTA routing & navigation semantics (items 15,16,17)", () =
   it("anonymous primary CTA routes to signup with consistent label (item 15)", () => {
     assert.match(pricingLib, /FREE_TRIAL_CTA = "Try your first Study Hall free"/);
     assert.match(home, /href:\s*"\/signup"/);
-    assert.match(home, /START_FREE_CTA/);
+    assert.match(home, /START_FREE_CTA|FREE_TRIAL_CTA/);
   });
 
   it("authenticated student CTA routes to booking (item 16)", () => {

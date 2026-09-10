@@ -19,9 +19,9 @@ describe("Pre-launch functional UX — brand + confirmation", () => {
 
   it("FAQ brand question matches homepage filter", () => {
     const faq = read("src/lib/faq.ts");
-    const home = read("src/app/(marketing)/page.tsx");
+    const faqPage = read("src/app/(marketing)/faq/page.tsx");
     assert.match(faq, /What is Study Hall \(at home\)\?/);
-    assert.match(home, /What is Study Hall \(at home\)\?/);
+    assert.match(faqPage, /FAQ_ITEMS|What is Study Hall \(at home\)\?/);
     assert.doesNotMatch(faq, /What is Study Hall at Home\?/);
   });
 

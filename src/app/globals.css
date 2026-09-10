@@ -216,6 +216,432 @@ body {
   background: var(--background);
 }
 
+/* Homepage 1A — sections 1–5 only. Does not restyle portals. */
+.sh-home {
+  --sh-canvas: #f4efe6;
+  --sh-paper: #fbf7f0;
+  --sh-ink: #14120f;
+  --sh-muted: #5c574e;
+  --sh-subtle: #8a8378;
+  --sh-navy: #152033;
+  --sh-line: rgba(20, 18, 15, 0.08);
+  --sh-shadow: 0 28px 80px -36px rgba(20, 18, 15, 0.42);
+  background: var(--sh-paper);
+  color: var(--sh-ink);
+}
+
+.sh-home .sh-home-display {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.046em;
+  line-height: 0.96;
+}
+
+.sh-home .sh-home-kicker {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sh-subtle);
+}
+
+.sh-home-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 88svh;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  color: #fff;
+}
+
+.sh-home-hero__photo {
+  object-fit: cover;
+  object-position: 68% 42%;
+}
+
+.sh-home-hero__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0.72) 0%, rgba(10, 9, 8, 0.38) 46%, rgba(10, 9, 8, 0.12) 100%),
+    linear-gradient(180deg, rgba(10, 9, 8, 0.28) 0%, transparent 28%, rgba(10, 9, 8, 0.45) 100%);
+}
+
+.sh-home-hero__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-top: 7.5rem;
+  padding-bottom: clamp(2.5rem, 6vw, 5rem);
+}
+
+.sh-home-hero__title {
+  max-width: 11ch;
+  font-size: clamp(3.1rem, 8vw, 6.4rem);
+}
+
+.sh-home-hero__support {
+  margin-top: 1.25rem;
+  max-width: 22rem;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.sh-home-hero__cta {
+  margin-top: 1.75rem;
+}
+
+.sh-home-hero__button {
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sh-ink);
+  min-height: 3.1rem;
+  padding-inline: 1.4rem;
+}
+
+.sh-home-hero__button:hover {
+  background: #f3efe7;
+}
+
+.sh-home-hero__facts {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.sh-home-hero__facts span {
+  margin-inline: 0.55rem;
+}
+
+.sh-home-explainer {
+  background: var(--sh-paper);
+  padding: clamp(4.5rem, 9vw, 7.5rem) 0;
+}
+
+.sh-home-explainer__grid {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+}
+
+.sh-home-explainer__title {
+  margin-top: 1rem;
+  max-width: 12ch;
+  font-size: clamp(2.6rem, 5.8vw, 4.6rem);
+}
+
+.sh-home-explainer__lede {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--sh-muted);
+}
+
+.sh-home-explainer__uses {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: var(--sh-ink);
+}
+
+.sh-home-explainer__visual {
+  position: relative;
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  background: #ddd6c8;
+}
+
+.sh-home-evening {
+  background: #fff;
+  padding: clamp(4.5rem, 9vw, 7.5rem) 0;
+}
+
+.sh-home-evening__kicker,
+.sh-home-evening__title,
+.sh-home-evening__support,
+.sh-home-pricing__kicker,
+.sh-home-pricing__title {
+  text-align: center;
+}
+
+.sh-home-evening__title,
+.sh-home-pricing__title {
+  margin-top: 0.85rem;
+  font-size: clamp(2.4rem, 5.4vw, 4.2rem);
+}
+
+.sh-home-evening__support {
+  margin-top: 0.85rem;
+  font-size: 1.25rem;
+  color: var(--sh-muted);
+}
+
+.sh-home-evening__split {
+  margin-top: 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sh-home-evening__panel {
+  padding: 1.75rem 1.5rem 2rem;
+}
+
+.sh-home-evening__panel--before {
+  background: #f3eee6;
+}
+
+.sh-home-evening__panel--after {
+  background: #f7f3ec;
+}
+
+.sh-home-evening__photo {
+  position: relative;
+  height: 12rem;
+  margin: -1.75rem -1.5rem 1.5rem;
+  overflow: hidden;
+}
+
+.sh-home-evening__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sh-subtle);
+}
+
+.sh-home-evening__list {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.sh-home-evening__list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--sh-ink);
+}
+
+.sh-home-evening__mark {
+  flex: 0 0 1.1rem;
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
+}
+
+.sh-home-evening__mark--no {
+  color: #b42318;
+}
+
+.sh-home-evening__mark--yes {
+  color: #2e6a48;
+}
+
+.sh-home-portal {
+  background: var(--sh-paper);
+  padding: clamp(4.5rem, 9vw, 7.5rem) 0;
+}
+
+.sh-home-portal__intro {
+  max-width: 36rem;
+}
+
+.sh-home-portal__title {
+  margin-top: 0.85rem;
+  font-size: clamp(2.5rem, 5.4vw, 4.4rem);
+}
+
+.sh-home-portal__lede {
+  margin-top: 1.15rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--sh-muted);
+}
+
+.sh-home-portal__stage {
+  position: relative;
+  margin-top: 2.5rem;
+}
+
+.sh-home-portal__note {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sh-subtle);
+}
+
+.sh-home-portal__frame {
+  overflow: hidden;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--sh-shadow), 0 0 0 1px rgba(20, 18, 15, 0.05);
+  max-height: min(40rem, 78vh);
+}
+
+.sh-home-pricing {
+  background: #fff;
+  padding: clamp(4.5rem, 9vw, 7.5rem) 0 6rem;
+}
+
+.sh-home-pricing__grid {
+  margin-top: 3rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sh-home-offer {
+  padding: 2rem 1.6rem 1.7rem;
+  background: var(--sh-paper);
+}
+
+.sh-home-offer__price {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 3.4rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.sh-home-offer__unit {
+  margin-left: 0.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--sh-subtle);
+}
+
+.sh-home-offer--flagship .sh-home-offer__unit {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sh-home-offer__name {
+  margin-top: 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.sh-home-offer__detail {
+  margin-top: 0.55rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--sh-muted);
+}
+
+.sh-home-offer--flagship .sh-home-offer__detail {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.sh-home-offer__cta {
+  margin-top: 1.6rem;
+  border-radius: 999px;
+}
+
+.sh-home-offer--flagship {
+  background: var(--sh-navy);
+  color: #fff;
+  padding-top: 2.4rem;
+  padding-bottom: 2.1rem;
+}
+
+.sh-home-offer__badge {
+  margin-bottom: 1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.sh-home-offer__cta--flagship {
+  background: #fff;
+  color: var(--sh-navy);
+}
+
+@media (min-width: 768px) {
+  .sh-home-evening__split {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .sh-home-evening__photo {
+    height: 16rem;
+  }
+
+  .sh-home-pricing__grid {
+    grid-template-columns: 1fr 1fr 1.15fr;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sh-home-explainer__grid {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 4.5rem;
+  }
+
+  .sh-home-portal__note {
+    display: block;
+  }
+
+  .sh-home-portal__note--plan {
+    left: 0;
+    top: 18%;
+    transform: translateX(-8%);
+  }
+
+  .sh-home-portal__note--join {
+    right: 2%;
+    top: 38%;
+  }
+
+  .sh-home-portal__note--report {
+    right: 6%;
+    bottom: 18%;
+  }
+
+  .sh-home-portal__frame {
+    width: 86%;
+    margin-left: auto;
+  }
+}
+
+body:has(.sh-home) header {
+  border-color: transparent;
+  background: rgba(12, 11, 10, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+body:has(.sh-home) header a,
+body:has(.sh-home) header button,
+body:has(.sh-home) header span {
+  color: #fff;
+}
+
+body:has(.sh-home) header a.bg-ink-900,
+body:has(.sh-home) header a[class*="bg-ink-900"] {
+  background: #fff;
+  color: #14120f;
+}
+
+body:has(.sh-home) header .lg\\:hidden > div.absolute {
+  background: rgba(16, 14, 12, 0.96);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-home .sh-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Soft product depth — single ambient, not stacked shadows */
 .mkt-depth {
   box-shadow:

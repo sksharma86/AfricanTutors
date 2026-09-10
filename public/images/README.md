@@ -1,5 +1,12 @@
 # Image Sources & Licensing Status
 
+## Homepage 1A photography (existing assets)
+
+- Hero: `marketing/studyhall-focus-close.webp` (child at a desk with a live Guide on the laptop). Closest existing match to the approved cinematic composition. Still a development placeholder — a dedicated evening over-the-shoulder plate would be stronger.
+- Explainer: `marketing/studyhall-hero-desk.webp`
+- Evening “With Study Hall”: `marketing/studyhall-routine-evening.webp`
+- Missing: a “Before Study Hall” parent portrait. Section 3 currently uses typography for the left panel.
+
 ## `student-tutoring-session.jpg`, `tutor-portrait.jpg`
 
 - **Source:** AI-generated (via the development environment's image

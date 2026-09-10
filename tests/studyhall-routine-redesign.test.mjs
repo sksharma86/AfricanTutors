@@ -66,7 +66,7 @@ describe("Study Hall routine redesign — public positioning", () => {
     const offers = read("src/lib/public-offers.ts");
     assert.match(offers, /PUBLIC_OFFER_CTA_HREF = "\/signup"/);
     assert.match(home, /href: "\/signup"/);
-    assert.match(home, /START_FREE_CTA/);
+    assert.match(home, /START_FREE_CTA|FREE_TRIAL_CTA/);
     assert.match(home, /\/dashboard\/student\/book/);
     assert.match(home, /getGuideApplicantInfo/);
   });

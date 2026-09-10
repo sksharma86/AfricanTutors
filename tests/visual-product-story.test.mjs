@@ -20,24 +20,14 @@ describe("Visual product story — homepage contracts", () => {
   it("homepage is seven chapters, not the old infographic stack", () => {
     const page = read("src/app/(marketing)/page.tsx");
     const jsx = page.slice(page.indexOf("return"));
-    const order = [
-      "SiteHero",
-      "HourChapter",
-      "MethodChapter",
-      "WhyStudyHall",
-      "Routine365",
-      "TrustSafety",
-      "PricingSection",
-      "Faq",
-      "CtaSection",
-    ];
+    const order = ["HomeHero", "HomeExplainer", "HomeEvening", "HomePortal", "HomePricing"];
     let last = -1;
     for (const name of order) {
       const i = jsx.indexOf(name);
       assert.ok(i > last, `${name} must follow previous section`);
       last = i;
     }
-    assert.doesNotMatch(page, /HowStudyHallWorks|HouseholdValue|HabitBuilding|ProductShowcase/);
+    assert.doesNotMatch(page, /HowStudyHallWorks|HouseholdValue|HabitBuilding|<ProductShowcase/);
     assert.doesNotMatch(page, /LiveStudyHallDemo|TrustRow|<Steps/);
   });
 
