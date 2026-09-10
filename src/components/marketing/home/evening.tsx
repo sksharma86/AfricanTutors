@@ -61,14 +61,9 @@ export function HomeEvening() {
                 />
               </div>
               <p className="sh-home-evening__label">With Study Hall</p>
-              <ul className="sh-home-evening__list">
+              <ul className="sh-home-evening__list sh-home-evening__list--after">
                 {AFTER.map((line) => (
-                  <li key={line}>
-                    <span className="sh-home-evening__mark sh-home-evening__mark--yes" aria-hidden>
-                      ✓
-                    </span>
-                    <span>{line}</span>
-                  </li>
+                  <li key={line}>{line}</li>
                 ))}
               </ul>
             </div>

@@ -428,6 +428,10 @@ body {
   color: var(--sh-ink);
 }
 
+.sh-home-evening__list--after li {
+  display: block;
+}
+
 .sh-home-evening__mark {
   flex: 0 0 1.1rem;
   margin-top: 0.1rem;
@@ -487,7 +491,7 @@ body {
 
 .sh-home-pricing {
   background: #fff;
-  padding: clamp(4.5rem, 9vw, 7.5rem) 0 6rem;
+  padding: clamp(5.5rem, 10vw, 8rem) 0 6rem;
 }
 
 .sh-home-pricing__grid {
@@ -546,8 +550,7 @@ body {
 .sh-home-offer--flagship {
   background: var(--sh-navy);
   color: #fff;
-  padding-top: 2.4rem;
-  padding-bottom: 2.1rem;
+  padding: 2.8rem 1.8rem 2.4rem;
 }
 
 .sh-home-offer__badge {
@@ -614,8 +617,7 @@ body {
 
 body:has(.sh-home) header {
   border-color: transparent;
-  background: rgba(12, 11, 10, 0.28);
-  backdrop-filter: blur(16px);
+  background: #14120f;
 }
 
 body:has(.sh-home) header a,
