@@ -558,6 +558,7 @@ body {
 .sh-home-offer__cta {
   margin-top: 1.6rem;
   border-radius: 999px;
+  min-height: 2.75rem;
 }
 
 .sh-home-offer--flagship {
