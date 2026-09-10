@@ -454,7 +454,7 @@ body {
 
 .sh-home-evening__photo-frame {
   position: relative;
-  min-height: 16.5rem;
+  width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: #1b1916;
@@ -588,6 +588,27 @@ body {
 @media (min-width: 768px) {
   .sh-home-evening__compare {
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto repeat(5, auto);
+    row-gap: 0.9rem;
+    align-items: stretch;
+  }
+
+  .sh-home-evening__panel {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: 1 / span 6;
+  }
+
+  .sh-home-evening__list {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: 2 / span 5;
+    margin-top: 0;
+    gap: 0;
+  }
+
+  .sh-home-evening__label {
+    padding-bottom: 0.3rem;
   }
 
   .sh-home-pricing__grid {
