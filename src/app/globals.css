@@ -389,86 +389,80 @@ body {
 }
 
 .sh-home-evening__composition {
-  position: relative;
   margin: 1.35rem auto 0;
   width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
-.sh-home-evening__scene {
+.sh-home-evening__compare {
+  display: grid;
+}
+
+.sh-home-evening__panel {
+  display: flex;
+  flex-direction: column;
+  padding: 1.85rem 1.6rem 2rem;
+}
+
+.sh-home-evening__panel--before {
+  background: #1b1916;
+  color: #f4efe6;
+}
+
+.sh-home-evening__panel--after {
+  background: var(--sh-paper);
+  color: var(--sh-ink);
+}
+
+.sh-home-evening__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sh-subtle);
+}
+
+.sh-home-evening__panel--before .sh-home-evening__label {
+  color: rgba(244, 239, 230, 0.52);
+}
+
+.sh-home-evening__list {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.sh-home-evening__list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  min-height: 2.55em;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.sh-home-evening__mark {
+  flex: 0 0 1.1rem;
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
+}
+
+.sh-home-evening__mark--no {
+  color: #d4a39a;
+}
+
+.sh-home-evening__photo-frame {
   position: relative;
-  isolation: isolate;
-  width: 100%;
-  aspect-ratio: 4 / 3;
+  min-height: 16.5rem;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
   background: #1b1916;
 }
 
 .sh-home-evening__photo {
   object-fit: cover;
-  object-position: 58% 42%;
-}
-
-.sh-home-evening__wash {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(14, 12, 10, 0.52) 0%, rgba(14, 12, 10, 0.18) 26%, transparent 40%, transparent 62%, rgba(255, 248, 236, 0.16) 82%, rgba(255, 248, 236, 0.08) 100%),
-    linear-gradient(180deg, rgba(14, 12, 10, 0.34) 0%, transparent 32%, transparent 78%, rgba(14, 12, 10, 0.16) 100%);
-}
-
-.sh-home-evening__copy {
-  position: relative;
-  z-index: 1;
-}
-
-.sh-home-evening__copy--before,
-.sh-home-evening__copy--after {
-  padding: 1.15rem 1.2rem 0;
-}
-
-.sh-home-evening__copy--before {
-  color: var(--sh-ink);
-}
-
-.sh-home-evening__copy--after {
-  color: var(--sh-ink);
-  padding-bottom: 1.2rem;
-}
-
-.sh-home-evening__label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.sh-home-evening__copy--before .sh-home-evening__label,
-.sh-home-evening__copy--after .sh-home-evening__label {
-  color: var(--sh-subtle);
-}
-
-.sh-home-evening__list {
-  margin-top: 0.7rem;
-  display: grid;
-  gap: 0.48rem;
-}
-
-.sh-home-evening__list li {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-start;
-  font-size: 0.95rem;
-  line-height: 1.35;
-}
-
-.sh-home-evening__mark {
-  flex: 0 0 0.95rem;
-  margin-top: 0.05rem;
-}
-
-.sh-home-evening__mark--no {
-  color: #b42318;
+  object-position: 32% 40%;
 }
 
 .sh-home-portal {
@@ -592,61 +586,37 @@ body {
 }
 
 @media (min-width: 768px) {
-  .sh-home-evening__composition {
-    width: 92%;
-  }
-
-  .sh-home-evening__scene {
-    min-height: 28rem;
-    aspect-ratio: 2.15 / 1;
-  }
-
-  .sh-home-evening__photo {
-    object-position: 40% 52%;
-  }
-
-  .sh-home-evening__copy--before,
-  .sh-home-evening__copy--after {
-    position: absolute;
-    top: 1.5rem;
-    max-width: 17.5rem;
-    padding: 0;
-  }
-
-  .sh-home-evening__copy--before {
-    left: 1.6rem;
-    color: #f4efe6;
-    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.38);
-  }
-
-  .sh-home-evening__copy--before .sh-home-evening__label {
-    color: rgba(244, 239, 230, 0.7);
-  }
-
-  .sh-home-evening__copy--before .sh-home-evening__mark--no {
-    color: #e0b4ac;
-  }
-
-  .sh-home-evening__copy--after {
-    right: 1.6rem;
-    max-width: 18.5rem;
-    color: #1b1916;
-    text-align: right;
-    padding-bottom: 0;
-    text-shadow: 0 1px 12px rgba(255, 250, 240, 0.55);
-  }
-
-  .sh-home-evening__copy--after .sh-home-evening__label {
-    color: rgba(27, 25, 22, 0.58);
-  }
-
-  .sh-home-evening__copy--after .sh-home-evening__list li {
-    justify-content: flex-end;
+  .sh-home-evening__compare {
+    grid-template-columns: 1fr 1fr;
   }
 
   .sh-home-pricing__grid {
     grid-template-columns: 1fr 1fr 1.15fr;
     align-items: stretch;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sh-home-evening__composition {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    width: 90%;
+    align-items: stretch;
+  }
+
+  .sh-home-evening__compare {
+    min-height: 100%;
+    align-items: stretch;
+  }
+
+  .sh-home-evening__photo-frame {
+    min-height: 0;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .sh-home-evening__photo {
+    object-position: 46% 48%;
   }
 }
 
