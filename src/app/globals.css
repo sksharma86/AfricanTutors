@@ -645,16 +645,15 @@ body:has(.sh-home) header a[class*="bg-ink-900"] {
   color: #14120f;
 }
 
-body:has(.sh-home) header .lg\\:hidden > div.absolute {
+body:has(.sh-home) header [class*="lg:hidden"] > div.absolute {
   background: rgba(16, 14, 12, 0.96);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sh-home .sh-reveal {
-    opacity: 1;
-    transform: none;
-  }
+/* Homepage copy must stay readable without waiting on scroll. */
+.sh-home .sh-reveal {
+  opacity: 1;
+  transform: none;
 }
 
 /* Soft product depth — single ambient, not stacked shadows */
