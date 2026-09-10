@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 
@@ -32,8 +30,8 @@ export function HomeEvening() {
           <p className="sh-home-evening__support">{HOME_EVENING_SUPPORT}</p>
         </Reveal>
 
-        <div className="sh-home-evening__split">
-          <Reveal>
+        <Reveal delay={40}>
+          <div className="sh-home-evening__compare" role="group" aria-label="Before Study Hall and with Study Hall">
             <div className="sh-home-evening__panel sh-home-evening__panel--before">
               <p className="sh-home-evening__label">Before Study Hall</p>
               <ul className="sh-home-evening__list">
@@ -47,28 +45,17 @@ export function HomeEvening() {
                 ))}
               </ul>
             </div>
-          </Reveal>
 
-          <Reveal delay={70}>
             <div className="sh-home-evening__panel sh-home-evening__panel--after">
-              <div className="sh-home-evening__photo">
-                <Image
-                  src="/images/marketing/studyhall-routine-evening.webp"
-                  alt="A parent with a quiet evening while a child works in the next room"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover object-[35%_30%]"
-                />
-              </div>
               <p className="sh-home-evening__label">With Study Hall</p>
-              <ul className="sh-home-evening__list sh-home-evening__list--after">
+              <ul className="sh-home-evening__list">
                 {AFTER.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
             </div>
-          </Reveal>
-        </div>
+          </div>
+        </Reveal>
       </Container>
     </section>
   );
