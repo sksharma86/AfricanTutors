@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
 
@@ -54,6 +56,16 @@ export function HomeEvening() {
                 ))}
               </ul>
             </div>
+          </div>
+
+          <div className="sh-home-evening__payoff">
+            <Image
+              src="/images/marketing/studyhall-routine-evening.webp"
+              alt="A parent relaxing in the next room while a child works with a live Study Hall Guide"
+              fill
+              sizes="(max-width: 1280px) 100vw, 80rem"
+              className="object-cover object-[32%_38%]"
+            />
           </div>
         </Reveal>
       </Container>
