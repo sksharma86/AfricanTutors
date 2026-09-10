@@ -365,7 +365,7 @@ body {
 
 .sh-home-evening {
   background: #fff;
-  padding: clamp(3.25rem, 6.5vw, 5.25rem) 0 clamp(2.25rem, 4vw, 3.5rem);
+  padding: clamp(3rem, 5.5vw, 4.5rem) 0 clamp(2.25rem, 4vw, 3.5rem);
 }
 
 .sh-home-evening__kicker,
@@ -388,76 +388,87 @@ body {
   color: var(--sh-muted);
 }
 
-.sh-home-evening__compare {
-  margin-top: 2rem;
-  display: grid;
-  overflow: hidden;
-}
-
-.sh-home-evening__panel {
-  padding: 1.85rem 1.6rem 2rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.sh-home-evening__panel--before {
-  background: #1b1916;
-  color: #f4efe6;
-}
-
-.sh-home-evening__panel--after {
-  background: var(--sh-paper);
-  color: var(--sh-ink);
-}
-
-.sh-home-evening__label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sh-subtle);
-}
-
-.sh-home-evening__panel--before .sh-home-evening__label {
-  color: rgba(244, 239, 230, 0.52);
-}
-
-.sh-home-evening__list {
-  margin-top: 1.2rem;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.sh-home-evening__list li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  font-size: 1.05rem;
-  line-height: 1.45;
-  color: inherit;
-}
-
-.sh-home-evening__mark {
-  flex: 0 0 1.1rem;
-  margin-top: 0.1rem;
-  font-size: 0.95rem;
-}
-
-.sh-home-evening__mark--no {
-  color: #d4a39a;
-}
-
-.sh-home-evening__payoff {
+.sh-home-evening__composition {
   position: relative;
-  margin-top: 1.15rem;
-  min-height: 18rem;
+  margin: 1.35rem auto 0;
+  width: 100%;
+}
+
+.sh-home-evening__scene {
+  position: relative;
+  isolation: isolate;
+  min-height: 20rem;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: #1b1916;
 }
 
-.sh-home-evening__payoff img {
-  object-position: 48% 40%;
+.sh-home-evening__photo {
+  object-fit: cover;
+  object-position: 42% 46%;
+}
+
+.sh-home-evening__wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(14, 12, 10, 0.52) 0%, rgba(14, 12, 10, 0.18) 26%, transparent 40%, transparent 62%, rgba(255, 248, 236, 0.16) 82%, rgba(255, 248, 236, 0.08) 100%),
+    linear-gradient(180deg, rgba(14, 12, 10, 0.34) 0%, transparent 32%, transparent 78%, rgba(14, 12, 10, 0.16) 100%);
+}
+
+.sh-home-evening__copy {
+  position: relative;
+  z-index: 1;
+}
+
+.sh-home-evening__copy--before,
+.sh-home-evening__copy--after {
+  padding: 1.15rem 1.2rem 0;
+}
+
+.sh-home-evening__copy--before {
+  color: var(--sh-ink);
+}
+
+.sh-home-evening__copy--after {
+  color: var(--sh-ink);
+  padding-bottom: 1.2rem;
+}
+
+.sh-home-evening__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sh-home-evening__copy--before .sh-home-evening__label,
+.sh-home-evening__copy--after .sh-home-evening__label {
+  color: var(--sh-subtle);
+}
+
+.sh-home-evening__list {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.48rem;
+}
+
+.sh-home-evening__list li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.sh-home-evening__mark {
+  flex: 0 0 0.95rem;
+  margin-top: 0.05rem;
+}
+
+.sh-home-evening__mark--no {
+  color: #b42318;
 }
 
 .sh-home-portal {
@@ -581,21 +592,55 @@ body {
 }
 
 @media (min-width: 768px) {
-  .sh-home-evening__compare {
-    grid-template-columns: 1fr 1fr;
+  .sh-home-evening__composition {
+    width: 92%;
   }
 
-  .sh-home-evening__panel {
-    padding: 2.15rem 2rem 2.25rem;
-  }
-
-  .sh-home-evening__payoff {
-    min-height: 24rem;
+  .sh-home-evening__scene {
+    min-height: 28rem;
     aspect-ratio: 2.15 / 1;
   }
 
-  .sh-home-evening__payoff img {
-    object-position: 32% 38%;
+  .sh-home-evening__photo {
+    object-position: 40% 52%;
+  }
+
+  .sh-home-evening__copy--before,
+  .sh-home-evening__copy--after {
+    position: absolute;
+    top: 1.5rem;
+    max-width: 17.5rem;
+    padding: 0;
+  }
+
+  .sh-home-evening__copy--before {
+    left: 1.6rem;
+    color: #f4efe6;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.38);
+  }
+
+  .sh-home-evening__copy--before .sh-home-evening__label {
+    color: rgba(244, 239, 230, 0.7);
+  }
+
+  .sh-home-evening__copy--before .sh-home-evening__mark--no {
+    color: #e0b4ac;
+  }
+
+  .sh-home-evening__copy--after {
+    right: 1.6rem;
+    color: #1b1916;
+    text-align: right;
+    padding-bottom: 0;
+    text-shadow: 0 1px 12px rgba(255, 250, 240, 0.55);
+  }
+
+  .sh-home-evening__copy--after .sh-home-evening__label {
+    color: rgba(27, 25, 22, 0.58);
+  }
+
+  .sh-home-evening__copy--after .sh-home-evening__list li {
+    justify-content: flex-end;
   }
 
   .sh-home-pricing__grid {

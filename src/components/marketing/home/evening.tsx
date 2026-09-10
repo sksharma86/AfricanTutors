@@ -33,8 +33,19 @@ export function HomeEvening() {
         </Reveal>
 
         <Reveal delay={40}>
-          <div className="sh-home-evening__compare" role="group" aria-label="Before Study Hall and with Study Hall">
-            <div className="sh-home-evening__panel sh-home-evening__panel--before">
+          <div className="sh-home-evening__composition" role="group" aria-label="Before Study Hall and with Study Hall">
+            <div className="sh-home-evening__scene">
+              <Image
+                src="/images/marketing/studyhall-routine-evening.webp"
+                alt="A parent relaxing in the next room while a child works with a live Study Hall Guide"
+                fill
+                sizes="(max-width: 1280px) 100vw, 80rem"
+                className="sh-home-evening__photo"
+              />
+              <div className="sh-home-evening__wash" aria-hidden />
+            </div>
+
+            <div className="sh-home-evening__copy sh-home-evening__copy--before">
               <p className="sh-home-evening__label">Before Study Hall</p>
               <ul className="sh-home-evening__list">
                 {BEFORE.map((line) => (
@@ -48,7 +59,7 @@ export function HomeEvening() {
               </ul>
             </div>
 
-            <div className="sh-home-evening__panel sh-home-evening__panel--after">
+            <div className="sh-home-evening__copy sh-home-evening__copy--after">
               <p className="sh-home-evening__label">With Study Hall</p>
               <ul className="sh-home-evening__list">
                 {AFTER.map((line) => (
@@ -56,16 +67,6 @@ export function HomeEvening() {
                 ))}
               </ul>
             </div>
-          </div>
-
-          <div className="sh-home-evening__payoff">
-            <Image
-              src="/images/marketing/studyhall-routine-evening.webp"
-              alt="A parent relaxing in the next room while a child works with a live Study Hall Guide"
-              fill
-              sizes="(max-width: 1280px) 100vw, 80rem"
-              className="object-cover"
-            />
           </div>
         </Reveal>
       </Container>
