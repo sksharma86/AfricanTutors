@@ -64,7 +64,7 @@ export function HomeEvening() {
               alt="A parent relaxing in the next room while a child works with a live Study Hall Guide"
               fill
               sizes="(max-width: 1280px) 100vw, 80rem"
-              className="object-cover object-[32%_38%]"
+              className="object-cover"
             />
           </div>
         </Reveal>

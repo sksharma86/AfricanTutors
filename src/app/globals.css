@@ -365,7 +365,7 @@ body {
 
 .sh-home-evening {
   background: #fff;
-  padding: clamp(3.25rem, 6.5vw, 5.25rem) 0;
+  padding: clamp(3.25rem, 6.5vw, 5.25rem) 0 clamp(2.25rem, 4vw, 3.5rem);
 }
 
 .sh-home-evening__kicker,
@@ -454,6 +454,10 @@ body {
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: #1b1916;
+}
+
+.sh-home-evening__payoff img {
+  object-position: 48% 40%;
 }
 
 .sh-home-portal {
@@ -612,6 +616,10 @@ body {
     aspect-ratio: 2.15 / 1;
   }
 
+  .sh-home-evening__payoff img {
+    object-position: 32% 38%;
+  }
+
   .sh-home-pricing__grid {
     grid-template-columns: 1fr 1fr 1.15fr;
     align-items: stretch;
@@ -638,13 +646,13 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.45rem;
-    width: 6.9rem;
+    width: 7.6rem;
   }
 
   .sh-home-portal__anno-line {
     display: block;
     position: relative;
-    width: 100%;
+    width: calc(100% + 1.6rem);
     height: 1px;
     background: rgba(244, 239, 230, 0.28);
   }
@@ -662,16 +670,20 @@ body {
   }
 
   .sh-home-portal__anno--plan {
-    top: 21%;
-    left: 0.35rem;
+    top: 22%;
+    left: 0.15rem;
   }
 
   .sh-home-portal__anno--join {
-    top: 34%;
-    right: 0.35rem;
+    top: 40%;
+    right: 0.15rem;
     left: auto;
     align-items: flex-end;
     text-align: right;
+  }
+
+  .sh-home-portal__anno--join .sh-home-portal__anno-line {
+    margin-left: -1.6rem;
   }
 
   .sh-home-portal__anno--join .sh-home-portal__anno-line::after {
@@ -681,8 +693,8 @@ body {
   }
 
   .sh-home-portal__anno--report {
-    top: 67%;
-    left: 0.35rem;
+    top: 64%;
+    left: 0.15rem;
   }
 
   .sh-home-portal__frame {
