@@ -397,7 +397,7 @@ body {
 .sh-home-evening__scene {
   position: relative;
   isolation: isolate;
-  min-height: 20rem;
+  width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: #1b1916;
@@ -405,7 +405,7 @@ body {
 
 .sh-home-evening__photo {
   object-fit: cover;
-  object-position: 42% 46%;
+  object-position: 58% 42%;
 }
 
 .sh-home-evening__wash {
@@ -629,6 +629,7 @@ body {
 
   .sh-home-evening__copy--after {
     right: 1.6rem;
+    max-width: 18.5rem;
     color: #1b1916;
     text-align: right;
     padding-bottom: 0;
