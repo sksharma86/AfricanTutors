@@ -245,6 +245,14 @@ body {
   color: var(--sh-subtle);
 }
 
+.sh-home-hero,
+.sh-home-explainer,
+.sh-home-evening,
+.sh-home-portal,
+.sh-home-pricing {
+  scroll-margin-top: 5.5rem;
+}
+
 .sh-home-hero {
   position: relative;
   isolation: isolate;
@@ -391,11 +399,12 @@ body {
 }
 
 .sh-home-evening__panel--before {
-  background: #f3eee6;
+  background: #1b1916;
+  color: #f4efe6;
 }
 
 .sh-home-evening__panel--after {
-  background: #f7f3ec;
+  background: var(--sh-paper);
 }
 
 .sh-home-evening__photo {
@@ -419,13 +428,17 @@ body {
   gap: 0.85rem;
 }
 
+.sh-home-evening__panel--before .sh-home-evening__label {
+  color: rgba(244, 239, 230, 0.52);
+}
+
 .sh-home-evening__list li {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
   font-size: 1.05rem;
   line-height: 1.45;
-  color: var(--sh-ink);
+  color: inherit;
 }
 
 .sh-home-evening__list--after li {
@@ -439,7 +452,7 @@ body {
 }
 
 .sh-home-evening__mark--no {
-  color: #b42318;
+  color: #d4a39a;
 }
 
 .sh-home-evening__mark--yes {
