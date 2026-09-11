@@ -284,7 +284,7 @@ describe("PR8C — pkg_10sh / legacy packages", () => {
   it("only pkg_10sh is the current prepaid offer; 14h/28h cannot be newly purchased", () => {
     assert.equal(PACKAGE_CODE_10_STUDY_HALLS, "pkg_10sh");
     assert.equal(PACKAGE_10SH_MINUTES, 600);
-    assert.equal(PACKAGE_10SH_PRICE_CENTS, 10000);
+    assert.equal(PACKAGE_10SH_PRICE_CENTS, 9900);
     const shown = customerFacingPrepaidPackages([
       { code: "pkg_14h" },
       { code: "pkg_10sh" },

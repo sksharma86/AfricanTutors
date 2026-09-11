@@ -21,7 +21,7 @@ export const PUBLIC_OFFERS = [
   {
     id: "alacarte",
     name: "À la carte",
-    price: "$100",
+    price: "$99",
     detail: "10 Study Halls · never expire",
   },
   {

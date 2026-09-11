@@ -95,7 +95,7 @@ describe("Study Hall PR3 — live 60-minute free session", { skip: !hasSupabaseE
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
-    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);
   });

@@ -95,7 +95,7 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
     const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
-    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents, by.pkg_14h.is_active], [840, 14000, false]);
     assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents, by.pkg_28h.is_active], [1680, 25200, false]);
   });

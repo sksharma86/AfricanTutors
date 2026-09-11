@@ -340,7 +340,7 @@ describe("Parent portal UX — Study Halls, reports, hours, account", () => {
   it("Hours keeps package math, PAYG $12, and #prepaid; hides Stripe jargon", () => {
     const hours = read("src/app/dashboard/student/packages/page.tsx");
     assert.match(hours, /How your household funds Study Hall|Hours never expire/);
-    assert.match(hours, /10 Study Halls \/ \$100/);
+    assert.match(hours, /10 Study Halls \/ \$\{formatCents\(PACKAGE_10SH_PRICE_CENTS\)\}/);
     assert.match(hours, /Study Hall 365/);
     assert.match(hours, /\$149\/month/);
     assert.match(hours, /Pay as you go · \$12 for one 60-minute Study Hall/);

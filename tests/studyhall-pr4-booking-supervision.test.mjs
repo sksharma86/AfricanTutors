@@ -289,7 +289,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
     const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
-    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);
   });

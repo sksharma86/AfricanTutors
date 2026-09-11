@@ -22,6 +22,7 @@ apply_sql "$ROOT/supabase/migrations/0040_same_day_365_funding_fallback.sql"
 apply_sql "$ROOT/supabase/migrations/0041_booking_replacement_finalization.sql"
 apply_sql "$ROOT/supabase/migrations/0042_same_day_365_replacement_transfer.sql"
 apply_sql "$ROOT/supabase/migrations/0047_deactivate_legacy_prepaid_packages.sql"
+apply_sql "$ROOT/supabase/migrations/0048_pkg_10sh_price_99.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role;"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "
   create extension if not exists btree_gist;

@@ -20,7 +20,8 @@ describe("Galaxy 1A homepage — approved copy and product truth", () => {
     assert.doesNotMatch(page, /SiteHero|HourChapter|MethodChapter|Routine365|CtaSection|<Faq/);
     assert.match(read("src/components/marketing/home/hero.tsx"), /Give your child an edge\./);
     assert.match(read("src/components/marketing/home/hero.tsx"), /Private, one on one Study Halls\. Right at home\./);
-    assert.match(read("src/components/marketing/home/hero.tsx"), /No credit card/);
+    assert.match(read("src/components/marketing/home/hero.tsx"), /No credit card required/);
+    assert.doesNotMatch(read("src/components/marketing/home/hero.tsx"), /60 minutes|One on one/);
     assert.match(read("src/components/marketing/home/explainer.tsx"), /A dedicated hour for getting things done\./);
     assert.match(read("src/components/marketing/home/evening.tsx"), /Get an hour of your evening back\./);
     assert.match(read("src/components/marketing/home/evening.tsx"), /Homework time\? We got this\./);
@@ -45,11 +46,15 @@ describe("Galaxy 1A homepage — approved copy and product truth", () => {
 
   it("keeps the 10-pack homepage price truthful to the catalog", () => {
     const pricing = read("src/components/marketing/home/pricing.tsx");
-    assert.equal(PACKAGE_10SH_PRICE_CENTS, 10000);
+    assert.equal(PACKAGE_10SH_PRICE_CENTS, 9900);
     assert.equal(STUDY_HALL_365_MONTHLY_USD, 149);
     assert.match(pricing, /PACKAGE_10SH_PRICE_CENTS/);
-    assert.match(pricing, /Do not advertise \$99/);
+    assert.match(pricing, /Save \{formatUsd\(PACK_10_SAVINGS_USD\)\} when you buy ten\./);
+    assert.doesNotMatch(pricing, /Do not advertise \$99/);
     assert.doesNotMatch(pricing, /formatUsd\(99\)/);
     assert.doesNotMatch(pricing, /price: "\$99"|\{pack\} = "\$99"/);
+    assert.match(read("src/app/api/checkout/package/route.ts"), /purchase_package/);
+    assert.match(read("src/lib/checkout-service.ts"), /unit_amount:\s*q\.stripe_cents_due/);
+    assert.match(read("supabase/migrations/0048_pkg_10sh_price_99.sql"), /price_cents = 9900/);
   });
 });

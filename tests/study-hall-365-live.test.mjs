@@ -34,7 +34,7 @@ async function tablesReady() {
 describe("Study Hall 365 — catalog + RPC presence (live, read-only)", { skip: !hasSupabaseEnv }, () => {
   const svc = adminClient();
 
-  it("pkg_10sh is 600 minutes / $100 when migration 0036 is applied", async (t) => {
+  it("pkg_10sh is 600 minutes / $99 when migration 0048 is applied", async (t) => {
     const { data, error } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
@@ -45,7 +45,11 @@ describe("Study Hall 365 — catalog + RPC presence (live, read-only)", { skip: 
       return;
     }
     assert.equal(data.minutes, PACKAGE_10SH_MINUTES);
-    assert.equal(data.price_cents, 10000);
+    if (data.price_cents === 10000) {
+      t.skip("ENVIRONMENT/BLOCKED: 0048 pkg_10sh $99 not applied on this database");
+      return;
+    }
+    assert.equal(data.price_cents, 9900);
     assert.equal(data.is_active, true);
   });
 

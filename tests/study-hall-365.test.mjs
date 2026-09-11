@@ -353,10 +353,10 @@ describe("Study Hall 365 — Stripe period extraction and catalog", () => {
     );
   });
 
-  it("10-pack is 600 minutes / $100 and 365 is $14900 / month", () => {
+  it("10-pack is 600 minutes / $99 and 365 is $14900 / month", () => {
     assert.equal(PACKAGE_CODE_10_STUDY_HALLS, "pkg_10sh");
     assert.equal(PACKAGE_10SH_MINUTES, 600);
-    assert.equal(PACKAGE_10SH_PRICE_CENTS, 10000);
+    assert.equal(PACKAGE_10SH_PRICE_CENTS, 9900);
     assert.equal(STUDY_HALL_365_MONTHLY_CENTS, 14900);
     assert.equal(STUDY_HALL_365_KIND, "study_hall_365");
   });

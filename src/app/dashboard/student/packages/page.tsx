@@ -13,7 +13,8 @@ import { formatMoneyCents } from "@/lib/format.mjs";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
 import { parentPaymentPurposeLabel, parentPaymentStatusLabel } from "@/lib/parent-portal.mjs";
 import { parseParentMembership } from "@/lib/parent-week.mjs";
-import { customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
+import { formatCents } from "@/lib/pricing";
+import { PACKAGE_10SH_PRICE_CENTS, customerFacingPrepaidPackages } from "@/lib/study-hall-365/catalog.mjs";
 import { parseOpenMembershipFlag } from "@/lib/study-hall-365/hours-ctas.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -136,8 +137,8 @@ export default async function PackagesPage() {
         </h2>
         <p className="mt-1 text-sm text-[var(--pp-muted)]">
           {entitled365
-            ? "10 Study Halls / $100 · $10 each. Useful if you want a second Study Hall on the same day. Purchased Study Halls never expire."
-            : "10 Study Halls / $100 · $10 each. Purchased Study Halls never expire."}
+            ? `10 Study Halls / ${formatCents(PACKAGE_10SH_PRICE_CENTS)} · ${formatCents(PACKAGE_10SH_PRICE_CENTS / 10)} each. Useful if you want a second Study Hall on the same day. Purchased Study Halls never expire.`
+            : `10 Study Halls / ${formatCents(PACKAGE_10SH_PRICE_CENTS)} · ${formatCents(PACKAGE_10SH_PRICE_CENTS / 10)} each. Purchased Study Halls never expire.`}
         </p>
         {entitled365 && minutes === 0 ? (
           <p className="mt-3 text-sm text-[var(--pp-muted)]">

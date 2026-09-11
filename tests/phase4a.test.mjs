@@ -64,7 +64,7 @@ describe("Phase 4A — financial foundation (live)", { skip: !hasSupabaseEnv }, 
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const activeBy = Object.fromEntries((active ?? []).map((p) => [p.code, p]));
-    assert.deepEqual([activeBy.pkg_10sh.minutes, activeBy.pkg_10sh.price_cents, activeBy.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([activeBy.pkg_10sh.minutes, activeBy.pkg_10sh.price_cents, activeBy.pkg_10sh.is_active], [600, 9900, true]);
     assert.deepEqual([activeBy.pkg_14h.minutes, activeBy.pkg_14h.price_cents, activeBy.pkg_14h.is_active], [840, 14000, false]);
     assert.deepEqual([activeBy.pkg_28h.minutes, activeBy.pkg_28h.price_cents, activeBy.pkg_28h.is_active], [1680, 25200, false]);
   });

@@ -151,7 +151,7 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
-    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 10000, true]);
+    assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);
     assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents], [840, 14000]);

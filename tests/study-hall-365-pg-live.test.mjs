@@ -85,7 +85,7 @@ describe("Study Hall 365 — throwaway Postgres live writes", { skip: !havePsql,
   it("applies 0036+0037+0039 on an isolated local database (not demo)", () => {
     execSync("bash scripts/setup-study-hall-365-throwaway-db.sh", { stdio: "pipe" });
     const ten = sql(`select minutes::text || ',' || price_cents::text || ',' || is_active::text from package_products where code = 'pkg_10sh'`);
-    assert.match(ten, /^600,10000,t/);
+    assert.match(ten, /^600,9900,t/);
     const tables = sql(
       `select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('study_hall_365_subscriptions','study_hall_365_day_usage')`,
     );

@@ -7,7 +7,7 @@ export const STUDY_HALL_MINUTES = 60;
 
 export const PACKAGE_CODE_10_STUDY_HALLS = "pkg_10sh";
 export const PACKAGE_10SH_MINUTES = 600;
-export const PACKAGE_10SH_PRICE_CENTS = 10000;
+export const PACKAGE_10SH_PRICE_CENTS = 9900;
 export const PACKAGE_10SH_STUDY_HALLS = 10;
 
 /**
