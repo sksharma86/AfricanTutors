@@ -54,7 +54,7 @@ export function PortalCallouts() {
             </marker>
           </defs>
           <path
-            d="M 108 9 C 68 14, 32 28, 8 47"
+            d="M 110 12 C 72 10, 34 20, 8 34"
             stroke="currentColor"
             strokeWidth="1.7"
             strokeLinecap="round"
