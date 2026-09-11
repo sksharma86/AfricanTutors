@@ -41,13 +41,7 @@ export function HomeHero({
             {primaryLabel}
           </TrackCta>
         </div>
-        <p className="sh-home-hero__facts">
-          60 minutes
-          <span aria-hidden>·</span>
-          One on one
-          <span aria-hidden>·</span>
-          No credit card
-        </p>
+        <p className="sh-home-hero__facts">No credit card required</p>
       </Container>
     </section>
   );
