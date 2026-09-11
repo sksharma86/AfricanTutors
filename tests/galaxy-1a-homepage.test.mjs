@@ -31,8 +31,16 @@ describe("Galaxy 1A homepage — approved copy and product truth", () => {
 
   it("reuses the real Parent Portal composition, not a fake dashboard", () => {
     const portal = read("src/components/marketing/home/portal.tsx");
+    const callouts = read("src/components/marketing/home/portal-callouts.tsx");
     assert.match(portal, /ParentPortalPreview/);
-    assert.doesNotMatch(portal, /Plan the week|Join when it’s time|See how it went|anno-line|sh-home-portal__anno/);
+    assert.doesNotMatch(portal, /Built for real life|sh-home-kicker|anno-line|────────/);
+    assert.match(callouts, /Plan the week/);
+    assert.match(callouts, /Join when it’s time/);
+    assert.match(callouts, /See how it went/);
+    assert.match(callouts, /Study Halls/);
+    assert.match(callouts, /Join Study Hall →/);
+    assert.match(callouts, /Report ready/);
+    assert.doesNotMatch(callouts, /anno-line|────────/);
     assert.doesNotMatch(portal, /JoinSession|This Week|Taylor|Jordan calendar/i);
     assert.match(read("src/components/marketing/product-showcase.tsx"), /export function ParentPortalPreview/);
     assert.doesNotMatch(read("src/app/(marketing)/page.tsx"), /HeroProductVisual|LiveStudyHallDemo/);

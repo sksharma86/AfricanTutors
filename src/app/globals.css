@@ -475,7 +475,7 @@ body {
 }
 
 .sh-home-portal__title {
-  margin-top: 0.8rem;
+  margin-top: 0;
   font-size: clamp(2.5rem, 5.4vw, 4.4rem);
 }
 
@@ -487,7 +487,59 @@ body {
 }
 
 .sh-home-portal__stage {
+  position: relative;
   margin-top: 1.75rem;
+  overflow: visible;
+}
+
+.sh-home-portal__callouts {
+  display: none;
+  position: absolute;
+  inset: 0 -8rem;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sh-home-portal__arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: #3d3428;
+}
+
+.sh-home-portal__arrow-halo {
+  fill: none;
+  stroke: rgba(255, 248, 236, 0.74);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sh-home-portal__arrow {
+  fill: none;
+  stroke: #3d3428;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sh-home-portal__callout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #3d3428;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.sh-home-portal__callout.is-placed {
+  opacity: 1;
 }
 
 .sh-home-portal__frame {
@@ -653,6 +705,10 @@ body {
 
   .sh-home-portal .parent-app {
     min-height: 36rem;
+  }
+
+  .sh-home-portal__callouts {
+    display: block;
   }
 }
 

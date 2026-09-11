@@ -1,3 +1,4 @@
+import { PortalCallouts } from "@/components/marketing/home/portal-callouts";
 import { ParentPortalPreview } from "@/components/marketing/product-showcase";
 import { Reveal } from "@/components/marketing/reveal";
 import { Container } from "@/components/ui/container";
@@ -12,7 +13,6 @@ export function HomePortal() {
       <Container size="wide">
         <div className="sh-home-portal__intro">
           <Reveal>
-            <p className="sh-home-kicker">Built for real life</p>
             <h2 className="sh-home-display sh-home-portal__title">{HOME_PORTAL_HEADLINE}</h2>
             <p className="sh-home-portal__lede">{HOME_PORTAL_SUPPORT}</p>
           </Reveal>
@@ -26,6 +26,7 @@ export function HomePortal() {
               </p>
               <ParentPortalPreview />
             </div>
+            <PortalCallouts />
           </div>
         </Reveal>
       </Container>
