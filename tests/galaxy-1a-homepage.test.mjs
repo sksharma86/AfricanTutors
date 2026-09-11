@@ -34,13 +34,10 @@ describe("Galaxy 1A homepage — approved copy and product truth", () => {
     const callouts = read("src/components/marketing/home/portal-callouts.tsx");
     assert.match(portal, /ParentPortalPreview/);
     assert.doesNotMatch(portal, /Built for real life|sh-home-kicker|anno-line|────────/);
-    assert.match(callouts, /Plan the week/);
+    assert.doesNotMatch(callouts, /Plan the week|Study Halls/);
     assert.match(callouts, /Join when it’s time/);
     assert.match(callouts, /See how it went/);
-    assert.match(callouts, /Study Halls nav row/);
-    assert.match(callouts, /Join Study Hall button/);
-    assert.match(callouts, /Report ready/);
-    assert.doesNotMatch(callouts, /anno-line|────────|"use client"/);
+    assert.doesNotMatch(callouts, /anno-line|────────|"use client"|M 1108|C 980/);
     assert.doesNotMatch(portal, /JoinSession|This Week|Taylor|Jordan calendar/i);
     assert.match(read("src/components/marketing/product-showcase.tsx"), /export function ParentPortalPreview/);
     assert.doesNotMatch(read("src/app/(marketing)/page.tsx"), /HeroProductVisual|LiveStudyHallDemo/);

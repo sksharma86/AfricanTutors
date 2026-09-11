@@ -495,67 +495,48 @@ body {
 .sh-home-portal__callouts {
   display: none;
   position: absolute;
-  top: 0;
-  left: 50%;
+  inset: 0;
   z-index: 3;
   width: 90%;
-  height: 100%;
-  overflow: visible;
+  margin-inline: auto;
+  overflow: hidden;
   pointer-events: none;
-  transform: translateX(-50%);
 }
 
-.sh-home-portal__arrows {
+.sh-home-portal__note {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  color: #3d3428;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  max-width: 10.5rem;
 }
 
-.sh-home-portal__arrow-halo {
-  fill: none;
-  stroke: rgba(255, 248, 236, 0.74);
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.sh-home-portal__arrow {
-  fill: none;
-  stroke: #3d3428;
-  stroke-width: 1.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.sh-home-portal__callout {
-  position: absolute;
-  font-size: 0.95rem;
+.sh-home-portal__note-label {
+  font-size: 0.84rem;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  font-style: italic;
+  letter-spacing: -0.015em;
   line-height: 1.2;
-  color: #3d3428;
   white-space: nowrap;
 }
 
-.sh-home-portal__callout--plan {
-  right: calc(100% + 1.15rem);
-  top: 19.3%;
-  transform: translateY(-50%);
+.sh-home-portal__note-arrow {
+  display: block;
+  width: 6.6rem;
+  height: 3.4rem;
 }
 
-.sh-home-portal__callout--join {
-  left: calc(100% + 1.15rem);
-  top: 48.6%;
-  transform: translateY(-50%);
+.sh-home-portal__note--join {
+  top: 41.5%;
+  left: 40%;
+  color: #eadcc6;
 }
 
-.sh-home-portal__callout--review {
-  right: calc(100% + 1.15rem);
-  top: 76%;
-  transform: translateY(-50%);
+.sh-home-portal__note--review {
+  top: 68.5%;
+  left: 36%;
+  color: #4a433c;
 }
 
 .sh-home-portal__frame {
