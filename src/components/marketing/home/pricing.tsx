@@ -7,11 +7,7 @@ import {
   STUDY_HALL_365_MONTHLY_USD,
 } from "@/lib/study-hall-365/catalog.mjs";
 
-/**
- * Desired future 10-pack price is $99 (save $21 vs 10 × $12).
- * Authoritative catalog/checkout remains PACKAGE_10SH_PRICE_CENTS ($100)
- * until a separate, reviewed economics change. Do not advertise $99 here.
- */
+/** Homepage 10-pack display tracks PACKAGE_10SH_PRICE_CENTS ($99). */
 export const PACK_10_DISPLAY_USD = PACKAGE_10SH_PRICE_CENTS / 100;
 const PACK_10_SAVINGS_USD = PAYG_PRICE_USD * PACKAGE_10SH_STUDY_HALLS - PACK_10_DISPLAY_USD;
 
@@ -34,7 +30,12 @@ export function HomePricing({
 
         <div className="sh-home-pricing__grid">
           <article data-offer="payg" className="sh-home-offer">
-            <p className="sh-home-offer__price">{payg}</p>
+            <div className="sh-home-offer__price-head">
+              <p className="sh-home-offer__badge" aria-hidden>
+                &nbsp;
+              </p>
+              <p className="sh-home-offer__price">{payg}</p>
+            </div>
             <p className="sh-home-offer__name">One Study Hall</p>
             <p className="sh-home-offer__detail">One private, 60 minute Study Hall.</p>
             <p className="sh-home-offer__detail">Pay as you go.</p>
@@ -44,7 +45,12 @@ export function HomePricing({
           </article>
 
           <article data-offer="alacarte" className="sh-home-offer">
-            <p className="sh-home-offer__price">{pack}</p>
+            <div className="sh-home-offer__price-head">
+              <p className="sh-home-offer__badge" aria-hidden>
+                &nbsp;
+              </p>
+              <p className="sh-home-offer__price">{pack}</p>
+            </div>
             <p className="sh-home-offer__name">10 Study Halls</p>
             <p className="sh-home-offer__detail">
               Save {formatUsd(PACK_10_SAVINGS_USD)} when you buy ten.
@@ -56,11 +62,13 @@ export function HomePricing({
           </article>
 
           <article data-offer="study-hall-365" className="sh-home-offer sh-home-offer--flagship">
-            <p className="sh-home-offer__badge">Best value</p>
-            <p className="sh-home-offer__price">
-              {unlimited}
-              <span className="sh-home-offer__unit">/month</span>
-            </p>
+            <div className="sh-home-offer__price-head">
+              <p className="sh-home-offer__badge">Best value</p>
+              <p className="sh-home-offer__price">
+                {unlimited}
+                <span className="sh-home-offer__unit">/month</span>
+              </p>
+            </div>
             <p className="sh-home-offer__name">Study Hall Unlimited</p>
             <p className="sh-home-offer__detail">Unlimited Study Halls, one per day, every day of the year.</p>
             <p className="sh-home-offer__detail">

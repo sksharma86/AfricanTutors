@@ -49,6 +49,7 @@ describe("Galaxy 1A homepage — responsive contracts", () => {
   it("prefers fluid type and min-width 0 over screenshot-locked pixel geometry", () => {
     assert.match(css, /\.sh-home-hero \{[\s\S]*min-height: 88vh;[\s\S]*min-height: 88svh;/);
     assert.match(css, /\.sh-home-offer__price \{[\s\S]*clamp\(2\.4rem, 4vw, 3\.4rem\)/);
+    assert.match(css, /\.sh-home-offer__price-head \{[\s\S]*grid-template-rows: 1\.15rem auto/);
     assert.match(css, /\.sh-home-evening__list li \{[\s\S]*min-width: 0;/);
     assert.match(css, /\.sh-home-portal__frame \{[\s\S]*min-width: 0;/);
     assert.match(css, /\.sh-home-evening__list li \{[\s\S]*overflow-wrap: break-word;/);
