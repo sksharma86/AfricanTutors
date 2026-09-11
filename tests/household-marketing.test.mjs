@@ -29,6 +29,8 @@ const PUBLIC_MARKETING = [
   "src/app/(marketing)/pricing/page.tsx",
   "src/app/(marketing)/faq/page.tsx",
   "src/app/(marketing)/how-it-works/page.tsx",
+  "src/app/(marketing)/why-it-works/page.tsx",
+  "src/lib/galaxy-1b-copy.ts",
   "src/app/(marketing)/about/page.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/routine-365.tsx",
