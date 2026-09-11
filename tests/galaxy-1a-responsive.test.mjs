@@ -19,10 +19,11 @@ describe("Galaxy 1A homepage — responsive contracts", () => {
   it("uses an intentional Section 3 layout ladder instead of crushing three columns", () => {
     assert.match(css, /\.sh-home-evening__compare \{[\s\S]*display: grid;/);
     assert.match(css, /@media \(min-width: 768px\) \{[\s\S]*\.sh-home-evening__compare \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+    assert.match(css, /@media \(min-width: 980px\) \{[\s\S]*\.sh-home-evening__composition \{[\s\S]*grid-template-columns: minmax\(0, 62fr\) minmax\(0, 38fr\)/);
     assert.match(css, /@media \(min-width: 1280px\) \{[\s\S]*\.sh-home-evening__composition \{[\s\S]*grid-template-columns: minmax\(0, 55fr\) minmax\(0, 45fr\)/);
     assert.doesNotMatch(
-      css.slice(css.indexOf("@media (min-width: 1024px)"), css.indexOf("@media (min-width: 1280px)")),
-      /\.sh-home-evening__composition \{[\s\S]*grid-template-columns: minmax\(0, 55fr\)/,
+      css.slice(css.indexOf("@media (min-width: 768px)"), css.indexOf("@media (min-width: 980px)")),
+      /\.sh-home-evening__composition \{[\s\S]*grid-template-columns: minmax\(0, 6[25]fr\)/,
     );
     assert.match(evening, /sh-home-evening__composition/);
   });

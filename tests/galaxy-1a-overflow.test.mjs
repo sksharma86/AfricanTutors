@@ -6,7 +6,7 @@ const LIVE = process.env.GALAXY_LIVE === "1";
 const BASE = process.env.GALAXY_BASE_URL || "http://127.0.0.1:3000/";
 const CHROME = ["/usr/local/bin/google-chrome", "/usr/bin/google-chrome"].find((p) => existsSync(p));
 
-const WIDTHS = [1920, 1680, 1440, 1366, 1280, 1180, 1024, 820, 768, 430, 414, 393, 390];
+const WIDTHS = [1920, 1680, 1440, 1366, 1280, 1180, 1024, 980, 900, 820, 768, 430, 414, 393, 390];
 const ZOOMS = [0.8, 0.9, 1, 1.1, 1.25, 1.5];
 
 async function loadPuppeteer() {
@@ -104,17 +104,19 @@ describe("Galaxy 1A homepage — live overflow and layout states", () => {
           failures.push(`${width}: horizontal overflow ${report.scrollWidth} > ${report.clientWidth}`);
         }
 
-        const threeRegion = /minmax\(0,\s*55fr\)/.test(report.eveningCols);
-        if (width >= 1280 && !threeRegion) {
+        const eveningTracks = (report.eveningCols.match(/[0-9.]+px/g) || []).length;
+        const threeRegion = eveningTracks >= 2;
+        if (width >= 980 && !threeRegion) {
           failures.push(`${width}: evening should be Before | With | Photo`);
         }
-        if (width < 1280 && threeRegion) {
+        if (width < 980 && threeRegion) {
           failures.push(`${width}: evening should not use the three-region composition`);
         }
-        if (width >= 768 && width < 1280 && !/minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/.test(report.compareCols)) {
+        const compareTracks = (report.compareCols.match(/[0-9.]+px/g) || []).length;
+        if (width >= 768 && compareTracks < 2) {
           failures.push(`${width}: evening compare should be Before | With`);
         }
-        if (width < 768 && /minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/.test(report.compareCols)) {
+        if (width < 768 && compareTracks >= 2) {
           failures.push(`${width}: evening should stack Before / With`);
         }
 
