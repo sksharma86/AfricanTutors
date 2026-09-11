@@ -197,6 +197,7 @@ export function WhyItWorksBenefits() {
                 alt="One child at a home desk with one live Guide present on the laptop"
                 fill
                 sizes="(max-width: 1024px) 100vw, 46vw"
+                loading="eager"
                 className="object-cover object-[68%_42%]"
               />
             </div>
@@ -216,6 +217,7 @@ export function WhyItWorksRhythm() {
           alt="A focused child at a home desk during a personal Study Hall"
           fill
           sizes="100vw"
+          loading="eager"
           className="object-cover object-[60%_22%]"
         />
       </div>

@@ -117,6 +117,7 @@ export function HowItWorksGuide() {
                 alt="A student writing at home while one live Guide appears on the laptop"
                 fill
                 sizes="(max-width: 1024px) 100vw, 46vw"
+                loading="eager"
                 className="object-cover object-[68%_42%]"
               />
             </div>

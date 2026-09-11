@@ -914,8 +914,14 @@ body:has(.sh-home) header svg path[stroke] {
 
 body:has(.sh-home) header [class*="lg:hidden"] > div.absolute {
   z-index: 61;
-  background: rgba(16, 14, 12, 0.94);
+  background: rgba(16, 14, 12, 0.96);
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+body:has(.sh-home) header [class*="lg:hidden"] > div.absolute a[class*="border"] {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.38);
+  color: #fff;
 }
 
 @media (min-width: 1024px) and (max-width: 1279px) {
