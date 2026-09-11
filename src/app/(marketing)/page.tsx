@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { HomeEvening } from "@/components/marketing/home/evening";
 import { HomeExplainer } from "@/components/marketing/home/explainer";
+import { HomeHeaderScroll } from "@/components/marketing/home/header-scroll";
 import { HomeHero } from "@/components/marketing/home/hero";
 import { HomePortal } from "@/components/marketing/home/portal";
 import { HomePricing } from "@/components/marketing/home/pricing";
@@ -31,6 +32,7 @@ export default async function HomePage() {
 
   return (
     <div className="sh-home">
+      <HomeHeaderScroll />
       <HomeHero primaryHref={primary.href} primaryLabel={primary.label} />
       <HomeExplainer />
       <HomeEvening />

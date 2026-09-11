@@ -56,4 +56,12 @@ describe("Galaxy 1A homepage — responsive contracts", () => {
     assert.match(css, /body:has\(\.sh-home\) footer \.max-w-7xl\.grid \{[\s\S]*minmax\(0, 1\.4fr\) repeat\(5, minmax\(0, 1fr\)\)/);
     assert.doesNotMatch(callouts, /left: 0\.15rem|top: 7%|M 152 48/);
   });
+
+  it("keeps the public homepage header fixed in the viewport", () => {
+    assert.match(css, /body:has\(\.sh-home\) header \{[\s\S]*position: fixed;/);
+    assert.match(css, /body:has\(\.sh-home\) header \{[\s\S]*z-index: 60;/);
+    assert.doesNotMatch(css, /body:has\(\.sh-home\) header \{[\s\S]*position: absolute;/);
+    assert.match(read("src/app/(marketing)/page.tsx"), /HomeHeaderScroll/);
+    assert.match(read("src/components/marketing/home/header-scroll.tsx"), /data-scrolled/);
+  });
 });
