@@ -525,19 +525,19 @@ body {
 
 .sh-home-portal__note-arrow {
   display: block;
-  width: 6.6rem;
-  height: 3.4rem;
+  width: 7.4rem;
+  height: 3.35rem;
 }
 
 .sh-home-portal__note--join {
-  top: 41.5%;
-  left: 40%;
+  top: 39.5%;
+  left: 35.2%;
   color: #eadcc6;
 }
 
 .sh-home-portal__note--review {
-  top: 68.5%;
-  left: 36%;
+  top: 66.8%;
+  left: 30.6%;
   color: #4a433c;
 }
 

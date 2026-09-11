@@ -3,7 +3,7 @@ export function PortalCallouts() {
     <div className="sh-home-portal__callouts" aria-hidden>
       <div className="sh-home-portal__note sh-home-portal__note--join">
         <span className="sh-home-portal__note-label">Join when it’s time</span>
-        <svg className="sh-home-portal__note-arrow" viewBox="0 0 112 58" fill="none">
+        <svg className="sh-home-portal__note-arrow" viewBox="0 0 128 58" fill="none">
           <defs>
             <marker
               id="sh-note-head-join"
@@ -23,7 +23,7 @@ export function PortalCallouts() {
             </marker>
           </defs>
           <path
-            d="M 98 11 C 64 18, 32 30, 11 49"
+            d="M 116 10 C 72 16, 34 30, 8 50"
             stroke="currentColor"
             strokeWidth="1.7"
             strokeLinecap="round"
@@ -34,7 +34,7 @@ export function PortalCallouts() {
 
       <div className="sh-home-portal__note sh-home-portal__note--review">
         <span className="sh-home-portal__note-label">See how it went</span>
-        <svg className="sh-home-portal__note-arrow" viewBox="0 0 104 54" fill="none">
+        <svg className="sh-home-portal__note-arrow" viewBox="0 0 120 54" fill="none">
           <defs>
             <marker
               id="sh-note-head-review"
@@ -54,7 +54,7 @@ export function PortalCallouts() {
             </marker>
           </defs>
           <path
-            d="M 90 10 C 58 16, 30 28, 10 46"
+            d="M 108 9 C 68 14, 32 28, 8 47"
             stroke="currentColor"
             strokeWidth="1.7"
             strokeLinecap="round"
