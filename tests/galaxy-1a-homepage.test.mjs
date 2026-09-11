@@ -37,10 +37,10 @@ describe("Galaxy 1A homepage — approved copy and product truth", () => {
     assert.match(callouts, /Plan the week/);
     assert.match(callouts, /Join when it’s time/);
     assert.match(callouts, /See how it went/);
-    assert.match(callouts, /Study Halls/);
-    assert.match(callouts, /Join Study Hall →/);
+    assert.match(callouts, /Study Halls nav row/);
+    assert.match(callouts, /Join Study Hall button/);
     assert.match(callouts, /Report ready/);
-    assert.doesNotMatch(callouts, /anno-line|────────/);
+    assert.doesNotMatch(callouts, /anno-line|────────|"use client"/);
     assert.doesNotMatch(portal, /JoinSession|This Week|Taylor|Jordan calendar/i);
     assert.match(read("src/components/marketing/product-showcase.tsx"), /export function ParentPortalPreview/);
     assert.doesNotMatch(read("src/app/(marketing)/page.tsx"), /HeroProductVisual|LiveStudyHallDemo/);

@@ -495,9 +495,14 @@ body {
 .sh-home-portal__callouts {
   display: none;
   position: absolute;
-  inset: 0 -8rem;
+  top: 0;
+  left: 50%;
   z-index: 3;
+  width: 90%;
+  height: 100%;
+  overflow: visible;
   pointer-events: none;
+  transform: translateX(-50%);
 }
 
 .sh-home-portal__arrows {
@@ -527,19 +532,30 @@ body {
 
 .sh-home-portal__callout {
   position: absolute;
-  left: 0;
-  top: 0;
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: #3d3428;
   white-space: nowrap;
-  opacity: 0;
 }
 
-.sh-home-portal__callout.is-placed {
-  opacity: 1;
+.sh-home-portal__callout--plan {
+  right: calc(100% + 1.15rem);
+  top: 19.3%;
+  transform: translateY(-50%);
+}
+
+.sh-home-portal__callout--join {
+  left: calc(100% + 1.15rem);
+  top: 48.6%;
+  transform: translateY(-50%);
+}
+
+.sh-home-portal__callout--review {
+  right: calc(100% + 1.15rem);
+  top: 76%;
+  transform: translateY(-50%);
 }
 
 .sh-home-portal__frame {
