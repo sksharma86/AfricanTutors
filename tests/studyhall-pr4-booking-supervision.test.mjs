@@ -9,7 +9,7 @@ import {
   PACKAGE_28H_PRICE_CENTS,
 } from "../src/lib/packages.mjs";
 import { JOIN_OPEN_LEAD_MIN, customerJoinState } from "../src/lib/session-window.mjs";
-import { adminClient, cleanupAll, createUser, hasSupabaseEnv, signIn } from "./helpers.mjs";
+import { adminClient, cleanupAll, createUser, hasSupabaseEnv, signIn, skipIfPkg10shNotYet99 } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const SFX = `pr4_${Date.now().toString(36)}`;
@@ -274,7 +274,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
     await cleanupAll();
   });
 
-  it("PR2/PR8B: current offer is pkg_10sh; pkg_14h/pkg_28h remain historical; $12/hour for 60 min", async () => {
+  it("PR2/PR8B: current offer is pkg_10sh; pkg_14h/pkg_28h remain historical; $12/hour for 60 min", async (t) => {
     const q60 = await svc.rpc("booking_quote", {
       p_account: parent.id,
       p_duration: 60,
@@ -289,6 +289,7 @@ describe("Study Hall PR4 — live DB (requires migration 0022)", { skip: !hasSup
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
     const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
+    if (skipIfPkg10shNotYet99(t, by.pkg_10sh)) return;
     assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);

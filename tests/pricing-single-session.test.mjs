@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
-import { adminClient, hasSupabaseEnv } from "./helpers.mjs";
+import { adminClient, hasSupabaseEnv, skipIfPkg10shNotYet99 } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
@@ -59,12 +59,13 @@ describe("Pricing page — single sessions before packages", () => {
 
 describe("Pricing page — prepaid packages (live)", { skip: !hasSupabaseEnv }, () => {
   const svc = adminClient();
-  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async () => {
+  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async (t) => {
     const { data } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    if (skipIfPkg10shNotYet99(t, by.pkg_10sh)) return;
     assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents, by.pkg_14h.is_active], [840, 14000, false]);
     assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents, by.pkg_28h.is_active], [1680, 25200, false]);

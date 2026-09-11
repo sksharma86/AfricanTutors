@@ -13,6 +13,7 @@ import {
   hasSupabaseEnv,
   isCanonicalDemoProject,
   signIn,
+  skipIfPkg10shNotYet99,
 } from "./helpers.mjs";
 
 // Configured NEXT_PUBLIC_SUPABASE_URL only. On the locked canonical demo this
@@ -45,10 +46,7 @@ describe("Study Hall 365 — catalog + RPC presence (live, read-only)", { skip: 
       return;
     }
     assert.equal(data.minutes, PACKAGE_10SH_MINUTES);
-    if (data.price_cents === 10000) {
-      t.skip("ENVIRONMENT/BLOCKED: 0048 pkg_10sh $99 not applied on this database");
-      return;
-    }
+    if (skipIfPkg10shNotYet99(t, data)) return;
     assert.equal(data.price_cents, 9900);
     assert.equal(data.is_active, true);
   });

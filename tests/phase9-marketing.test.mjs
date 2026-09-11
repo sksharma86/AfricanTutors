@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
-import { adminClient, hasSupabaseEnv } from "./helpers.mjs";
+import { adminClient, hasSupabaseEnv, skipIfPkg10shNotYet99 } from "./helpers.mjs";
 import { packageEconomics } from "../src/lib/packages.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
@@ -145,12 +145,13 @@ describe("Phase 9 — authoritative pricing & free trial (live)", { skip: !hasSu
     assert.equal(qf.data.funding, "free_trial");
   });
 
-  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are historical (0047)", async () => {
+  it("active customer prepaid offer is pkg_10sh; pkg_14h/pkg_28h are historical (0047)", async (t) => {
     const { data } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const by = Object.fromEntries((data ?? []).map((p) => [p.code, p]));
+    if (skipIfPkg10shNotYet99(t, by.pkg_10sh)) return;
     assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);

@@ -11,7 +11,7 @@ import {
   packageBadge,
   packageEconomics,
 } from "../src/lib/packages.mjs";
-import { adminClient, hasSupabaseEnv } from "./helpers.mjs";
+import { adminClient, hasSupabaseEnv, skipIfPkg10shNotYet99 } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const pricingSrc = read("src/lib/pricing.ts");
@@ -88,13 +88,14 @@ describe("Study Hall PR2 — live pricing authority", { skip: !hasSupabaseEnv },
     assert.equal(q.data.stripe_cents_due, 1200);
   });
 
-  it("2–5. Active customer offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async () => {
+  it("2–5. Active customer offer is pkg_10sh; pkg_14h/pkg_28h are not sold (0047)", async (t) => {
     const { data, error } = await svc
       .from("package_products")
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     assert.equal(error, null, error?.message);
     const by = Object.fromEntries((data ?? []).map((r) => [r.code, r]));
+    if (skipIfPkg10shNotYet99(t, by.pkg_10sh)) return;
     assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.deepEqual([by.pkg_14h.minutes, by.pkg_14h.price_cents, by.pkg_14h.is_active], [840, 14000, false]);
     assert.deepEqual([by.pkg_28h.minutes, by.pkg_28h.price_cents, by.pkg_28h.is_active], [1680, 25200, false]);

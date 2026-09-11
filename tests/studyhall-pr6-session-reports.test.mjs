@@ -27,6 +27,7 @@ import {
   hasSupabaseEnv,
   makeAdmin,
   signIn,
+  skipIfPkg10shNotYet99,
 } from "./helpers.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
@@ -301,7 +302,7 @@ describe("Study Hall PR6 — live session_reports (requires migration 0023)", { 
     await cleanupAll();
   });
 
-  it("PR2 pricing + PR3 free session remain intact", async () => {
+  it("PR2 pricing + PR3 free session remain intact", async (t) => {
     const q60 = await svc.rpc("booking_quote", {
       p_account: parent.id,
       p_duration: 60,
@@ -323,6 +324,7 @@ describe("Study Hall PR6 — live session_reports (requires migration 0023)", { 
       .select("code, minutes, price_cents, is_active")
       .in("code", ["pkg_10sh", "pkg_14h", "pkg_28h"]);
     const by = Object.fromEntries((pkgs ?? []).map((r) => [r.code, r]));
+    if (skipIfPkg10shNotYet99(t, by.pkg_10sh)) return;
     assert.deepEqual([by.pkg_10sh.minutes, by.pkg_10sh.price_cents, by.pkg_10sh.is_active], [600, 9900, true]);
     assert.equal(by.pkg_14h.is_active, false);
     assert.equal(by.pkg_28h.is_active, false);
