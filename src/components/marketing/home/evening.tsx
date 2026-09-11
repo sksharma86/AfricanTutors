@@ -64,7 +64,7 @@ export function HomeEvening() {
                 src="/images/marketing/studyhall-routine-evening.webp"
                 alt="A parent relaxing in the next room while a child works with a live Study Hall Guide"
                 fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
+                sizes="(max-width: 1280px) 100vw, 40vw"
                 className="sh-home-evening__photo"
               />
             </div>
