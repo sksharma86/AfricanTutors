@@ -505,7 +505,7 @@ body {
 
 .sh-home-portal__note {
   position: absolute;
-  width: 12.75rem;
+  width: 11.5rem;
 }
 
 .sh-home-portal__note-title {
@@ -526,18 +526,18 @@ body {
 }
 
 .sh-home-portal__note--plan {
-  top: 4%;
-  left: 0;
+  top: 7%;
+  left: 0.15rem;
 }
 
 .sh-home-portal__note--join {
-  top: 32%;
-  right: 0;
+  top: 36%;
+  right: 0.15rem;
 }
 
 .sh-home-portal__note--review {
-  bottom: 6%;
-  left: 0;
+  bottom: 7%;
+  left: 0.15rem;
 }
 
 .sh-home-portal__arrows {
@@ -707,7 +707,7 @@ body {
   }
 
   .sh-home-portal__frame {
-    width: 68%;
+    width: 66%;
   }
 
   .sh-home-portal .parent-app {

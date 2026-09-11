@@ -30,7 +30,7 @@ export function PortalCallouts() {
 
         {/* Plan the week → Home */}
         <path
-          d="M 198 78 C 248 52, 286 58, 318 92"
+          d="M 152 48 C 176 30, 194 52, 208 88"
           stroke="currentColor"
           strokeWidth="2.15"
           strokeLinecap="round"
@@ -39,7 +39,7 @@ export function PortalCallouts() {
 
         {/* Join when it’s time → Join Study Hall */}
         <path
-          d="M 812 248 C 700 210, 560 228, 498 268"
+          d="M 848 228 C 720 198, 580 236, 502 308"
           stroke="currentColor"
           strokeWidth="2.15"
           strokeLinecap="round"
@@ -48,7 +48,7 @@ export function PortalCallouts() {
 
         {/* See how it went → Report ready */}
         <path
-          d="M 198 478 C 268 508, 336 498, 392 452"
+          d="M 152 528 C 236 556, 328 528, 390 474"
           stroke="currentColor"
           strokeWidth="2.15"
           strokeLinecap="round"
