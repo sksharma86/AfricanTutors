@@ -914,8 +914,14 @@ body:has(.sh-home) header svg path[stroke] {
 
 body:has(.sh-home) header [class*="lg:hidden"] > div.absolute {
   z-index: 61;
-  background: rgba(16, 14, 12, 0.94);
+  background: rgba(16, 14, 12, 0.96);
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+body:has(.sh-home) header [class*="lg:hidden"] > div.absolute a[class*="border"] {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.38);
+  color: #fff;
 }
 
 @media (min-width: 1024px) and (max-width: 1279px) {
@@ -932,6 +938,456 @@ body:has(.sh-home) footer .max-w-7xl.grid {
 @media (min-width: 768px) {
   body:has(.sh-home) footer .max-w-7xl.grid {
     grid-template-columns: minmax(0, 1.4fr) repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Galaxy 1B — How It Works + Why It Works. Reuses 1A tokens. */
+.sh-galaxy {
+  overflow-x: clip;
+}
+
+.sh-galaxy-hero__title {
+  max-width: 16ch;
+}
+
+.sh-galaxy-hero__support {
+  max-width: min(34rem, 100%);
+}
+
+.sh-galaxy-hero__photo--desk {
+  object-position: 60% 20%;
+}
+
+.sh-galaxy-hero__photo--evening {
+  object-position: 32% 40%;
+}
+
+.sh-galaxy-section-title {
+  margin-top: 1rem;
+  max-width: 14ch;
+  font-size: clamp(2.4rem, 5.4vw, 4.4rem);
+  overflow-wrap: break-word;
+}
+
+.sh-galaxy-lede {
+  margin-top: 1.5rem;
+  max-width: min(38rem, 100%);
+  font-size: clamp(1rem, 1.5vw, 1.0625rem);
+  line-height: 1.7;
+  color: var(--sh-muted);
+}
+
+.sh-galaxy-journey,
+.sh-galaxy-guide,
+.sh-galaxy-who,
+.sh-galaxy-faq,
+.sh-galaxy-core,
+.sh-galaxy-week,
+.sh-galaxy-benefits {
+  background: var(--sh-paper);
+  padding: clamp(4.25rem, 8vw, 7rem) 0;
+}
+
+.sh-galaxy-steps {
+  margin-top: 3rem;
+  display: grid;
+  gap: 1.75rem 1.5rem;
+  min-width: 0;
+}
+
+.sh-galaxy-step {
+  min-width: 0;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--sh-line);
+}
+
+.sh-galaxy-step__body {
+  margin-top: 0.75rem;
+  max-width: 22rem;
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.55;
+}
+
+.sh-galaxy-household {
+  margin-top: 2.5rem;
+  max-width: min(40rem, 100%);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--sh-muted);
+}
+
+.sh-galaxy-split {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.sh-galaxy-list {
+  margin-top: 2rem;
+  display: grid;
+  gap: 0.85rem;
+  max-width: 34rem;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.sh-galaxy-list li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.sh-galaxy-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--sh-ink);
+}
+
+.sh-galaxy-distinction {
+  margin-top: 2rem;
+  max-width: min(34rem, 100%);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--sh-muted);
+}
+
+.sh-galaxy-visual {
+  position: relative;
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  background: #ddd6c8;
+}
+
+.sh-galaxy-parent__stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sh-galaxy-uses {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: var(--sh-ink);
+  overflow-wrap: break-word;
+}
+
+.sh-galaxy-trust {
+  background: var(--sh-navy);
+  color: #fff;
+  padding: clamp(4.25rem, 8vw, 7rem) 0;
+}
+
+.sh-galaxy-trust__kicker,
+.sh-galaxy-trust .sh-home-kicker {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sh-galaxy-trust__title {
+  color: #fff;
+}
+
+.sh-galaxy-trust__list {
+  margin-top: 2.25rem;
+  display: grid;
+  gap: 1.15rem;
+  max-width: 40rem;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sh-galaxy-who__title {
+  margin-top: 1rem;
+  max-width: 16ch;
+  font-size: clamp(2.4rem, 5.4vw, 4.4rem);
+}
+
+.sh-galaxy-who__list {
+  margin-top: 2.25rem;
+  display: grid;
+  gap: 0.55rem;
+  max-width: 28rem;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.sh-galaxy-faq__list {
+  margin-top: 2.5rem;
+  max-width: 42rem;
+  border-top: 1px solid var(--sh-line);
+}
+
+.sh-galaxy-faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.2rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sh-galaxy-faq__item summary::-webkit-details-marker {
+  display: none;
+}
+
+.sh-galaxy-faq__item dt {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sh-galaxy-faq__item summary span {
+  color: var(--sh-subtle);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.sh-galaxy-faq__item[open] summary span {
+  transform: rotate(45deg);
+}
+
+.sh-galaxy-faq__item dd {
+  padding-bottom: 1.25rem;
+  max-width: 38rem;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--sh-muted);
+}
+
+.sh-galaxy-cta {
+  background: var(--sh-navy);
+  color: #fff;
+  padding: clamp(4.5rem, 9vw, 7.5rem) 0;
+}
+
+.sh-galaxy-cta__title {
+  max-width: 14ch;
+  font-size: clamp(2.6rem, 5.8vw, 4.8rem);
+}
+
+.sh-galaxy-cta__support {
+  margin: 1.25rem 0 1.75rem;
+  max-width: min(36rem, 100%);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.sh-galaxy-cta__micro {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.sh-galaxy-core__title,
+.sh-galaxy-core__body {
+  max-width: 22ch;
+}
+
+.sh-galaxy-core__body {
+  max-width: min(42rem, 100%);
+}
+
+.sh-galaxy-nights {
+  margin-top: 2.5rem;
+  display: grid;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.sh-galaxy-night {
+  min-width: 0;
+  padding: clamp(1.35rem, 2.4vw, 2rem) clamp(1.1rem, 2vw, 1.7rem);
+}
+
+.sh-galaxy-night--before {
+  background: #1b1916;
+  color: #f4efe6;
+}
+
+.sh-galaxy-night--after {
+  background: #fff;
+}
+
+.sh-galaxy-night--before .sh-home-evening__label {
+  color: rgba(244, 239, 230, 0.52);
+}
+
+.sh-galaxy-night__list {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.9rem;
+  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
+  line-height: 1.45;
+}
+
+.sh-galaxy-night__list li {
+  display: flex;
+  gap: 0.75rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.sh-galaxy-week__strip {
+  margin-top: 2.5rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.sh-galaxy-week__day {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.15rem 1rem 1.25rem;
+  background: #fff;
+}
+
+.sh-galaxy-week__day span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sh-subtle);
+}
+
+.sh-galaxy-week__day strong {
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.sh-galaxy-week__day.is-on {
+  background: var(--sh-navy);
+  color: #fff;
+}
+
+.sh-galaxy-week__day.is-on span {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sh-galaxy-benefit-pair {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.sh-galaxy-benefit-copy {
+  margin-top: 0.85rem;
+  max-width: 28rem;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+}
+
+.sh-galaxy-focus {
+  margin: clamp(3rem, 6vw, 4.5rem) 0;
+  padding: clamp(3.5rem, 7vw, 6rem) 0;
+  background: #fff;
+}
+
+.sh-galaxy-focus__title {
+  margin-top: 1rem;
+  max-width: 18ch;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.sh-galaxy-friction {
+  padding: clamp(2rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2.5rem);
+  background: #1b1916;
+  color: #f4efe6;
+  border-radius: 16px;
+}
+
+.sh-galaxy-friction__kicker {
+  color: rgba(244, 239, 230, 0.52);
+}
+
+.sh-galaxy-friction__list {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.45rem;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.sh-galaxy-follow {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+}
+
+.sh-galaxy-follow__kicker {
+  margin-top: 2.25rem;
+}
+
+.sh-galaxy-rhythm {
+  background: var(--sh-canvas);
+}
+
+.sh-galaxy-rhythm__photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  overflow: hidden;
+  background: #1b1916;
+}
+
+.sh-galaxy-rhythm__copy {
+  padding: clamp(3.25rem, 6vw, 5rem) 0;
+}
+
+.sh-galaxy-unlimited__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.sh-galaxy-unlimited__pricing {
+  border-radius: 999px;
+  min-height: 3.1rem;
+  padding-inline: 1.4rem;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.sh-galaxy-unlimited__pricing:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+@media (min-width: 700px) {
+  .sh-galaxy-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sh-galaxy-nights,
+  .sh-galaxy-benefit-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .sh-galaxy-week__strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .sh-galaxy-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sh-galaxy-split {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: clamp(2rem, 4vw, 4.5rem);
   }
 }
 
