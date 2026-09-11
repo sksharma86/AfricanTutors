@@ -26,10 +26,10 @@ export function PortalCallouts() {
         </defs>
 
         {/* Plan the week → Study Halls nav row */}
-        <path className="sh-home-portal__arrow-halo" d="M -8 117 C 14 86, 4 104, 20 117" />
+        <path className="sh-home-portal__arrow-halo" d="M -12 117 C 10 86, 24 96, 42 117" />
         <path
           className="sh-home-portal__arrow"
-          d="M -8 117 C 14 86, 4 104, 20 117"
+          d="M -12 117 C 10 86, 24 96, 42 117"
           markerEnd="url(#sh-portal-arrowhead)"
         />
 
