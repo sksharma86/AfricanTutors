@@ -32,6 +32,7 @@ describe("Galaxy 1A homepage — responsive contracts", () => {
     assert.match(callouts, /ResizeObserver/);
     assert.match(callouts, /min-width: 1180px/);
     assert.match(callouts, /setViewBox/);
+    assert.match(callouts, /sh-home-portal__note-arrow/);
     assert.doesNotMatch(callouts, /viewBox="0 0 1000 620"|preserveAspectRatio="none"/);
     assert.match(css, /@media \(min-width: 1180px\) \{[\s\S]*\.sh-home-portal__stage \{[\s\S]*grid-template-columns: minmax\(0, 10rem\) minmax\(0, 1fr\) minmax\(0, 10rem\)/);
     assert.match(css, /@media \(min-width: 1280px\) \{[\s\S]*\.sh-home-portal__stage \{[\s\S]*grid-template-columns: minmax\(0, 13\.25rem\) minmax\(0, 1fr\) minmax\(0, 13\.25rem\)/);

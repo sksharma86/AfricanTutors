@@ -35,10 +35,16 @@ const NOTES = [
 function findExactText(root: Element, text: string) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Node | null;
+  let fallback: Node | null = null;
   while ((node = walker.nextNode())) {
-    if (node.textContent?.trim() === text) return node;
+    if (node.textContent?.trim() !== text) continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const box = range.getBoundingClientRect();
+    if (box.width > 2 && box.height > 2) return node;
+    fallback ??= node;
   }
-  return null;
+  return fallback;
 }
 
 function textBox(root: Element, text: string) {
@@ -48,7 +54,9 @@ function textBox(root: Element, text: string) {
   range.selectNodeContents(node);
   const tight = range.getBoundingClientRect();
   if (tight.width > 2 && tight.height > 2) return tight;
-  return node.parentElement?.getBoundingClientRect() ?? null;
+  const parent = node.parentElement?.getBoundingClientRect();
+  if (parent && parent.width > 2 && parent.height > 2) return parent;
+  return null;
 }
 
 function clamp(n: number, min: number, max: number) {
@@ -72,6 +80,32 @@ function curve(x1: number, y1: number, x2: number, y2: number, id: string, w: nu
   return `M ${x1} ${y1} C ${cx(x1 + 56)} ${cy(y1 + 28)}, ${cx(x2 - 40)} ${cy(y2 + 18)}, ${x2} ${y2}`;
 }
 
+function NoteArrow({ id }: { id: "plan" | "join" | "review" }) {
+  const d =
+    id === "plan"
+      ? "M 4 30 C 40 2, 78 8, 116 26"
+      : id === "join"
+        ? "M 116 34 C 78 2, 36 10, 8 28"
+        : "M 4 18 C 42 52, 80 44, 116 30";
+  return (
+    <svg className={`sh-home-portal__note-arrow sh-home-portal__note-arrow--${id}`} viewBox="0 0 120 64" aria-hidden>
+      <defs>
+        <marker id={`sh-note-head-${id}`} markerWidth="8" markerHeight="8" refX="6.2" refY="4" orient="auto">
+          <path d="M1.2 1.2 L6.6 4 L1.2 6.8 Z" fill="currentColor" />
+        </marker>
+      </defs>
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        markerEnd={`url(#sh-note-head-${id})`}
+      />
+    </svg>
+  );
+}
+
 export function PortalCallouts() {
   const planRef = useRef<HTMLDivElement>(null);
   const joinRef = useRef<HTMLDivElement>(null);
@@ -86,17 +120,20 @@ export function PortalCallouts() {
     const measure = () => {
       if (!mq.matches) {
         setPaths([]);
+        planRef.current?.closest(".sh-home-portal__stage")?.classList.remove("is-measured");
         return;
       }
       const stage = planRef.current?.closest(".sh-home-portal__stage");
       const frame = stage?.querySelector(".sh-home-portal__frame");
       if (!stage || !frame) {
         setPaths([]);
+        stage?.classList.remove("is-measured");
         return;
       }
       const origin = stage.getBoundingClientRect();
       if (origin.width < 8 || origin.height < 8) {
         setPaths([]);
+        stage.classList.remove("is-measured");
         return;
       }
       setViewBox(`0 0 ${origin.width} ${origin.height}`);
@@ -113,6 +150,7 @@ export function PortalCallouts() {
         next.push(curve(x1, y1, x2, y2, note.id, origin.width, origin.height));
       }
       setPaths(next);
+      stage.classList.toggle("is-measured", next.length >= 3);
     };
 
     const stage = planRef.current?.closest(".sh-home-portal__stage");
@@ -141,10 +179,12 @@ export function PortalCallouts() {
         <div ref={planRef} className="sh-home-portal__note sh-home-portal__note--plan">
           <p className="sh-home-portal__note-title">{NOTES[0].title}</p>
           <p className="sh-home-portal__note-copy">{NOTES[0].copy}</p>
+          <NoteArrow id="plan" />
         </div>
         <div ref={reviewRef} className="sh-home-portal__note sh-home-portal__note--review">
           <p className="sh-home-portal__note-title">{NOTES[2].title}</p>
           <p className="sh-home-portal__note-copy">{NOTES[2].copy}</p>
+          <NoteArrow id="review" />
         </div>
       </div>
 
@@ -152,6 +192,7 @@ export function PortalCallouts() {
         <div ref={joinRef} className="sh-home-portal__note sh-home-portal__note--join">
           <p className="sh-home-portal__note-title">{NOTES[1].title}</p>
           <p className="sh-home-portal__note-copy">{NOTES[1].copy}</p>
+          <NoteArrow id="join" />
         </div>
       </div>
 

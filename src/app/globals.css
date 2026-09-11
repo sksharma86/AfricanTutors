@@ -519,8 +519,13 @@ body {
 }
 
 .sh-home-portal__note {
+  position: relative;
   min-width: 0;
   overflow-wrap: break-word;
+}
+
+.sh-home-portal__note-arrow {
+  display: none;
 }
 
 .sh-home-portal__note-title {
@@ -722,6 +727,34 @@ body {
     overflow: hidden;
     pointer-events: none;
     color: #c9a227;
+  }
+
+  .sh-home-portal__note-arrow {
+    display: block;
+    position: absolute;
+    z-index: 4;
+    overflow: visible;
+    pointer-events: none;
+    color: #c9a227;
+  }
+
+  .sh-home-portal__note-arrow--plan,
+  .sh-home-portal__note-arrow--review {
+    top: 0.15rem;
+    left: calc(100% + 2px);
+    width: 5.25rem;
+    height: 2.85rem;
+  }
+
+  .sh-home-portal__note-arrow--join {
+    top: 0.1rem;
+    right: calc(100% + 2px);
+    width: 6.25rem;
+    height: 3.2rem;
+  }
+
+  .sh-home-portal__stage.is-measured .sh-home-portal__note-arrow {
+    display: none;
   }
 }
 
