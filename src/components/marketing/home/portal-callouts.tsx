@@ -83,10 +83,10 @@ function curve(x1: number, y1: number, x2: number, y2: number, id: string, w: nu
 function NoteArrow({ id }: { id: "plan" | "join" | "review" }) {
   const d =
     id === "plan"
-      ? "M 4 30 C 40 2, 78 8, 116 26"
+      ? "M 4 28 C 38 16, 78 18, 116 28"
       : id === "join"
-        ? "M 116 34 C 78 2, 36 10, 8 28"
-        : "M 4 18 C 42 52, 80 44, 116 30";
+        ? "M 116 34 C 78 8, 40 14, 8 30"
+        : "M 4 22 C 40 34, 80 30, 116 26";
   return (
     <svg className={`sh-home-portal__note-arrow sh-home-portal__note-arrow--${id}`} viewBox="0 0 120 64" aria-hidden>
       <defs>
