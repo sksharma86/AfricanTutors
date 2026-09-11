@@ -21,5 +21,6 @@ create or replace function public.booking_quote(
 ) returns jsonb language sql as \$\$ select '{}'::jsonb \$\$;
 "
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0039_study_hall_365_security_hardening.sql"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -f "$ROOT/supabase/migrations/0048_pkg_10sh_price_99.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" -c "GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role;"
 echo "THROWAWAY_DB_READY ${DB_NAME}"

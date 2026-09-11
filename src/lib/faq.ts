@@ -50,7 +50,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How much does it cost?",
-    a: "Your first 60-minute Study Hall is free. Pay as you go is $12 for one hour. À la carte is $100 for 10 Study Halls that never expire. Study Hall 365 is $149/month for one hour available every calendar day. Start with the free hour — 365 checkout is not live yet.",
+    a: "Your first 60-minute Study Hall is free. Pay as you go is $12 for one hour. À la carte is $99 for 10 Study Halls that never expire. Study Hall 365 is $149/month for one hour available every calendar day. Start with the free hour — 365 checkout is not live yet.",
   },
   {
     q: "Can siblings join the same Study Hall?",

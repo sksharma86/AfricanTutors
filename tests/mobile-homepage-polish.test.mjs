@@ -6,6 +6,11 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 const home = [
   "src/app/(marketing)/page.tsx",
+  "src/components/marketing/home/hero.tsx",
+  "src/components/marketing/home/explainer.tsx",
+  "src/components/marketing/home/evening.tsx",
+  "src/components/marketing/home/portal.tsx",
+  "src/components/marketing/home/pricing.tsx",
   "src/components/marketing/site-hero.tsx",
   "src/components/marketing/hour-chapter.tsx",
   "src/components/marketing/method-chapter.tsx",
@@ -20,11 +25,11 @@ const home = [
 
 describe("Mobile homepage polish", () => {
   it("preserves a short hero and a short nav CTA", () => {
-    const hero = read("src/components/marketing/site-hero.tsx");
+    const hero = read("src/components/marketing/home/hero.tsx");
     const nav = read("src/components/layout/navbar.tsx");
     const mobile = read("src/components/layout/mobile-menu.tsx");
-    assert.match(hero, /Make studying a habit\./);
-    assert.match(hero, /Start free|primaryLabel/);
+    assert.match(hero, /Give your child an edge\./);
+    assert.match(hero, /FREE_TRIAL_CTA|primaryLabel/);
     assert.match(nav, /START_FREE_CTA/);
     assert.match(mobile, /START_FREE_CTA/);
     assert.match(mobile, /lg:hidden/);

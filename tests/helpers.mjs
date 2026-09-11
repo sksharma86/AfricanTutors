@@ -13,6 +13,23 @@ export function isCanonicalDemoProject(supabaseUrl = url) {
   return Boolean(supabaseUrl && supabaseUrl.includes(CANONICAL_DEMO_PROJECT_REF));
 }
 
+/**
+ * Live catalog rows stay $100 until 0048 is applied.
+ * Do not apply 0048 to production from this branch.
+ * @returns {boolean} true when the caller should return after skip
+ */
+export function skipIfPkg10shNotYet99(t, row) {
+  if (!row) {
+    t.skip("ENVIRONMENT/BLOCKED: pkg_10sh not in this database yet");
+    return true;
+  }
+  if (row.price_cents === 10000) {
+    t.skip("ENVIRONMENT/BLOCKED: 0048 pkg_10sh $99 not applied on this database");
+    return true;
+  }
+  return false;
+}
+
 /** Service-role client that bypasses RLS. Server-only, never shipped to the browser. */
 export function adminClient() {
   return createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });

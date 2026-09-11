@@ -41,7 +41,7 @@ export function ProductShowcase() {
   );
 }
 
-function ParentPortalPreview() {
+export function ParentPortalPreview() {
   return (
     <div className="parent-app flex min-h-0 bg-[var(--pp-canvas)] text-[var(--pp-ink)]">
       <aside className="hidden w-[13.75rem] shrink-0 flex-col border-r border-[#1c1915]/[0.06] bg-[#f3eee4] px-3 py-4 lg:flex">

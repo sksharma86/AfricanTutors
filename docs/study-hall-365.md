@@ -8,7 +8,7 @@ daily entitlement. Booking UI (Plan My Week) is PR3+.
 | Offer | Customer price | Internal value | Stripe |
 | --- | --- | --- | --- |
 | Pay as you go | $12 / 60-minute Study Hall | existing `book_session` list price | Checkout `mode=payment` (unchanged) |
-| 10 Study Halls | $100, never expire | `pkg_10sh` → **600 minutes** | existing package Checkout + webhook |
+| 10 Study Halls | $99, never expire | `pkg_10sh` → **600 minutes** | existing package Checkout + webhook |
 | Study Hall 365 | $149 / month | **daily entitlement**, not credits | Checkout `mode=subscription` |
 
 1 Study Hall = 60 prepaid minutes internally. Existing minute ledgers are not rewritten.
@@ -145,7 +145,7 @@ Production is **not** ready until those Dashboard items exist. Code does not har
 ## Cutover
 
 1. Apply `0036_study_hall_365.sql` and `0037_study_hall_365_parent_privacy.sql`. Existing balances unchanged.
-2. Confirm `pkg_10sh` is the current customer prepaid offer (600 minutes / $100 / 10 one-hour Study Halls; hours never expire).
+2. Confirm `pkg_10sh` is the current customer prepaid offer (600 minutes / $99 / 10 one-hour Study Halls; hours never expire).
 3. Parent Hours UI (`customerFacingPrepaidPackages`) lists **only** `pkg_10sh`. Legacy 14h/28h are never re-offered, even as a fallback.
 4. `0047_deactivate_legacy_prepaid_packages.sql` is the intended catalog cutover: `pkg_14h` / `pkg_28h` `is_active=false`. `purchase_package` then refuses those SKUs (`Package is not available`). **Do not delete those rows.** Historical purchases and remaining minutes stay usable through the existing prepaid ledger.
 5. Do **not** apply `0047` to production until this cutover is approved to merge. After it lands, live tests must expect `pkg_10sh` as the only active customer prepaid offer.

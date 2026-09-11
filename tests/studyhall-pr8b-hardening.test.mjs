@@ -67,7 +67,7 @@ describe("PR8B — legacy prepaid cutover (new purchases only)", () => {
     assert.deepEqual(CUSTOMER_PREPAID_OFFER_CODES, [PACKAGE_CODE_10_STUDY_HALLS]);
     assert.deepEqual(LEGACY_PREPAID_PACKAGE_CODES, ["pkg_14h", "pkg_28h"]);
     assert.equal(PACKAGE_10SH_MINUTES, 600);
-    assert.equal(PACKAGE_10SH_PRICE_CENTS, 10000);
+    assert.equal(PACKAGE_10SH_PRICE_CENTS, 9900);
     const mixed = customerFacingPrepaidPackages([
       { code: "pkg_14h" },
       { code: "pkg_10sh" },
