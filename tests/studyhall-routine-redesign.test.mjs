@@ -39,15 +39,16 @@ describe("Study Hall routine redesign — public positioning", () => {
     assert.match(nav, /The Study Hall Hour/);
   });
 
-  it("keeps navigation short and uses Start free", () => {
+  it("keeps navigation short and uses a short trial CTA", () => {
     const constants = read("src/lib/constants.ts");
     const nav = read("src/components/layout/navbar.tsx");
     const mobile = read("src/components/layout/mobile-menu.tsx");
-    assert.match(constants, /How it works/);
+    assert.match(constants, /How It Works/);
+    assert.match(constants, /Why It Works/);
     assert.match(constants, /Pricing/);
     assert.match(constants, /FAQ/);
-    assert.match(nav, /START_FREE_CTA/);
-    assert.match(mobile, /START_FREE_CTA/);
+    assert.match(nav, /NAV_TRIAL_CTA/);
+    assert.match(mobile, /NAV_TRIAL_CTA/);
     assert.doesNotMatch(nav + mobile, /Try your first Study Hall free/);
   });
 

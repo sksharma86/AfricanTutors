@@ -1,5 +1,35 @@
 # Image Sources & Licensing Status
 
+## Galaxy 2 homepage photography (`marketing/galaxy-*.webp`)
+
+Art direction: premium family lifestyle editorial. Evening, warm practical
+light, believable American homes, nobody posing, the Guide visible as one
+human on the laptop (never a group grid).
+
+- `galaxy-hero-evening.webp` — Moment 1 hero. Child at a desk at dusk, brass
+  lamp, live Guide on the laptop, dark negative space on the left for the
+  headline. 1920×1080.
+- `galaxy-hour-intimate.webp` — Moment 2. Over-the-shoulder, hands writing,
+  one Guide on the laptop. 1200×1600 (portrait).
+- `galaxy-evening-647.webp` — Moment 3, “6:47 PM”. Kitchen at dusk, parent
+  mid-motion at the stove, unopened backpack, phone face-up, untouched
+  worksheets. Used at low opacity under the reminder fragments. 1920×1080.
+- `galaxy-routine-desk.webp` — Moment 5 bridge, “The hour becomes expected.”
+  Lamp-lit desk, laptop open, chair pulled out, no people; negative space on
+  the right for type. 1920×1080.
+
+Source and status: AI-generated in the development environment (September
+2026) from the briefs above, then upscaled and encoded to WebP with ffmpeg.
+They depict no real people and carry no third-party claim. They are
+**development placeholders that establish the art direction**. Before public
+launch, replace with commissioned photography shot to these briefs (model
+releases required) or properly licensed editorial stock. Keep the
+compositions: dark left third for the hero, portrait crop for the hour,
+right-side negative space for the routine plate.
+
+Retained from 1A: `studyhall-routine-evening.webp` (Moment 3, “7:00 PM” —
+parent with coffee in the living room, child at the desk in the next room).
+
 ## Homepage 1A photography (existing assets)
 
 - Hero: `marketing/studyhall-focus-close.webp` (child at a desk with a live Guide on the laptop). Closest existing match to the approved cinematic composition. Still a development placeholder — a dedicated evening over-the-shoulder plate would be stronger.

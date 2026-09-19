@@ -7,17 +7,17 @@ export const SITE_DESCRIPTION =
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://studyhallathome.com";
 
 export const PUBLIC_NAV_LINKS = [
-  { label: "How it works", href: "/how-it-works" },
-  { label: "The Study Hall Hour", href: "/the-study-hall-hour" },
+  { label: "How It Works", href: "/how-it-works" },
+  { label: "Why It Works", href: "/why-it-works" },
   { label: "Pricing", href: "/pricing" },
-  { label: "FAQ", href: "/faq" },
 ] as const;
 
 export const FOOTER_SECTIONS = [
   {
     heading: "Product",
     links: [
-      { label: "How it works", href: "/how-it-works" },
+      { label: "How It Works", href: "/how-it-works" },
+      { label: "Why It Works", href: "/why-it-works" },
       { label: "The Study Hall Hour", href: "/the-study-hall-hour" },
       { label: "Pricing", href: "/pricing" },
       { label: "FAQ", href: "/faq" },

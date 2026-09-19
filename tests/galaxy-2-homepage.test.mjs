@@ -1,0 +1,167 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { describe, it } from "node:test";
+
+import { PACKAGE_10SH_PRICE_CENTS, STUDY_HALL_365_MONTHLY_USD } from "../src/lib/study-hall-365/catalog.mjs";
+
+const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+
+const HOME_FILES = [
+  "src/app/(marketing)/page.tsx",
+  "src/components/marketing/home/hero.tsx",
+  "src/components/marketing/home/explainer.tsx",
+  "src/components/marketing/home/evening.tsx",
+  "src/components/marketing/home/portal.tsx",
+  "src/components/marketing/home/portal-reveal.tsx",
+  "src/components/marketing/home/portal-stage.tsx",
+  "src/components/marketing/home/pricing.tsx",
+];
+const home = HOME_FILES.map(read).join("\n");
+
+describe("Galaxy 2 homepage — one continuous story with the approved copy", () => {
+  it("keeps the five moments in narrative order: family → child → parent → product → routine", () => {
+    const page = read("src/app/(marketing)/page.tsx");
+    const jsx = page.slice(page.indexOf("return"));
+    const order = ["HomeHero", "HomeExplainer", "HomeEvening", "HomePortal", "HomePricing"];
+    let last = -1;
+    for (const name of order) {
+      const i = jsx.indexOf(name);
+      assert.ok(i > last, `${name} must follow previous section`);
+      last = i;
+    }
+    assert.match(page, /HomeHeaderScroll/);
+    assert.match(page, /export const metadata/);
+  });
+
+  it("anchors every moment on the approved messaging, verbatim", () => {
+    const hero = read("src/components/marketing/home/hero.tsx");
+    assert.match(hero, /HOME_HERO_HEADLINE = "Give your child an edge\."/);
+    assert.match(hero, /Private, one on one Study Halls\. Right at home\./);
+    assert.match(hero, /No credit card required/);
+    assert.match(hero, /FREE_TRIAL_CTA/);
+
+    const hour = read("src/components/marketing/home/explainer.tsx");
+    assert.match(hour, /A dedicated hour for getting things done\./);
+    assert.match(hour, /keeps them focused, organized, and on task, whether they have work to finish or want to get ahead\./);
+    for (const use of ["Homework", "Studying", "Test prep", "Reviewing", "Reading", "Organizing"]) {
+      assert.match(hour, new RegExp(`"${use}"`));
+    }
+
+    const evening = read("src/components/marketing/home/evening.tsx");
+    assert.match(evening, /HOME_EVENING_HEADLINE = "Get an hour of your evening back\."/);
+    assert.match(evening, /Homework time\? We got this\./);
+    assert.match(evening, /Did you start your homework\?/);
+    assert.match(evening, /Put your phone away\./);
+    assert.match(evening, /What are you supposed to be working on\?/);
+    assert.match(evening, /Homework started\./);
+    assert.match(evening, /Phone away\./);
+    assert.match(evening, /Tonight’s work organized\./);
+    assert.match(evening, /6:47/);
+    assert.match(evening, /7:00/);
+
+    assert.match(read("src/components/marketing/home/portal.tsx"), /Everything in one place\./);
+
+    const pricing = read("src/components/marketing/home/pricing.tsx");
+    assert.match(pricing, /Study Hall Unlimited/);
+    assert.match(pricing, /Unlimited Study Halls, one per day, every day of the year\./);
+    assert.match(pricing, /Use them when you want, at the times that work for your family\./);
+    assert.match(pricing, /Try it once\./);
+    assert.match(pricing, /Keep Study Halls on hand\./);
+    assert.match(pricing, /Make it a routine\./);
+    assert.match(pricing, /The hour becomes expected\./);
+  });
+
+  it("never swaps the specific brand voice for generic marketing language", () => {
+    assert.doesNotMatch(
+      home,
+      /unlock your child|empowering students|personalized learning|academic journey|transform their|potential\b/i,
+    );
+    assert.doesNotMatch(home, /Study Hall 365/);
+    assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach/i);
+    assert.doesNotMatch(home, /sibling/i);
+  });
+
+  it("keeps the header restrained: three links, Sign In, Try It Free", () => {
+    const constants = read("src/lib/constants.ts");
+    const navBlock = constants.slice(constants.indexOf("PUBLIC_NAV_LINKS"), constants.indexOf("] as const;"));
+    assert.deepEqual(
+      [...navBlock.matchAll(/label: "([^"]+)"/g)].map((m) => m[1]),
+      ["How It Works", "Why It Works", "Pricing"],
+    );
+    const nav = read("src/components/layout/navbar.tsx");
+    const mobile = read("src/components/layout/mobile-menu.tsx");
+    assert.match(read("src/lib/public-offers.ts"), /NAV_TRIAL_CTA = "Try It Free"/);
+    assert.match(nav, /Sign In/);
+    assert.match(nav, /NAV_TRIAL_CTA/);
+    assert.match(mobile, /Sign In/);
+    assert.match(mobile, /NAV_TRIAL_CTA/);
+  });
+});
+
+describe("Galaxy 2 homepage — product truth", () => {
+  it("reveals the real Parent Portal Home, not a fictional dashboard", () => {
+    const stage = read("src/components/marketing/home/portal-stage.tsx");
+    const reveal = read("src/components/marketing/home/portal-reveal.tsx");
+    assert.match(stage, /PARENT_PORTAL_NAV/);
+    assert.match(stage, /Next Study Hall/);
+    assert.match(stage, /Join Study Hall →/);
+    assert.match(stage, /Your Study Hall Week/);
+    assert.match(stage, /Plan my week/);
+    assert.match(stage, /Recent Study Hall/);
+    assert.match(stage, /Report ready/);
+    assert.match(stage, /Recording ready/);
+    assert.match(stage, /Study Halls remaining/);
+    for (const region of ["plan", "next", "join", "review"]) {
+      assert.match(stage, new RegExp(`data-region="${region}"`));
+    }
+    assert.doesNotMatch(stage, /Matching|AI tutor|live chat|leaderboard|streak|grade tracker/i);
+
+    for (const title of ["Plan the week.", "See what’s next.", "Join when it’s time.", "See how it went."]) {
+      assert.ok(reveal.includes(title), `reveal step "${title}"`);
+    }
+    assert.match(reveal, /IntersectionObserver/);
+    assert.match(reveal, /min-width: 1024px/);
+    assert.match(read("src/components/marketing/home/portal.tsx"), /PortalReveal[\s\S]*PortalStage/);
+  });
+
+  it("keeps homepage prices truthful to the catalog and the savings math", () => {
+    const pricing = read("src/components/marketing/home/pricing.tsx");
+    assert.equal(PACKAGE_10SH_PRICE_CENTS, 9900);
+    assert.equal(STUDY_HALL_365_MONTHLY_USD, 149);
+    assert.match(pricing, /PACKAGE_10SH_PRICE_CENTS/);
+    assert.match(pricing, /STUDY_HALL_365_MONTHLY_USD/);
+    assert.match(pricing, /PAYG_PRICE_USD/);
+    assert.match(pricing, /Save \{formatUsd\(PACK_10_SAVINGS_USD\)\} when you buy ten\./);
+    assert.doesNotMatch(pricing, /formatUsd\(99\)|"\$99"|"\$149"|"\$12"/);
+  });
+
+  it("gives Unlimited the culminating weight without hiding the other two options", () => {
+    const pricing = read("src/components/marketing/home/pricing.tsx");
+    const payg = pricing.indexOf('data-offer="payg"');
+    const pack = pricing.indexOf('data-offer="alacarte"');
+    const unlimited = pricing.indexOf('data-offer="study-hall-365"');
+    assert.ok(payg > 0 && pack > payg && unlimited > pack, "options read try → keep → routine");
+    assert.match(pricing, /sh-home-flagship/);
+    assert.match(pricing, /sh-home-option/);
+    assert.match(pricing, /Choose Unlimited/);
+    assert.match(pricing, /location="closing"/);
+  });
+
+  it("keeps trust quiet: no badge strip, no invented credentials", () => {
+    assert.doesNotMatch(home, /shield|lock icon|certified|background[- ]check|guarantee|COPPA|SOC ?2|encrypted/i);
+    assert.doesNotMatch(home, /testimonial|as seen in|featured in|★|5[- ]star/i);
+    assert.match(read("src/components/marketing/home/pricing.tsx"), /highly vetted Study Hall Guide/);
+  });
+
+  it("uses editorial photography, not the old placeholder plates, for the new moments", () => {
+    assert.match(read("src/components/marketing/home/hero.tsx"), /galaxy-hero-evening\.webp/);
+    assert.match(read("src/components/marketing/home/explainer.tsx"), /galaxy-hour-intimate\.webp/);
+    assert.match(read("src/components/marketing/home/evening.tsx"), /galaxy-evening-647\.webp/);
+    assert.match(read("src/components/marketing/home/evening.tsx"), /studyhall-routine-evening\.webp/);
+    assert.match(read("src/components/marketing/home/pricing.tsx"), /galaxy-routine-desk\.webp/);
+    const readme = read("public/images/README.md");
+    for (const plate of ["galaxy-hero-evening", "galaxy-evening-647", "galaxy-hour-intimate", "galaxy-routine-desk"]) {
+      assert.match(readme, new RegExp(plate));
+    }
+  });
+});

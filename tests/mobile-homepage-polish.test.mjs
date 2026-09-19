@@ -30,8 +30,8 @@ describe("Mobile homepage polish", () => {
     const mobile = read("src/components/layout/mobile-menu.tsx");
     assert.match(hero, /Give your child an edge\./);
     assert.match(hero, /FREE_TRIAL_CTA|primaryLabel/);
-    assert.match(nav, /START_FREE_CTA/);
-    assert.match(mobile, /START_FREE_CTA/);
+    assert.match(nav, /NAV_TRIAL_CTA/);
+    assert.match(mobile, /NAV_TRIAL_CTA/);
     assert.match(mobile, /lg:hidden/);
     assert.doesNotMatch(nav + mobile, /Try your first Study Hall free/);
     assert.doesNotMatch(hero, /ROUTINE_WEEK|grid-cols-7/);
