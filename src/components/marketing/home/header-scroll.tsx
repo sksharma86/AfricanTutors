@@ -5,8 +5,9 @@ import { useEffect } from "react";
 const THRESHOLD_PX = 16;
 
 /**
- * Homepage-only: mark the public header after a short scroll so CSS can add
- * a restrained reading surface. Stickiness itself is CSS (position: fixed).
+ * Galaxy public pages (homepage + How/Why It Works): mark the public header
+ * after a short scroll so CSS can add a restrained reading surface.
+ * Stickiness itself is CSS (position: fixed on body:has(.sh-home) header).
  */
 export function HomeHeaderScroll() {
   useEffect(() => {

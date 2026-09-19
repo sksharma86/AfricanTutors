@@ -78,7 +78,8 @@ describe("Study Hall routine redesign — public positioning", () => {
     assert.match(pricing, /coming next/);
     assert.doesNotMatch(pricing, /Subscribe|Buy Study Hall 365|href=.*\/checkout/);
     assert.doesNotMatch(offers, /href: "\/checkout"|stripe|subscription/);
-    assert.doesNotMatch(PUBLIC, /Plan My Week|entitlement|Daily unit|Available state/);
+    assert.doesNotMatch(PUBLIC, /entitlement|Daily unit|Available state/);
+    assert.match(read("src/app/(marketing)/how-it-works/page.tsx") + read("src/lib/galaxy-1b-copy.ts"), /Plan My Week/);
     assert.doesNotMatch(read("src/app/dashboard/student/page.tsx"), /Routine365|HourChapter/);
   });
 
