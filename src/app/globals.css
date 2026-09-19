@@ -2073,6 +2073,20 @@ body:has(.sh-home) footer .max-w-7xl.grid {
   color: var(--sh-muted);
 }
 
+/* Stacked widths: one compact row per day instead of five tall boxes. */
+@media (max-width: 699px) {
+  .sh-galaxy-week__strip {
+    gap: 0.4rem;
+  }
+
+  .sh-galaxy-week__day {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+  }
+}
+
 .sh-galaxy-benefit-pair {
   display: grid;
   gap: 2.5rem;
