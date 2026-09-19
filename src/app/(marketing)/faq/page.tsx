@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
-import { CtaSection } from "@/components/marketing/cta-section";
-import { Faq } from "@/components/marketing/faq";
-import { PageHeader } from "@/components/marketing/page-header";
+import { FaqCta, FaqHero, FaqList } from "@/components/marketing/faq/page-sections";
+import { HomeHeaderScroll } from "@/components/marketing/home/header-scroll";
 import { FAQ_ITEMS } from "@/lib/faq";
-import { PUBLIC_OFFER_CTA_HREF, START_FREE_CTA } from "@/lib/public-offers";
+import { getGalaxyPublicCta } from "@/lib/galaxy-public-cta";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -22,19 +21,16 @@ const faqJsonLd = {
   })),
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const primary = await getGalaxyPublicCta();
+
   return (
-    <div className="mkt-atmosphere">
+    <div className="sh-home sh-galaxy sh-faq">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      <PageHeader title="Questions, answered." description="Short answers before the first Study Hall." />
-      <Faq eyebrow="" title="Frequently asked questions" />
-      <CtaSection
-        title="Start with one free hour."
-        description="No credit card required."
-        primaryHref={PUBLIC_OFFER_CTA_HREF}
-        primaryLabel={START_FREE_CTA}
-        showFinePrint={false}
-      />
+      <HomeHeaderScroll />
+      <FaqHero />
+      <FaqList items={FAQ_ITEMS} />
+      <FaqCta primaryHref={primary.href} primaryLabel={primary.label} />
     </div>
   );
 }

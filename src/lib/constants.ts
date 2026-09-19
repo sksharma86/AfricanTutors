@@ -10,6 +10,7 @@ export const PUBLIC_NAV_LINKS = [
   { label: "How It Works", href: "/how-it-works" },
   { label: "Why It Works", href: "/why-it-works" },
   { label: "Pricing", href: "/pricing" },
+  { label: "FAQ", href: "/faq" },
 ] as const;
 
 export const FOOTER_SECTIONS = [
