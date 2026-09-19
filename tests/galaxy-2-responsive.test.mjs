@@ -94,7 +94,9 @@ describe("Galaxy 2 homepage — visual system contracts", () => {
     const reduced = css.slice(css.indexOf("Galaxy 2 — public homepage"));
     assert.match(reduced, /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*\.sh-home-hero__photo,[\s\S]*animation: none;/);
     assert.match(reduced, /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*\.sh-home-portal__stage \[data-region\],[\s\S]*transition: none;/);
-    assert.doesNotMatch(css.slice(css.indexOf("Galaxy 2 — public homepage")), /rotate\((?:[2-9]\d|1\d)deg\)|scale\(1\.[3-9]/);
+    const galaxy2 = css.slice(css.indexOf("Galaxy 2 — public homepage"), css.indexOf("Galaxy 1B — How It Works"));
+    assert.ok(galaxy2.length > 0, "Galaxy 2 block precedes the 1B block");
+    assert.doesNotMatch(galaxy2, /rotate\((?:[2-9]\d|1\d)deg\)|scale\(1\.[3-9]/);
   });
 
   it("keeps the public header fixed and transparent over the hero", () => {

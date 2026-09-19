@@ -30,6 +30,17 @@ export const PORTAL_STEPS: ReadonlyArray<{ id: PortalStep; title: string; copy: 
 const STAGE_QUERY = "(min-width: 1024px)";
 
 /**
+ * Design width of the Parent Portal representation on desktop. The UI lays
+ * out once at this width; the whole frame is then scaled as one object so it
+ * fits the usable viewport (column width × height beneath the fixed header).
+ * Mirrors --sh-portal-design-width in globals.css.
+ */
+export const PORTAL_DESIGN_WIDTH = 880;
+/** Space kept clear above and below the sticky frame, in px. */
+const STAGE_BREATHING_PX = 28;
+const STAGE_MIN_SCALE = 0.55;
+
+/**
  * Sticky product reveal. The Parent Portal stays anchored while four short
  * statements scroll past; whichever statement crosses the middle of the
  * viewport becomes the active step and CSS illuminates that region.
@@ -37,6 +48,8 @@ const STAGE_QUERY = "(min-width: 1024px)";
  */
 export function PortalReveal({ stage }: { stage: ReactNode }) {
   const stepsRef = useRef<HTMLOListElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const uiRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<PortalStep | null>(null);
 
   useEffect(() => {
@@ -75,6 +88,51 @@ export function PortalReveal({ stage }: { stage: ReactNode }) {
     };
   }, []);
 
+  // Viewport composition: one scale for the whole frame, derived from both
+  // the column width and the height left beneath the fixed header, plus a
+  // sticky offset that centres the frame in that usable band.
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const ui = uiRef.current;
+    if (!wrap || !ui) return;
+    const mq = window.matchMedia(STAGE_QUERY);
+
+    const fit = () => {
+      if (!mq.matches) {
+        wrap.style.removeProperty("--sh-portal-scale");
+        wrap.style.removeProperty("--sh-portal-top");
+        return;
+      }
+      const header = document.querySelector("header");
+      const headerH = header instanceof HTMLElement ? header.getBoundingClientRect().height : 64;
+      const usableH = window.innerHeight - headerH - STAGE_BREATHING_PX * 2;
+      // The frame lays out at the design width; undo the zoom currently applied
+      // to the stage to recover its natural height.
+      const stage = ui.parentElement;
+      const applied = stage ? Number.parseFloat(getComputedStyle(stage).zoom) || 1 : 1;
+      const naturalH = ui.getBoundingClientRect().height / applied;
+      const widthScale = wrap.clientWidth / PORTAL_DESIGN_WIDTH;
+      const heightScale = naturalH > 0 ? usableH / naturalH : 1;
+      const scale = Math.max(STAGE_MIN_SCALE, Math.min(1, widthScale, heightScale));
+      const frameH = naturalH * scale;
+      const top = headerH + Math.max(STAGE_BREATHING_PX, (window.innerHeight - headerH - frameH) / 2);
+      wrap.style.setProperty("--sh-portal-scale", scale.toFixed(4));
+      wrap.style.setProperty("--sh-portal-top", `${Math.round(top)}px`);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(wrap);
+    ro.observe(ui);
+    window.addEventListener("resize", fit);
+    mq.addEventListener("change", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+      mq.removeEventListener("change", fit);
+    };
+  }, []);
+
   return (
     <div className="sh-home-portal__reveal" data-live={active ? "1" : undefined}>
       <ol ref={stepsRef} className="sh-home-portal__steps">
@@ -94,9 +152,11 @@ export function PortalReveal({ stage }: { stage: ReactNode }) {
         ))}
       </ol>
 
-      <div className="sh-home-portal__stage-wrap">
+      <div ref={wrapRef} className="sh-home-portal__stage-wrap">
         <div className="sh-home-portal__stage" data-step={active ?? undefined}>
-          <div className="sh-home-portal__frame">{stage}</div>
+          <div ref={uiRef} className="sh-home-portal__frame">
+            {stage}
+          </div>
         </div>
       </div>
     </div>

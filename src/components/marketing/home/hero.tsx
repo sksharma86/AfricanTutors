@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-import { EditorialLine } from "@/components/marketing/home/editorial";
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
 import { FREE_TRIAL_CTA } from "@/lib/pricing";
@@ -37,7 +36,7 @@ export function HomeHero({
       <Container size="wide" className="sh-home-hero__inner">
         <div className="sh-home-hero__copy">
           <h1 id="home-hero-title" className="sh-home-display sh-home-hero__title">
-            <EditorialLine text={HOME_HERO_HEADLINE} accent="edge." />
+            {HOME_HERO_HEADLINE}
           </h1>
           <p className="sh-home-hero__support">{HOME_HERO_SUPPORT}</p>
           <div className="sh-home-hero__cta">

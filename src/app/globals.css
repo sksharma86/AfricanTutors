@@ -248,11 +248,6 @@ body {
   text-wrap: balance;
 }
 
-.sh-home .sh-home-display em {
-  font-style: italic;
-  font-weight: 400;
-}
-
 .sh-home .sh-home-kicker {
   font-size: 0.72rem;
   font-weight: 600;
@@ -492,7 +487,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Moment 3 — parent relief: 6:47 PM → 7:00 PM → the statement
+   Moment 3 — parent relief: before Study Hall → with Study Hall → the statement
    -------------------------------------------------------------------------- */
 .sh-home-evening {
   background: var(--sh-paper);
@@ -539,21 +534,26 @@ body {
   min-width: 0;
 }
 
-.sh-home-evening__clock {
-  display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  margin: 0;
-  font-size: clamp(3.2rem, 7vw, 6rem);
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+/* The two states are named, not clocked: this is before / after adoption,
+   not two moments in one evening. */
+.sh-home-evening__state {
+  min-width: 0;
 }
 
-.sh-home-evening__meridiem {
-  font-size: 0.34em;
-  letter-spacing: 0.06em;
-  opacity: 0.7;
+.sh-home-evening__state-title {
+  margin: 0;
+  max-width: 10ch;
+  font-size: clamp(2.6rem, 5.2vw, 4.4rem);
+  overflow-wrap: break-word;
+}
+
+.sh-home-evening__state-note {
+  margin: 0.9rem 0 0;
+  max-width: 18rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: rgba(243, 238, 229, 0.62);
 }
 
 .sh-home-evening__noise {
@@ -601,8 +601,14 @@ body {
 
 .sh-home-evening__fragment:nth-child(4) {
   --tilt: 1.3deg;
-  --o: 0.42;
+  --o: 0.46;
   padding-left: 22%;
+}
+
+.sh-home-evening__fragment:nth-child(5) {
+  --tilt: -0.9deg;
+  --o: 0.36;
+  padding-left: 8%;
 }
 
 @keyframes sh-drift {
@@ -686,14 +692,58 @@ body {
   opacity: 0.9;
 }
 
+/* The statement is a cinematic bridge, not a holding card: the evening
+   photograph dissolves upward into paper, the statement rises out of it, and
+   the section closes on paper before the room goes dark. */
 .sh-home-evening__land {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: var(--sh-paper);
   color: var(--sh-ink);
-  padding: clamp(5rem, 11vw, 9.5rem) 0 clamp(4.5rem, 9vw, 8rem);
+  padding: clamp(9rem, 20vw, 16rem) 0 clamp(5.5rem, 11vw, 9rem);
+}
+
+.sh-home-evening__land-media {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 0;
+  height: 64%;
+  opacity: 0.6;
+  overflow: hidden;
+}
+
+/* The room, out of focus: warmth and depth carried forward, not a second
+   copy of the photograph. */
+.sh-home-evening__land-photo {
+  object-fit: cover;
+  object-position: 50% 70%;
+  filter: saturate(0.75) blur(14px);
+  transform: scale(1.12);
+  transform-origin: 50% 0%;
+}
+
+.sh-home-evening__land-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(247, 243, 236, 0.12) 0%, rgba(247, 243, 236, 0.42) 26%, var(--sh-paper) 52%, var(--sh-paper) 100%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(201, 162, 39, 0.1), transparent 70%);
 }
 
 .sh-home-evening__land-inner {
+  position: relative;
+  z-index: 2;
   text-align: center;
+}
+
+.sh-home-evening__land-rule {
+  display: block;
+  width: 3rem;
+  height: 1px;
+  margin: 0 auto 2.25rem;
+  background: var(--sh-accent);
 }
 
 .sh-home-evening__title {
@@ -707,6 +757,25 @@ body {
   margin-top: 1.4rem;
   font-size: clamp(1.1rem, 1.6vw, 1.35rem);
   color: var(--sh-muted);
+}
+
+@keyframes sh-land-settle {
+  from {
+    transform: scale(1.18) translateY(-2%);
+  }
+  to {
+    transform: scale(1.12) translateY(0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sh-home-evening__land-photo {
+      animation: sh-land-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 60%;
+    }
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -772,19 +841,21 @@ body {
 }
 
 .sh-home-portal__step-title {
-  font-size: clamp(1.9rem, 3vw, 2.9rem);
+  max-width: 12ch;
+  font-size: clamp(1.75rem, 2.5vw, 2.6rem);
   color: #fff;
 }
 
 .sh-home-portal__step-copy {
-  margin-top: 0.7rem;
-  max-width: 26rem;
-  font-size: 0.98rem;
-  line-height: 1.6;
+  margin-top: 0.65rem;
+  max-width: 22rem;
+  font-size: clamp(0.95rem, 1.05vw, 1.05rem);
+  line-height: 1.55;
   color: rgba(243, 238, 229, 0.6);
 }
 
 .sh-home-portal__stage-wrap {
+  --sh-portal-design-width: 880px;
   order: 1;
   min-width: 0;
 }
@@ -1081,13 +1152,8 @@ body {
   min-width: 0;
 }
 
-.sh-home-option__name {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
 .sh-home-option__detail {
-  margin-top: 0.3rem;
+  margin-top: 0;
   max-width: 30rem;
   font-size: 0.95rem;
   line-height: 1.55;
@@ -1269,7 +1335,7 @@ body {
   .sh-home-portal__steps {
     order: 1;
     gap: 0;
-    padding-block: 12vh;
+    padding-block: 10vh;
   }
 
   .sh-home-portal__step {
@@ -1283,10 +1349,22 @@ body {
     opacity: 0.36;
   }
 
+  /* The frame lays out once at the design width and is scaled as a single
+     object (zoom, so layout follows) to fit the column and the height left
+     beneath the fixed header. PortalReveal measures and sets both variables;
+     the fallbacks keep the first paint sane before hydration. */
   .sh-home-portal__stage-wrap {
     order: 2;
     position: sticky;
-    top: clamp(4.5rem, 9vh, 6rem);
+    top: var(--sh-portal-top, clamp(4.5rem, 9vh, 6rem));
+    display: flex;
+    justify-content: center;
+  }
+
+  .sh-home-portal__stage {
+    width: var(--sh-portal-design-width);
+    flex: 0 0 auto;
+    zoom: var(--sh-portal-scale, 0.82);
   }
 
   .sh-home-portal__side {
@@ -1322,26 +1400,6 @@ body {
   }
 }
 
-/* Height budget for the sticky stage: the whole product frame must stay in
-   view on shorter laptop screens, so the UI scales rather than clipping. */
-@media (min-width: 1024px) and (max-height: 940px) {
-  .sh-home-portal__ui {
-    zoom: 0.9;
-  }
-}
-
-@media (min-width: 1024px) and (max-height: 780px) {
-  .sh-home-portal__ui {
-    zoom: 0.8;
-  }
-}
-
-@media (min-width: 1024px) and (max-height: 680px) {
-  .sh-home-portal__ui {
-    zoom: 0.7;
-  }
-}
-
 @media (min-width: 1280px) {
   .sh-home-portal__reveal {
     grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
@@ -1356,7 +1414,8 @@ body {
   .sh-home-hero__photo,
   .sh-home-hero__media,
   .sh-home .sh-rise,
-  .sh-home-evening__fragment {
+  .sh-home-evening__fragment,
+  .sh-home-evening__land-photo {
     animation: none;
   }
 

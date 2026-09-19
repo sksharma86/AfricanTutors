@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-import { EditorialLine } from "@/components/marketing/home/editorial";
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
 import { FREE_TRIAL_CTA, PAYG_PRICE_USD, formatUsd } from "@/lib/pricing";
@@ -8,6 +7,7 @@ import {
   PACKAGE_10SH_PRICE_CENTS,
   PACKAGE_10SH_STUDY_HALLS,
   STUDY_HALL_365_MONTHLY_USD,
+  STUDY_HALL_365_PRODUCT_NAME,
 } from "@/lib/study-hall-365/catalog.mjs";
 
 /** Homepage 10-pack display tracks PACKAGE_10SH_PRICE_CENTS ($99). */
@@ -17,8 +17,11 @@ const PACK_10_SAVINGS_USD = PAYG_PRICE_USD * PACKAGE_10SH_STUDY_HALLS - PACK_10_
 export const HOME_ROUTINE_HEADLINE = "The hour becomes expected.";
 export const HOME_ROUTINE_COPY = "It’s Study Hall time. The student sits down. The work begins.";
 export const HOME_PRICING_TITLE = "Choose what works for your family.";
-export const HOME_UNLIMITED_NAME = "Study Hall Unlimited";
-export const HOME_UNLIMITED_LINES = [
+export const HOME_PAYG_NAME = "One Study Hall";
+export const HOME_PACK_NAME = `${PACKAGE_10SH_STUDY_HALLS} Study Halls`;
+export const HOME_365_NAME = STUDY_HALL_365_PRODUCT_NAME;
+export const HOME_365_HEADLINE = "Make it a routine.";
+export const HOME_365_LINES = [
   "Unlimited Study Halls, one per day, every day of the year.",
   "Use them when you want, at the times that work for your family.",
 ] as const;
@@ -28,7 +31,7 @@ export const HOME_TRUST_LINE =
 /**
  * Moment 5 — routine + pricing. The dark reveal gives way to a lamp-lit desk
  * and the idea that the hour becomes expected. Two purchasing options are set
- * as quiet editorial rows; Study Hall Unlimited is the culmination.
+ * as quiet editorial rows; Study Hall 365 is the culmination.
  */
 export function HomePricing({
   ctaHref,
@@ -39,7 +42,7 @@ export function HomePricing({
 }) {
   const payg = formatUsd(PAYG_PRICE_USD);
   const pack = formatUsd(PACK_10_DISPLAY_USD);
-  const unlimited = formatUsd(STUDY_HALL_365_MONTHLY_USD);
+  const monthly = formatUsd(STUDY_HALL_365_MONTHLY_USD);
 
   return (
     <section id="pricing" className="sh-home-pricing" aria-labelledby="home-pricing-title">
@@ -72,10 +75,9 @@ export function HomePricing({
         <div className="sh-home-pricing__ladder">
           <div className="sh-home-pricing__options sh-rise">
             <article data-offer="payg" className="sh-home-option">
-              <h3 className="sh-home-display sh-home-option__label">Try it once.</h3>
+              <h3 className="sh-home-display sh-home-option__label">{HOME_PAYG_NAME}</h3>
               <p className="sh-home-option__price">{payg}</p>
               <div className="sh-home-option__body">
-                <p className="sh-home-option__name">One Study Hall</p>
                 <p className="sh-home-option__detail">One private, 60 minute Study Hall. Pay as you go.</p>
                 <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_payg" variant="text" className="sh-home-option__cta">
                   Get started →
@@ -84,15 +86,14 @@ export function HomePricing({
             </article>
 
             <article data-offer="alacarte" className="sh-home-option">
-              <h3 className="sh-home-display sh-home-option__label">Keep Study Halls on hand.</h3>
+              <h3 className="sh-home-display sh-home-option__label">{HOME_PACK_NAME}</h3>
               <p className="sh-home-option__price">
                 {pack}
                 <span className="sh-home-option__unit">/ {PACKAGE_10SH_STUDY_HALLS}</span>
               </p>
               <div className="sh-home-option__body">
-                <p className="sh-home-option__name">{PACKAGE_10SH_STUDY_HALLS} Study Halls</p>
                 <p className="sh-home-option__detail">
-                  Save {formatUsd(PACK_10_SAVINGS_USD)} when you buy ten. They never expire.
+                  Keep Study Halls on hand. Save {formatUsd(PACK_10_SAVINGS_USD)} when you buy ten. They never expire.
                 </p>
                 <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_10" variant="text" className="sh-home-option__cta">
                   Get started →
@@ -103,28 +104,26 @@ export function HomePricing({
 
           <article data-offer="study-hall-365" className="sh-home-flagship sh-rise">
             <div className="sh-home-flagship__glow" aria-hidden />
-            <p className="sh-home-kicker sh-home-kicker--light">{HOME_UNLIMITED_NAME}</p>
-            <h3 className="sh-home-display sh-home-flagship__title">
-              <EditorialLine text="Make it a routine." accent="routine." />
-            </h3>
+            <p className="sh-home-kicker sh-home-kicker--light">{HOME_365_NAME}</p>
+            <h3 className="sh-home-display sh-home-flagship__title">{HOME_365_HEADLINE}</h3>
             <p className="sh-home-flagship__price">
-              {unlimited}
+              {monthly}
               <span className="sh-home-flagship__unit">/month</span>
             </p>
             <div className="sh-home-flagship__lines">
-              {HOME_UNLIMITED_LINES.map((line) => (
+              {HOME_365_LINES.map((line) => (
                 <p key={line}>{line}</p>
               ))}
             </div>
             <TrackCta
               href={ctaHref}
               cta={ctaLabel}
-              location="pricing_unlimited"
+              location="pricing_365"
               variant="secondary"
               size="lg"
               className="sh-home-flagship__cta"
             >
-              Choose Unlimited
+              Choose {HOME_365_NAME}
             </TrackCta>
           </article>
         </div>

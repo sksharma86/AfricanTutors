@@ -1,27 +1,38 @@
 import Image from "next/image";
 
-import { EditorialLine } from "@/components/marketing/home/editorial";
 import { Container } from "@/components/ui/container";
 
 export const HOME_EVENING_HEADLINE = "Get an hour of your evening back.";
 export const HOME_EVENING_SUPPORT = "Homework time? We got this.";
 
-/** Fragments of the evening before Study Hall. Typeset as noise, not a list. */
+export const HOME_EVENING_BEFORE_LABEL = "Before Study Hall";
+export const HOME_EVENING_BEFORE_NOTE = "Most weeknights, before it became the routine.";
+/** Fragments of the evenings before the family used Study Hall. Typeset as noise, not a list. */
 export const HOME_EVENING_BEFORE = [
   "Did you start your homework?",
   "Put your phone away.",
   "What are you supposed to be working on?",
-  "Are you finished?",
+  "Please focus.",
+  "Did you finish everything?",
 ] as const;
 
-/** What the same evening looks like once the Study Hall begins. */
-export const HOME_EVENING_AFTER = ["Homework started.", "Phone away.", "Tonight’s work organized."] as const;
+export const HOME_EVENING_AFTER_LABEL = "With Study Hall";
+export const HOME_EVENING_AFTER_NOTE = "Once the hour has a place in the week.";
+/** What homework time looks like once Study Hall is the routine. */
+export const HOME_EVENING_AFTER = [
+  "Homework started.",
+  "Phone away.",
+  "Tonight’s work organized.",
+  "Focused and working.",
+  "Study Hall complete.",
+] as const;
 
 /**
- * Moment 3 — parent relief, told as two moments in one evening.
- * 6:47 PM: a charcoal room and fragments of reminders.
- * 7:00 PM: the noise is gone, the child is settled, the parent is elsewhere.
- * Then the statement lands on paper.
+ * Moment 3 — parent relief, told as a before / after across time.
+ * Before Study Hall: a charcoal room and fragments of the reminders that
+ * used to run every homework evening. With Study Hall: the noise is gone,
+ * the child is settled with the Guide, the parent is elsewhere in the home.
+ * Then the statement lands on paper as a cinematic bridge into the product.
  */
 export function HomeEvening() {
   return (
@@ -37,11 +48,11 @@ export function HomeEvening() {
           />
         </div>
         <Container size="wide" className="sh-home-evening__before-inner">
-          <p className="sh-home-evening__clock sh-home-display">
-            <span className="sh-home-evening__time">6:47</span>
-            <span className="sh-home-evening__meridiem">PM</span>
-          </p>
-          <ul className="sh-home-evening__noise" aria-label="Before Study Hall">
+          <div className="sh-home-evening__state">
+            <p className="sh-home-evening__state-title sh-home-display">{HOME_EVENING_BEFORE_LABEL}</p>
+            <p className="sh-home-evening__state-note">{HOME_EVENING_BEFORE_NOTE}</p>
+          </div>
+          <ul className="sh-home-evening__noise" aria-label={HOME_EVENING_BEFORE_LABEL}>
             {HOME_EVENING_BEFORE.map((line) => (
               <li key={line} className="sh-home-evening__fragment">
                 {line}
@@ -61,11 +72,11 @@ export function HomeEvening() {
         />
         <div className="sh-home-evening__after-shade" aria-hidden />
         <Container size="wide" className="sh-home-evening__after-inner">
-          <p className="sh-home-evening__clock sh-home-display">
-            <span className="sh-home-evening__time">7:00</span>
-            <span className="sh-home-evening__meridiem">PM</span>
-          </p>
-          <ul className="sh-home-evening__calm" aria-label="With Study Hall">
+          <div className="sh-home-evening__state">
+            <p className="sh-home-evening__state-title sh-home-display">{HOME_EVENING_AFTER_LABEL}</p>
+            <p className="sh-home-evening__state-note">{HOME_EVENING_AFTER_NOTE}</p>
+          </div>
+          <ul className="sh-home-evening__calm" aria-label={HOME_EVENING_AFTER_LABEL}>
             {HOME_EVENING_AFTER.map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -74,9 +85,20 @@ export function HomeEvening() {
       </div>
 
       <div className="sh-home-evening__land">
+        <div className="sh-home-evening__land-media" aria-hidden>
+          <Image
+            src="/images/marketing/studyhall-routine-evening.webp"
+            alt=""
+            fill
+            sizes="100vw"
+            className="sh-home-evening__land-photo"
+          />
+        </div>
+        <div className="sh-home-evening__land-shade" aria-hidden />
         <Container size="wide" className="sh-home-evening__land-inner sh-rise">
+          <p className="sh-home-evening__land-rule" aria-hidden />
           <h2 id="home-evening-title" className="sh-home-display sh-home-evening__title">
-            <EditorialLine text={HOME_EVENING_HEADLINE} accent="evening" />
+            {HOME_EVENING_HEADLINE}
           </h2>
           <p className="sh-home-evening__support">{HOME_EVENING_SUPPORT}</p>
         </Container>

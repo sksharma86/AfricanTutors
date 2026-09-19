@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
-import { PACKAGE_10SH_PRICE_CENTS, STUDY_HALL_365_MONTHLY_USD } from "../src/lib/study-hall-365/catalog.mjs";
+import {
+  PACKAGE_10SH_PRICE_CENTS,
+  STUDY_HALL_365_MONTHLY_USD,
+  STUDY_HALL_365_PRODUCT_NAME,
+} from "../src/lib/study-hall-365/catalog.mjs";
 
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
@@ -53,22 +57,39 @@ describe("Galaxy 2 homepage — one continuous story with the approved copy", ()
     assert.match(evening, /Did you start your homework\?/);
     assert.match(evening, /Put your phone away\./);
     assert.match(evening, /What are you supposed to be working on\?/);
+    assert.match(evening, /Please focus\./);
+    assert.match(evening, /Did you finish everything\?/);
     assert.match(evening, /Homework started\./);
     assert.match(evening, /Phone away\./);
     assert.match(evening, /Tonight’s work organized\./);
-    assert.match(evening, /6:47/);
-    assert.match(evening, /7:00/);
+    assert.match(evening, /Focused and working\./);
+    assert.match(evening, /Study Hall complete\./);
 
     assert.match(read("src/components/marketing/home/portal.tsx"), /Everything in one place\./);
 
     const pricing = read("src/components/marketing/home/pricing.tsx");
-    assert.match(pricing, /Study Hall Unlimited/);
     assert.match(pricing, /Unlimited Study Halls, one per day, every day of the year\./);
     assert.match(pricing, /Use them when you want, at the times that work for your family\./);
-    assert.match(pricing, /Try it once\./);
-    assert.match(pricing, /Keep Study Halls on hand\./);
     assert.match(pricing, /Make it a routine\./);
     assert.match(pricing, /The hour becomes expected\./);
+  });
+
+  it("sets every editorial statement whole: no arbitrary single-word italics", () => {
+    assert.doesNotMatch(home, /<em>|EditorialLine|accent=/);
+    assert.doesNotMatch(read("src/app/globals.css"), /\.sh-home-display em\b/);
+  });
+
+  it("tells parent relief as before adoption versus the established routine, not two clocks in one evening", () => {
+    const evening = read("src/components/marketing/home/evening.tsx");
+    assert.match(evening, /HOME_EVENING_BEFORE_LABEL = "Before Study Hall"/);
+    assert.match(evening, /HOME_EVENING_AFTER_LABEL = "With Study Hall"/);
+    assert.match(evening, /routine/i);
+    assert.doesNotMatch(evening, /\b6:47\b|\b7:00\b|PM<\/span>|__clock|__meridiem/);
+    const before = evening.indexOf("sh-home-evening__before");
+    const after = evening.indexOf("sh-home-evening__after");
+    const land = evening.indexOf("sh-home-evening__land");
+    assert.ok(before > 0 && after > before && land > after, "before → with → statement");
+    assert.match(evening, /sh-home-evening__land-media[\s\S]*sh-home-evening__land-shade[\s\S]*sh-home-evening__land-rule/);
   });
 
   it("never swaps the specific brand voice for generic marketing language", () => {
@@ -76,7 +97,7 @@ describe("Galaxy 2 homepage — one continuous story with the approved copy", ()
       home,
       /unlock your child|empowering students|personalized learning|academic journey|transform their|potential\b/i,
     );
-    assert.doesNotMatch(home, /Study Hall 365/);
+    assert.doesNotMatch(home, /Study Hall Unlimited|Unlimited plan|Try it once/i);
     assert.doesNotMatch(home, /not tutoring|do not tutor|do not teach/i);
     assert.doesNotMatch(home, /sibling/i);
   });
@@ -135,16 +156,36 @@ describe("Galaxy 2 homepage — product truth", () => {
     assert.doesNotMatch(pricing, /formatUsd\(99\)|"\$99"|"\$149"|"\$12"/);
   });
 
-  it("gives Unlimited the culminating weight without hiding the other two options", () => {
+  it("names the three offers truthfully and gives Study Hall 365 the culminating weight", () => {
     const pricing = read("src/components/marketing/home/pricing.tsx");
     const payg = pricing.indexOf('data-offer="payg"');
     const pack = pricing.indexOf('data-offer="alacarte"');
-    const unlimited = pricing.indexOf('data-offer="study-hall-365"');
-    assert.ok(payg > 0 && pack > payg && unlimited > pack, "options read try → keep → routine");
+    const flagship = pricing.indexOf('data-offer="study-hall-365"');
+    assert.ok(payg > 0 && pack > payg && flagship > pack, "options read one → ten → 365");
+    assert.match(pricing, /HOME_PAYG_NAME = "One Study Hall"/);
+    assert.match(pricing, /HOME_PACK_NAME = `\$\{PACKAGE_10SH_STUDY_HALLS\} Study Halls`/);
+    assert.match(pricing, /HOME_365_NAME = STUDY_HALL_365_PRODUCT_NAME/);
+    assert.equal(STUDY_HALL_365_PRODUCT_NAME, "Study Hall 365");
     assert.match(pricing, /sh-home-flagship/);
     assert.match(pricing, /sh-home-option/);
-    assert.match(pricing, /Choose Unlimited/);
+    assert.match(pricing, /Choose \{HOME_365_NAME\}/);
+    assert.match(pricing, /location="pricing_365"/);
     assert.match(pricing, /location="closing"/);
+  });
+
+  it("fits the sticky Parent Portal to the viewport as one scaled object", () => {
+    const reveal = read("src/components/marketing/home/portal-reveal.tsx");
+    const css = read("src/app/globals.css");
+    assert.match(reveal, /PORTAL_DESIGN_WIDTH = 880/);
+    assert.match(reveal, /ResizeObserver/);
+    assert.match(reveal, /window\.innerHeight - headerH/);
+    assert.match(reveal, /Math\.min\(1, widthScale, heightScale\)/);
+    assert.match(reveal, /--sh-portal-scale/);
+    assert.match(reveal, /--sh-portal-top/);
+    assert.match(css, /--sh-portal-design-width: 880px/);
+    assert.match(css, /zoom: var\(--sh-portal-scale/);
+    assert.match(css, /top: var\(--sh-portal-top/);
+    assert.doesNotMatch(css, /max-height: 940px|max-height: 780px|max-height: 680px/);
   });
 
   it("keeps trust quiet: no badge strip, no invented credentials", () => {
