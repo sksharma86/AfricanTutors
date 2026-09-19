@@ -592,25 +592,25 @@ body {
 
 .sh-home-evening__fragment:nth-child(2) {
   --tilt: 0.8deg;
-  --o: 0.7;
+  --o: 0.78;
   padding-left: 12%;
 }
 
 .sh-home-evening__fragment:nth-child(3) {
   --tilt: -0.4deg;
-  --o: 0.55;
+  --o: 0.68;
   padding-left: 4%;
 }
 
 .sh-home-evening__fragment:nth-child(4) {
   --tilt: 1.3deg;
-  --o: 0.46;
+  --o: 0.6;
   padding-left: 22%;
 }
 
 .sh-home-evening__fragment:nth-child(5) {
   --tilt: -0.9deg;
-  --o: 0.36;
+  --o: 0.54;
   padding-left: 8%;
 }
 
@@ -855,7 +855,7 @@ body {
   max-width: 22rem;
   font-size: clamp(0.95rem, 1.05vw, 1.05rem);
   line-height: 1.55;
-  color: rgba(243, 238, 229, 0.6);
+  color: rgba(243, 238, 229, 0.7);
 }
 
 .sh-home-portal__stage-wrap {
@@ -1297,7 +1297,7 @@ body {
   font-size: 0.5em;
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--sh-subtle);
+  color: var(--sh-eyebrow);
 }
 
 .sh-home-option__body {
@@ -1841,6 +1841,10 @@ body:has(.sh-home) footer .max-w-7xl.grid {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.sh-galaxy-parent .sh-home-kicker {
+  color: rgba(243, 238, 229, 0.62);
+}
+
 .sh-galaxy-uses {
   margin-top: 1.75rem;
   text-align: center;
@@ -1996,7 +2000,7 @@ body:has(.sh-home) footer .max-w-7xl.grid {
 }
 
 .sh-galaxy-night--before .sh-home-evening__label {
-  color: rgba(244, 239, 230, 0.52);
+  color: rgba(244, 239, 230, 0.66);
 }
 
 .sh-galaxy-night__list {
@@ -2106,8 +2110,8 @@ body:has(.sh-home) footer .max-w-7xl.grid {
   border-radius: 16px;
 }
 
-.sh-galaxy-friction__kicker {
-  color: rgba(244, 239, 230, 0.52);
+.sh-home .sh-galaxy-friction__kicker {
+  color: rgba(244, 239, 230, 0.66);
 }
 
 .sh-galaxy-friction__list {
