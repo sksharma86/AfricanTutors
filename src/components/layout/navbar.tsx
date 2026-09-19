@@ -7,7 +7,7 @@ import { LinkButton } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
-import { START_FREE_CTA } from "@/lib/public-offers";
+import { NAV_TRIAL_CTA } from "@/lib/public-offers";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export async function Navbar() {
@@ -53,10 +53,10 @@ export async function Navbar() {
           ) : (
             <>
               <LinkButton href="/login" variant="ghost" size="sm">
-                Sign in
+                Sign In
               </LinkButton>
               <LinkButton href="/signup" variant="primary" size="sm">
-                {START_FREE_CTA}
+                {NAV_TRIAL_CTA}
               </LinkButton>
             </>
           )}

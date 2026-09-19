@@ -31,18 +31,17 @@ describe("Visual product story — homepage contracts", () => {
     assert.doesNotMatch(page, /LiveStudyHallDemo|TrustRow|<Steps/);
   });
 
-  it("how-it-works page is a short journey, not the hour page", () => {
+  it("how-it-works page is a Galaxy product story, not the hour page", () => {
     const how = read("src/app/(marketing)/how-it-works/page.tsx");
-    const journey = read("src/components/marketing/how-it-works-journey.tsx");
+    const copy = read("src/lib/galaxy-1b-copy.ts");
     assert.match(how, /HowItWorksJourney/);
+    assert.match(how, /HOW_IT_WORKS_HOUSEHOLD/);
     assert.doesNotMatch(how, /HowStudyHallWorks|LiveStudyHallDemo|<Steps/);
-    assert.match(journey, /Choose a time/);
-    assert.match(journey, /Join/);
-    assert.match(journey, /Plan/);
-    assert.match(journey, /Focus/);
-    assert.match(journey, /Finish/);
-    assert.match(journey, /Report/);
-    assert.match(journey, /Return/);
+    assert.match(copy, /label: "Book"/);
+    assert.match(copy, /label: "Join"/);
+    assert.match(copy, /label: "Focus"/);
+    assert.match(copy, /label: "Finish"/);
+    assert.doesNotMatch(copy, /Plan → Focus → Finish/);
   });
 
   it("parent portal showcase file remains a single composition", () => {

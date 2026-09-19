@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { LinkButton } from "@/components/ui/button";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
-import { START_FREE_CTA } from "@/lib/public-offers";
+import { NAV_TRIAL_CTA } from "@/lib/public-offers";
 
 export function MobileMenu({
   isAuthed,
@@ -67,10 +67,10 @@ export function MobileMenu({
             ) : (
               <>
                 <LinkButton href="/login" variant="outline" className="w-full" onClick={close}>
-                  Sign in
+                  Sign In
                 </LinkButton>
                 <LinkButton href="/signup" variant="primary" className="w-full" onClick={close}>
-                  {START_FREE_CTA}
+                  {NAV_TRIAL_CTA}
                 </LinkButton>
               </>
             )}

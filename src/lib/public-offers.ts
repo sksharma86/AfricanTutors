@@ -5,6 +5,8 @@
 
 export const PUBLIC_OFFER_CTA_HREF = "/signup";
 export const START_FREE_CTA = "Start free";
+/** Short header CTA. The full offer line lives in FREE_TRIAL_CTA. */
+export const NAV_TRIAL_CTA = "Try It Free";
 
 export const STUDY_HALL_365_MONTHLY_USD = 149;
 export const STUDY_HALL_365_EXAMPLE_DAYS = 31;

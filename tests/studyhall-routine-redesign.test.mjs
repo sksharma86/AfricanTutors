@@ -39,15 +39,16 @@ describe("Study Hall routine redesign — public positioning", () => {
     assert.match(nav, /The Study Hall Hour/);
   });
 
-  it("keeps navigation short and uses Start free", () => {
+  it("keeps navigation short and uses a short trial CTA", () => {
     const constants = read("src/lib/constants.ts");
     const nav = read("src/components/layout/navbar.tsx");
     const mobile = read("src/components/layout/mobile-menu.tsx");
-    assert.match(constants, /How it works/);
+    assert.match(constants, /How It Works/);
+    assert.match(constants, /Why It Works/);
     assert.match(constants, /Pricing/);
     assert.match(constants, /FAQ/);
-    assert.match(nav, /START_FREE_CTA/);
-    assert.match(mobile, /START_FREE_CTA/);
+    assert.match(nav, /NAV_TRIAL_CTA/);
+    assert.match(mobile, /NAV_TRIAL_CTA/);
     assert.doesNotMatch(nav + mobile, /Try your first Study Hall free/);
   });
 
@@ -77,7 +78,8 @@ describe("Study Hall routine redesign — public positioning", () => {
     assert.match(pricing, /coming next/);
     assert.doesNotMatch(pricing, /Subscribe|Buy Study Hall 365|href=.*\/checkout/);
     assert.doesNotMatch(offers, /href: "\/checkout"|stripe|subscription/);
-    assert.doesNotMatch(PUBLIC, /Plan My Week|entitlement|Daily unit|Available state/);
+    assert.doesNotMatch(PUBLIC, /entitlement|Daily unit|Available state/);
+    assert.match(read("src/app/(marketing)/how-it-works/page.tsx") + read("src/lib/galaxy-1b-copy.ts"), /Plan My Week/);
     assert.doesNotMatch(read("src/app/dashboard/student/page.tsx"), /Routine365|HourChapter/);
   });
 
