@@ -2,43 +2,43 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export type PortalStep = "plan" | "next" | "join" | "review";
+export type PortalStep = "plan" | "join" | "review" | "all";
 
 export const PORTAL_STEPS: ReadonlyArray<{ id: PortalStep; title: string; copy: string }> = [
   {
     id: "plan",
     title: "Plan the week.",
-    copy: "See what’s coming up and plan Study Halls for the week.",
-  },
-  {
-    id: "next",
-    title: "See what’s next.",
-    copy: "Your next Study Hall, the time, and the Guide, right at the top.",
+    copy: "Set Study Halls for the days you want. The week shows what’s done, what’s next, and what’s open.",
   },
   {
     id: "join",
     title: "Join when it’s time.",
-    copy: "One click to join your child’s Study Hall.",
+    copy: "Your next Study Hall, the time, and the Guide sit at the top. One click to join.",
   },
   {
     id: "review",
-    title: "See how it went.",
-    copy: "Read the report and watch the recording after each Study Hall.",
+    title: "See what happened.",
+    copy: "After every Study Hall, the report and the recording are waiting for you.",
+  },
+  {
+    id: "all",
+    title: "Keep everything in one place.",
+    copy: "Scheduling, joining, reports, recordings, and your household’s Study Halls, all in the Parent Portal.",
   },
 ];
 
 const STAGE_QUERY = "(min-width: 1024px)";
 
 /**
- * Design width of the Parent Portal representation on desktop. The UI lays
- * out once at this width; the whole frame is then scaled as one object so it
- * fits the usable viewport (column width × height beneath the fixed header).
- * Mirrors --sh-portal-design-width in globals.css.
+ * Design width of the marketing preview on desktop. The preview is composed
+ * to read at this width (about 760 × 500 at scale 1); the whole frame is then
+ * scaled as one object only when the column or the height beneath the fixed
+ * header is smaller than that. Mirrors --sh-portal-design-width in globals.css.
  */
-export const PORTAL_DESIGN_WIDTH = 880;
+export const PORTAL_DESIGN_WIDTH = 760;
 /** Space kept clear above and below the sticky frame, in px. */
 const STAGE_BREATHING_PX = 28;
-const STAGE_MIN_SCALE = 0.55;
+const STAGE_MIN_SCALE = 0.7;
 
 /**
  * Sticky product reveal. The Parent Portal stays anchored while four short

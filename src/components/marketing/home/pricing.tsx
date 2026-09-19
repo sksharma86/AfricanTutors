@@ -14,8 +14,10 @@ import {
 export const PACK_10_DISPLAY_USD = PACKAGE_10SH_PRICE_CENTS / 100;
 const PACK_10_SAVINGS_USD = PAYG_PRICE_USD * PACKAGE_10SH_STUDY_HALLS - PACK_10_DISPLAY_USD;
 
-export const HOME_ROUTINE_HEADLINE = "The hour becomes expected.";
-export const HOME_ROUTINE_COPY = "It’s Study Hall time. The student sits down. The work begins.";
+export const HOME_ROUTINE_KICKER = "The routine";
+export const HOME_ROUTINE_HEADLINE = "It becomes part of the week.";
+export const HOME_ROUTINE_COPY =
+  "Study Hall has a time. Your child knows when to sit down, get started, and get the work done.";
 export const HOME_PRICING_TITLE = "Choose what works for your family.";
 export const HOME_PAYG_NAME = "One Study Hall";
 export const HOME_PACK_NAME = `${PACKAGE_10SH_STUDY_HALLS} Study Halls`;
@@ -30,8 +32,9 @@ export const HOME_TRUST_LINE =
 
 /**
  * Moment 5 — routine + pricing. The dark reveal gives way to a lamp-lit desk
- * and the idea that the hour becomes expected. Two purchasing options are set
- * as quiet editorial rows; Study Hall 365 is the culmination.
+ * and the culmination of the habit story: Study Hall becomes a normal part of
+ * the child's week. Two purchasing options are set as quiet editorial rows;
+ * Study Hall 365 is the culmination.
  */
 export function HomePricing({
   ctaHref,
@@ -58,9 +61,11 @@ export function HomePricing({
         </div>
         <div className="sh-home-routine__shade" aria-hidden />
         <Container size="wide" className="sh-home-routine__inner">
-          <p className="sh-home-kicker sh-home-kicker--light">The routine</p>
-          <h2 className="sh-home-display sh-home-routine__title">{HOME_ROUTINE_HEADLINE}</h2>
-          <p className="sh-home-routine__copy">{HOME_ROUTINE_COPY}</p>
+          <div className="sh-home-routine__block">
+            <p className="sh-home-kicker sh-home-kicker--light">{HOME_ROUTINE_KICKER}</p>
+            <h2 className="sh-home-display sh-home-routine__title">{HOME_ROUTINE_HEADLINE}</h2>
+            <p className="sh-home-routine__copy">{HOME_ROUTINE_COPY}</p>
+          </div>
         </Container>
       </div>
 

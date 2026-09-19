@@ -73,10 +73,11 @@ describe("Galaxy 2 homepage — visual system contracts", () => {
   it("keeps the sticky product reveal desktop-only and the stage static below", () => {
     const desktop = media("min-width: 1024px");
     assert.match(desktop, /\.sh-home-portal__stage-wrap \{[\s\S]*position: sticky;/);
-    assert.match(desktop, /\.sh-home-portal__reveal \{[\s\S]*grid-template-columns: minmax\(0, 4fr\) minmax\(0, 8fr\)/);
-    assert.match(desktop, /\.sh-home-portal__side \{[\s\S]*display: flex;/);
+    assert.match(desktop, /\.sh-home-portal__reveal \{[\s\S]*grid-template-columns: minmax\(0, 3\.4fr\) minmax\(0, 8\.6fr\)/);
+    assert.match(desktop, /\.sh-home-portal__stage \{[\s\S]*zoom: var\(--sh-portal-scale/);
     assert.doesNotMatch(block(".sh-home-portal__stage-wrap"), /position: sticky/);
-    assert.match(block(".sh-home-portal__side"), /display: none/);
+    assert.doesNotMatch(css, /\.sh-home-portal__side\b/, "no desktop sidebar copy in the marketing preview");
+    assert.match(media("min-width: 640px"), /\.sh-home-portal__body \{[\s\S]*"lead week"[\s\S]*"status recent"/);
     assert.match(css, /\.sh-home-portal__stage\[data-step="plan"\] \[data-region="plan"\]/);
     assert.match(css, /\.sh-home-portal__stage\[data-step="join"\] \[data-region="join"\]/);
   });

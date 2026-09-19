@@ -71,7 +71,12 @@ describe("Galaxy 2 homepage — one continuous story with the approved copy", ()
     assert.match(pricing, /Unlimited Study Halls, one per day, every day of the year\./);
     assert.match(pricing, /Use them when you want, at the times that work for your family\./);
     assert.match(pricing, /Make it a routine\./);
-    assert.match(pricing, /The hour becomes expected\./);
+    assert.match(pricing, /HOME_ROUTINE_HEADLINE = "It becomes part of the week\."/);
+    assert.match(
+      pricing,
+      /Study Hall has a time\. Your child knows when to sit down, get started, and get the work done\./,
+    );
+    assert.doesNotMatch(pricing, /The hour becomes expected|It’s Study Hall time/);
   });
 
   it("sets every editorial statement whole: no arbitrary single-word italics", () => {
@@ -102,12 +107,12 @@ describe("Galaxy 2 homepage — one continuous story with the approved copy", ()
     assert.doesNotMatch(home, /sibling/i);
   });
 
-  it("keeps the header restrained: three links, Sign In, Try It Free", () => {
+  it("keeps the header restrained: four links, Sign In, Try It Free", () => {
     const constants = read("src/lib/constants.ts");
     const navBlock = constants.slice(constants.indexOf("PUBLIC_NAV_LINKS"), constants.indexOf("] as const;"));
     assert.deepEqual(
       [...navBlock.matchAll(/label: "([^"]+)"/g)].map((m) => m[1]),
-      ["How It Works", "Why It Works", "Pricing"],
+      ["How It Works", "Why It Works", "Pricing", "FAQ"],
     );
     const nav = read("src/components/layout/navbar.tsx");
     const mobile = read("src/components/layout/mobile-menu.tsx");
@@ -128,21 +133,44 @@ describe("Galaxy 2 homepage — product truth", () => {
     assert.match(stage, /Join Study Hall →/);
     assert.match(stage, /Your Study Hall Week/);
     assert.match(stage, /Plan my week/);
+    assert.match(stage, /Book a Study Hall/);
+    assert.match(stage, /Household/);
     assert.match(stage, /Recent Study Hall/);
     assert.match(stage, /Report ready/);
     assert.match(stage, /Recording ready/);
+    assert.match(stage, /Read report/);
+    assert.match(stage, /Watch recording/);
     assert.match(stage, /Study Halls remaining/);
     for (const region of ["plan", "next", "join", "review"]) {
       assert.match(stage, new RegExp(`data-region="${region}"`));
     }
-    assert.doesNotMatch(stage, /Matching|AI tutor|live chat|leaderboard|streak|grade tracker/i);
+    assert.doesNotMatch(stage, /Matching|AI tutor|live chat|leaderboard|streak|grade tracker|messages|chat/i);
 
-    for (const title of ["Plan the week.", "See what’s next.", "Join when it’s time.", "See how it went."]) {
+    for (const title of ["Plan the week.", "Join when it’s time.", "See what happened.", "Keep everything in one place."]) {
       assert.ok(reveal.includes(title), `reveal step "${title}"`);
     }
+    assert.equal([...reveal.matchAll(/^\s+id: "(plan|join|review|all)",$/gm)].length, 4, "exactly four steps");
     assert.match(reveal, /IntersectionObserver/);
     assert.match(reveal, /min-width: 1024px/);
     assert.match(read("src/components/marketing/home/portal.tsx"), /PortalReveal[\s\S]*PortalStage/);
+  });
+
+  it("composes the week as a compact day list with the real strip states, not seven crushed columns", () => {
+    const stage = read("src/components/marketing/home/portal-stage.tsx");
+    const css = read("src/app/globals.css");
+    assert.doesNotMatch(stage, /pp-week-strip|pp-week-day/);
+    assert.match(stage, /sh-home-portal__days/);
+    for (const kind of ["completed", "none", "today", "scheduled"]) {
+      assert.match(stage, new RegExp(`kind: "${kind}"`));
+    }
+    assert.match(stage, /mark: "✓"/);
+    assert.match(stage, /mark: "—"/);
+    assert.match(stage, /mark: "Today"/);
+    assert.match(stage, /mark: "•"/);
+    assert.equal([...stage.matchAll(/\{ day: "(Mon|Tue|Wed|Thu|Fri|Sat|Sun)"/g)].length, 7);
+    assert.match(css, /\.sh-home-portal__day \{[\s\S]*grid-template-columns: 2\.4rem 1\.6rem minmax\(0, 1fr\) auto;/);
+    assert.match(css, /\.sh-home-portal__day-label \{[\s\S]*white-space: nowrap;/);
+    assert.match(css, /\.sh-home-portal__stage\[data-step="all"\] \[data-region\] \{[\s\S]*opacity: 1;/);
   });
 
   it("keeps homepage prices truthful to the catalog and the savings math", () => {
@@ -176,13 +204,14 @@ describe("Galaxy 2 homepage — product truth", () => {
   it("fits the sticky Parent Portal to the viewport as one scaled object", () => {
     const reveal = read("src/components/marketing/home/portal-reveal.tsx");
     const css = read("src/app/globals.css");
-    assert.match(reveal, /PORTAL_DESIGN_WIDTH = 880/);
+    assert.match(reveal, /PORTAL_DESIGN_WIDTH = 760/);
+    assert.match(reveal, /STAGE_MIN_SCALE = 0\.7/);
     assert.match(reveal, /ResizeObserver/);
     assert.match(reveal, /window\.innerHeight - headerH/);
     assert.match(reveal, /Math\.min\(1, widthScale, heightScale\)/);
     assert.match(reveal, /--sh-portal-scale/);
     assert.match(reveal, /--sh-portal-top/);
-    assert.match(css, /--sh-portal-design-width: 880px/);
+    assert.match(css, /--sh-portal-design-width: 760px/);
     assert.match(css, /zoom: var\(--sh-portal-scale/);
     assert.match(css, /top: var\(--sh-portal-top/);
     assert.doesNotMatch(css, /max-height: 940px|max-height: 780px|max-height: 680px/);
