@@ -1,7 +1,8 @@
 /**
  * Galaxy 1B customer-facing copy for How It Works and Why It Works.
  * Keep claims aligned with implemented product rules. Do not invent
- * certifications, grade outcomes, or live Study Hall Unlimited checkout.
+ * certifications, grade outcomes, or live Study Hall 365 checkout.
+ * Public FAQ content lives in src/lib/faq.ts (canonical) and renders at /faq.
  */
 
 export const HOW_IT_WORKS_META_TITLE = "How It Works";
@@ -81,58 +82,20 @@ export const HOW_IT_WORKS_TRUST_ITEMS = [
 ] as const;
 
 export const HOW_IT_WORKS_WHO_KICKER = "A good fit";
-export const HOW_IT_WORKS_WHO_HEADLINE = "Study Hall can be useful when a child";
+export const HOW_IT_WORKS_WHO_HEADLINE = "For the nights when getting started is the hard part.";
+export const HOW_IT_WORKS_WHO_LEDE =
+  "Study Hall gives a child a dedicated hour, a live Guide, and a clear place to get the work done.";
 export const HOW_IT_WORKS_WHO_ITEMS = [
-  "has homework but needs structure",
-  "gets distracted",
-  "procrastinates",
-  "needs reminders to keep moving",
-  "works better when another person is present",
-  "turns nightly homework into a management job for parents",
-  "simply works better with a consistent routine",
+  "Homework gets pushed off.",
+  "Distractions keep winning.",
+  "A child needs reminders to keep moving.",
+  "Parents are tired of managing every step.",
+  "Having someone present helps them stay with the work.",
+  "A consistent time makes homework easier to begin.",
 ] as const;
 
-export const HOW_IT_WORKS_FAQ_KICKER = "Questions";
-export const HOW_IT_WORKS_FAQ_HEADLINE = "The short answers.";
-
-export const HOW_IT_WORKS_FAQ = [
-  {
-    q: "Is this tutoring?",
-    a: "No. The child does their own work. Guides do not tutor, teach lessons, provide answers, or complete assignments.",
-  },
-  {
-    q: "Is Study Hall private?",
-    a: "Yes. Each Study Hall is a private session for your child or household with one dedicated Guide. It is not a group class or a grid of students.",
-  },
-  {
-    q: "What does the Guide do?",
-    a: "The Guide stays present throughout the hour — for accountability, encouragement, redirection, and help organizing the work in front of your child.",
-  },
-  {
-    q: "What if my child gets stuck?",
-    a: "The Guide helps them stay organized and keep moving. The Guide does not teach the lesson or supply answers. If your child needs you, the Guide can Call Parent through the platform.",
-  },
-  {
-    q: "Can siblings participate?",
-    a: "Up to three children from the same family may participate when all children remain continuously visible on camera.",
-  },
-  {
-    q: "How long is a Study Hall?",
-    a: "A Study Hall is 60 minutes.",
-  },
-  {
-    q: "Can I schedule ahead?",
-    a: "Yes. Book a time that fits, or use Plan My Week to set more than one Study Hall at once.",
-  },
-  {
-    q: "Are sessions recorded?",
-    a: "Yes. Sessions are recorded for quality and safety. Parents can access recordings for 60 days after the Study Hall.",
-  },
-  {
-    q: "What happens after Study Hall?",
-    a: "You can read a short report and, when a recording is available, review the session from the Parent Portal.",
-  },
-] as const;
+export const HOW_IT_WORKS_CTA_HEADLINE = "Try your first Study Hall free";
+export const HOW_IT_WORKS_CTA_SUPPORT = "A personal hour, with a live Guide, right at home.";
 
 export const WHY_IT_WORKS_META_TITLE = "Why It Works";
 export const WHY_IT_WORKS_META_DESCRIPTION =
@@ -167,11 +130,14 @@ export const WHY_IT_WORKS_AFTER = [
 ] as const;
 
 export const WHY_IT_WORKS_WEEK_KICKER = "A place in the week";
-export const WHY_IT_WORKS_WEEK_HEADLINE = "The hour becomes expected.";
+export const WHY_IT_WORKS_WEEK_HEADLINE = "Study Hall finds its place in the week.";
 export const WHY_IT_WORKS_WEEK_LEDE =
   "Not every family uses Study Hall every day. The point is that homework has a known time — the way dinner or practice already does.";
 export const WHY_IT_WORKS_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
 export const WHY_IT_WORKS_WEEK_MARKS = [false, true, false, true, true] as const;
+export const WHY_IT_WORKS_WEEK_ON_LABEL = "Study Hall";
+export const WHY_IT_WORKS_WEEK_OFF_LABEL = "Open evening";
+export const WHY_IT_WORKS_WEEK_LEGEND = "One family’s week: three Study Halls, two open evenings. Yours can look different.";
 
 export const WHY_IT_WORKS_CONSISTENCY_HEADLINE = "Consistency";
 export const WHY_IT_WORKS_CONSISTENCY_BODY =
@@ -208,5 +174,5 @@ export const WHY_IT_WORKS_RHYTHM_BODY =
 export const WHY_IT_WORKS_UNLIMITED_KICKER = "Keep the routine";
 export const WHY_IT_WORKS_UNLIMITED_HEADLINE = "Make Study Hall part of the week.";
 export const WHY_IT_WORKS_UNLIMITED_BODY =
-  "Once the week has a place for Study Hall, it is easier to keep that place. Study Hall Unlimited makes one Study Hall available each day, so the routine does not depend on starting from scratch every time.";
+  "Once the week has a place for Study Hall, it is easier to keep that place. Study Hall 365 makes one Study Hall available each day, so the routine does not depend on starting from scratch every time.";
 export const WHY_IT_WORKS_PRICING_LABEL = "View pricing";

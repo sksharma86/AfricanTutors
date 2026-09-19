@@ -35,7 +35,10 @@ import {
   WHY_IT_WORKS_WEEK_HEADLINE,
   WHY_IT_WORKS_WEEK_KICKER,
   WHY_IT_WORKS_WEEK_LEDE,
+  WHY_IT_WORKS_WEEK_LEGEND,
   WHY_IT_WORKS_WEEK_MARKS,
+  WHY_IT_WORKS_WEEK_OFF_LABEL,
+  WHY_IT_WORKS_WEEK_ON_LABEL,
   WHY_IT_WORKS_WEEKDAYS,
 } from "@/lib/galaxy-1b-copy";
 
@@ -128,17 +131,18 @@ export function WhyItWorksWeek() {
           <h2 className="sh-home-display sh-galaxy-section-title">{WHY_IT_WORKS_WEEK_HEADLINE}</h2>
           <p className="sh-galaxy-lede">{WHY_IT_WORKS_WEEK_LEDE}</p>
         </Reveal>
-        <ol className="sh-galaxy-week__strip">
+        <ol className="sh-galaxy-week__strip" aria-label="An example week">
           {WHY_IT_WORKS_WEEKDAYS.map((day, index) => (
             <li
               key={day}
               className={WHY_IT_WORKS_WEEK_MARKS[index] ? "sh-galaxy-week__day is-on" : "sh-galaxy-week__day"}
             >
               <span>{day}</span>
-              <strong>{WHY_IT_WORKS_WEEK_MARKS[index] ? "Study Hall" : "Open evening"}</strong>
+              <strong>{WHY_IT_WORKS_WEEK_MARKS[index] ? WHY_IT_WORKS_WEEK_ON_LABEL : WHY_IT_WORKS_WEEK_OFF_LABEL}</strong>
             </li>
           ))}
         </ol>
+        <p className="sh-galaxy-week__legend">{WHY_IT_WORKS_WEEK_LEGEND}</p>
       </Container>
     </section>
   );

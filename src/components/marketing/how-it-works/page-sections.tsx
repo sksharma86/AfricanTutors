@@ -5,9 +5,8 @@ import { Reveal } from "@/components/marketing/reveal";
 import { TrackCta } from "@/components/marketing/track-cta";
 import { Container } from "@/components/ui/container";
 import {
-  HOW_IT_WORKS_FAQ,
-  HOW_IT_WORKS_FAQ_HEADLINE,
-  HOW_IT_WORKS_FAQ_KICKER,
+  HOW_IT_WORKS_CTA_HEADLINE,
+  HOW_IT_WORKS_CTA_SUPPORT,
   HOW_IT_WORKS_GUIDE_DISTINCTION,
   HOW_IT_WORKS_GUIDE_DOES,
   HOW_IT_WORKS_GUIDE_HEADLINE,
@@ -30,6 +29,7 @@ import {
   HOW_IT_WORKS_WHO_HEADLINE,
   HOW_IT_WORKS_WHO_ITEMS,
   HOW_IT_WORKS_WHO_KICKER,
+  HOW_IT_WORKS_WHO_LEDE,
 } from "@/lib/galaxy-1b-copy";
 
 export function HowItWorksHero({
@@ -181,39 +181,14 @@ export function HowItWorksWho() {
       <Container size="wide">
         <Reveal>
           <p className="sh-home-kicker">{HOW_IT_WORKS_WHO_KICKER}</p>
-          <h2 className="sh-home-display sh-galaxy-who__title">{HOW_IT_WORKS_WHO_HEADLINE}</h2>
+          <h2 className="sh-home-display sh-galaxy-section-title sh-galaxy-who__title">{HOW_IT_WORKS_WHO_HEADLINE}</h2>
+          <p className="sh-galaxy-lede">{HOW_IT_WORKS_WHO_LEDE}</p>
           <ul className="sh-galaxy-who__list">
             {HOW_IT_WORKS_WHO_ITEMS.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
         </Reveal>
-      </Container>
-    </section>
-  );
-}
-
-export function HowItWorksFaq() {
-  return (
-    <section className="sh-galaxy-faq">
-      <Container size="wide">
-        <Reveal>
-          <p className="sh-home-kicker">{HOW_IT_WORKS_FAQ_KICKER}</p>
-          <h2 className="sh-home-display sh-galaxy-section-title">{HOW_IT_WORKS_FAQ_HEADLINE}</h2>
-        </Reveal>
-        <dl className="sh-galaxy-faq__list">
-          {HOW_IT_WORKS_FAQ.map((item) => (
-            <div key={item.q}>
-              <details className="sh-galaxy-faq__item">
-                <summary>
-                  <dt>{item.q}</dt>
-                  <span aria-hidden>+</span>
-                </summary>
-                <dd>{item.a}</dd>
-              </details>
-            </div>
-          ))}
-        </dl>
       </Container>
     </section>
   );
@@ -230,8 +205,8 @@ export function HowItWorksCta({
     <section className="sh-galaxy-cta">
       <Container size="wide">
         <Reveal>
-          <h2 className="sh-home-display sh-galaxy-cta__title">Try your first Study Hall free</h2>
-          <p className="sh-galaxy-cta__support">A personal hour, with a live Guide, right at home.</p>
+          <h2 className="sh-home-display sh-galaxy-cta__title">{HOW_IT_WORKS_CTA_HEADLINE}</h2>
+          <p className="sh-galaxy-cta__support">{HOW_IT_WORKS_CTA_SUPPORT}</p>
           <TrackCta
             href={primaryHref}
             cta={primaryLabel}

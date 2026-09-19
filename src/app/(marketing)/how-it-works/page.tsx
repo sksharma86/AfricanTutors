@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { HomeHeaderScroll } from "@/components/marketing/home/header-scroll";
 import {
   HowItWorksCta,
-  HowItWorksFaq,
   HowItWorksGuide,
   HowItWorksHero,
   HowItWorksJourney,
@@ -36,7 +35,6 @@ export default async function HowItWorksPage() {
       <HowItWorksParent />
       <HowItWorksTrust />
       <HowItWorksWho />
-      <HowItWorksFaq />
       <HowItWorksCta primaryHref={primary.href} primaryLabel={primary.label} />
     </div>
   );
