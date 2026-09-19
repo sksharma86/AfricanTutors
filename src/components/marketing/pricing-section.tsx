@@ -61,7 +61,7 @@ export function PricingSection({
           <div className="grid gap-8 sm:grid-cols-2">
             {supporting.map((offer) => (
               <div key={offer.id} data-offer={offer.id}>
-                <p className="text-[13px] font-medium text-ink-400">{offer.name}</p>
+                <p className="text-[13px] font-medium text-ink-500">{offer.name}</p>
                 <p className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-ink-900">
                   {offer.price}
                 </p>
@@ -70,7 +70,7 @@ export function PricingSection({
             ))}
           </div>
 
-          <div className="max-w-xl space-y-2 text-[14px] leading-6 text-ink-400">
+          <div className="max-w-xl space-y-2 text-[14px] leading-6 text-ink-500">
             <p>
               {FAMILY_VALUE_EYEBROW} {FAMILY_VALUE_BODY}
             </p>

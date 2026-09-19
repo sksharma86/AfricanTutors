@@ -232,6 +232,9 @@ body {
   --sh-night: #0c0b0a;
   --sh-muted: #625c53;
   --sh-subtle: #8c8578;
+  /* Smallest functional text on paper/cream (eyebrows, captions, facts):
+     still warm and quiet, but at least 4.5:1 on every light surface. */
+  --sh-eyebrow: #6f685c;
   --sh-accent: #c9a227;
   --sh-line: rgba(20, 18, 15, 0.1);
   --sh-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -253,7 +256,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--sh-subtle);
+  color: var(--sh-eyebrow);
 }
 
 .sh-home .sh-home-kicker--light {
@@ -483,7 +486,7 @@ body {
   margin-top: 0.9rem;
   font-size: 0.8rem;
   letter-spacing: 0.02em;
-  color: var(--sh-subtle);
+  color: var(--sh-eyebrow);
 }
 
 /* --------------------------------------------------------------------------
@@ -957,7 +960,16 @@ body {
 }
 
 .sh-home-portal__greeting {
-  padding: 0.1rem 0.15rem 0;
+  padding: 0.15rem 0.15rem 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--pp-ink);
+}
+
+.sh-home-portal__greeting span {
+  font-weight: 500;
+  color: var(--pp-muted);
 }
 
 .sh-home-portal__next {
@@ -966,7 +978,7 @@ body {
   flex: 1;
   border-radius: 18px;
   background: #161c18;
-  padding: 1.05rem 1.15rem 1.15rem;
+  padding: 1rem 1.1rem 1.05rem;
   color: #f3eee5;
   box-shadow: var(--pp-shadow-2);
 }
@@ -1020,10 +1032,11 @@ body {
   grid-template-columns: 2.4rem 1.6rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.35rem;
-  min-height: 1.7rem;
+  min-height: 1.6rem;
   padding: 0 0.6rem;
   border-radius: 9px;
   font-size: 12.5px;
+  line-height: 1.2;
   color: var(--pp-ink);
 }
 
@@ -1395,7 +1408,7 @@ body {
 .sh-home-close__facts {
   margin-top: 0.9rem;
   font-size: 0.8125rem;
-  color: var(--sh-subtle);
+  color: var(--sh-eyebrow);
 }
 
 /* --------------------------------------------------------------------------
@@ -1685,7 +1698,7 @@ body:has(.sh-home) footer .max-w-7xl.grid {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--sh-subtle);
+  color: var(--sh-eyebrow);
 }
 
 .sh-home-evening__mark {
@@ -1832,8 +1845,9 @@ body:has(.sh-home) footer .max-w-7xl.grid {
   margin-top: 1.75rem;
   text-align: center;
   font-size: 0.95rem;
+  line-height: 1.7;
   letter-spacing: 0.01em;
-  color: var(--sh-ink);
+  color: rgba(243, 238, 229, 0.78);
   overflow-wrap: break-word;
 }
 

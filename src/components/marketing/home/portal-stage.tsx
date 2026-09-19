@@ -48,10 +48,9 @@ export function PortalStage() {
 
       <div className="sh-home-portal__body">
         <div className="sh-home-portal__lead">
-          <div className="sh-home-portal__greeting" data-region="chrome">
-            <p className="text-[12px] font-medium text-[var(--pp-muted)]">Good evening,</p>
-            <p className="text-[1.25rem] font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">Priya</p>
-          </div>
+          <p className="sh-home-portal__greeting" data-region="chrome">
+            <span>Good evening,</span> Priya
+          </p>
 
           <div className="sh-home-portal__next pp-hero" data-region="next">
             <div className="pp-hero-atmosphere" />
