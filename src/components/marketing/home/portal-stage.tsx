@@ -34,7 +34,7 @@ export function PortalStage() {
           variant="product"
           size={20}
           className="pointer-events-none px-1"
-          textClassName="text-[12px]"
+          textClassName="text-[12px] whitespace-nowrap"
         />
         <nav className="mt-5 flex flex-col gap-0.5">
           {PARENT_PORTAL_NAV.map((item, i) => {
@@ -75,7 +75,7 @@ export function PortalStage() {
 
         <div className="sh-home-portal__greeting" data-region="chrome">
           <p className="text-[12px] font-medium text-[var(--pp-muted)]">Good evening,</p>
-          <p className="text-[1.2rem] font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">Priya</p>
+          <p className="text-[1.1rem] font-semibold tracking-[-0.03em] text-[var(--pp-ink)]">Priya</p>
         </div>
 
         <div className="sh-home-portal__grid">
@@ -83,18 +83,17 @@ export function PortalStage() {
             <div className="pp-hero-atmosphere" />
             <div className="relative">
               <p className="text-[10px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Next Study Hall</p>
-              <p className="mt-2 text-[2.1rem] font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-[2.4rem]">
+              <p className="mt-1.5 text-[1.9rem] font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-[2.1rem]">
                 6:30 PM
               </p>
               <p className="mt-1 text-[12.5px] text-white/68">Tonight</p>
-              <div className="mt-3 border-t border-white/12 pt-3">
+              <div className="mt-2.5 border-t border-white/12 pt-2.5">
                 <p className="text-[1rem] font-medium tracking-[-0.02em] text-white">Jordan</p>
-                <p className="mt-0.5 text-[12.5px] text-white/70">Confirmed</p>
-                <p className="mt-0.5 text-[12.5px] text-white/60">
-                  with Guide <span className="font-medium text-white/86">James</span>
+                <p className="mt-0.5 text-[12.5px] text-white/70">
+                  Confirmed · with Guide <span className="font-medium text-white/86">James</span>
                 </p>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span
                   data-region="join"
                   className="sh-home-portal__join inline-flex min-h-10 items-center rounded-[11px] bg-[#c9a227] px-4 text-[13px] font-semibold text-[#1c1915]"
@@ -115,15 +114,15 @@ export function PortalStage() {
                 <p className="mt-0.5 text-[12px] text-[var(--pp-muted)]">Sep 14 – Sep 20</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex min-h-8 items-center rounded-[10px] bg-[#1c1915] px-3 text-[12px] font-semibold text-white">
+                <span className="inline-flex min-h-7 items-center rounded-[9px] bg-[#1c1915] px-2.5 text-[12px] font-semibold text-white">
                   Plan my week
                 </span>
-                <span className="inline-flex min-h-8 items-center rounded-[10px] border border-[#1c1915]/12 bg-white px-3 text-[12px] font-semibold text-[#1c1915]">
+                <span className="inline-flex min-h-7 items-center rounded-[9px] border border-[#1c1915]/12 bg-white px-2.5 text-[12px] font-semibold text-[#1c1915]">
                   Book a Study Hall
                 </span>
               </div>
             </div>
-            <div className="pp-week-strip mt-3">
+            <div className="pp-week-strip mt-2.5">
               {PORTAL_STAGE_WEEK.map((day) => (
                 <div
                   key={day.date}
@@ -138,11 +137,9 @@ export function PortalStage() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[12.5px] font-medium text-[var(--pp-ink)]">
-              2 of 5 scheduled Study Halls completed this week.
-            </p>
-            <p className="mt-0.5 text-[12px] leading-5 text-[var(--pp-muted)]">
-              We’re keeping up with our Study Hall routine.
+            <p className="mt-2.5 text-[12.5px] font-medium text-[var(--pp-ink)]">
+              2 of 5 scheduled Study Halls completed this week.{" "}
+              <span className="font-normal text-[var(--pp-muted)]">We’re keeping up with our Study Hall routine.</span>
             </p>
           </div>
 
@@ -154,27 +151,31 @@ export function PortalStage() {
               </span>
               <span className="font-semibold">7 Study Halls remaining</span>
             </p>
-            <p className="mt-2 text-[12.5px] font-medium text-[var(--pp-ink)]">Hours →</p>
+            <p className="mt-1.5 text-[11.5px] leading-4 text-[var(--pp-muted)]">Prepaid Study Halls never expire.</p>
+            <p className="mt-2.5 text-[12.5px] font-medium text-[var(--pp-ink)]">Hours →</p>
           </div>
 
           <div className="sh-home-portal__recent" data-region="review">
             <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--pp-muted)] uppercase">Recent Study Hall</p>
-            <p className="mt-2 text-[12px] text-[var(--pp-muted)]">Tue · 6:30 PM</p>
-            <p className="mt-0.5 text-[13px] font-medium text-[var(--pp-ink)]">Jordan</p>
+            <p className="mt-2 text-[13px] font-medium text-[var(--pp-ink)]">
+              Jordan <span className="font-normal text-[var(--pp-muted)]">· Tue · 6:30 PM</span>
+            </p>
             <p className="text-[12px] text-[var(--pp-muted)]">with Guide Sarah</p>
-            <p className="mt-2 flex items-center gap-1.5 text-[12.5px] text-[var(--pp-positive)]">
-              <ParentIconReports className="h-3.5 w-3.5" />
-              Report ready
-            </p>
-            <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[var(--pp-positive)]">
-              <ParentIconPlay className="h-3.5 w-3.5" />
-              Recording ready
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[var(--pp-positive)]">
+              <span className="inline-flex items-center gap-1.5">
+                <ParentIconReports className="h-3.5 w-3.5" />
+                Report ready
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <ParentIconPlay className="h-3.5 w-3.5" />
+                Recording ready
+              </span>
+            </div>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
-              <span className="inline-flex min-h-8 items-center rounded-[10px] border border-[#1c1915]/12 bg-white px-2.5 text-[12px] font-semibold text-[#1c1915]">
+              <span className="inline-flex min-h-7 items-center rounded-[9px] border border-[#1c1915]/12 bg-white px-2.5 text-[12px] font-semibold text-[#1c1915]">
                 Read report
               </span>
-              <span className="inline-flex min-h-8 items-center rounded-[10px] border border-[#1c1915]/12 bg-white px-2.5 text-[12px] font-semibold text-[#1c1915]">
+              <span className="inline-flex min-h-7 items-center rounded-[9px] border border-[#1c1915]/12 bg-white px-2.5 text-[12px] font-semibold text-[#1c1915]">
                 Watch recording
               </span>
             </div>
