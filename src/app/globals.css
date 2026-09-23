@@ -2948,3 +2948,87 @@ body:has(.sh-home) footer .max-w-7xl.grid {
     transition: none;
   }
 }
+
+/* Study Hall room — the live-session threshold and in-room shell. Dark, lamp-lit,
+   and quiet: the video stage should read as "inside Study Hall", not a video call. */
+.sh-room {
+  position: relative;
+  background:
+    radial-gradient(ellipse 60% 45% at 78% -10%, rgba(255, 226, 150, 0.16) 0%, rgba(201, 162, 39, 0.05) 45%, transparent 70%),
+    linear-gradient(180deg, #14161c 0%, #0f1115 100%);
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+}
+
+.sh-room__atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 34% 40% at 84% 0%, rgba(255, 236, 186, 0.14), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 50% 115%, rgba(0, 0, 0, 0.5), transparent 70%);
+}
+
+.sh-room__door {
+  background:
+    radial-gradient(ellipse 52% 60% at 50% 12%, rgba(243, 210, 122, 0.12) 0%, rgba(243, 210, 122, 0.03) 45%, transparent 70%),
+    linear-gradient(180deg, #0e1014 0%, #0b0d10 100%);
+}
+
+.sh-room[data-room-state="open"] .sh-room__door {
+  background:
+    radial-gradient(ellipse 56% 64% at 50% 10%, rgba(255, 226, 150, 0.22) 0%, rgba(243, 210, 122, 0.06) 48%, transparent 72%),
+    linear-gradient(180deg, #121310 0%, #0b0d10 100%);
+}
+
+.sh-room__pill {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(243, 238, 229, 0.8);
+}
+.sh-room__pill .sh-room__dot {
+  background: rgba(243, 238, 229, 0.45);
+}
+.sh-room__pill[data-tone="live"] {
+  border-color: rgba(201, 162, 39, 0.45);
+  background: rgba(201, 162, 39, 0.12);
+  color: #f3d27a;
+}
+.sh-room__pill[data-tone="live"] .sh-room__dot {
+  background: #f3d27a;
+  box-shadow: 0 0 0 4px rgba(243, 210, 122, 0.18);
+}
+.sh-room__pill[data-tone="wait"] .sh-room__dot {
+  background: #f3d27a;
+  animation: sh-room-breathe 2.4s ease-in-out infinite;
+}
+
+.sh-room__presence-dot {
+  display: inline-block;
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 9999px;
+  background: #f3d27a;
+  box-shadow: 0 0 0 5px rgba(243, 210, 122, 0.14);
+  animation: sh-room-breathe 2.4s ease-in-out infinite;
+}
+.sh-room__presence-dot.is-together {
+  background: #7fc48f;
+  box-shadow: 0 0 0 5px rgba(127, 196, 143, 0.18);
+  animation: none;
+}
+
+.sh-room__stage {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+}
+
+@keyframes sh-room-breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-room__pill[data-tone="wait"] .sh-room__dot,
+  .sh-room__presence-dot {
+    animation: none;
+  }
+}

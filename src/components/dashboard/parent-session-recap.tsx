@@ -71,8 +71,9 @@ export function ParentSessionRecap({
         {escalated ? (
           <p className="mb-3 text-sm text-ink-600">A parent attention request was sent during this session.</p>
         ) : null}
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Guide report</p>
         {report ? (
-          <div className="space-y-6">
+          <div className="mt-3 space-y-6">
             {sections.map((child) => (
               <div
                 key={child.key}
@@ -89,20 +90,23 @@ export function ParentSessionRecap({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-ink-500">No report yet.</p>
+          <div className="mt-2">
+            <p className="text-sm text-ink-600">No report yet.</p>
+            <p className="mt-1 text-xs text-ink-400">Your Guide writes a short note on how the hour went right after the Study Hall.</p>
+          </div>
         )}
       </section>
 
       <section>
         <p className="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Recording</p>
         {!rec ? (
-          <p className="mt-2 text-sm text-ink-500">No recording yet.</p>
+          <p className="mt-2 text-sm text-ink-500">No recording yet. It appears here once the Study Hall recording is processed.</p>
         ) : rec.status === "failed" ? (
           <p className="mt-2 text-sm text-ink-600">Recording unavailable</p>
         ) : rec.deleted_at || (!rec.playable && rec.status === "completed") ? (
           <p className="mt-2 text-sm text-ink-600">Recording expired</p>
         ) : rec.status !== "completed" ? (
-          <p className="mt-2 text-sm text-ink-600">Recording processing</p>
+          <p className="mt-2 text-sm text-ink-600">Recording processing — it appears here when ready.</p>
         ) : (
           <div className="mt-2">
             <p className="text-sm text-ink-700">{recordingAvailabilityLabel(rec.retention_until)}</p>

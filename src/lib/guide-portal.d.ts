@@ -21,6 +21,11 @@ declare module "@/lib/guide-portal.mjs" {
     reported?: boolean,
     nowMs?: number,
   ): boolean;
+  export function guideReportsDue<T extends { id: string; status: string; scheduled_start?: string | null; scheduled_end?: string | null }>(
+    bookings: T[],
+    reportedIds: Set<string> | string[],
+    nowMs?: number,
+  ): T[];
   export function unfinishedGuideReport<T extends { id: string; status: string; scheduled_start?: string | null; scheduled_end?: string | null }>(
     bookings: T[],
     reportedIds: Set<string> | string[],
