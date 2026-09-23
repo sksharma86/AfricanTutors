@@ -1,10 +1,39 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { Container } from "@/components/ui/container";
 import { FOOTER_SECTIONS, SITE_NAME } from "@/lib/constants";
+import { hostnameFrom, isGuideRecruitmentHost } from "@/lib/guide-host.mjs";
 
-export function Footer() {
+export async function Footer() {
+  const hostHeader = await headers();
+  const guideSite = isGuideRecruitmentHost(
+    hostnameFrom(hostHeader.get("x-forwarded-host") || hostHeader.get("host")),
+  );
+  if (guideSite) {
+    return (
+      <footer className="border-t border-ink-100 bg-white">
+        <Container size="wide" className="flex flex-col gap-3 py-8 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between">
+          <BrandLockup href="/" variant="product" />
+          <p className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link href="/apply-to-tutor" className="hover:text-ink-900">
+              Become a Guide
+            </Link>
+            <Link href="/login" className="hover:text-ink-900">
+              Log in
+            </Link>
+            <Link href="/terms" className="hover:text-ink-900">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-ink-900">
+              Privacy
+            </Link>
+          </p>
+        </Container>
+      </footer>
+    );
+  }
   return (
     <footer className="border-t border-ink-100 bg-white">
       <Container size="wide" className="grid gap-7 py-8 md:grid-cols-[1.4fr_repeat(5,1fr)] md:gap-10 md:py-14">

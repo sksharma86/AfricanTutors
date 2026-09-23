@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 
 import { BrandLockup } from "@/components/brand/brand-lockup";
 import { MobileMenu } from "@/components/layout/mobile-menu";
@@ -7,10 +8,15 @@ import { LinkButton } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { PUBLIC_NAV_LINKS } from "@/lib/constants";
 import { getGuideApplicantInfo } from "@/lib/guide-applicant";
+import { hostnameFrom, isGuideRecruitmentHost } from "@/lib/guide-host.mjs";
 import { NAV_TRIAL_CTA } from "@/lib/public-offers";
 import { DASHBOARD_PATH_BY_ROLE } from "@/lib/roles";
 
 export async function Navbar() {
+  const hostHeader = await headers();
+  const guideSite = isGuideRecruitmentHost(
+    hostnameFrom(hostHeader.get("x-forwarded-host") || hostHeader.get("host")),
+  );
   const user = await getCurrentUser();
   const applicant = user?.role === "student" ? await getGuideApplicantInfo(user.id) : null;
   const dashboardHref = applicant
@@ -27,15 +33,24 @@ export async function Navbar() {
         <BrandLockup priority variant="product" />
 
         <nav className="hidden items-center gap-6 lg:flex">
-          {PUBLIC_NAV_LINKS.map((link) => (
+          {guideSite ? (
             <Link
-              key={link.href}
-              href={link.href}
+              href="/apply-to-tutor"
               className="text-[13px] font-medium tracking-[-0.01em] text-ink-500 transition-colors hover:text-ink-900"
             >
-              {link.label}
+              Become a Guide
             </Link>
-          ))}
+          ) : (
+            PUBLIC_NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-[13px] font-medium tracking-[-0.01em] text-ink-500 transition-colors hover:text-ink-900"
+              >
+                {link.label}
+              </Link>
+            ))
+          )}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -53,19 +68,26 @@ export async function Navbar() {
           ) : (
             <>
               <LinkButton href="/login" variant="ghost" size="sm">
-                Sign In
+                {guideSite ? "Log in" : "Sign In"}
               </LinkButton>
-              <LinkButton href="/signup" variant="primary" size="sm">
-                {NAV_TRIAL_CTA}
-              </LinkButton>
+              {guideSite ? (
+                <LinkButton href="/apply-to-tutor" variant="primary" size="sm">
+                  Become a Guide
+                </LinkButton>
+              ) : (
+                <LinkButton href="/signup" variant="primary" size="sm">
+                  {NAV_TRIAL_CTA}
+                </LinkButton>
+              )}
             </>
           )}
         </div>
 
         <MobileMenu
           isAuthed={Boolean(user)}
-          showParentBookCta={showParentBookCta}
+          showParentBookCta={showParentBookCta && !guideSite}
           dashboardHref={dashboardHref}
+          guideSite={guideSite}
         />
       </Container>
     </header>
