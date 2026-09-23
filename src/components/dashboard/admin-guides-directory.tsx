@@ -31,6 +31,8 @@ export type AdminGuideDirectoryRow = {
   profile_id: string;
   label: "pending" | "active" | "suspended" | "rejected" | "unknown";
   name: string;
+  email: string | null;
+  phone: string | null;
   upcoming: number;
   hasWeeklyHours: boolean;
   comp_rate_cents_per_hour: number | null;
@@ -99,6 +101,11 @@ export function AdminGuidesDirectory({
                   >
                     {g.name}
                   </Link>
+                  <p className="mt-0.5 text-[13px] text-[var(--mg-muted)]">
+                    {g.email ?? "Email unavailable"}
+                    {" · "}
+                    {g.phone ?? "No WhatsApp number"}
+                  </p>
                   <p className="mt-0.5 text-[13px] text-[var(--mg-muted)]">
                     {typeof g.comp_rate_cents_per_hour === "number"
                       ? formatCompensationHourly(g.comp_rate_cents_per_hour, g.comp_currency ?? "USD")

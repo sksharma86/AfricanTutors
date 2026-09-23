@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { authCallbackUrl } from "@/lib/auth-redirect";
+import { normalizeGuidePhone } from "@/lib/guide-phone.mjs";
 import { notifyWelcome } from "@/lib/notify";
 import { friendlySignupError, parentWelcomeEligible } from "@/lib/notifications/parent-welcome.mjs";
 import type { RequestableRole } from "@/lib/roles";
@@ -24,12 +25,30 @@ export async function POST(request: NextRequest) {
   const email = typeof body?.email === "string" ? body.email.trim() : "";
   const password = typeof body?.password === "string" ? body.password : "";
   const requestedRole = requestedRoleOf(body?.requestedRole);
+  const phone =
+    requestedRole === "tutor"
+      ? normalizeGuidePhone(
+          typeof body?.phone === "string" ? body.phone : "",
+          typeof body?.countryCallingCode === "string" ? body.countryCallingCode : "",
+        )
+      : null;
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
   if (password.length < 8) {
     return NextResponse.json({ error: "Choose a stronger password (at least 8 characters)." }, { status: 400 });
+  }
+  if (requestedRole === "tutor") {
+    if (!displayName) {
+      return NextResponse.json({ error: "Full name is required." }, { status: 400 });
+    }
+    if (!phone) {
+      return NextResponse.json(
+        { error: "Enter a WhatsApp number with your country code, like +254712345678." },
+        { status: 400 },
+      );
+    }
   }
 
   const supabase = await createSupabaseServerClient();
@@ -42,7 +61,11 @@ export async function POST(request: NextRequest) {
     email,
     password,
     options: {
-      data: { display_name: displayName, requested_role: requestedRole },
+      data: {
+        display_name: displayName,
+        requested_role: requestedRole,
+        ...(phone ? { phone_e164: phone } : {}),
+      },
       emailRedirectTo: authCallbackUrl(appUrl, "/dashboard"),
     },
   });
@@ -56,6 +79,14 @@ export async function POST(request: NextRequest) {
       await notifyWelcome(data.user!.id, displayName || data.user?.email || null);
     } catch {
       /* best-effort — never undo account creation */
+    }
+  }
+
+  if (data.session && phone) {
+    try {
+      await supabase.rpc("set_my_phone", { p_phone: phone });
+    } catch {
+      /* trigger stores phone_e164 from signup metadata when migration 0049 is applied */
     }
   }
 

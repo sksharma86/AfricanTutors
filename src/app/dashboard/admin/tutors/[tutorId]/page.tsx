@@ -5,6 +5,7 @@ import { GuideWorkforceActions } from "@/components/dashboard/guide-workforce-ac
 import { TutorRateForm } from "@/components/dashboard/tutor-rate-form";
 import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { ManagementPage } from "@/components/dashboard/management-page";
+import { lookupEmail } from "@/lib/admin-service";
 import { requireRole } from "@/lib/auth";
 import {
   aggregateCompensationByCurrency,
@@ -43,11 +44,11 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
   await requireRole("admin", `/dashboard/admin/tutors/${tutorId}`);
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: prof }, { data: bookings }, { data: earnings }, { data: disputes }, { data: reqs }, { data: avail }] =
+  const [{ data: prof }, { data: bookings }, { data: earnings }, { data: disputes }, { data: reqs }, { data: avail }, email] =
     await Promise.all([
       supabase!
         .from("tutor_profiles")
-        .select("status, approved_at, bio, timezone, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)")
+        .select("status, approved_at, bio, timezone, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name, phone_e164)")
         .eq("profile_id", tutorId)
         .maybeSingle(),
       supabase!.from("bookings").select("id, status, scheduled_start, public_reference, student_first_name").eq("tutor_id", tutorId),
@@ -55,6 +56,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
       supabase!.from("disputes").select("id").eq("tutor_id", tutorId),
       supabase!.from("tutor_cancellation_requests").select("id, status").eq("tutor_id", tutorId),
       supabase!.from("tutor_availability").select("id").eq("tutor_id", tutorId),
+      lookupEmail(tutorId),
     ]);
 
   const profile = prof as unknown as {
@@ -64,7 +66,7 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
     timezone: string | null;
     comp_rate_cents_per_hour: number | null;
     comp_currency: string | null;
-    profiles: { display_name: string | null } | null;
+    profiles: { display_name: string | null; phone_e164: string | null } | null;
   } | null;
   const name = profile?.profiles?.display_name ?? tutorId.slice(0, 8);
   const workforceLabel = guideWorkforceLabel(profile?.status, profile?.approved_at);
@@ -110,6 +112,11 @@ export default async function AdminTutorDetailPage({ params }: { params: Promise
             futureAssignments={upcomingRows}
           />
         </div>
+        <p className="mt-1 text-sm text-ink-500">
+          {email ?? "Email unavailable"}
+          {" · "}
+          {profile?.profiles?.phone_e164 ?? "No WhatsApp number"}
+        </p>
         <p className="mt-1 text-sm text-ink-500">
           Timezone: {profile?.timezone ?? "—"} · Rate:{" "}
           {typeof profile?.comp_rate_cents_per_hour === "number"

@@ -7,6 +7,7 @@ import {
 } from "@/components/dashboard/admin-guides-directory";
 import { ADMIN_PORTAL_NAV } from "@/components/dashboard/dashboard-shell";
 import { ManagementPage } from "@/components/dashboard/management-page";
+import { lookupEmail } from "@/lib/admin-service";
 import { requireRole } from "@/lib/auth";
 import { guideWorkforceLabel } from "@/lib/guide-workforce.mjs";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -35,7 +36,7 @@ export default async function AdminGuidesPage() {
     supabase!
       .from("tutor_profiles")
       .select(
-        "profile_id, status, approved_at, timezone, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name)",
+        "profile_id, status, approved_at, timezone, comp_rate_cents_per_hour, comp_currency, profiles!tutor_profiles_profile_id_fkey(display_name, phone_e164)",
       ),
     supabase!
       .from("bookings")
@@ -51,18 +52,30 @@ export default async function AdminGuidesPage() {
     ((avail ?? []) as { tutor_id: string }[]).map((row) => row.tutor_id).filter(Boolean),
   );
 
-  const guides = ((guideRows ?? []) as unknown as {
+  const guidesRaw = ((guideRows ?? []) as unknown as {
     profile_id: string;
     status: string;
     approved_at: string | null;
     timezone: string | null;
     comp_rate_cents_per_hour: number | null;
     comp_currency: string | null;
-    profiles: { display_name: string | null } | null;
-  }[]).map((g) => ({
+    profiles: { display_name: string | null; phone_e164: string | null } | null;
+  }[]);
+
+  const pendingIds = guidesRaw.map((g) => g.profile_id);
+  const emails = new Map<string, string | null>();
+  await Promise.all(
+    pendingIds.map(async (id) => {
+      emails.set(id, await lookupEmail(id));
+    }),
+  );
+
+  const guides = guidesRaw.map((g) => ({
     ...g,
     label: guideWorkforceLabel(g.status, g.approved_at) as AdminGuideDirectoryRow["label"],
     name: g.profiles?.display_name ?? g.profile_id.slice(0, 8),
+    email: emails.get(g.profile_id) ?? null,
+    phone: g.profiles?.phone_e164 ?? null,
     upcoming: upcomingByGuide.get(g.profile_id) ?? 0,
     hasWeeklyHours: weeklyHours.has(g.profile_id),
   }));
