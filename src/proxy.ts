@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getUserBounded } from "@/lib/auth-user.mjs";
+import { guideHostRoute, hostnameFrom } from "@/lib/guide-host.mjs";
 import { DASHBOARD_PATH_BY_ROLE, type Role } from "@/lib/roles";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -21,14 +22,31 @@ const PROTECTED_PREFIXES = ["/dashboard"];
  * not configured it passes requests through so the app still runs.
  */
 export async function proxy(request: NextRequest) {
+  const host = hostnameFrom(request.headers.get("x-forwarded-host") || request.headers.get("host"));
+  const guideRoute = guideHostRoute(host, request.nextUrl.pathname, request.nextUrl.search);
+  if (guideRoute?.type === "redirect") {
+    return NextResponse.redirect(guideRoute.destination, 308);
+  }
+
   if (!isSupabaseConfigured) {
+    if (guideRoute?.type === "rewrite") {
+      const url = request.nextUrl.clone();
+      url.pathname = guideRoute.pathname;
+      return NextResponse.rewrite(url);
+    }
     return NextResponse.next();
   }
 
   const path = request.nextUrl.pathname;
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => path.startsWith(prefix));
 
-  let response = NextResponse.next({ request });
+  const rewritePath = guideRoute?.type === "rewrite" ? guideRoute.pathname : null;
+  const continueWith = () =>
+    rewritePath
+      ? NextResponse.rewrite(new URL(rewritePath, request.url), { request })
+      : NextResponse.next({ request });
+
+  let response = continueWith();
 
   const supabase = createServerClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
     cookies: {
@@ -37,7 +55,7 @@ export async function proxy(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = continueWith();
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });
