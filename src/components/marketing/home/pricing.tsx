@@ -85,7 +85,7 @@ export function HomePricing({
               <div className="sh-home-option__body">
                 <p className="sh-home-option__detail">One private, 60 minute Study Hall. Pay as you go.</p>
                 <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_payg" variant="text" className="sh-home-option__cta">
-                  Get started →
+                  {ctaLabel} →
                 </TrackCta>
               </div>
             </article>
@@ -101,7 +101,7 @@ export function HomePricing({
                   Keep Study Halls on hand. Save {formatUsd(PACK_10_SAVINGS_USD)} when you buy ten. They never expire.
                 </p>
                 <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_10" variant="text" className="sh-home-option__cta">
-                  Get started →
+                  {ctaLabel} →
                 </TrackCta>
               </div>
             </article>
@@ -128,7 +128,7 @@ export function HomePricing({
               size="lg"
               className="sh-home-flagship__cta"
             >
-              Choose {HOME_365_NAME}
+              {ctaLabel}
             </TrackCta>
           </article>
         </div>

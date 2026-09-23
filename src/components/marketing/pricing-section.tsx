@@ -76,8 +76,8 @@ export function PricingSection({
             </p>
             <p>{FAMILY_VALUE_RATE}</p>
             <p>
-              The first hour is available now. À la carte Study Halls never expire. Study Hall 365
-              ($149/month) and the 10-Study-Hall option are coming next — there is no checkout for them yet.
+              The first hour is free, with no credit card. One Study Hall is $12. Ten Study Halls are $99
+              and never expire. Study Hall 365 is $149/month for one hour every calendar day.
             </p>
           </div>
         </div>

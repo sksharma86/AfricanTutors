@@ -1293,6 +1293,8 @@ export async function notifyCoverageFailureProtection(
     rendered: T.coverageFailureProtection({
       restorationLine,
       appUrl: APP_URL,
+      whenISO: b.scheduled_start,
+      tz: b.studentTz,
     }),
   });
   await deliverParentSms({
@@ -1307,7 +1309,26 @@ export async function notifyCoverageFailureProtection(
       tz: b.studentTz,
     }),
   });
-  return { status: "ok", parentNotified: true };
+  let guideNotified = false;
+  if (b.tutor_id) {
+    try {
+      const guide = await deliver({
+        key: `coverage-protect-guide:${bookingId}`,
+        type: "coverage_failure_guide",
+        accountId: b.tutor_id,
+        bookingId,
+        rendered: T.coverageFailureGuide({
+          whenISO: b.scheduled_start,
+          tz: b.tutorTz,
+          appUrl: APP_URL,
+        }),
+      });
+      guideNotified = guide?.status === "sent" || guide?.status === "duplicate";
+    } catch {
+      guideNotified = false;
+    }
+  }
+  return { status: "ok", parentNotified: true, guideNotified, hadGuide: Boolean(b.tutor_id) };
 }
 
 export async function notifyAdminAlert(dedupeKey: string, ctx: { title: string; summary: string; lines?: string[] }) {

@@ -196,7 +196,8 @@ describe("Galaxy 2 homepage — product truth", () => {
     assert.equal(STUDY_HALL_365_PRODUCT_NAME, "Study Hall 365");
     assert.match(pricing, /sh-home-flagship/);
     assert.match(pricing, /sh-home-option/);
-    assert.match(pricing, /Choose \{HOME_365_NAME\}/);
+    assert.match(pricing, /\{ctaLabel\}/);
+    assert.doesNotMatch(pricing, /Choose \{HOME_365_NAME\}|Get started →/);
     assert.match(pricing, /location="pricing_365"/);
     assert.match(pricing, /location="closing"/);
   });

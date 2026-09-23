@@ -146,7 +146,7 @@ export function decideRetryAction({
     return { ok: true };
   }
 
-  if (type === "coverage_cancellation") {
+  if (type === "coverage_cancellation" || type === "coverage_failure_guide") {
     if (!booking) return skip("booking_missing");
     if (booking.status !== "cancelled" && booking.status !== "expired") return skip("coverage_no_longer_valid");
     return { ok: true };

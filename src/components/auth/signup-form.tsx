@@ -96,12 +96,6 @@ export function SignupForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       {!isSupabaseConfigured ? <AuthNotConfiguredNotice /> : null}
 
-      {role === "tutor" ? (
-        <p className="text-xs leading-5 text-ink-400">
-          Guide applications are reviewed by our team before you get full Guide access.
-        </p>
-      ) : null}
-
       <div>
         <label htmlFor="displayName" className="block text-sm font-medium text-ink-800">
           Full name

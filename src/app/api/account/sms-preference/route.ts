@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     const msg = error.message || "";
     if (/does not exist|sms_transactional/i.test(msg)) {
-      return NextResponse.json({ error: "Text alerts are not available yet." }, { status: 503 });
+      return NextResponse.json({ error: "Text alerts can't be saved right now. You'll still get email about your Study Halls." }, { status: 503 });
     }
     if (/Not authorized|Not authenticated/i.test(msg)) {
       return NextResponse.json({ error: msg }, { status: 400 });

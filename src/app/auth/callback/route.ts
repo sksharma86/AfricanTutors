@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { resolvePostAuthHome } from "@/lib/auth-home";
-import { sanitizeNextPath } from "@/lib/auth-redirect";
+import { postAuthLanding, sanitizeNextPath } from "@/lib/auth-redirect";
 import { getUserBounded } from "@/lib/auth-user.mjs";
 import type { Role } from "@/lib/roles";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -77,8 +77,7 @@ export async function GET(request: NextRequest) {
   const role = (profile?.role ?? "student") as Role;
   const home = await resolvePostAuthHome(user.id, role);
 
-  // Always land on the role-appropriate home after confirm/login exchange.
-  // Avoid the marketing homepage and avoid ambiguous "confirmed" with no next step.
-  void next;
-  return NextResponse.redirect(new URL(home, origin));
+  // A specific Study Hall or portal path on the link is kept. Otherwise the
+  // role home — never the marketing site, never a bare /dashboard bounce.
+  return NextResponse.redirect(new URL(postAuthLanding(next, home), origin));
 }

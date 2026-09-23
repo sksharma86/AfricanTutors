@@ -64,7 +64,8 @@ describe("Visual product story — homepage contracts", () => {
     assert.match(section, /First Study Hall free/);
     assert.match(section, /Study Hall 365/);
     assert.match(section, /\$149/);
-    assert.match(section, /coming next/);
+    assert.match(section, /\$149\/month/);
+    assert.doesNotMatch(section, /coming next|not live yet|no checkout/i);
     assert.doesNotMatch(section, /Subscribe|Buy now|href=.*365/);
     assert.doesNotMatch(`${read("src/components/marketing/site-hero.tsx")}\n${section}`, /Starting at \$12/);
   });

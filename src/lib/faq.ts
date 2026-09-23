@@ -1,6 +1,6 @@
 /**
  * Public FAQ. Answers must match implemented rules.
- * Offer architecture is marketing presentation; 365 checkout is not live.
+ * Prices match the public offer: free first hour, $12, $99 for 10, $149/month.
  */
 export interface FaqItem {
   q: string;
@@ -50,7 +50,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "How much does it cost?",
-    a: "Your first 60-minute Study Hall is free. Pay as you go is $12 for one hour. À la carte is $99 for 10 Study Halls that never expire. Study Hall 365 is $149/month for one hour available every calendar day. Start with the free hour — 365 checkout is not live yet.",
+    a: "Your first 60-minute Study Hall is free. Pay as you go is $12 for one hour. À la carte is $99 for 10 Study Halls that never expire. Study Hall 365 is $149/month for one hour available every calendar day. Start with the free hour.",
   },
   {
     q: "Can siblings join the same Study Hall?",

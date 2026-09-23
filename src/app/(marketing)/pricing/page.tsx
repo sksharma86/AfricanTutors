@@ -32,7 +32,7 @@ export default async function PricingPage() {
     <div className="mkt-atmosphere">
       <PageHeader
         title="Try it. Then choose what fits."
-        description="The first Study Hall is free. Study Hall 365 is the flagship. No purchase buttons here — start with the free hour."
+        description="The first Study Hall is free. One hour is $12, ten are $99, and Study Hall 365 is $149/month."
       />
       <PricingSection withHeader={false} ctaHref={cta.href} ctaLabel={cta.label} />
       <Faq

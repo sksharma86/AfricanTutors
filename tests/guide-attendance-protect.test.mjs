@@ -161,10 +161,13 @@ describe("T-10 / T-2 customer protection policy", () => {
     });
     assert.equal(issue.kind, "guide_customer_protected");
     assert.match(issue.summary, /complimentary hour/i);
-    const lists = parentStudyHallLists([
-      { ...six, status: "cancelled" },
-      { ...seven, status: "confirmed" },
-    ]);
+    const lists = parentStudyHallLists(
+      [
+        { ...six, status: "cancelled" },
+        { ...seven, status: "confirmed" },
+      ],
+      nowMs,
+    );
     assert.equal(lists.next?.id, "b7");
     assert.equal(lists.cancelled.some((b) => b.id === "b6"), true);
   });

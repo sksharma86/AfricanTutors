@@ -40,6 +40,8 @@ export const NOTIFICATION_EVENTS = Object.freeze({
   GUIDE_CONFIRMATION_MISSED: "guide_confirmation_missed",
   COVERAGE_CANCELLATION: "coverage_cancellation",
   COVERAGE_FAILURE_PROTECTION: "coverage_failure_protection",
+  /** Guide email after T-2 protection cancels the hour they were assigned. */
+  COVERAGE_FAILURE_GUIDE: "coverage_failure_guide",
   GUIDE_ATTENDANCE_WHATSAPP: "guide_attendance_whatsapp",
   GUIDE_ATTENDANCE_CRITICAL: "guide_attendance_critical",
   GUIDE_OPEN_COVERAGE: "guide_open_coverage",
@@ -80,6 +82,7 @@ export const CHANNEL_POLICY = Object.freeze({
     "guide_open_coverage",
     "coverage_cancellation",
     "coverage_failure_protection",
+    "coverage_failure_guide",
     // PR7B: parent email after 365 membership upsert. Still not SMS/WhatsApp.
     "study_hall_365_started",
     "study_hall_365_renewed",

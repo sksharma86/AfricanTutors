@@ -262,7 +262,7 @@ export async function createBookingCheckout(
   } catch (err) {
     await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
     if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
-      throw new Error("Online payment is not available yet. Please try again later.");
+      throw new Error("Your free Study Hall is ready to book. Paid checkout isn't open on this account, and nothing was charged.");
     }
     throw new Error("We couldn't start secure checkout. Your account credit was not used — please try again.");
   }
@@ -356,7 +356,7 @@ export async function createPackageCheckout(packageId: string, baseUrl: string):
   } catch (err) {
     await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
     if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
-      throw new Error("Online payment is not available yet. Please try again later.");
+      throw new Error("Your free Study Hall is ready to book. Paid checkout isn't open on this account, and nothing was charged.");
     }
     throw new Error("We couldn't start secure checkout. Your account credit was not used — please try again.");
   }
@@ -536,7 +536,7 @@ export async function createStudyHall365Checkout(baseUrl: string): Promise<Start
   } catch (err) {
     await rollbackReservation(service, q.payment_id, "Stripe checkout could not be started; reservation released");
     if (err instanceof Error && err.message === "STRIPE_NOT_CONFIGURED") {
-      throw new Error("Online payment is not available yet. Please try again later.");
+      throw new Error("Your free Study Hall is ready to book. Paid checkout isn't open on this account, and nothing was charged.");
     }
     if (err instanceof Error && /already has a Study Hall 365/i.test(err.message)) {
       throw err;

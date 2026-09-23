@@ -82,6 +82,7 @@ export const HISTORICAL_RETRY_TYPES = Object.freeze([
   "admin_alert",
   "session_report_ready",
   "coverage_failure_protection",
+  "coverage_failure_guide",
 ]);
 
 const CURRENT_STATE_SET = new Set(CURRENT_STATE_RETRY_TYPES);

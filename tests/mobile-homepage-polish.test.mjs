@@ -67,7 +67,8 @@ describe("Mobile homepage polish", () => {
     assert.match(pricing, /First Study Hall free/);
     assert.match(pricing, /Then choose what fits|withHeader/);
     assert.match(pricing, /Study Hall 365/);
-    assert.match(pricing, /coming next/);
+    assert.match(pricing, /\$149\/month/);
+    assert.doesNotMatch(pricing, /coming next|not live yet|no checkout/i);
     assert.doesNotMatch(pricing, /Subscribe|Buy now/);
   });
 

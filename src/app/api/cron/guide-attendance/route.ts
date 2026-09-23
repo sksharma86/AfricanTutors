@@ -18,7 +18,8 @@ export const dynamic = "force-dynamic";
  * After a miss, open per-booking emergency replacement offers (first claim wins).
  * V1 notifies by email (Resend). WhatsApp is optional and never required.
  * One initial email per Guide per search cycle. Idempotent.
- * Does not silently auto-reassign, cancel, or refund.
+ * T-2 protection cancels an uncovered Study Hall and tells the parent and Guide.
+ * A failed cancel or a failed notice is reported to ops — it is not swallowed.
  */
 async function handle(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -58,6 +59,7 @@ async function handle(request: NextRequest) {
   let alertsSent = 0;
   let criticalAlerts = 0;
   let protectedCount = 0;
+  let protectFailed = 0;
   let offersOpened = 0;
   let offersNotified = 0;
   const notifiedLeaders = new Set<string>();
@@ -239,7 +241,15 @@ async function handle(request: NextRequest) {
       const { data: result, error } = await service.rpc("protect_unconfirmed_booking", {
         p_booking: row.booking_id,
       });
-      if (error) continue;
+      if (error) {
+        protectFailed += 1;
+        await notifyAdminAlert(`coverage-protect-failed:${row.booking_id}`, {
+          title: "T-2 customer protection failed",
+          summary: "The Study Hall was not cancelled because protection could not finish. The next run will try again.",
+          lines: [`Booking: ${row.booking_id}`, error.message],
+        });
+        continue;
+      }
       const payload = (result ?? {}) as {
         status?: string;
         reason?: string;
@@ -250,14 +260,34 @@ async function handle(request: NextRequest) {
       };
       if (payload.status === "cancelled" && payload.reason === "customer_protected") {
         protectedCount += 1;
-        await notifyCoverageFailureProtection(row.booking_id, {
+        const note = await notifyCoverageFailureProtection(row.booking_id, {
           isFreeTrial: Boolean(payload.is_free_trial),
           restoredMinutes: payload.restored_minutes ?? null,
           restoredCreditCents: payload.restored_credit_cents ?? null,
-        });
+        }).catch(() => ({ status: "failed" as const, parentNotified: false, guideNotified: false, hadGuide: false }));
+        if (note?.status !== "ok" || !note.parentNotified) {
+          protectFailed += 1;
+          await notifyAdminAlert(`coverage-protect-unnotified:${row.booking_id}`, {
+            title: "Parent was not told their Study Hall was cancelled",
+            summary: "T-2 protection cancelled the Study Hall, but the parent notice did not send.",
+            lines: [`Booking: ${row.booking_id}`, `Notice: ${note?.status ?? "unknown"}`],
+          });
+        } else if (note.hadGuide && !note.guideNotified) {
+          protectFailed += 1;
+          await notifyAdminAlert(`coverage-protect-guide-unnotified:${row.booking_id}`, {
+            title: "Guide was not told their Study Hall was cancelled",
+            summary: "T-2 protection cancelled the Study Hall and the parent was told. The Guide notice did not send.",
+            lines: [`Booking: ${row.booking_id}`],
+          });
+        }
       }
     } catch {
-      /* retries are safe; protect RPC is idempotent */
+      protectFailed += 1;
+      await notifyAdminAlert(`coverage-protect-failed:${row.booking_id}`, {
+        title: "T-2 customer protection failed",
+        summary: "Protection threw before the Study Hall could be cancelled or the family could be told. The next run will try again.",
+        lines: [`Booking: ${row.booking_id}`],
+      }).catch(() => {});
     }
   }
 
@@ -271,6 +301,7 @@ async function handle(request: NextRequest) {
     alertsSent,
     criticalAlerts,
     protectedCount,
+    protectFailed,
     offersOpened,
     offersNotified,
   });

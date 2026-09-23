@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   if (!isStripeConfigured) {
-    return NextResponse.json({ error: "Billing is not available yet." }, { status: 503 });
+    return NextResponse.json({ error: "We couldn't open billing for this account. Your free Study Hall is still available from Home." }, { status: 503 });
   }
 
   const body = await request.json().catch(() => null);

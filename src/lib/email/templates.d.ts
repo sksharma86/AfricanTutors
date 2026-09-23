@@ -109,6 +109,13 @@ export function guideOpenCoverageOffer(ctx: {
 export function coverageFailureProtection(ctx: {
   restorationLine?: string | null;
   appUrl?: string | null;
+  whenISO?: string | null;
+  tz?: string | null;
+}): RenderedEmail;
+export function coverageFailureGuide(ctx: {
+  whenISO?: string | null;
+  tz?: string | null;
+  appUrl?: string | null;
 }): RenderedEmail;
 export function coverageCancellation(ctx: {
   restorationLine?: string | null;

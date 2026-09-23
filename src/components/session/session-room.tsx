@@ -124,6 +124,7 @@ export function SessionRoom({
     preview === "left" ? { ended: true } : preview === "left-early" ? { ended: false } : null,
   );
   const [cameraWarning, setCameraWarning] = useState<{ title: string; body: string } | null>(null);
+  const [wakeHold, setWakeHold] = useState<"off" | "held" | "unavailable">("off");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<Frame | null>(null);
   const payloadRef = useRef<{ roomUrl: string; token: string } | null>(null);
@@ -148,6 +149,56 @@ export function SessionRoom({
       timeouts.forEach((t) => window.clearTimeout(t));
     };
   }, [nowMs, info.join_open_at, info.scheduled_end, info.join_close_at]);
+
+  // Keep the display awake while the Study Hall is live so an idle lock
+  // doesn't black out the recording. Re-request when the tab becomes visible
+  // again — the platform releases a lock as soon as the page is hidden.
+  useEffect(() => {
+    if (!inCall || preview) return;
+    let released = false;
+    let sentinel: { release: () => Promise<void> } | null = null;
+    const nav = navigator as Navigator & {
+      wakeLock?: {
+        request: (type: "screen") => Promise<{
+          release: () => Promise<void>;
+          addEventListener: (event: string, cb: () => void) => void;
+        }>;
+      };
+    };
+
+    async function acquire() {
+      if (!nav.wakeLock?.request) {
+        setWakeHold("unavailable");
+        return;
+      }
+      try {
+        const lock = await nav.wakeLock.request("screen");
+        if (released) {
+          await lock.release().catch(() => {});
+          return;
+        }
+        sentinel = lock;
+        setWakeHold("held");
+        lock.addEventListener("release", () => {
+          if (!released) setWakeHold("unavailable");
+        });
+      } catch {
+        if (!released) setWakeHold("unavailable");
+      }
+    }
+
+    void acquire();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void acquire();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      released = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      void sentinel?.release().catch(() => {});
+      setWakeHold("off");
+    };
+  }, [inCall, preview]);
 
   const leaveBeacon = useCallback(() => {
     try {
@@ -318,16 +369,19 @@ export function SessionRoom({
   const doorState: DoorState = state === "open" ? "open" : state === "too_late" ? "ended" : "closed";
 
   const pill = useMemo(() => {
+    // The pill carries the clock. Presence lives in the strip, so the two
+    // don't repeat "waiting" / "in progress" in two places.
+    if (left && !left.ended && windowOpen && remaining) return { tone: "wait" as const, label: remaining.label };
     if (left) return { tone: "muted" as const, label: left.ended ? "Ended" : "Stepped out" };
     if (stageOpen) {
-      if (presence.kind === "together") return { tone: "live" as const, label: remaining ? `In progress · ${remaining.label}` : "In progress" };
-      return { tone: "wait" as const, label: presence.headline };
+      if (remaining) return { tone: remaining.tone === "ending" ? ("wait" as const) : ("live" as const), label: remaining.label };
+      return { tone: "live" as const, label: "Live" };
     }
     if (state === "open") return { tone: "live" as const, label: "Door open" };
     if (state === "too_early") return { tone: "wait" as const, label: `Opens at ${formatClock(info.join_open_at)}` };
     if (state === "too_late") return { tone: "muted" as const, label: "Ended" };
     return { tone: "muted" as const, label: statusLabel };
-  }, [left, stageOpen, presence.kind, presence.headline, remaining, state, info.join_open_at, statusLabel]);
+  }, [left, stageOpen, windowOpen, remaining, state, info.join_open_at, statusLabel]);
 
   const backHref = isGuide ? "/dashboard/tutor" : "/dashboard/student";
   const exit = left ? exitCopy(info.role, bookingId, { ended: left.ended, windowOpen }) : null;
@@ -379,10 +433,9 @@ export function SessionRoom({
                     <p className="text-[13px] text-white/60">{presence.detail}</p>
                   </div>
                 </div>
-                {remaining ? (
-                  <p className={remaining.tone === "ending" ? "text-sm font-medium text-gold-200" : "text-sm text-white/60"}>
-                    {remaining.label}
-                    {info.scheduled_end ? <span className="text-white/40"> · ends {formatClock(info.scheduled_end)}</span> : null}
+                {isGuide && wakeHold === "unavailable" ? (
+                  <p data-kind="wake-tip" className="basis-full text-[13px] leading-5 text-gold-300">
+                    This browser won&apos;t keep the screen awake. Leave this tab open and in front so the recording doesn&apos;t go dark.
                   </p>
                 ) : null}
               </div>
@@ -464,15 +517,10 @@ export function SessionRoom({
                     >
                       {busy ? "Opening the door…" : "Rejoin Study Hall"}
                     </button>
-                  ) : null}
-                  {exit.primary ? (
+                  ) : exit.primary ? (
                     <Link
                       href={exit.primary.href}
-                      className={
-                        exit.canRejoin
-                          ? "rounded-xl border border-white/20 px-5 py-3 text-sm font-medium text-white hover:bg-white/10"
-                          : "rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
-                      }
+                      className="rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
                     >
                       {exit.primary.label} →
                     </Link>
