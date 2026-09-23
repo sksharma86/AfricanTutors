@@ -109,8 +109,8 @@ export function thresholdCopy(state, role, opts = {}) {
     return {
       headline: "Study Hall opens soon",
       body: guide
-        ? "The door opens 5 minutes before start. Have your camera ready."
-        : "The door opens 5 minutes before start. Have homework and a charged device ready.",
+        ? "Have your camera ready. Nothing else to do until the door opens."
+        : "Have homework and a charged device ready. Nothing else to do until the door opens.",
     };
   }
   if (state === "open") {
@@ -166,12 +166,14 @@ export function exitCopy(role, bookingId, { ended = false, windowOpen = false } 
       canRejoin: false,
     };
   }
-  return {
-    headline: "You left the Study Hall",
-    body: "The hour isn't over yet. You can step back in any time before it ends.",
-    primary: { href: `/dashboard/student/study-halls/${bookingId}`, label: "View this Study Hall" },
-    canRejoin: windowOpen,
-  };
+    return {
+      headline: "You left the Study Hall",
+      body: "The hour isn't over yet. Step back in — this is the same Study Hall.",
+      // While the door is still open, Rejoin is the only forward path.
+      // The Study Hall page is the secondary path once rejoin has closed.
+      primary: windowOpen ? null : { href: `/dashboard/student/study-halls/${bookingId}`, label: "View this Study Hall" },
+      canRejoin: windowOpen,
+    };
 }
 
 /**

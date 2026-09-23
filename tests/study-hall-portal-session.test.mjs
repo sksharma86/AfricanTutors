@@ -70,7 +70,7 @@ describe("Study Hall threshold — copy is understandable without support and ne
   it("doorway copy keeps the T−5 rule and camera policy in plain words", () => {
     const early = thresholdCopy("too_early", "student");
     assert.match(early.headline, /opens soon/i);
-    assert.match(early.body, /5 minutes before start/);
+    assert.match(early.body, /until the door opens/);
     const open = thresholdCopy("open", "student");
     assert.match(open.body, /Camera is required/);
     assert.match(thresholdCopy("open", "tutor").headline, /door is open/i);
@@ -126,7 +126,10 @@ describe("Study Hall exit — 'here's what happened' is one click away", () => {
     assert.match(done.body, /recording/);
     const early = exitCopy("student", "bk1", { ended: false, windowOpen: true });
     assert.equal(early.canRejoin, true);
-    assert.equal(early.primary.href, "/dashboard/student/study-halls/bk1");
+    assert.equal(early.primary, null);
+    const closed = exitCopy("student", "bk1", { ended: false, windowOpen: false });
+    assert.equal(closed.canRejoin, false);
+    assert.equal(closed.primary.href, "/dashboard/student/study-halls/bk1");
   });
 
   it("room wiring: presence from Daily participants, brand theme, rejoin + hand-off links, single stable mount", () => {

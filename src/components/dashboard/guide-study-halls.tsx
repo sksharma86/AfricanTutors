@@ -49,7 +49,9 @@ export function GuideStudyHalls({
   const lists = useMemo(() => guideStudyHallLists(bookings, nowMs, tz), [bookings, nowMs, tz]);
   const reported = useMemo(() => new Set(reportedIds), [reportedIds]);
   const openReqs = useMemo(() => new Set(openRequestIds), [openRequestIds]);
-  const rows = view === "completed" ? lists.completed : view === "upcoming" ? lists.upcoming : lists.today;
+  // Upcoming is after today. Today's halls stay on Today so a finished hour
+  // is not hidden in a mixed list, and Completed is only the past list.
+  const rows = view === "completed" ? lists.completed : view === "upcoming" ? lists.later : lists.today;
   const due = useMemo(() => guideReportsDue(bookings, reported, nowMs), [bookings, reported, nowMs]);
 
   function setView(next: string) {
