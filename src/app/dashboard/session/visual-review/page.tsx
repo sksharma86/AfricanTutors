@@ -5,15 +5,19 @@ import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { GuideCustomerNoShowControl } from "@/components/session/guide-customer-no-show-control";
 import { GuideOperatingMethod } from "@/components/dashboard/guide-operating-method";
+import { SessionRoom } from "@/components/session/session-room";
+import { Container } from "@/components/ui/container";
 import { requireUser } from "@/lib/auth";
 import { cameraWarningCopy } from "@/lib/daily/camera-presence.mjs";
+import { sessionRoomFixture } from "@/lib/session-visual-fixture.mjs";
 
 export const metadata: Metadata = { title: "Study Hall camera visual review" };
 export const dynamic = "force-dynamic";
 
 /**
  * Isolated composition review. 404 unless SESSION_VISUAL_REVIEW=1.
- * Renders the same CameraRequiredBanner used in the live room.
+ * Renders the same CameraRequiredBanner used in the live room, and the full
+ * SessionRoom threshold / in-room / exit states from fixture data.
  * Does not join Daily or write to the database.
  */
 export default async function SessionCameraVisualReviewPage({
@@ -25,6 +29,21 @@ export default async function SessionCameraVisualReviewPage({
   await requireUser("/dashboard/session/visual-review");
   const params = await searchParams;
   const scene = params.scene ?? "normal";
+
+  const room = sessionRoomFixture(scene);
+  if (room) {
+    return (
+      <div className="sh-room-canvas min-h-svh bg-[#0b0d10] py-6 sm:py-8">
+        <p className="sr-only">Visual review fixture. Not a live Study Hall.</p>
+        <Container className="max-w-5xl">
+          <span className="text-sm font-medium text-gold-300">← Back to Home</span>
+          <div className="mt-4">
+            <SessionRoom bookingId="fixture-session" info={room.info} preview={room.preview} nowMs={room.nowMs} />
+          </div>
+        </Container>
+      </div>
+    );
+  }
   const guide = cameraWarningCopy("tutor");
   const student = cameraWarningCopy("student");
   const methodStart = new Date(Date.now() - 20 * 60000).toISOString();
