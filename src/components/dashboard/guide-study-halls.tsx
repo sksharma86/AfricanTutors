@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -13,6 +14,7 @@ import {
   guideChildName,
   guideNeedsReport,
   guideReportHref,
+  guideReportsDue,
   guideRowStatus,
   guideStudyHallLists,
 } from "@/lib/guide-portal.mjs";
@@ -48,6 +50,7 @@ export function GuideStudyHalls({
   const reported = useMemo(() => new Set(reportedIds), [reportedIds]);
   const openReqs = useMemo(() => new Set(openRequestIds), [openRequestIds]);
   const rows = view === "completed" ? lists.completed : view === "upcoming" ? lists.upcoming : lists.today;
+  const due = useMemo(() => guideReportsDue(bookings, reported, nowMs), [bookings, reported, nowMs]);
 
   function setView(next: string) {
     const sp = new URLSearchParams(params.toString());
@@ -64,8 +67,44 @@ export function GuideStudyHalls({
         value={view}
         onChange={setView}
       />
+      {view !== "completed" && due.length > 0 ? (
+        <div
+          data-kind="reports-due"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-[rgba(201,162,39,0.1)] px-4 py-3 ring-1 ring-[#c9a227]/35"
+        >
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-[#a15c1a] uppercase">Report needed</p>
+            <p className="mt-1 text-sm text-ink-900">
+              {due.length === 1
+                ? `${guideChildName(due[0])} · ${due[0].scheduled_start ? formatDayHeading(due[0].scheduled_start, tz) : "Recently"} is finished and waiting on your report.`
+                : `${due.length} finished Study Halls are waiting on your report.`}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {due.length === 1 ? (
+              <LinkButton href={guideReportHref(due[0].id)} variant="primary" size="sm">
+                Finish report
+              </LinkButton>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setView("completed")}
+                className="rounded-[12px] bg-ink-900 px-3.5 py-2.5 text-[13px] font-semibold text-white hover:bg-ink-800"
+              >
+                See completed
+              </button>
+            )}
+          </div>
+        </div>
+      ) : null}
       {rows.length === 0 ? (
-        <p className="py-5 text-sm text-ink-500">{view === "completed" ? "None yet." : "No Study Hall scheduled."}</p>
+        <p className="py-5 text-sm text-ink-500">
+          {view === "completed"
+            ? "No completed Study Halls yet. Finished Study Halls appear here once the hour ends."
+            : view === "upcoming"
+              ? "No upcoming Study Halls after today."
+              : "No Study Hall scheduled today."}
+        </p>
       ) : (
         <ul className="divide-y divide-ink-100">
           {rows.map((b) => {
@@ -117,9 +156,19 @@ export function GuideStudyHalls({
                       Finish report
                     </LinkButton>
                   ) : reported.has(b.id) ? (
-                    <span data-kind="status" className="text-sm text-ink-500">
-                      Report submitted
-                    </span>
+                    <div className="flex flex-col items-start gap-1 sm:items-end">
+                      <span data-kind="status" className="text-sm text-ink-500">
+                        Report submitted
+                      </span>
+                      {view === "completed" ? (
+                        <Link
+                          href="/dashboard/tutor/earnings"
+                          className="text-[13px] font-medium text-ink-800 underline-offset-4 hover:underline"
+                        >
+                          View earnings →
+                        </Link>
+                      ) : null}
+                    </div>
                   ) : null}
                   {view !== "completed" && (b.status === "confirmed" || b.status === "pending") ? (
                     <TutorCancelRequest bookingId={b.id} alreadyRequested={openReqs.has(b.id)} />

@@ -66,12 +66,19 @@ export function guideNeedsReport(booking, reported = false, nowMs = Date.now()) 
   return Number.isFinite(end) && nowMs >= end;
 }
 
-export function unfinishedGuideReport(bookings, reportedIds, nowMs = Date.now()) {
+/**
+ * Every finished Study Hall still waiting on its Guide report, most recent
+ * first. Pure ms comparison — a Guide in any timezone sees the same list.
+ */
+export function guideReportsDue(bookings, reportedIds, nowMs = Date.now()) {
   const reported = reportedIds instanceof Set ? reportedIds : new Set(reportedIds ?? []);
-  const due = (bookings ?? [])
+  return (bookings ?? [])
     .filter((b) => guideNeedsReport(b, reported.has(b.id), nowMs))
     .sort((a, b) => Date.parse(b.scheduled_end ?? b.scheduled_start ?? 0) - Date.parse(a.scheduled_end ?? a.scheduled_start ?? 0));
-  return due[0] ?? null;
+}
+
+export function unfinishedGuideReport(bookings, reportedIds, nowMs = Date.now()) {
+  return guideReportsDue(bookings, reportedIds, nowMs)[0] ?? null;
 }
 
 export function guideStartsInLabel(startISO, nowMs = Date.now()) {
