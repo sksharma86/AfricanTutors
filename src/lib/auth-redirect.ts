@@ -17,6 +17,24 @@ export function sanitizeNextPath(raw: string | null | undefined, fallback = "/da
   return next;
 }
 
+/**
+ * After email confirm or a magic link, a specific portal path (the next
+ * Study Hall, a report, open coverage) is kept. A bare `/dashboard` becomes
+ * the role home so nobody lands on a redirect loop or the marketing site.
+ */
+export function postAuthLanding(next: string | null | undefined, roleHome: string): string {
+  const requested = sanitizeNextPath(next, "/dashboard");
+  if (requested.startsWith("/reset-password")) return "/reset-password";
+  if (requested === "/dashboard") return roleHome;
+  if (requested.startsWith("/dashboard/")) return requested;
+  return roleHome;
+}
+
+/** Join / Study Hall detail paths worth returning to after sign-in. */
+export function isPortalReturnPath(path: string | null | undefined): boolean {
+  return /^\/dashboard\/(session|student\/study-halls|tutor\/study-halls)\//.test(String(path ?? ""));
+}
+
 /** Deep-link after login for emergency open-coverage offers only. */
 export function isSafeOpenCoveragePath(path: string | null | undefined): boolean {
   return /^\/dashboard\/tutor\/open-coverage\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(

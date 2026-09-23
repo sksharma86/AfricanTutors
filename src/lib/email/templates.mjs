@@ -502,16 +502,38 @@ export function guideOpenCoverageOffer(ctx) {
 
 /** T-2 automatic protection. Do not name the Guide. Do not blame the Guide. */
 export function coverageFailureProtection(ctx) {
+  const when = ctx.whenISO ? formatWhen(ctx.whenISO, ctx.tz) : null;
   const lines = [
-    "We're sorry. We weren't able to confirm Guide coverage for your upcoming Study Hall, so we've cancelled it rather than leave you waiting.",
+    when
+      ? `We're sorry. We weren't able to confirm Guide coverage for your Study Hall at ${when}, so we've cancelled it rather than leave you waiting.`
+      : "We're sorry. We weren't able to confirm Guide coverage for your upcoming Study Hall, so we've cancelled it rather than leave you waiting.",
     ctx.restorationLine || "Your booking has been fully restored.",
     "We've added a complimentary Study Hall hour to your account for the inconvenience.",
     "You can book another time whenever you're ready.",
   ];
   return {
-    subject: "We couldn't provide your Guide tonight",
-    html: layout("We couldn't provide your Guide tonight", lines.filter(Boolean).map(p).join(""), ctx.appUrl ? { href: `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student`, label: "Open your account" } : null),
+    subject: "We couldn't provide your Guide for this Study Hall",
+    html: layout(
+      "We couldn't provide your Guide for this Study Hall",
+      lines.filter(Boolean).map(p).join(""),
+      ctx.appUrl ? { href: `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/student`, label: "Open your account" } : null,
+    ),
     text: textJoin(lines.filter(Boolean)),
+  };
+}
+
+/** Guide: the hour they were assigned was cancelled at T-2. No blame, no pay. */
+export function coverageFailureGuide(ctx) {
+  const when = ctx.whenISO ? formatWhen(ctx.whenISO, ctx.tz) : "the scheduled time";
+  const lines = [
+    `The Study Hall at ${when} was cancelled because coverage was not confirmed in time.`,
+    "You don't need to join. This hour is not on your report or your earnings.",
+  ];
+  const href = ctx.appUrl ? `${String(ctx.appUrl).replace(/\/+$/, "")}/dashboard/tutor/study-halls` : null;
+  return {
+    subject: "Study Hall cancelled — coverage wasn't confirmed",
+    html: layout("This Study Hall was cancelled", lines.map(p).join(""), href ? { href, label: "Your Study Halls" } : null),
+    text: textJoin(lines),
   };
 }
 

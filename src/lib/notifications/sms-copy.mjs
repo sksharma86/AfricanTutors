@@ -55,8 +55,9 @@ export function parentCoverageCancellationSms(ctx = {}) {
 }
 
 export function parentCoverageFailureProtectionSms(ctx = {}) {
-  void ctx;
-  return "Study Hall: we weren't able to confirm Guide coverage for your upcoming Study Hall, so we cancelled it. Your booking is restored and we've added a complimentary hour. You can book again anytime.";
+  const when = formatWhen(ctx.whenISO, ctx.tz);
+  const at = ctx.whenISO && when ? ` at ${when}` : "";
+  return `Study Hall: we weren't able to confirm Guide coverage for your upcoming Study Hall${at}, so we cancelled it. Your booking is restored and we've added a complimentary hour. You can book again anytime.`;
 }
 
 export function parentReassignmentSms(ctx) {

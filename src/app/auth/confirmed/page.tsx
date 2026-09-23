@@ -52,7 +52,7 @@ export default async function AuthConfirmedPage({
     return (
       <AuthCard
         title="Email confirmed"
-        description="Your Study Hall (at home) account is ready. Sign in to open your parent dashboard."
+        description="Your Study Hall (at home) account is ready. Sign in to open your Study Hall."
         footer={
           <>
             Need an account?{" "}
