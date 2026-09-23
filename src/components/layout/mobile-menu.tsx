@@ -11,11 +11,14 @@ export function MobileMenu({
   isAuthed,
   showParentBookCta,
   dashboardHref,
+  guideSite = false,
 }: {
   isAuthed: boolean;
   /** Genuine parent accounts only — not pending Guide applicants. */
   showParentBookCta: boolean;
   dashboardHref: string;
+  /** guides.studyhallathome.com — recruitment chrome, not the parent funnel. */
+  guideSite?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -41,16 +44,26 @@ export function MobileMenu({
       {open ? (
         <div className="absolute inset-x-0 top-full border-t border-ink-100 bg-[#f7f4ee]/98 px-6 py-7 backdrop-blur-xl">
           <nav className="flex flex-col gap-1">
-            {PUBLIC_NAV_LINKS.map((link) => (
+            {guideSite ? (
               <Link
-                key={link.href}
-                href={link.href}
+                href="/apply-to-tutor"
                 onClick={close}
                 className="rounded-[14px] px-3 py-3 text-base font-medium tracking-[-0.01em] text-ink-800 hover:bg-white/70"
               >
-                {link.label}
+                Become a Guide
               </Link>
-            ))}
+            ) : (
+              PUBLIC_NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={close}
+                  className="rounded-[14px] px-3 py-3 text-base font-medium tracking-[-0.01em] text-ink-800 hover:bg-white/70"
+                >
+                  {link.label}
+                </Link>
+              ))
+            )}
           </nav>
           <div className="mt-6 flex flex-col gap-3">
             {isAuthed ? (
@@ -67,11 +80,17 @@ export function MobileMenu({
             ) : (
               <>
                 <LinkButton href="/login" variant="outline" className="w-full" onClick={close}>
-                  Sign In
+                  {guideSite ? "Log in" : "Sign In"}
                 </LinkButton>
-                <LinkButton href="/signup" variant="primary" className="w-full" onClick={close}>
-                  {NAV_TRIAL_CTA}
-                </LinkButton>
+                {guideSite ? (
+                  <LinkButton href="/apply-to-tutor" variant="primary" className="w-full" onClick={close}>
+                    Become a Guide
+                  </LinkButton>
+                ) : (
+                  <LinkButton href="/signup" variant="primary" className="w-full" onClick={close}>
+                    {NAV_TRIAL_CTA}
+                  </LinkButton>
+                )}
               </>
             )}
           </div>
