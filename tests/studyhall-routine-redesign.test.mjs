@@ -75,7 +75,10 @@ describe("Study Hall routine redesign — public positioning", () => {
   it("does not invent 365 checkout or authenticated portal features", () => {
     const pricing = read("src/components/marketing/pricing-section.tsx");
     const offers = read("src/lib/public-offers.ts");
-    assert.match(pricing, /coming next/);
+    assert.match(pricing, /\$12/);
+    assert.match(pricing, /\$99/);
+    assert.match(pricing, /\$149\/month/);
+    assert.doesNotMatch(pricing, /coming next|not live yet|no checkout/i);
     assert.doesNotMatch(pricing, /Subscribe|Buy Study Hall 365|href=.*\/checkout/);
     assert.doesNotMatch(offers, /href: "\/checkout"|stripe|subscription/);
     assert.doesNotMatch(PUBLIC, /entitlement|Daily unit|Available state/);

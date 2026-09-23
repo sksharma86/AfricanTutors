@@ -179,7 +179,8 @@ describe("Study Hall PR9 — architecture source contracts", () => {
     const terms = read("src/app/(marketing)/terms/page.tsx");
     assert.match(privacy, /60 days/);
     assert.match(terms, /60 days/);
-    assert.match(privacy, /attorney review/i);
+    assert.doesNotMatch(privacy, /attorney review|being finalized/i);
+    assert.doesNotMatch(terms, /attorney review|being finalized/i);
   });
 
   it("PR8 notification architecture and reminder cron remain intact", () => {

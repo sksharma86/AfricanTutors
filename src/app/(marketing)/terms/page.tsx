@@ -17,16 +17,27 @@ export default function TermsPage() {
       <Container className="py-16">
         <div className="max-w-2xl space-y-4 text-base leading-7 text-ink-600">
           <p>
-            Our full Terms of Service are being finalized ahead of public launch. In the meantime,
-            key policies are described in plain language across this site — including{" "}
-            <Link href="/pricing" className="font-medium text-gold-700 hover:underline">pricing</Link>,
-            the free trial, non-expiring package hours, and our cancellation policy on the{" "}
-            <Link href="/faq" className="font-medium text-gold-700 hover:underline">FAQ</Link>.
+            Study Hall (at home) provides a private, live hour where a child does their own work with a
+            Guide present for structure and accountability. By creating an account or booking a Study
+            Hall, you agree to these terms.
+          </p>
+          <p>
+            Your first 60-minute Study Hall is free, one per account. After that, one Study Hall is $12,
+            ten Study Halls are $99 and do not expire, and Study Hall 365 is $149/month for one hour
+            available every calendar day. Prices and what each plan includes are on{" "}
+            <Link href="/pricing" className="font-medium text-gold-700 hover:underline">
+              pricing
+            </Link>{" "}
+            and the{" "}
+            <Link href="/faq" className="font-medium text-gold-700 hover:underline">
+              FAQ
+            </Link>
+            . Cancel 24 or more hours before a session and the session value returns to your account.
+            Cancellations inside 24 hours are non-refundable.
           </p>
           <p>
             Study Hall sessions are recorded. Recordings may be shared with the parent/account holder
-            for sessions on their account and are kept for 60 days, then deleted. Attorney review of
-            this wording is recommended before public launch.
+            for sessions on their account and are kept for 60 days, then deleted.
           </p>
           <p>
             During an active Study Hall, we may contact the phone number on your account by
@@ -40,11 +51,13 @@ export default function TermsPage() {
             texts. Consent is optional and is not required to use Study Hall. Message and data rates
             may apply. You can change this preference in Account, or text STOP to our number. If you
             previously texted STOP, reply START to that number as well so texts can resume.
-            Attorney review of this wording is recommended before public launch.
           </p>
           <p>
-            If you have a question about our terms before then, please{" "}
-            <Link href="/contact" className="font-medium text-gold-700 hover:underline">contact us</Link>.
+            Questions about these terms?{" "}
+            <Link href="/contact" className="font-medium text-gold-700 hover:underline">
+              Contact us
+            </Link>
+            .
           </p>
         </div>
       </Container>

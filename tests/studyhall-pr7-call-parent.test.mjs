@@ -135,7 +135,7 @@ describe("Study Hall PR7 — Call Parent (source)", () => {
     assert.match(read("src/app/(marketing)/privacy/page.tsx"), /Transactional text alerts are sent only if you opt in/i);
     assert.match(read("src/app/(marketing)/terms/page.tsx"), /automated voice call/i);
     assert.match(read("src/app/(marketing)/terms/page.tsx"), /opt in to Study Hall text alerts/i);
-    assert.match(read("src/app/(marketing)/privacy/page.tsx"), /attorney review/i);
+    assert.doesNotMatch(read("src/app/(marketing)/privacy/page.tsx"), /attorney review|being finalized/i);
   });
 
   it("admin can see escalations; PR6 reports lightly note escalation", () => {

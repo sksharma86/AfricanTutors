@@ -78,7 +78,7 @@ export function StudyHall365Card({
         window.location.assign(payload.url as string);
         return;
       }
-      setError(payload?.error ?? "Billing portal is not available yet.");
+      setError(payload?.error ?? "We couldn't open billing for this account. Your free Study Hall is still available from Home.");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
