@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { StudyHallMark } from "@/components/brand/study-hall-mark";
 import { CameraRequiredBanner } from "@/components/session/camera-required-banner";
 import { CallParentControl } from "@/components/session/call-parent-control";
 import { GuideCustomerNoShowControl } from "@/components/session/guide-customer-no-show-control";
+import { StudyHallDoor, type DoorState } from "@/components/session/study-hall-door";
 import { GuideOperatingMethod } from "@/components/dashboard/guide-operating-method";
 import {
   classifyCameraError,
@@ -15,8 +17,21 @@ import {
   nextCameraPresenceAction,
 } from "@/lib/daily/camera-presence.mjs";
 import type { SessionInfo } from "@/lib/session-service";
+import {
+  STUDY_HALL_DAILY_THEME,
+  counterpartLabel,
+  exitCopy,
+  opensInLabel,
+  presenceLine,
+  thresholdCopy,
+  thresholdState,
+  timeRemaining,
+} from "@/lib/session-threshold.mjs";
+import { GUIDE_METHOD_PHASES, guideMethodPhase } from "@/lib/guide-operating-method.mjs";
 import { formatStudyHallDuration } from "@/lib/studyhall-duration.mjs";
 import { customerBookingStatus } from "@/lib/status-labels.mjs";
+
+type DailyParticipantLike = { local?: boolean; user_id?: string; tracks?: { video?: unknown } };
 
 type Frame = {
   join: (o: { url: string; token?: string }) => Promise<unknown>;
@@ -24,13 +39,19 @@ type Frame = {
   destroy: () => void;
   on: (e: string, cb: (ev?: unknown) => void) => void;
   setLocalVideo: (enabled: boolean) => void;
-  participants: () => { local?: { tracks?: { video?: unknown } } };
+  participants: () => Record<string, DailyParticipantLike>;
 };
 
-function sessionEndedForReport(info: SessionInfo): boolean {
+/**
+ * Visual-review only. Seeds the room into an in-call or post-call state without
+ * loading Daily. Never set from a production route.
+ */
+export type SessionRoomPreview = "waiting" | "live" | "left" | "left-early";
+
+function sessionEndedForReport(info: SessionInfo, nowMs = Date.now()): boolean {
   if (info.status === "cancelled" || info.status === "expired" || info.status === "no_show") return false;
   const end = info.scheduled_end ? Date.parse(info.scheduled_end) : NaN;
-  return Number.isFinite(end) && Date.now() >= end;
+  return Number.isFinite(end) && nowMs >= end;
 }
 
 function formatWhen(iso?: string | null): string {
@@ -48,27 +69,85 @@ function formatWhen(iso?: string | null): string {
   }
 }
 
+function formatDay(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  } catch {
+    return iso;
+  }
+}
+
+function formatClock(iso?: string | null): string {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  } catch {
+    return iso;
+  }
+}
+
+/** The counterpart is identified by the role baked into their Daily token (user_id). */
+function counterpartInRoom(participants: Record<string, DailyParticipantLike>, isGuide: boolean): boolean {
+  const want = isGuide ? "student" : "tutor";
+  return Object.values(participants ?? {}).some((p) => !p.local && p.user_id === want);
+}
+
 export function SessionRoom({
   bookingId,
   info,
   studentJoinedAt = null,
+  preview = null,
+  nowMs,
 }: {
   bookingId: string;
   info: SessionInfo;
   studentJoinedAt?: string | null;
+  preview?: SessionRoomPreview | null;
+  /** Pins the clock for fixtures; production leaves it undefined. */
+  nowMs?: number;
 }) {
   const router = useRouter();
-  const [state, setState] = useState(info.join_state ?? "not_joinable");
+  const isGuide = info.role === "tutor";
+  const [liveNow, setLiveNow] = useState(() => Date.now());
+  const now = nowMs ?? liveNow;
+
+  // Server response can pin the door (too_early / too_late) regardless of the local clock.
+  const [serverState, setServerState] = useState<string | null>(null);
+  const state = serverState ?? thresholdState(info, now);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inCall, setInCall] = useState(false);
-  const [stageOpen, setStageOpen] = useState(false);
+  const [inCall, setInCall] = useState(preview === "waiting" || preview === "live");
+  const [stageOpen, setStageOpen] = useState(preview === "waiting" || preview === "live");
+  const [counterpartPresent, setCounterpartPresent] = useState(preview === "live");
+  const [left, setLeft] = useState<{ ended: boolean } | null>(
+    preview === "left" ? { ended: true } : preview === "left-early" ? { ended: false } : null,
+  );
   const [cameraWarning, setCameraWarning] = useState<{ title: string; body: string } | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<Frame | null>(null);
   const payloadRef = useRef<{ roomUrl: string; token: string } | null>(null);
   const attachStartedRef = useRef(false);
-  const isGuide = info.role === "tutor";
+
+  // Live clock: 15s ticks plus exact wake-ups at door-open and scheduled end so
+  // the doorway opens itself without a reload.
+  useEffect(() => {
+    if (nowMs != null) return;
+    const tick = () => setLiveNow(Date.now());
+    const interval = window.setInterval(tick, 15_000);
+    const timeouts: number[] = [];
+    for (const iso of [info.join_open_at, info.scheduled_end, info.join_close_at]) {
+      if (!iso) continue;
+      const delay = Date.parse(iso) - Date.now();
+      if (Number.isFinite(delay) && delay > 0 && delay < 24 * 3600_000) {
+        timeouts.push(window.setTimeout(tick, delay + 50));
+      }
+    }
+    return () => {
+      window.clearInterval(interval);
+      timeouts.forEach((t) => window.clearTimeout(t));
+    };
+  }, [nowMs, info.join_open_at, info.scheduled_end, info.join_close_at]);
 
   const leaveBeacon = useCallback(() => {
     try {
@@ -115,6 +194,8 @@ export function SessionRoom({
         if (existing) existing.destroy();
         const frame = DailyIframe.createFrame(node, {
           showLeaveButton: true,
+          showFullscreenButton: true,
+          theme: STUDY_HALL_DAILY_THEME,
           iframeStyle: { width: "100%", height: "100%", border: "0", borderRadius: "16px" },
         }) as unknown as Frame;
         frameRef.current = frame;
@@ -130,20 +211,33 @@ export function SessionRoom({
             }
           }
         };
+        const syncPresence = () => {
+          try {
+            setCounterpartPresent(counterpartInRoom(frame.participants(), isGuide));
+          } catch {
+            /* participants() can throw during teardown */
+          }
+        };
 
         frame.on("joined-meeting", () => {
           syncCamera();
+          syncPresence();
         });
+        frame.on("participant-joined", syncPresence);
+        frame.on("participant-left", syncPresence);
         frame.on("participant-updated", () => {
           syncCamera();
+          syncPresence();
         });
         frame.on("camera-error", () => {
           syncCamera(classifyCameraError());
         });
         frame.on("left-meeting", () => {
+          const ended = sessionEndedForReport(info);
           setInCall(false);
           setStageOpen(false);
           setCameraWarning(null);
+          setCounterpartPresent(false);
           leaveBeacon();
           try {
             frame.destroy();
@@ -153,9 +247,11 @@ export function SessionRoom({
           frameRef.current = null;
           attachStartedRef.current = false;
           payloadRef.current = null;
-          if (isGuide && sessionEndedForReport(info)) {
+          if (isGuide && ended) {
             router.push(`/dashboard/tutor/study-halls/${bookingId}/report`);
+            return;
           }
+          setLeft({ ended });
         });
         await frame.join({ url: payload.roomUrl, token: payload.token });
         setInCall(true);
@@ -163,7 +259,7 @@ export function SessionRoom({
         teardownFrame();
         setStageOpen(false);
         setCameraWarning(null);
-        setError("Could not start the video room. Please try again.");
+        setError("Could not open the Study Hall room. Please try again.");
       } finally {
         setBusy(false);
       }
@@ -171,7 +267,7 @@ export function SessionRoom({
   }, [stageOpen, leaveBeacon, teardownFrame, bookingId, info, isGuide, router]);
 
   async function join() {
-    if (busy || stageOpen) return;
+    if (busy || stageOpen || preview) return;
     setBusy(true);
     setError(null);
     let res: Response;
@@ -185,201 +281,292 @@ export function SessionRoom({
     const payload = await res.json().catch(() => null);
     if (!res.ok) {
       setBusy(false);
-      if (payload?.code === "too_early") setState("too_early");
-      else if (payload?.code === "too_late") setState("too_late");
-      setError(payload?.error ?? "Unable to join the session.");
+      if (payload?.code === "too_early") setServerState("too_early");
+      else if (payload?.code === "too_late") setServerState("too_late");
+      setError(payload?.error ?? "Unable to join the Study Hall.");
       return;
     }
     payloadRef.current = { roomUrl: payload.roomUrl, token: payload.token };
+    setLeft(null);
+    setServerState(null);
     setStageOpen(true);
   }
 
-  const title = "Study Hall";
-  void info.subject;
+  const who = counterpartLabel(info.role, info.counterpart, info.child_names);
+  const whoLine = isGuide
+    ? Array.isArray(info.child_names) && info.child_names.length > 1
+      ? `${info.child_names.join(", ")} · ${info.child_names.length} children`
+      : `Child: ${info.counterpart ?? "—"}`
+    : `with ${who}`;
   const scheduleLine = [
-    formatWhen(info.scheduled_start),
-    info.scheduled_end ? `– ${formatWhen(info.scheduled_end)}` : null,
+    info.scheduled_start ? formatDay(info.scheduled_start) : "To be scheduled",
+    info.scheduled_start
+      ? `${formatClock(info.scheduled_start)}${info.scheduled_end ? ` – ${formatClock(info.scheduled_end)}` : ""}`
+      : null,
     info.duration_minutes ? formatStudyHallDuration(info.duration_minutes) : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
+  const remaining = timeRemaining(info.scheduled_start, info.scheduled_end, now);
+  const presence = presenceLine(info.role, counterpartPresent, info.counterpart, info.child_names);
+  const windowOpen = state === "open";
+  const ended = sessionEndedForReport(info, now);
+  const statusLabel = customerBookingStatus(info.status ?? "", undefined).label;
+  const door = thresholdCopy(state, info.role, { statusLabel });
+  const opensIn = opensInLabel(info.join_open_at, now);
+  const doorState: DoorState = state === "open" ? "open" : state === "too_late" ? "ended" : "closed";
+
+  const pill = useMemo(() => {
+    if (left) return { tone: "muted" as const, label: left.ended ? "Ended" : "Stepped out" };
+    if (stageOpen) {
+      if (presence.kind === "together") return { tone: "live" as const, label: remaining ? `In progress · ${remaining.label}` : "In progress" };
+      return { tone: "wait" as const, label: presence.headline };
+    }
+    if (state === "open") return { tone: "live" as const, label: "Door open" };
+    if (state === "too_early") return { tone: "wait" as const, label: `Opens at ${formatClock(info.join_open_at)}` };
+    if (state === "too_late") return { tone: "muted" as const, label: "Ended" };
+    return { tone: "muted" as const, label: statusLabel };
+  }, [left, stageOpen, presence.kind, presence.headline, remaining, state, info.join_open_at, statusLabel]);
+
+  const backHref = isGuide ? "/dashboard/tutor" : "/dashboard/student";
+  const exit = left ? exitCopy(info.role, bookingId, { ended: left.ended, windowOpen }) : null;
+  const phase = guideMethodPhase(info.scheduled_start, info.scheduled_end, now);
+  const phaseTitle = GUIDE_METHOD_PHASES.find((p) => p.id === phase)?.title ?? null;
+  const methodSummary = phaseTitle ? `Plan → Focus → Finish · now: ${phaseTitle}` : "Plan → Focus → Finish";
+  const title = "Study Hall";
+
   return (
-    <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#12141a]">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 px-5 py-5 sm:px-6">
+    <div className="sh-room overflow-hidden rounded-[24px] border border-white/10 text-[#f3eee5]" data-room-state={left ? "left" : stageOpen ? "in-room" : state}>
+      <div className="sh-room__atmosphere" aria-hidden />
+      <header className="relative flex flex-wrap items-start justify-between gap-3 border-b border-white/10 px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <StudyHallMark size={36} variant="dark" className="mt-0.5" />
+          <StudyHallMark size={40} variant="dark" className="mt-0.5" />
           <div>
-            <p className="text-xs font-semibold tracking-wide text-gold-300 uppercase">Study Hall (at home) · Live session</p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-white">{title}</h1>
-            <p className="mt-1 text-sm text-ink-300">
-              {isGuide
-                ? Array.isArray(info.child_names) && info.child_names.length > 1
-                  ? "Children"
-                  : "Child"
-                : "Guide"}
-              : {info.counterpart ?? "—"}
-            </p>
-            {isGuide && Array.isArray(info.child_names) && info.child_names.length > 1 ? (
-              <p className="mt-0.5 text-sm text-ink-400">{info.child_names.length} children</p>
-            ) : null}
-            <p className="mt-1 text-sm text-ink-400">{scheduleLine}</p>
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-gold-300 uppercase">Study Hall (at home)</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold tracking-[-0.02em] text-white">{title}</h1>
+            <p className="mt-1 text-sm text-white/72">{whoLine}</p>
+            <p className="mt-0.5 text-sm text-white/50">{scheduleLine}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-1 text-xs font-medium text-white/80">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-            Recording
-          </span>
-          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-ink-200">
-            {customerBookingStatus(info.status ?? "", undefined).label}
-          </span>
-        </div>
-      </div>
-      <div className="p-5 sm:p-6">
-        {isGuide ? (
-          <div className="space-y-3">
-            <GuideOperatingMethod
-              scheduledStart={info.scheduled_start}
-              scheduledEnd={info.scheduled_end}
-              tone="session"
-            />
-            <div className="rounded-lg border border-forest-700/50 bg-forest-950/40 p-3">
-              <p className="text-[12.5px] leading-5 text-ink-300">
-                Stay visible on camera. If a parent is needed, use Call Parent — you will never see their number.
-              </p>
-              <div className="mt-3 max-w-sm">
-                <CallParentControl bookingId={bookingId} enabled={state === "open" || inCall} />
-              </div>
-              <div className="mt-3">
-                <GuideCustomerNoShowControl
-                  bookingId={bookingId}
-                  status={info.status ?? ""}
-                  scheduledStart={info.scheduled_start ?? null}
-                  studentJoinedAt={studentJoinedAt}
-                  callParentEnabled={state === "open" || inCall}
-                  includeCallParent={false}
-                  variant="session"
-                />
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-xs text-ink-200">
-          <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-gold-300">
-            <circle cx="12" cy="12" r="9" />
-            <path strokeLinecap="round" d="M12 8h.01M11 12h1v4h1" />
-          </svg>
-          <span>This Study Hall session is recorded for quality assurance, safety, and dispute resolution.</span>
-        </div>
-
-        {isGuide && inCall ? (
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                void frameRef.current?.leave();
-              }}
-              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
-            >
-              End Study Hall
-            </button>
-          </div>
-        ) : null}
-
-        <div className="relative mt-6">
-          {stageOpen && cameraWarning ? (
-            <div className="mb-4">
-              <CameraRequiredBanner
-                title={cameraWarning.title}
-                body={cameraWarning.body}
-                variant={isGuide ? "guide" : "student"}
-              />
-            </div>
+          {inCall ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-1 text-xs font-medium text-white/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+              Recording
+            </span>
           ) : null}
-          <div
-            ref={containerRef}
-            data-daily-mount="true"
-            className={
-              stageOpen
-                ? "h-[70vh] w-full overflow-hidden rounded-2xl bg-black"
-                : "pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
-            }
-            aria-hidden={!stageOpen}
-          />
-          {!stageOpen ? (
-            <div className="rounded-2xl border border-ink-700 bg-ink-900 p-8 text-center">
-              {state === "open" ? (
-                <>
-                  <h2 className="font-display text-xl font-semibold text-white">You&apos;re ready to join</h2>
-                  <p className="mt-1 text-sm text-ink-300">
-                    Camera is required during Study Hall. You can mute your microphone. Screen sharing stays available.
+          <span data-kind="room-pill" data-tone={pill.tone} className="sh-room__pill inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium">
+            <span className="sh-room__dot h-1.5 w-1.5 rounded-full" />
+            {pill.label}
+          </span>
+        </div>
+      </header>
+
+      <div className="relative p-5 sm:p-6">
+        {stageOpen ? (
+          <div className={isGuide ? "lg:grid lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start lg:gap-5" : undefined}>
+            <div className="min-w-0">
+              <div
+                data-kind="presence"
+                data-presence={presence.kind}
+                className="sh-room__presence mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={presence.kind === "together" ? "sh-room__presence-dot is-together" : "sh-room__presence-dot"} aria-hidden />
+                  <div>
+                    <p className="text-[15px] font-semibold text-white">{presence.headline}</p>
+                    <p className="text-[13px] text-white/60">{presence.detail}</p>
+                  </div>
+                </div>
+                {remaining ? (
+                  <p className={remaining.tone === "ending" ? "text-sm font-medium text-gold-200" : "text-sm text-white/60"}>
+                    {remaining.label}
+                    {info.scheduled_end ? <span className="text-white/40"> · ends {formatClock(info.scheduled_end)}</span> : null}
                   </p>
-                  {info.videoConfigured === false ? (
-                    <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-                      Video service is not configured in this environment.
-                    </p>
-                  ) : null}
+                ) : null}
+              </div>
+              {cameraWarning ? (
+                <div className="mb-4">
+                  <CameraRequiredBanner title={cameraWarning.title} body={cameraWarning.body} variant={isGuide ? "guide" : "student"} />
+                </div>
+              ) : null}
+              <div ref={containerRef} data-daily-mount="true" className="sh-room__stage h-[70vh] w-full overflow-hidden rounded-2xl bg-black">
+                {preview ? (
+                  <div className="flex h-full items-center justify-center text-center">
+                    <div>
+                      <p className="text-sm font-medium text-white/80">Video stage</p>
+                      <p className="mt-1 text-xs text-white/45">Fixture placeholder. Daily Prebuilt is not mounted here.</p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+              <p className="mt-3 text-xs text-white/45">
+                This Study Hall session is recorded for quality assurance, safety, and dispute resolution.
+              </p>
+            </div>
+            {isGuide ? (
+              <aside className="mt-5 space-y-3 lg:mt-0" aria-label="Guide tools">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-[10px] font-semibold tracking-[0.14em] text-gold-300 uppercase">Guide tools</p>
+                  <p className="mt-2 text-[12.5px] leading-5 text-white/65">
+                    Stay visible on camera. If a parent is needed, use Call Parent — you will never see their number.
+                  </p>
+                  <div className="mt-3">
+                    <CallParentControl bookingId={bookingId} enabled={windowOpen || inCall} />
+                  </div>
+                  <div className="mt-3">
+                    <GuideCustomerNoShowControl
+                      bookingId={bookingId}
+                      status={info.status ?? ""}
+                      scheduledStart={info.scheduled_start ?? null}
+                      studentJoinedAt={counterpartPresent ? (studentJoinedAt ?? new Date(now).toISOString()) : studentJoinedAt}
+                      callParentEnabled={windowOpen || inCall}
+                      includeCallParent={false}
+                      variant="session"
+                      nowMs={nowMs}
+                    />
+                  </div>
                   <button
-                    onClick={join}
-                    disabled={busy}
-                    className="mt-6 rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
+                    type="button"
+                    onClick={() => {
+                      void frameRef.current?.leave();
+                    }}
+                    disabled={!inCall}
+                    className="mt-4 w-full rounded-xl border border-white/20 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 disabled:opacity-40"
                   >
-                    {busy ? "Connecting…" : isGuide ? "Join Study Hall" : "Join session"}
+                    End Study Hall
                   </button>
-                </>
-              ) : state === "too_early" ? (
-                <>
-                  <h2 className="font-display text-xl font-semibold text-white">Study Hall isn&apos;t open yet</h2>
-                  <p className="mt-1 text-sm text-ink-300">
+                </div>
+                <details className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 open:pb-4">
+                  <summary className="cursor-pointer text-[13px] font-medium text-white">{methodSummary}</summary>
+                  <div className="mt-3">
+                    <GuideOperatingMethod scheduledStart={info.scheduled_start} scheduledEnd={info.scheduled_end} nowMs={nowMs} tone="session" />
+                  </div>
+                </details>
+              </aside>
+            ) : null}
+          </div>
+        ) : (
+          <div className="sh-room__door relative overflow-hidden rounded-2xl border border-white/10 px-6 py-9 text-center sm:px-10">
+            <StudyHallDoor state={exit ? (exit.canRejoin ? "open" : "ended") : doorState} className="mx-auto h-[150px] w-[168px]" />
+            {exit ? (
+              <>
+                <h2 className="mt-4 font-display text-[1.65rem] font-semibold tracking-[-0.02em] text-white">{exit.headline}</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/65">{exit.body}</p>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  {exit.canRejoin ? (
+                    <button
+                      type="button"
+                      onClick={join}
+                      disabled={busy}
+                      className="rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300 disabled:opacity-50"
+                    >
+                      {busy ? "Opening the door…" : "Rejoin Study Hall"}
+                    </button>
+                  ) : null}
+                  {exit.primary ? (
+                    <Link
+                      href={exit.primary.href}
+                      className={
+                        exit.canRejoin
+                          ? "rounded-xl border border-white/20 px-5 py-3 text-sm font-medium text-white hover:bg-white/10"
+                          : "rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
+                      }
+                    >
+                      {exit.primary.label} →
+                    </Link>
+                  ) : null}
+                  <Link href={backHref} className="text-sm font-medium text-white/60 hover:text-white">
+                    Back to Home
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                {state === "too_early" && opensIn ? (
+                  <p className="mt-3 text-[11px] font-semibold tracking-[0.16em] text-gold-300 uppercase">{opensIn}</p>
+                ) : state === "open" ? (
+                  <p className="mt-3 text-[11px] font-semibold tracking-[0.16em] text-gold-300 uppercase">
+                    {isGuide ? `Waiting for ${who}` : `${who} will meet you inside`}
+                  </p>
+                ) : null}
+                <h2 className="mt-2 font-display text-[1.65rem] font-semibold tracking-[-0.02em] text-white">{door.headline}</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/65">{door.body}</p>
+
+                {state === "open" ? (
+                  <>
+                    {info.videoConfigured === false ? (
+                      <p className="mx-auto mt-4 max-w-md rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+                        Video service is not configured in this environment.
+                      </p>
+                    ) : null}
+                    <button
+                      onClick={join}
+                      disabled={busy}
+                      className="mt-6 rounded-xl bg-gold-400 px-7 py-3.5 text-[15px] font-semibold text-ink-900 shadow-[0_12px_30px_-14px_rgba(201,162,39,0.8)] hover:bg-gold-300 disabled:opacity-50"
+                    >
+                      {busy ? "Opening the door…" : "Join Study Hall"}
+                    </button>
+                    <p className="mx-auto mt-4 max-w-md text-xs leading-5 text-white/50">
+                      Camera stays on. You can mute your microphone. Screen sharing stays available.
+                    </p>
+                  </>
+                ) : state === "too_early" ? (
+                  <p className="mt-5 text-sm text-white/60">
                     Ready to join 5 minutes before start
                     {info.join_open_at ? (
                       <>
                         {" "}
-                        (<span className="font-medium text-white">({formatWhen(info.join_open_at)})</span>
+                        · <span className="font-medium text-white">{formatWhen(info.join_open_at)}</span>
                       </>
                     ) : null}
-                    .
+                    . This page opens the door on its own — no need to refresh.
                   </p>
-                  <button
-                    onClick={() => location.reload()}
-                    className="mt-6 rounded-xl border border-ink-600 px-5 py-2.5 text-sm font-medium text-ink-100 hover:border-ink-400"
-                  >
-                    Check again
-                  </button>
-                </>
-              ) : state === "too_late" ? (
-                <>
-                  <h2 className="font-display text-xl font-semibold text-white">This session has ended</h2>
-                  <p className="mt-1 text-sm text-ink-300">The room closed 15 minutes after the scheduled end time.</p>
-                  {isGuide && sessionEndedForReport(info) ? (
-                    <a
-                      href={`/dashboard/tutor/study-halls/${bookingId}/report`}
-                      className="mt-6 inline-block rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
-                    >
-                      Finish report
-                    </a>
-                  ) : null}
-                </>
-              ) : state === "not_scheduled" ? (
-                <>
-                  <h2 className="font-display text-xl font-semibold text-white">No scheduled time yet</h2>
-                  <p className="mt-1 text-sm text-ink-300">Our team is still arranging this session.</p>
-                </>
-              ) : (
-                <>
-                  <h2 className="font-display text-xl font-semibold text-white">Session not available</h2>
-                  <p className="mt-1 text-sm text-ink-300">
-                    This session is {customerBookingStatus(info.status ?? "", undefined).label.toLowerCase()}, so the live
-                    room is closed.
-                  </p>
-                </>
-              )}
-              {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
-            </div>
-          ) : null}
-        </div>
+                ) : state === "too_late" ? (
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    {isGuide && ended ? (
+                      <Link
+                        href={`/dashboard/tutor/study-halls/${bookingId}/report`}
+                        className="rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
+                      >
+                        Finish report →
+                      </Link>
+                    ) : null}
+                    {!isGuide ? (
+                      <Link
+                        href={`/dashboard/student/study-halls/${bookingId}`}
+                        className="rounded-xl bg-gold-400 px-6 py-3 font-semibold text-ink-900 hover:bg-gold-300"
+                      >
+                        See what happened →
+                      </Link>
+                    ) : null}
+                    <Link href={backHref} className="text-sm font-medium text-white/60 hover:text-white">
+                      Back to Home
+                    </Link>
+                  </div>
+                ) : null}
+              </>
+            )}
+            {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
+          </div>
+        )}
+
+        {!stageOpen ? (
+          <>
+            <p className="mt-4 text-xs text-white/40">
+              This Study Hall session is recorded for quality assurance, safety, and dispute resolution.
+            </p>
+            {isGuide && !left ? (
+              <details className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4" open={state !== "too_late" || undefined}>
+                <summary className="cursor-pointer text-[13px] font-medium text-white">{methodSummary}</summary>
+                <div className="mt-3">
+                  <GuideOperatingMethod scheduledStart={info.scheduled_start} scheduledEnd={info.scheduled_end} nowMs={nowMs} tone="session" />
+                </div>
+              </details>
+            ) : null}
+          </>
+        ) : null}
       </div>
     </div>
   );

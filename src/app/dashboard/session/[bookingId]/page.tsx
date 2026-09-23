@@ -33,22 +33,23 @@ export default async function SessionPage({ params }: { params: Promise<{ bookin
   }
 
   const backHref = info.role === "tutor" ? "/dashboard/tutor" : info.role === "admin" ? `/dashboard/admin/study-halls/${bookingId}` : "/dashboard/student";
+  const backLabel = info.role === "admin" ? "Back to Management" : "Back to Home";
 
   return (
-    <div className="min-h-full bg-[#0b0d10] py-8">
+    <div className="sh-room-canvas min-h-svh bg-[#0b0d10] py-6 sm:py-8">
       <Container className="max-w-5xl">
         <Link href={backHref} className="text-sm font-medium text-gold-300 hover:text-gold-200">
-          ← Back to dashboard
+          ← {backLabel}
         </Link>
         <div className="mt-4">
           {info.authorized ? (
             <SessionRoom bookingId={bookingId} info={info} studentJoinedAt={studentJoinedAt} />
           ) : (
             <div className="rounded-2xl border border-ink-700 bg-ink-800 p-8 text-center">
-              <h1 className="font-display text-2xl font-semibold text-white">Session unavailable</h1>
+              <h1 className="font-display text-2xl font-semibold text-white">Study Hall unavailable</h1>
               <p className="mt-2 text-sm text-ink-300">
                 {info.reason === "not_found"
-                  ? "We couldn't find that session."
+                  ? "We couldn't find that Study Hall."
                   : "You don't have access to this Study Hall session."}
               </p>
             </div>
