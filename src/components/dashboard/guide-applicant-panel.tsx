@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { GuideHandbookDownload } from "@/components/auth/guide-handbook-download";
 import type { GuideApplicantInfo } from "@/lib/guide-applicant";
 
 function formatSubmitted(iso: string | null): string | null {
@@ -32,7 +33,7 @@ export function GuideApplicantPanel({ info }: { info: GuideApplicantInfo }) {
     ? "This application was not approved as a Study Hall Guide. Parent booking, prepaid hours, and Guide tools are not available on this account."
     : isSuspended
       ? "Your Study Hall Guide application is not active right now. Contact us if you have questions about next steps."
-      : "Your application to become a Study Hall Guide is under review. We will email you when there is an update.";
+      : "Your application to become a Study Hall Guide is under review. A manager will reach out on WhatsApp. Hours stay closed until you are approved.";
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -68,9 +69,16 @@ export function GuideApplicantPanel({ info }: { info: GuideApplicantInfo }) {
       </section>
 
       <section className="rounded-2xl border border-ink-100 bg-white p-6 sm:p-8">
-        <h3 className="font-display text-lg font-semibold text-ink-900">What happens next</h3>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-ink-600">
-          <li>Our team reviews your application.</li>
+        <h3 className="font-display text-lg font-semibold text-ink-900">While you wait</h3>
+        <p className="mt-3 text-sm leading-6 text-ink-600">
+          Read the Guide handbook. It explains the hour: structure and accountability, not tutoring. Approval is a
+          separate step. This page does not open a quiz or a schedule.
+        </p>
+        {!isRejected && !isSuspended ? (
+          <GuideHandbookDownload className="mt-5 w-full sm:w-auto" />
+        ) : null}
+        <ul className="mt-5 list-disc space-y-2 pl-5 text-sm leading-6 text-ink-600">
+          <li>Our team reviews your application and may message you on WhatsApp.</li>
           <li>If approved, this account becomes your Guide workspace — no new signup needed.</li>
           <li>Approval is not guaranteed; we only hire Guides who fit Study Hall supervision needs.</li>
         </ul>

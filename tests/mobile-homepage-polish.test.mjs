@@ -100,14 +100,15 @@ describe("Homepage long-term value + product accuracy", () => {
     const signup = read("src/components/auth/signup-form.tsx");
     const page = read("src/app/(marketing)/signup/page.tsx");
     const apply = read("src/app/(marketing)/apply-to-tutor/page.tsx");
+    assert.match(apply, /GuideApplicationForm/);
     assert.match(page, /Create your parent account/);
     assert.match(signup, /Full name/);
     assert.match(signup, /name="displayName"/);
     assert.match(signup, /requestedRole: role/);
     assert.match(signup, /\/guides\/apply/);
     assert.match(read("src/app/api/auth/signup/route.ts"), /requested_role: requestedRole/);
-    assert.match(apply, /defaultRole="tutor"/);
-    assert.match(apply, /Submit Application/);
+    assert.match(read("src/components/auth/guide-application-form.tsx"), /requestedRole: "tutor"/);
+    assert.match(read("src/components/auth/guide-application-form.tsx"), /Submit Application/);
     assert.doesNotMatch(signup, /Display name|platform users|I'm a parent|Become a Guide/);
     assert.doesNotMatch(page, /Parents book Study Hall|Guides apply separately|marketplace|browse Guides/i);
     assert.doesNotMatch(signup, /grid-cols-2 gap-3/);
