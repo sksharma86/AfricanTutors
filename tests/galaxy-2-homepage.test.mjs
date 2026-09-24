@@ -68,8 +68,9 @@ describe("Galaxy 2 homepage — one continuous story with the approved copy", ()
     assert.match(read("src/components/marketing/home/portal.tsx"), /Everything in one place\./);
 
     const pricing = read("src/components/marketing/home/pricing.tsx");
-    assert.match(pricing, /Unlimited Study Halls, one per day, every day of the year\./);
-    assert.match(pricing, /Use them when you want, at the times that work for your family\./);
+    assert.match(pricing, /One Study Hall available every calendar day\./);
+    assert.match(pricing, /You choose the days, at the times that work for your family\./);
+    assert.doesNotMatch(pricing, /Unlimited Study Halls/);
     assert.match(pricing, /Make it a routine\./);
     assert.match(pricing, /HOME_ROUTINE_HEADLINE = "It becomes part of the week\."/);
     assert.match(
@@ -180,7 +181,8 @@ describe("Galaxy 2 homepage — product truth", () => {
     assert.match(pricing, /PACKAGE_10SH_PRICE_CENTS/);
     assert.match(pricing, /STUDY_HALL_365_MONTHLY_USD/);
     assert.match(pricing, /PAYG_PRICE_USD/);
-    assert.match(pricing, /Save \{formatUsd\(PACK_10_SAVINGS_USD\)\} when you buy ten\./);
+    assert.match(pricing, /Ten Study Halls\. They never expire\./);
+    assert.doesNotMatch(pricing, /when you buy ten/);
     assert.doesNotMatch(pricing, /formatUsd\(99\)|"\$99"|"\$149"|"\$12"/);
   });
 
@@ -198,8 +200,9 @@ describe("Galaxy 2 homepage — product truth", () => {
     assert.match(pricing, /sh-home-option/);
     assert.match(pricing, /\{ctaLabel\}/);
     assert.doesNotMatch(pricing, /Choose \{HOME_365_NAME\}|Get started →/);
-    assert.match(pricing, /location="pricing_365"/);
+    assert.doesNotMatch(pricing, /location="pricing_365"|location="pricing_payg"|location="pricing_10"/);
     assert.match(pricing, /location="closing"/);
+    assert.match(pricing, /Paid plans open after your free hour\./);
   });
 
   it("fits the sticky Parent Portal to the viewport as one scaled object", () => {

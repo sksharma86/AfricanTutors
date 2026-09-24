@@ -12,7 +12,6 @@ import {
 
 /** Homepage 10-pack display tracks PACKAGE_10SH_PRICE_CENTS ($99). */
 export const PACK_10_DISPLAY_USD = PACKAGE_10SH_PRICE_CENTS / 100;
-const PACK_10_SAVINGS_USD = PAYG_PRICE_USD * PACKAGE_10SH_STUDY_HALLS - PACK_10_DISPLAY_USD;
 
 export const HOME_ROUTINE_KICKER = "The routine";
 export const HOME_ROUTINE_HEADLINE = "It becomes part of the week.";
@@ -24,16 +23,17 @@ export const HOME_PACK_NAME = `${PACKAGE_10SH_STUDY_HALLS} Study Halls`;
 export const HOME_365_NAME = STUDY_HALL_365_PRODUCT_NAME;
 export const HOME_365_HEADLINE = "Make it a routine.";
 export const HOME_365_LINES = [
-  "Unlimited Study Halls, one per day, every day of the year.",
-  "Use them when you want, at the times that work for your family.",
+  "One Study Hall available every calendar day.",
+  "You choose the days, at the times that work for your family.",
 ] as const;
+export const HOME_PAID_PLANS_NOTE = "Paid plans open after your free hour.";
 export const HOME_TRUST_LINE =
   "Every Study Hall is live and one on one with a highly vetted Study Hall Guide. Afterward, the report and recording are waiting in your Parent Portal.";
 
 /**
  * Moment 5 — routine + pricing. The dark reveal gives way to a lamp-lit desk
  * and the culmination of the habit story: Study Hall becomes a normal part of
- * the child's week. Two purchasing options are set as quiet editorial rows;
+ * the child's week. Two menu rows sit quietly under the prices;
  * Study Hall 365 is the culmination.
  */
 export function HomePricing({
@@ -83,10 +83,7 @@ export function HomePricing({
               <h3 className="sh-home-display sh-home-option__label">{HOME_PAYG_NAME}</h3>
               <p className="sh-home-option__price">{payg}</p>
               <div className="sh-home-option__body">
-                <p className="sh-home-option__detail">One private, 60 minute Study Hall. Pay as you go.</p>
-                <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_payg" variant="text" className="sh-home-option__cta">
-                  {ctaLabel} →
-                </TrackCta>
+                <p className="sh-home-option__detail">One private, 60 minute Study Hall.</p>
               </div>
             </article>
 
@@ -97,12 +94,7 @@ export function HomePricing({
                 <span className="sh-home-option__unit">/ {PACKAGE_10SH_STUDY_HALLS}</span>
               </p>
               <div className="sh-home-option__body">
-                <p className="sh-home-option__detail">
-                  Keep Study Halls on hand. Save {formatUsd(PACK_10_SAVINGS_USD)} when you buy ten. They never expire.
-                </p>
-                <TrackCta href={ctaHref} cta={ctaLabel} location="pricing_10" variant="text" className="sh-home-option__cta">
-                  {ctaLabel} →
-                </TrackCta>
+                <p className="sh-home-option__detail">Ten Study Halls. They never expire.</p>
               </div>
             </article>
           </div>
@@ -120,18 +112,10 @@ export function HomePricing({
                 <p key={line}>{line}</p>
               ))}
             </div>
-            <TrackCta
-              href={ctaHref}
-              cta={ctaLabel}
-              location="pricing_365"
-              variant="secondary"
-              size="lg"
-              className="sh-home-flagship__cta"
-            >
-              {ctaLabel}
-            </TrackCta>
           </article>
         </div>
+
+        <p className="sh-home-pricing__note">{HOME_PAID_PLANS_NOTE}</p>
 
         <div className="sh-home-close sh-rise">
           <p className="sh-home-close__trust">{HOME_TRUST_LINE}</p>

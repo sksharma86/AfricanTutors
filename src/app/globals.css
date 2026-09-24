@@ -1254,6 +1254,14 @@ body {
   min-width: 0;
 }
 
+.sh-home-pricing__note {
+  margin-top: 1.25rem;
+  max-width: 36rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--sh-muted);
+}
+
 .sh-home-pricing__options {
   display: grid;
   align-content: start;
