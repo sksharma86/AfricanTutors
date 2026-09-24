@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import { GUIDE_HANDBOOK_HREF, GUIDE_HANDBOOK_LABEL } from "../src/lib/guide-handbook.mjs";
@@ -36,13 +36,18 @@ describe("Guide application funnel", () => {
   });
 
   it("success copy offers the handbook and keeps hours closed", () => {
-    const handbook = read("public/downloads/study-hall-guide-handbook.md");
     const panel = read("src/components/dashboard/guide-applicant-panel.tsx");
-    assert.match(handbook, /You are not tutoring/);
-    assert.match(handbook, /cannot set hours until a manager approves/);
+    const download = read("src/components/auth/guide-handbook-download.tsx");
+    const pdf = readFileSync(new URL("../public/downloads/study-hall-guide-handbook.pdf", import.meta.url));
+    assert.equal(pdf.subarray(0, 5).toString("utf8"), "%PDF-");
+    assert.equal(existsSync(new URL("../public/downloads/study-hall-guide-handbook.md", import.meta.url)), false);
     assert.equal(GUIDE_HANDBOOK_LABEL, "Download the Guide handbook");
-    assert.match(read("src/components/auth/guide-handbook-download.tsx"), /GUIDE_HANDBOOK_HREF/);
-    assert.match(read("src/lib/guide-handbook.mjs"), /study-hall-guide-handbook\.md/);
+    assert.equal(GUIDE_HANDBOOK_HREF, "/downloads/study-hall-guide-handbook.pdf");
+    assert.match(download, /<a/);
+    assert.match(download, /\bdownload\b/);
+    assert.match(download, /GUIDE_HANDBOOK_HREF/);
+    assert.doesNotMatch(download, /next\/link/);
+    assert.match(read("src/lib/guide-handbook.mjs"), /study-hall-guide-handbook\.pdf/);
     assert.match(panel, /GuideHandbookDownload/);
     assert.match(panel, /does not open a quiz or a schedule/);
     assert.doesNotMatch(panel, /href=.*availability|Set your hours|Take the quiz/i);
